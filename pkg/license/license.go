@@ -3,15 +3,19 @@
 package license
 
 import (
+	"bufio"
 	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 const sourceFileExt = "go"
+const existingLic = `/*
+Copyright`
 
 type License struct {
 	projectLicense    []byte
@@ -77,7 +81,14 @@ func (l *License) updateFiles() error {
 			if err != nil {
 				return err
 			}
-			newContent := string(l.sourceFileLicense) + string(sourceFileContent)
+
+			// remove any existing license
+			strippedContent, err := stripLicense(sourceFileContent)
+			if err != nil {
+				return err
+			}
+
+			licensedContent := string(l.sourceFileLicense) + strippedContent
 
 			f, err := os.OpenFile(sourceFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 			if err != nil {
@@ -86,13 +97,13 @@ func (l *License) updateFiles() error {
 
 			defer f.Close()
 
-			f.WriteString(newContent)
+			f.WriteString(licensedContent)
 		}
 		changes = true
 	}
 
 	if !changes {
-		return errors.New("No project or source code files provided - no changes made")
+		return errors.New("No project or source code license files provided - no changes made")
 	}
 
 	return nil
@@ -114,6 +125,28 @@ func (l *License) getSourceFiles(fileExt string) error {
 	})
 
 	return nil
+}
+
+// stripLicense removes any existing license from source code files
+func stripLicense(sourceFileContent []byte) (string, error) {
+
+	var sourceFileContentOut string
+	endOfLicenseFound := false
+
+	if strings.HasPrefix(string(sourceFileContent), existingLic) {
+		scanner := bufio.NewScanner(strings.NewReader(string(sourceFileContent)))
+		for scanner.Scan() {
+			if endOfLicenseFound {
+				sourceFileContentOut = sourceFileContentOut + "\n" + string(scanner.Text())
+			} else if scanner.Text() == "*/" {
+				endOfLicenseFound = true
+			}
+		}
+	} else {
+		return string(sourceFileContent), nil
+	}
+
+	return sourceFileContentOut, nil
 }
 
 func init() {
