@@ -1,15 +1,9 @@
 #!/bin/bash
 
-#kbl init --domain apps.acme.com
-kbl init
-kbl create api --group workloads --version v1alpha1 --kind WebApp --controller --resource
-
-mkdir licensing
-
-cat > licensing/project.txt <<EOF
+cat > /tmp/project.txt <<EOF
     MIT License
 
-    Copyright (c) Microsoft Corporation. All rights reserved.
+    Copyright (c) Acme Inc. All rights reserved.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -31,10 +25,20 @@ cat > licensing/project.txt <<EOF
 
 EOF
 
-cat > licensing/source-code.txt <<EOF
-// Copyright 2006-2021 VMware, Inc.
+cat > /tmp/source-header.txt <<EOF
+// Copyright 2006-2021 Acme Inc.
 // SPDX-License-Identifier: MIT
 EOF
 
-kbl license -p licensing/project.txt -s licensing/source-code.txt
+kbl init \
+    --domain apps.acme.com \
+    --project-license /tmp/project.txt \
+    --source-header-license /tmp/source-header.txt
+
+kbl create api \
+    --group workloads \
+    --version v1alpha1 \
+    --kind WebApp \
+    --controller \
+    --resource
 

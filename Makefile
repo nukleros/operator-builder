@@ -1,5 +1,5 @@
 build:
-	go build -o bin/kbl .
+	go build -o bin/kbl cmd/main.go
 
 test-install: build
 	cp bin/kbl /usr/local/bin/kbl
