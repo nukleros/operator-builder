@@ -1,14 +1,14 @@
-package license
+package v1
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
+
+	"gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/license"
 )
 
 var _ plugin.InitSubcommand = &initSubcommand{}
@@ -49,36 +49,16 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 
 	// project license
 	if len(p.projectLicensePath) != 0 {
-		pLicense, err := ioutil.ReadFile(p.projectLicensePath)
-		if err != nil {
+		if err := license.UpdateProjectLicense(p.projectLicensePath); err != nil {
 			return err
 		}
-
-		licenseF, err := os.Create("LICENSE")
-		if err != nil {
-			return err
-		}
-		defer licenseF.Close()
-		licenseF.WriteString(string(pLicense))
 	}
 
 	// source header license
 	if len(p.sourceHeaderPath) != 0 {
-		sLicense, err := ioutil.ReadFile(p.sourceHeaderPath)
-		if err != nil {
+		if err := license.UpdateSourceHeader(p.sourceHeaderPath); err != nil {
 			return err
 		}
-
-		err = os.Mkdir("hack", 0755)
-		if err != nil {
-			return err
-		}
-		licenseB, err := os.Create("hack/boilerplate.go.txt")
-		if err != nil {
-			return err
-		}
-		defer licenseB.Close()
-		licenseB.WriteString(string(sLicense) + "\n")
 	}
 
 	return nil

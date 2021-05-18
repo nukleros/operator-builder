@@ -2,7 +2,7 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
-	//"github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 	"sigs.k8s.io/kubebuilder/v3/pkg/cli"
 	cfgv2 "sigs.k8s.io/kubebuilder/v3/pkg/config/v2"
 	cfgv3 "sigs.k8s.io/kubebuilder/v3/pkg/config/v3"
@@ -13,14 +13,15 @@ import (
 	golangv2 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v2"
 	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 
+	kblcli "gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/cli"
 	licensev1 "gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/plugins/license/v1"
 )
 
-//var (
-//	commands = []*cobra.Command{
-//		// update command here
-//	}
-//)
+var (
+	commands = []*cobra.Command{
+		kblcli.NewUpdateCmd(),
+	}
+)
 
 func main() {
 
@@ -43,7 +44,7 @@ func main() {
 		cli.WithDefaultPlugins(cfgv2.Version, golangv2.Plugin{}),
 		cli.WithDefaultPlugins(cfgv3.Version, gov3Bundle),
 		cli.WithDefaultProjectVersion(cfgv3.Version),
-		//cli.WithExtraCommands(commands...),
+		cli.WithExtraCommands(commands...),
 		cli.WithCompletion(),
 	)
 	if err != nil {
