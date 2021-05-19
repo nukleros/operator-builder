@@ -13,13 +13,13 @@ import (
 	golangv2 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v2"
 	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 
-	kblcli "gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/cli"
+	opbcli "gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/cli"
 	licensev1 "gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/plugins/license/v1"
 )
 
 var (
 	commands = []*cobra.Command{
-		kblcli.NewUpdateCmd(),
+		opbcli.NewUpdateCmd(),
 	}
 )
 
@@ -32,7 +32,7 @@ func main() {
 	)
 
 	c, err := cli.New(
-		cli.WithCommandName("kbl"),
+		cli.WithCommandName("operator-builder"),
 		cli.WithVersion(versionString()),
 		cli.WithPlugins(
 			golangv2.Plugin{},

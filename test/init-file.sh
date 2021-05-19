@@ -30,12 +30,12 @@ cat > /tmp/source-header.txt <<EOF
 // SPDX-License-Identifier: MIT
 EOF
 
-kbl init \
+operator-builder init \
     --domain apps.acme.com \
     --project-license /tmp/project.txt \
     --source-header-license /tmp/source-header.txt
 
-kbl create api \
+operator-builder create api \
     --group workloads \
     --version v1alpha1 \
     --kind WebApp \

@@ -1,8 +1,8 @@
 build:
-	go build -o bin/kbl cmd/main.go
+	go build -o bin/operator-builder cmd/main.go
 
 test-install: build
-	cp bin/kbl /usr/local/bin/kbl
+	cp bin/operator-builder /usr/local/bin/operator-builder
 
 TEST_PATH ?= /tmp
 TEST_SCRIPT ?= default.sh
