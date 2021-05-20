@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
-	"gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/license"
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/license"
 )
 
 var _ plugin.InitSubcommand = &initSubcommand{}

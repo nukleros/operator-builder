@@ -13,8 +13,8 @@ import (
 	golangv2 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v2"
 	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 
-	opbcli "gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/cli"
-	licensev1 "gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/plugins/license/v1"
+	opbcli "gitlab.eng.vmware.com/landerr/operator-builder/pkg/cli"
+	licensev1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/license/v1"
 )
 
 var (

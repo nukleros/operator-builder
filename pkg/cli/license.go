@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"gitlab.eng.vmware.com/landerr/kb-license-plugin/pkg/license"
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/license"
 )
 
 func NewUpdateLicenseCmd() *cobra.Command {

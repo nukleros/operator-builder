@@ -1,4 +1,4 @@
-module gitlab.eng.vmware.com/landerr/kb-license-plugin
+module gitlab.eng.vmware.com/landerr/operator-builder
 
 go 1.15
 
