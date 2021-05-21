@@ -15,6 +15,7 @@ import (
 
 	opbcli "gitlab.eng.vmware.com/landerr/operator-builder/pkg/cli"
 	licensev1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/license/v1"
+	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1"
 )
 
 var (
@@ -29,6 +30,7 @@ func main() {
 		licensev1.Plugin{},
 		kustomizecommonv1.Plugin{},
 		golangv3.Plugin{},
+		workloadv1.Plugin{},
 	)
 
 	c, err := cli.New(
@@ -40,6 +42,7 @@ func main() {
 			&licensev1.Plugin{},
 			&kustomizecommonv1.Plugin{},
 			&declarativev1.Plugin{},
+			&workloadv1.Plugin{},
 		),
 		cli.WithDefaultPlugins(cfgv2.Version, golangv2.Plugin{}),
 		cli.WithDefaultPlugins(cfgv3.Version, gov3Bundle),

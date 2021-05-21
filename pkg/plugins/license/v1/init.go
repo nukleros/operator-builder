@@ -36,8 +36,8 @@ func (p *initSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *
 
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 
-	fs.StringVarP(&p.projectLicensePath, "project-license", "p", "", "path to project license file")
-	fs.StringVarP(&p.sourceHeaderPath, "source-header-license", "s", "", "path to file with source code header license text")
+	fs.StringVar(&p.projectLicensePath, "project-license", "", "path to project license file")
+	fs.StringVar(&p.sourceHeaderPath, "source-header-license", "", "path to file with source code header license text")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) {

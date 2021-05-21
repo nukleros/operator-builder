@@ -1,0 +1,15 @@
+apiVersion: workload.cnr.vmware.com/v1alpha1
+kind: Workload
+#metadata:
+#  name: WebApp
+spec:
+  group: apps
+  version: v1alpha1
+  kind: Webapp
+  clusterScoped: false
+  companionCliRootcmd:
+    name: webappctl
+    description: Manage webapp stuff like a boss
+  resources:
+  - app.yaml
+
