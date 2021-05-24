@@ -13,26 +13,17 @@ type WorkloadSpec struct {
 	Version             string     `json:"version"`
 	Kind                string     `json:"kind"`
 	ClusterScoped       bool       `json:"clusterScoped"`
-	Resources           []string   `json:"resources"`
-	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" ` // when no WorkloadCollection
 	CompanionCliSubcmd  CliCommand `json:"companionCliSubcmd"`
+	Resources           []string   `json:"resources"`
+	Collection          bool       `json:"collection"`
+	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" ` // when collection: true
+	Children            []string   `json:"children"`             // when collection: true
 }
 
 // Workload defines the attributes of a distinct workload
 // A Workload will get an API type and a controller to manage the Kubernetes
 // resourses that constitute that workload
 type Workload struct {
+	Name string       `json:"name"`
 	Spec WorkloadSpec `json:"spec"`
-}
-
-// WorkloadCollectionSpec defines the desired state for a WorkloadCollection
-type WorkloadCollectionSpec struct {
-	ClusterScoped       bool       `json:"clusterScoped"`
-	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd"`
-}
-
-// A WorkloadCollection represents a set of Workloads that belong to a broader
-// collective and may have dependencies on one another
-type WorkloadCollection struct {
-	Spec WorkloadCollectionSpec `json:"spec"`
 }

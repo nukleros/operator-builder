@@ -11,8 +11,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds"
-	//"gitlab.eng.vmware.com/landerr/operator-builder/pkg/workload"
-	//workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1"
 	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/workload/v1"
 )
 
@@ -24,11 +22,6 @@ type initSubcommand struct {
 	workloadPath string
 	//workload     workloadv1.Workload
 	workload workloadv1.Workload
-
-	// workload collection
-	workloadCollectionPath string
-	//workloadCollection     workloadv1.WorkloadCollection
-	workloadCollection workloadv1.WorkloadCollection
 }
 
 var _ plugin.InitSubcommand = &initSubcommand{}
@@ -45,7 +38,6 @@ func (p *initSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&p.workloadPath, "workload-config", "", "path to workload config file")
-	fs.StringVar(&p.workloadCollectionPath, "workload-collection-config", "", "path to workload collection config file")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
@@ -77,7 +69,7 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 		return err
 	}
 
-	scaffolder := scaffolds.NewInitScaffolder(p.config, p.workload, p.workloadCollection)
+	scaffolder := scaffolds.NewInitScaffolder(p.config, p.workload)
 	scaffolder.InjectFS(fs)
 	err = scaffolder.Scaffold()
 	if err != nil {

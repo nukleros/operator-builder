@@ -15,10 +15,9 @@ import (
 var _ plugins.Scaffolder = &initScaffolder{}
 
 type initScaffolder struct {
-	config             config.Config
-	boilerplatePath    string
-	workload           workloadv1.Workload
-	workloadCollection workloadv1.WorkloadCollection
+	config          config.Config
+	boilerplatePath string
+	workload        workloadv1.Workload
 
 	fs machinery.Filesystem
 }
@@ -27,13 +26,11 @@ type initScaffolder struct {
 func NewInitScaffolder(
 	config config.Config,
 	workload workloadv1.Workload,
-	workloadCollection workloadv1.WorkloadCollection,
 ) plugins.Scaffolder {
 	return &initScaffolder{
-		config:             config,
-		boilerplatePath:    "hack/boilerplate.go.txt",
-		workload:           workload,
-		workloadCollection: workloadCollection,
+		config:          config,
+		boilerplatePath: "hack/boilerplate.go.txt",
+		workload:        workload,
 	}
 }
 
