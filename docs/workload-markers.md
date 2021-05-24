@@ -54,7 +54,7 @@ resource:
 Now the end-user of the operator will be able to define a custom resource
 similar to the following to configure the deployment created:
 
-	apiVersion: apps.acme.com/v1alpha1
+	apiVersion: product.apps.acme.com/v1alpha1
 	kind: WebApp
 	metadata:
 	  name: dev-webapp

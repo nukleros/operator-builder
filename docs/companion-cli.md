@@ -23,3 +23,13 @@ These are the CLI configurations:
    `WorkloadCollection` manifest.  Then define `spec.companionCliSubcmd` in one
    or more `Workload` manifests.
 
+## Root Command
+
+The root command for the CLI can be defined in a standalone workload or in a
+[collection workload](collections.md).
+
+## Subcommands
+
+If a workload belongs to a collection you may define a subcommand for that
+workload.
+

@@ -15,8 +15,17 @@ An operator built with Operator Builder has the following features:
 - A [companion CLI](docs/companion-cli.md) that helps end users with common
   operations.
 
-The custom resource generated can be cluster-scoped or namespace-scoped based on
-the requirements of the project.  More info [here](docs/resource-scope.md).
+Operator Builder uses a [workload configuration](docs/workloads.md) as the
+primary configuration mechanism for providing attributes for the source code.
+
+The custom resource defined in the source code can be cluster-scoped or
+namespace-scoped based on the requirements of the project.  More info
+[here](docs/resource-scope.md).
+
+## Collections
+
+Operator Builder can generate source code for operators that manage multiple
+workloads.  See [collections](docs/collections.md) for more info.
 
 ## Licensing
 
