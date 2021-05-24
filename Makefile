@@ -6,6 +6,7 @@ test-install: build
 
 TEST_PATH ?= /tmp
 TEST_SCRIPT ?= default.sh
+
 test: test-install
 	mkdir $(TEST_PATH)/.test
 	cp test/$(TEST_SCRIPT) $(TEST_PATH)/.test/

@@ -1,13 +1,12 @@
 #!/bin/bash
 
 cat > .test/workload.yaml <<EOF
-apiVersion: workload.cnr.vmware.com/v1alpha1
-kind: Workload
-metadata:
-  name: WebApp
+name: webapp
 spec:
+  group: apps
+  version: v1alpha1
+  kind: WebApp
   clusterScoped: false
-  importPath: gitlab.eng.vmware.com/landerr/acme-webapp-mgr
   companionCliRootcmd:
     name: webappctl
     description: Manage webapp stuff like a boss
