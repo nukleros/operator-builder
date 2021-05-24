@@ -56,9 +56,6 @@ func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 
 func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 
-	// validate that we have workload config OR workload collection config
-	// TODO
-
 	// unmarshal config file to Workload
 	config, err := ioutil.ReadFile(p.workloadPath)
 	if err != nil {
@@ -66,6 +63,11 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 	}
 	err = yaml.Unmarshal(config, &p.workload)
 	if err != nil {
+		return err
+	}
+
+	// validate Workload config
+	if err := p.workload.Validate(); err != nil {
 		return err
 	}
 
