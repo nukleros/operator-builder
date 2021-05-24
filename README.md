@@ -7,6 +7,26 @@ to facilitate development and maintenance of Kubernetes operators.  It is especi
 helpful if you need to take large numbers of resources defined with static or
 templated yaml and migrate to managing those resources with a custom Kubernetes operator.
 
+An operator built with Operator Builder has the following features:
+- A defined API for a custom resource based on [workload
+  markers](docs/workload-markers.md).
+- A functioning controller that will create, update and delete child resources
+  to reconcile the state for the custom resource/s.
+- A [companion CLI](docs/companion-cli.md) that helps end users with common
+  operations.
+
+The custom resource generated can be cluster-scoped or namespace-scoped based on
+the requirements of the project.  More info [here](docs/resource-scope.md).
+
+## Licensing
+
+Operator Builder can help manage licensing for the resulting project.  More
+info [here](docs/licensing.md).
+
+## Testing
+
+Testing of Operator Builder is documented [here](docs/testing.md).
+
 ## TODO
 
 * add companion cli build make targets (see https://gitlab.eng.vmware.com/landerr/rpk-operator)

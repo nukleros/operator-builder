@@ -2,7 +2,7 @@
 
 When testing operator-builder, keep in mind you are testing a source code generator
 that end-user engineers will manually use to manage Kubernetes operator projects.
-Operator-builder is used to generate code for a distinct code repository - so the
+Operator Builder is used to generate code for a distinct code repository - so the
 testing is conducted as such.  It stamps out and/or modifies source code for an
 operator project when a test is run.
 
