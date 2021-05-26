@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
 
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/api"
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/config/samples"
 	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/workload/v1"
 )
 
@@ -68,6 +69,9 @@ func (s *apiScaffolder) Scaffold() error {
 				SpecFields:    s.apiSpecFields,
 				ClusterScoped: s.workload.Spec.ClusterScoped,
 				Dependencies:  s.workload.Spec.Dependencies,
+			},
+			&samples.CRDSample{
+				SpecFields: s.apiSpecFields,
 			},
 		)
 	} else {
