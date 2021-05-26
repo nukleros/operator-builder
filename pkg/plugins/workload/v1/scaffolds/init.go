@@ -7,10 +7,14 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
+	"sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3/scaffolds"
 
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates"
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/cli"
 	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/workload/v1"
 )
+
+const CobraVersion = "v1.1.3"
 
 var _ plugins.Scaffolder = &initScaffolder{}
 
@@ -58,6 +62,10 @@ func (s *initScaffolder) Scaffold() error {
 		&cli.CliCmdRoot{
 			CliRootCmd:         s.workload.Spec.CompanionCliRootcmd.Name,
 			CliRootDescription: s.workload.Spec.CompanionCliRootcmd.Description,
+		},
+		&templates.GoMod{
+			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,
+			CobraVersion:             CobraVersion,
 		},
 	)
 
