@@ -42,6 +42,8 @@ func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
 	p.config = c
+
+	// operator builder always uses multi-group APIs
 	if err := c.SetMultiGroup(); err != nil {
 		return err
 	}
@@ -50,11 +52,6 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 }
 
 func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
-
-	return nil
-}
-
-func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 
 	// unmarshal config file to Workload
 	config, err := ioutil.ReadFile(p.workloadPath)
@@ -71,9 +68,14 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 		return err
 	}
 
+	return nil
+}
+
+func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
+
 	scaffolder := scaffolds.NewInitScaffolder(p.config, p.workload)
 	scaffolder.InjectFS(fs)
-	err = scaffolder.Scaffold()
+	err := scaffolder.Scaffold()
 	if err != nil {
 		return err
 	}

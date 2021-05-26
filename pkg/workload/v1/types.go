@@ -18,6 +18,7 @@ type WorkloadSpec struct {
 	Collection          bool       `json:"collection"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" ` // when collection: true
 	Children            []string   `json:"children"`             // when collection: true
+	Dependencies        []string   `yaml:"dependencies"`
 }
 
 // Workload defines the attributes of a distinct workload
@@ -26,4 +27,45 @@ type WorkloadSpec struct {
 type Workload struct {
 	Name string       `json:"name"`
 	Spec WorkloadSpec `json:"spec"`
+}
+
+// APISpecField represents a single field in a custom API type
+type APISpecField struct {
+	FieldName         string
+	ManifestFieldName string
+	DataType          string
+	DefaultVal        string
+	ZeroVal           string
+	ApiSpecContent    string
+	SampleField       string
+}
+
+// SourceFile is a golang source code file that contains one or more child
+// resource objects
+type SourceFile struct {
+	Filename       string
+	ChildResources []ChildResource
+	Legacy         bool
+}
+
+// ChildResource contains attributes for resources created by the custom resource.
+// These definitions are inferred from the resource manfiests.
+type ChildResource struct {
+	Name                 string
+	Group                string
+	Version              string
+	Kind                 string
+	Content              string
+	CreateResourceName   string
+	LegacyCreateStrategy bool
+}
+
+// Marker contains the attributes of a workload marker from a static manifest
+type Marker struct {
+	Key           string
+	Value         string
+	FieldName     string
+	DataType      string
+	Default       string
+	LeadingSpaces int
 }

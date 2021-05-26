@@ -1,0 +1,91 @@
+package v1
+
+import (
+	"fmt"
+	"io/ioutil"
+
+	"github.com/spf13/pflag"
+	"sigs.k8s.io/kubebuilder/v3/pkg/config"
+	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
+	"sigs.k8s.io/yaml"
+
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds"
+	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/workload/v1"
+)
+
+type createAPISubcommand struct {
+	config config.Config
+
+	resource *resource.Resource
+
+	// workload
+	workloadPath string
+	//workload     workloadv1.Workload
+	workload workloadv1.Workload
+}
+
+var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
+
+func (p *createAPISubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *plugin.SubcommandMetadata) {
+
+	subcmdMeta.Description = `Build a new API that can capture state for workloads
+`
+	subcmdMeta.Examples = fmt.Sprintf(`  # Add API attributes defined by a workload config file
+  %[1]s create api --workload-config .source-manifests/workload.yaml
+`, cliMeta.CommandName)
+}
+
+func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
+
+	fs.StringVar(&p.workloadPath, "workload-config", "", "path to workload config file")
+}
+
+func (p *createAPISubcommand) InjectConfig(c config.Config) error {
+
+	p.config = c
+
+	return nil
+}
+
+func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
+
+	p.resource = res
+
+	return nil
+}
+
+func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
+
+	// unmarshal config file to Workload
+	config, err := ioutil.ReadFile(p.workloadPath)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(config, &p.workload)
+	if err != nil {
+		return err
+	}
+
+	// validate Workload config
+	if err := p.workload.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
+
+	specFields, err := p.workload.GetSpecFields(p.workloadPath)
+
+	scaffolder := scaffolds.NewAPIScaffolder(p.config, *p.resource, p.workload, specFields)
+	scaffolder.InjectFS(fs)
+	err = scaffolder.Scaffold()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

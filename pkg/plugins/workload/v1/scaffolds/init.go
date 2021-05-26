@@ -23,10 +23,7 @@ type initScaffolder struct {
 }
 
 // NewInitScaffolder returns a new Scaffolder for project initialization operations
-func NewInitScaffolder(
-	config config.Config,
-	workload workloadv1.Workload,
-) plugins.Scaffolder {
+func NewInitScaffolder(config config.Config, workload workloadv1.Workload) plugins.Scaffolder {
 	return &initScaffolder{
 		config:          config,
 		boilerplatePath: "hack/boilerplate.go.txt",

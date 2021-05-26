@@ -16,15 +16,18 @@ var (
 )
 
 var (
-	_ plugin.Plugin = Plugin{}
-	_ plugin.Init   = Plugin{}
+	_ plugin.Plugin    = Plugin{}
+	_ plugin.Init      = Plugin{}
+	_ plugin.CreateAPI = Plugin{}
 )
 
 type Plugin struct {
 	initSubcommand
+	createAPISubcommand
 }
 
-func (Plugin) Name() string                               { return pluginName }
-func (Plugin) Version() plugin.Version                    { return pluginVersion }
-func (Plugin) SupportedProjectVersions() []config.Version { return supportedProjectVersions }
-func (p Plugin) GetInitSubcommand() plugin.InitSubcommand { return &p.initSubcommand }
+func (Plugin) Name() string                                         { return pluginName }
+func (Plugin) Version() plugin.Version                              { return pluginVersion }
+func (Plugin) SupportedProjectVersions() []config.Version           { return supportedProjectVersions }
+func (p Plugin) GetInitSubcommand() plugin.InitSubcommand           { return &p.initSubcommand }
+func (p Plugin) GetCreateAPISubcommand() plugin.CreateAPISubcommand { return &p.createAPISubcommand }

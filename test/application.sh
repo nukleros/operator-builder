@@ -70,10 +70,11 @@ operator-builder init \
     --domain apps.acme.com \
     --workload-config .test/workload.yaml
 
-#operator-builder create api \
-#    --group workloads \
-#    --version v1alpha1 \
-#    --kind WebApp \
-#    --controller \
-#    --resource
+operator-builder create api \
+    --workload-config .test/workload.yaml \
+    --group workloads \
+    --version v1alpha1 \
+    --kind WebApp \
+    --controller \
+    --resource
 
