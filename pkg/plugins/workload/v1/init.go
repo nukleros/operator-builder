@@ -18,10 +18,8 @@ type initSubcommand struct {
 	config      config.Config
 	commandName string
 
-	// workload
-	workloadPath string
-	//workload     workloadv1.Workload
-	workload workloadv1.Workload
+	workloadConfigPath string
+	workloadConfig     workloadv1.WorkloadConfig
 }
 
 var _ plugin.InitSubcommand = &initSubcommand{}
@@ -37,7 +35,7 @@ func (p *initSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *
 
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 
-	fs.StringVar(&p.workloadPath, "workload-config", "", "path to workload config file")
+	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
@@ -53,18 +51,18 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 
 func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 
-	// unmarshal config file to Workload
-	config, err := ioutil.ReadFile(p.workloadPath)
+	// unmarshal config file to WorkloadConfig
+	config, err := ioutil.ReadFile(p.workloadConfigPath)
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(config, &p.workload)
+	err = yaml.Unmarshal(config, &p.workloadConfig)
 	if err != nil {
 		return err
 	}
 
-	// validate Workload config
-	if err := p.workload.Validate(); err != nil {
+	// validate WorkloadConfig
+	if err := p.workloadConfig.Validate(); err != nil {
 		return err
 	}
 
@@ -73,7 +71,7 @@ func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 
 func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 
-	scaffolder := scaffolds.NewInitScaffolder(p.config, p.workload)
+	scaffolder := scaffolds.NewInitScaffolder(p.config, p.workloadConfig)
 	scaffolder.InjectFS(fs)
 	err := scaffolder.Scaffold()
 	if err != nil {

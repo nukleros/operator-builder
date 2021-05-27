@@ -7,8 +7,8 @@ type CliCommand struct {
 	Description string `json:"description"`
 }
 
-// WorkloadSpec defines the desired state for a Workload
-type WorkloadSpec struct {
+// WorkloadConfigSpec defines the desired state for a WorkloadConfig
+type WorkloadConfigSpec struct {
 	Group               string     `json:"group"`
 	Version             string     `json:"version"`
 	Kind                string     `json:"kind"`
@@ -21,12 +21,12 @@ type WorkloadSpec struct {
 	Dependencies        []string   `yaml:"dependencies"`
 }
 
-// Workload defines the attributes of a distinct workload
-// A Workload will get an API type and a controller to manage the Kubernetes
+// WorkloadConfig defines the attributes of a distinct workload
+// A WorkloadConfig will get an API type and a controller to manage the Kubernetes
 // resourses that constitute that workload
-type Workload struct {
-	Name string       `json:"name"`
-	Spec WorkloadSpec `json:"spec"`
+type WorkloadConfig struct {
+	Name string             `json:"name"`
+	Spec WorkloadConfigSpec `json:"spec"`
 }
 
 // APISpecField represents a single field in a custom API type

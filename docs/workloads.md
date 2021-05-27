@@ -1,11 +1,11 @@
 # Workloads
 
-Operator Builder uses configurations called "workloads."  A workload represents
-any group of Kubernetes resources.  For example, a workload could be an
+Operator Builder uses WorkloadConfig manifests to define "workloads."  A workload
+represents any group of Kubernetes resources.  For example, a workload could be an
 application with Deployment, Service and Ingress resources.  A workload may also
 be a group of resources that provide a platform service.  They can be
-any group of resources that make sense to deploy together.  Here's an example of
-a simple workload definition for a hypothetical web application called "webapp":
+any group of resources that logically group together.  Here's an example of
+a simple WorkloadConfig for a hypothetical web application called "webapp":
 
     name: webapp
     spec:

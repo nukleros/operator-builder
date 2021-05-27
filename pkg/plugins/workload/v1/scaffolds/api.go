@@ -22,7 +22,7 @@ type apiScaffolder struct {
 	config          config.Config
 	resource        resource.Resource
 	boilerplatePath string
-	workload        *workloadv1.Workload
+	workloadConfig  *workloadv1.WorkloadConfig
 	apiSpecFields   *[]workloadv1.APISpecField
 	sourceFiles     *[]workloadv1.SourceFile
 
@@ -33,7 +33,7 @@ type apiScaffolder struct {
 func NewAPIScaffolder(
 	config config.Config,
 	res resource.Resource,
-	workload *workloadv1.Workload,
+	workloadConfig *workloadv1.WorkloadConfig,
 	apiSpecFields *[]workloadv1.APISpecField,
 	sourceFiles *[]workloadv1.SourceFile,
 ) plugins.Scaffolder {
@@ -41,7 +41,7 @@ func NewAPIScaffolder(
 		config:          config,
 		resource:        res,
 		boilerplatePath: "hack/boilerplate.go.txt",
-		workload:        workload,
+		workloadConfig:  workloadConfig,
 		apiSpecFields:   apiSpecFields,
 		sourceFiles:     sourceFiles,
 	}
@@ -69,12 +69,12 @@ func (s *apiScaffolder) Scaffold() error {
 	)
 
 	// API types
-	if !s.workload.Spec.Collection {
+	if !s.workloadConfig.Spec.Collection {
 		if err = scaffold.Execute(
 			&api.Types{
 				SpecFields:    s.apiSpecFields,
-				ClusterScoped: s.workload.Spec.ClusterScoped,
-				Dependencies:  s.workload.Spec.Dependencies,
+				ClusterScoped: s.workloadConfig.Spec.ClusterScoped,
+				Dependencies:  s.workloadConfig.Spec.Dependencies,
 			},
 			&samples.CRDSample{
 				SpecFields: s.apiSpecFields,
@@ -99,9 +99,9 @@ func (s *apiScaffolder) Scaffold() error {
 
 		if err = scaffold.Execute(
 			&resources.Resources{
-				ClusterScoped: s.workload.Spec.ClusterScoped,
+				ClusterScoped: s.workloadConfig.Spec.ClusterScoped,
 				SourceFile:    sourceFile,
-				PackageName:   strings.ToLower(strings.Replace(s.workload.Name, "-", "_", -1)),
+				PackageName:   strings.ToLower(strings.Replace(s.workloadConfig.Name, "-", "_", -1)),
 			},
 		); err != nil {
 			return err

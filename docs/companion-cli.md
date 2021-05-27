@@ -17,11 +17,11 @@ The companion CLI does three things:
 These are the CLI configurations:
 1. No CLI: Don't define any companion CLI data and no CLI source code will be
    scaffolded.
-2. A single root command: define the `spec.companionCliRootcmd` fields in a the
-   `Workload` manifest.
+2. A single root command: define the `spec.companionCliRootcmd` fields in a
+   standalone `WorkloadConfig` manifest.
 3. A root command with subcommands: define the `spec.companionCliRootcmd` in a
-   `WorkloadCollection` manifest.  Then define `spec.companionCliSubcmd` in one
-   or more `Workload` manifests.
+   collection `WorkloadConfig` manifest.  Then define `spec.companionCliSubcmd`
+   in one or more component `WorkloadConfig` manifests.
 
 ## Root Command
 

@@ -10,13 +10,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func (w *Workload) GetResources(workloadPath string) (*[]SourceFile, error) {
+func (wc *WorkloadConfig) GetResources(workloadPath string) (*[]SourceFile, error) {
 
 	// each sourceFile is a source code file that contains one or more child
 	// resource definition
 	var sourceFiles []SourceFile
 
-	for _, manifestFile := range w.Spec.Resources {
+	for _, manifestFile := range wc.Spec.Resources {
 
 		// determine sourceFile filename
 		var sourceFile SourceFile

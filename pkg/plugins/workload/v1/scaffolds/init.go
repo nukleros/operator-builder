@@ -21,17 +21,17 @@ var _ plugins.Scaffolder = &initScaffolder{}
 type initScaffolder struct {
 	config          config.Config
 	boilerplatePath string
-	workload        workloadv1.Workload
+	workloadConfig  workloadv1.WorkloadConfig
 
 	fs machinery.Filesystem
 }
 
 // NewInitScaffolder returns a new Scaffolder for project initialization operations
-func NewInitScaffolder(config config.Config, workload workloadv1.Workload) plugins.Scaffolder {
+func NewInitScaffolder(config config.Config, workloadConfig workloadv1.WorkloadConfig) plugins.Scaffolder {
 	return &initScaffolder{
 		config:          config,
 		boilerplatePath: "hack/boilerplate.go.txt",
-		workload:        workload,
+		workloadConfig:  workloadConfig,
 	}
 }
 
@@ -57,11 +57,11 @@ func (s *initScaffolder) Scaffold() error {
 
 	return scaffold.Execute(
 		&cli.CliMain{
-			CliRootCmd: s.workload.Spec.CompanionCliRootcmd.Name,
+			CliRootCmd: s.workloadConfig.Spec.CompanionCliRootcmd.Name,
 		},
 		&cli.CliCmdRoot{
-			CliRootCmd:         s.workload.Spec.CompanionCliRootcmd.Name,
-			CliRootDescription: s.workload.Spec.CompanionCliRootcmd.Description,
+			CliRootCmd:         s.workloadConfig.Spec.CompanionCliRootcmd.Name,
+			CliRootDescription: s.workloadConfig.Spec.CompanionCliRootcmd.Description,
 		},
 		&templates.GoMod{
 			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,

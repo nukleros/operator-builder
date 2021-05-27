@@ -3,7 +3,7 @@
 Kubernetes resources are either cluster-scoped or namespace scoped.  The custom
 resources (CRs) created with workload-api can be either.  By default, they are
 namespace-scoped.  If you wish to create a cluster-scoped CR, you
-will need to specify in the Workload manifest as shown in this example:
+will need to specify in the WorkloadConfig manifest as shown in this example:
 
     name: webapp
     spec:

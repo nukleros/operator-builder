@@ -20,10 +20,8 @@ type createAPISubcommand struct {
 
 	resource *resource.Resource
 
-	// workload
-	workloadPath string
-	//workload     workloadv1.Workload
-	workload workloadv1.Workload
+	workloadConfigPath string
+	workloadConfig     workloadv1.WorkloadConfig
 }
 
 var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
@@ -39,7 +37,7 @@ func (p *createAPISubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdM
 
 func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
 
-	fs.StringVar(&p.workloadPath, "workload-config", "", "path to workload config file")
+	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
 }
 
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
@@ -58,18 +56,18 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 
 func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 
-	// unmarshal config file to Workload
-	config, err := ioutil.ReadFile(p.workloadPath)
+	// unmarshal config file to WorkloadConfig
+	config, err := ioutil.ReadFile(p.workloadConfigPath)
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(config, &p.workload)
+	err = yaml.Unmarshal(config, &p.workloadConfig)
 	if err != nil {
 		return err
 	}
 
-	// validate Workload config
-	if err := p.workload.Validate(); err != nil {
+	// validate WorkloadConfig
+	if err := p.workloadConfig.Validate(); err != nil {
 		return err
 	}
 
@@ -79,16 +77,16 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 
 	// The specFields contain all fields to build into the API type spec
-	specFields, err := p.workload.GetSpecFields(p.workloadPath)
+	specFields, err := p.workloadConfig.GetSpecFields(p.workloadConfigPath)
 
 	// The sourceFiles contain the information needed to build resource source
 	// code files
-	sourceFiles, err := p.workload.GetResources(p.workloadPath)
+	sourceFiles, err := p.workloadConfig.GetResources(p.workloadConfigPath)
 
 	scaffolder := scaffolds.NewAPIScaffolder(
 		p.config,
 		*p.resource,
-		&p.workload,
+		&p.workloadConfig,
 		specFields,
 		sourceFiles,
 	)

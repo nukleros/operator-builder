@@ -39,5 +39,4 @@ Testing of Operator Builder is documented [here](docs/testing.md).
 ## TODO
 
 * add companion cli build make targets (see https://gitlab.eng.vmware.com/landerr/rpk-operator)
-* add validation for Workload vs WorkloadCollection (see pkg/plugins/workload/v1/init.go)
 

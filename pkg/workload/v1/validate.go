@@ -6,18 +6,18 @@ import (
 )
 
 // Validate validates a workload configuration
-func (w Workload) Validate() error {
+func (wc *WorkloadConfig) Validate() error {
 
 	missingFields := []string{}
 
 	// required fields
-	if w.Spec.Group == "" {
+	if wc.Spec.Group == "" {
 		missingFields = append(missingFields, "spec.group")
 	}
-	if w.Spec.Version == "" {
+	if wc.Spec.Version == "" {
 		missingFields = append(missingFields, "spec.version")
 	}
-	if w.Spec.Kind == "" {
+	if wc.Spec.Kind == "" {
 		missingFields = append(missingFields, "spec.kind")
 	}
 	if len(missingFields) > 0 {
@@ -26,7 +26,7 @@ func (w Workload) Validate() error {
 	}
 
 	// children only valid if a collection
-	if !w.Spec.Collection && len(w.Spec.Children) > 0 {
+	if !wc.Spec.Collection && len(wc.Spec.Children) > 0 {
 		return errors.New("Cannot define spec.Children if spec.collection is false")
 	}
 

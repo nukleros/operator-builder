@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-func (w *Workload) GetSpecFields(workloadPath string) (*[]APISpecField, error) {
+func (wc *WorkloadConfig) GetSpecFields(workloadPath string) (*[]APISpecField, error) {
 
 	var specFields []APISpecField
 
-	for _, manifestFile := range w.Spec.Resources {
+	for _, manifestFile := range wc.Spec.Resources {
 
 		// capture entire resource manifest file content
 		manifestContent, err := ioutil.ReadFile(filepath.Join(filepath.Dir(workloadPath), manifestFile))
