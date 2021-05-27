@@ -67,6 +67,9 @@ func (s *initScaffolder) Scaffold() error {
 			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,
 			CobraVersion:             CobraVersion,
 		},
+		&templates.Makefile{
+			CliRootCmd: s.workloadConfig.Spec.CompanionCliRootcmd.Name,
+		},
 	)
 
 }
