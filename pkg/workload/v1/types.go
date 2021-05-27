@@ -43,20 +43,21 @@ type APISpecField struct {
 // SourceFile is a golang source code file that contains one or more child
 // resource objects
 type SourceFile struct {
-	Filename       string
-	ChildResources []ChildResource
-	Legacy         bool
+	Filename string
+	Children []ChildResource
+	Legacy   bool
 }
 
 // ChildResource contains attributes for resources created by the custom resource.
 // These definitions are inferred from the resource manfiests.
 type ChildResource struct {
 	Name                 string
+	UniqueName           string
 	Group                string
 	Version              string
 	Kind                 string
-	Content              string
-	CreateResourceName   string
+	StaticContent        string
+	SourceCode           string
 	LegacyCreateStrategy bool
 }
 

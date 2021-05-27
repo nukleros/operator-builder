@@ -78,9 +78,20 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 
 func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 
+	// The specFields contain all fields to build into the API type spec
 	specFields, err := p.workload.GetSpecFields(p.workloadPath)
 
-	scaffolder := scaffolds.NewAPIScaffolder(p.config, *p.resource, p.workload, specFields)
+	// The sourceFiles contain the information needed to build resource source
+	// code files
+	sourceFiles, err := p.workload.GetResources(p.workloadPath)
+
+	scaffolder := scaffolds.NewAPIScaffolder(
+		p.config,
+		*p.resource,
+		&p.workload,
+		specFields,
+		sourceFiles,
+	)
 	scaffolder.InjectFS(fs)
 	err = scaffolder.Scaffold()
 	if err != nil {

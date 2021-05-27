@@ -19,7 +19,7 @@ EOF
 
 # tenancy
 cat > .test/ns-operator-workload.yaml <<EOF
-name: ns-operator
+name: ns-operator-component
 spec:
   group: tenancy
   version: v1alpha1
@@ -63,7 +63,7 @@ EOF
 
 # ingress
 cat > .test/contour-workload.yaml <<EOF
-name: contour
+name: contour-component
 spec:
   group: ingress
   version: v1alpha1
