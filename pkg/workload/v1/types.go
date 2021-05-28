@@ -13,12 +13,12 @@ type WorkloadConfigSpec struct {
 	Version             string     `json:"version"`
 	Kind                string     `json:"kind"`
 	ClusterScoped       bool       `json:"clusterScoped"`
-	CompanionCliSubcmd  CliCommand `json:"companionCliSubcmd"`
+	CompanionCliSubcmd  CliCommand `json:"companionCliSubcmd"` // only with component workloads
 	Resources           []string   `json:"resources"`
 	Collection          bool       `json:"collection"`
-	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" ` // when collection: true
-	Children            []string   `json:"children"`             // when collection: true
-	Dependencies        []string   `yaml:"dependencies"`
+	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
+	Children            []string   `json:"children"`     // when collection: true
+	Dependencies        []string   `yaml:"dependencies"` // when collection: true
 }
 
 // WorkloadConfig defines the attributes of a distinct workload

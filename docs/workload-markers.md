@@ -2,7 +2,7 @@
 
 Operator Builder uses commented markers as the basis for defining a new API.
 The fields for a custom resource kind are created when it finds a `+workload`
-marker in a manifest.
+marker in a source manifest.
 
 A workload marker is commented out so the manifest is still valid and can be
 used if needed.  The marker must begin with `+worload` followed by some
