@@ -19,8 +19,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webapp-deploy
-  labels:
-    production: false  #+workload:production:default=false:type=bool
 spec:
   replicas: 2  # +workload:webAppReplicas:default=2:type=int
   selector:

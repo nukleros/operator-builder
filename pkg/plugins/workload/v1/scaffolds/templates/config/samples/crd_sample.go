@@ -19,7 +19,6 @@ type CRDSample struct {
 	SpecFields *[]workloadv1.APISpecField
 }
 
-// SetTemplateDefaults implements file.Template
 func (f *CRDSample) SetTemplateDefaults() error {
 
 	f.Path = filepath.Join(

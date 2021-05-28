@@ -8,7 +8,7 @@ var _ machinery.Template = &Makefile{}
 
 const crdOptions = "crd:preserveUnknownFields=false,crdVersions=v1,trivialVersions=true"
 
-// Makefile scaffolds a file that defines the project dependencies
+// Makefile scaffolds the project Makefile
 type Makefile struct {
 	machinery.TemplateMixin
 
@@ -16,7 +16,6 @@ type Makefile struct {
 	CrdOptions string
 }
 
-// SetTemplateDefaults implements file.Template
 func (f *Makefile) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = "Makefile"

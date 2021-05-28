@@ -18,7 +18,6 @@ type CliMain struct {
 	CliRootCmd string
 }
 
-// SetTemplateDefaults implements file.Template
 func (f *CliMain) SetTemplateDefaults() error {
 	f.Path = filepath.Join("cmd", f.CliRootCmd, "main.go")
 

@@ -15,7 +15,6 @@ type GoMod struct {
 	CobraVersion             string
 }
 
-// SetTemplateDefaults implements file.Template
 func (f *GoMod) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = "go.mod"

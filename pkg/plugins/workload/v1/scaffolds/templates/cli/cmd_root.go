@@ -19,7 +19,6 @@ type CliCmdRoot struct {
 	CliRootDescription string
 }
 
-// SetTemplateDefaults implements file.Template
 func (f *CliCmdRoot) SetTemplateDefaults() error {
 	f.Path = filepath.Join("cmd", f.CliRootCmd, "commands", "root.go")
 

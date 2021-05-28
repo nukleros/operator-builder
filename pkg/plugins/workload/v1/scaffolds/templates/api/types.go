@@ -11,7 +11,7 @@ import (
 
 var _ machinery.Template = &Types{}
 
-// Types scaffolds the main package for the companion CLI
+// Types scaffolds a workload's API type
 type Types struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -43,7 +43,7 @@ var typesTemplate = `{{ .Boilerplate }}
 package {{ .Resource.Version }}
 
 import (
-	//common "{{ .Repo }}/apis/common"
+	common "{{ .Repo }}/apis/common"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	//"k8s.io/apimachinery/pkg/runtime/schema"
@@ -75,7 +75,7 @@ type {{ .Resource.Kind }}Status struct {
 
 	Created               bool               ` + "`" + `json:"created,omitempty"` + "`" + `
 	DependenciesSatisfied bool               ` + "`" + `json:"dependenciesSatisfied,omitempty"` + "`" + `
-	//Conditions            []common.Condition ` + "`" + `json:"conditions,omitempty"` + "`" + `
+	Conditions            []common.Condition ` + "`" + `json:"conditions,omitempty"` + "`" + `
 }
 
 // +kubebuilder:object:root=true
@@ -103,10 +103,10 @@ type {{.Resource.Kind}}List struct {
 
 // interface methods
 
-//// GetReadyStatus returns the ready status for a component
-//func (component {{.Resource.Kind}}) GetReadyStatus() bool {
-//	return component.Status.Created
-//}
+// GetReadyStatus returns the ready status for a component
+func (component {{.Resource.Kind}}) GetReadyStatus() bool {
+	return component.Status.Created
+}
 
 //// SetReadyStatus sets the ready status for a component
 //func (component *{{.Resource.Kind}}) SetReadyStatus(status bool) {
@@ -123,15 +123,15 @@ type {{.Resource.Kind}}List struct {
 //	component.Status.DependenciesSatisfied = dependencyStatus
 //}
 
-//// GetStatusConditions returns the status conditions for a component
-//func (component {{.Resource.Kind}}) GetStatusConditions() []common.Condition {
-//	return component.Status.Conditions
-//}
+// GetStatusConditions returns the status conditions for a component
+func (component {{.Resource.Kind}}) GetStatusConditions() []common.Condition {
+	return component.Status.Conditions
+}
 
-//// SetStatusConditions sets the status conditions for a component
-//func (component *{{.Resource.Kind}}) SetStatusConditions(condition common.Condition) {
-//	component.Status.Conditions = append(component.Status.Conditions, condition)
-//}
+// SetStatusConditions sets the status conditions for a component
+func (component *{{.Resource.Kind}}) SetStatusConditions(condition common.Condition) {
+	component.Status.Conditions = append(component.Status.Conditions, condition)
+}
 
 //// GetDependencies returns the dependencies for a component
 //func (component {{.Resource.Kind}}) GetDependencies() []common.Component {

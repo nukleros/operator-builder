@@ -11,8 +11,11 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
 
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/api"
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/api/common"
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/api/resources"
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/config/samples"
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/controller"
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/controller/phases"
 	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/workload/v1"
 )
 
@@ -68,6 +71,16 @@ func (s *apiScaffolder) Scaffold() error {
 		machinery.WithResource(&s.resource),
 	)
 
+	packageName := strings.ToLower(strings.Replace(s.workloadConfig.Name, "-", "_", -1))
+
+	var createFuncNames []string
+	for _, sourceFile := range *s.sourceFiles {
+		for _, childResource := range sourceFile.Children {
+			funcName := fmt.Sprintf("Create%s", childResource.UniqueName)
+			createFuncNames = append(createFuncNames, funcName)
+		}
+	}
+
 	// API types
 	if !s.workloadConfig.Spec.Collection {
 		if err = scaffold.Execute(
@@ -76,6 +89,22 @@ func (s *apiScaffolder) Scaffold() error {
 				ClusterScoped: s.workloadConfig.Spec.ClusterScoped,
 				Dependencies:  s.workloadConfig.Spec.Dependencies,
 			},
+			&common.Components{},
+			&common.Conditions{},
+			&resources.Resources{
+				PackageName:     packageName,
+				CreateFuncNames: createFuncNames,
+				SpecFields:      s.apiSpecFields,
+			},
+			&controller.Controller{
+				PackageName: packageName,
+			},
+			&controller.Common{},
+			&phases.Types{},
+			&phases.Common{},
+			&phases.CreateResource{},
+			&phases.ResourcePersist{},
+			&phases.ResourceCreateInMemory{},
 			&samples.CRDSample{
 				SpecFields: s.apiSpecFields,
 			},
@@ -98,10 +127,10 @@ func (s *apiScaffolder) Scaffold() error {
 		)
 
 		if err = scaffold.Execute(
-			&resources.Resources{
+			&resources.Definition{
 				ClusterScoped: s.workloadConfig.Spec.ClusterScoped,
 				SourceFile:    sourceFile,
-				PackageName:   strings.ToLower(strings.Replace(s.workloadConfig.Name, "-", "_", -1)),
+				PackageName:   packageName,
 			},
 		); err != nil {
 			return err
