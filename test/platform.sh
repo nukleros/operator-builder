@@ -13,8 +13,8 @@ spec:
     name: cnpctl
     description: Manage platform stuff like a boss
   children:
-  - ns-operator
-  - contour
+  - ns-operator-workload.yaml
+  - contour-workload.yaml
 EOF
 
 # tenancy

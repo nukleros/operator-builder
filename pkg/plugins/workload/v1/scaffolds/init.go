@@ -55,21 +55,31 @@ func (s *initScaffolder) Scaffold() error {
 		machinery.WithBoilerplate(string(boilerplate)),
 	)
 
-	return scaffold.Execute(
-		&cli.CliMain{
-			CliRootCmd: s.workloadConfig.Spec.CompanionCliRootcmd.Name,
-		},
-		&cli.CliCmdRoot{
-			CliRootCmd:         s.workloadConfig.Spec.CompanionCliRootcmd.Name,
-			CliRootDescription: s.workloadConfig.Spec.CompanionCliRootcmd.Description,
-		},
+	if s.workloadConfig.Spec.CompanionCliRootcmd.Name != "" {
+		if err = scaffold.Execute(
+			&cli.CliMain{
+				CliRootCmd: s.workloadConfig.Spec.CompanionCliRootcmd.Name,
+			},
+			&cli.CliCmdRoot{
+				CliRootCmd:         s.workloadConfig.Spec.CompanionCliRootcmd.Name,
+				CliRootDescription: s.workloadConfig.Spec.CompanionCliRootcmd.Description,
+			},
+			&templates.Makefile{
+				CliRootCmd: s.workloadConfig.Spec.CompanionCliRootcmd.Name,
+			},
+		); err != nil {
+			return err
+		}
+	}
+
+	if err = scaffold.Execute(
 		&templates.GoMod{
 			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,
 			CobraVersion:             CobraVersion,
 		},
-		&templates.Makefile{
-			CliRootCmd: s.workloadConfig.Spec.CompanionCliRootcmd.Name,
-		},
-	)
+	); err != nil {
+		return err
+	}
 
+	return nil
 }
