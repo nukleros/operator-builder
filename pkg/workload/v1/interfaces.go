@@ -1,6 +1,7 @@
 package v1
 
 type WorkloadInitializer interface {
+	GetDomain() string
 	HasRootCmdName() bool
 	GetRootCmdName() string
 	GetRootCmdDescr() string
@@ -8,6 +9,9 @@ type WorkloadInitializer interface {
 
 type WorkloadAPIBuilder interface {
 	GetName() string
+	GetGroup() string
+	GetVersion() string
+	GetKind() string
 	GetSubcommandName() string
 	GetSubcommandDescr() string
 	GetRootcommandName() string

@@ -4,6 +4,18 @@ func (c ComponentWorkload) GetName() string {
 	return c.Name
 }
 
+func (c ComponentWorkload) GetGroup() string {
+	return c.Spec.Group
+}
+
+func (c ComponentWorkload) GetVersion() string {
+	return c.Spec.Version
+}
+
+func (c ComponentWorkload) GetKind() string {
+	return c.Spec.Kind
+}
+
 func (c ComponentWorkload) GetSubcommandName() string {
 	return c.Spec.CompanionCliSubcmd.Name
 }

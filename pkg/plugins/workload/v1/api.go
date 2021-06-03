@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/spf13/pflag"
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
@@ -39,15 +38,17 @@ func (p *createAPISubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdM
 `, cliMeta.CommandName)
 }
 
-func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
-
-	fs.StringVar(&p.standaloneWorkloadConfigPath, "standalone-workload-config", "", "path to standalone workload config file")
-	fs.StringVar(&p.componentWorkloadConfigPath, "component-workload-config", "", "path to component workload config file")
-}
-
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 
 	p.config = c
+
+	var taxi workloadv1.ConfigTaxi
+	if err := c.DecodePluginConfig(workloadv1.ConfigTaxiKey, &taxi); err != nil {
+		return err
+	}
+
+	p.standaloneWorkloadConfigPath = taxi.StandaloneConfigPath
+	p.componentWorkloadConfigPath = taxi.ComponentConfigPath
 
 	return nil
 }

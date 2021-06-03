@@ -3,7 +3,6 @@ package v1
 import (
 	"fmt"
 
-	"github.com/spf13/pflag"
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
@@ -33,13 +32,8 @@ func (p *initSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *
 `, cliMeta.CommandName)
 }
 
-func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
-
-	fs.StringVar(&p.standaloneWorkloadConfigPath, "standalone-workload-config", "", "path to standalone workload config file")
-	fs.StringVar(&p.workloadCollectionConfigPath, "workload-collection-config", "", "path to workload collection config file")
-}
-
 func (p *initSubcommand) InjectConfig(c config.Config) error {
+
 	p.config = c
 
 	// operator builder always uses multi-group APIs
@@ -47,12 +41,19 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 		return err
 	}
 
+	var taxi workloadv1.ConfigTaxi
+	if err := c.DecodePluginConfig(workloadv1.ConfigTaxiKey, &taxi); err != nil {
+		return err
+	}
+
+	p.standaloneWorkloadConfigPath = taxi.StandaloneConfigPath
+	p.workloadCollectionConfigPath = taxi.CollectionConfigPath
+
 	return nil
 }
 
 func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 
-	// process workload config file
 	workload, err := workloadv1.ProcessInitConfig(
 		p.standaloneWorkloadConfigPath,
 		p.workloadCollectionConfigPath,

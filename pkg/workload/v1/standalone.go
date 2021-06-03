@@ -1,6 +1,10 @@
 package v1
 
 // methods that implement WorkloadInitializer
+func (s StandaloneWorkload) GetDomain() string {
+	return s.Spec.Domain
+}
+
 func (s StandaloneWorkload) HasRootCmdName() bool {
 
 	if s.Spec.CompanionCliRootcmd.Name != "" {
@@ -21,6 +25,18 @@ func (s StandaloneWorkload) GetRootCmdDescr() string {
 // methods that implement WorkloadAPIBuilder
 func (s StandaloneWorkload) GetName() string {
 	return s.Name
+}
+
+func (s StandaloneWorkload) GetGroup() string {
+	return s.Spec.Group
+}
+
+func (s StandaloneWorkload) GetVersion() string {
+	return s.Spec.Version
+}
+
+func (s StandaloneWorkload) GetKind() string {
+	return s.Spec.Kind
 }
 
 func (s StandaloneWorkload) GetSubcommandName() string {

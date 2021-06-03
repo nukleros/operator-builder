@@ -1,5 +1,9 @@
 package v1
 
+func (c WorkloadCollection) GetDomain() string {
+	return c.Spec.Domain
+}
+
 func (c WorkloadCollection) HasRootCmdName() bool {
 	if c.Spec.CompanionCliRootcmd.Name != "" {
 		return true

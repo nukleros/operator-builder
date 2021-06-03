@@ -24,6 +24,7 @@ type CliCommand struct {
 // StandaloneWorkloadSpec defines the attributes for a standalone workload
 type StandaloneWorkloadSpec struct {
 	WorkloadSharedSpec
+	Domain              string     `json:"domain"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
 	Resources           []string   `json:"resources"`
 }
@@ -51,6 +52,7 @@ type ComponentWorkload struct {
 // WorkloadCollectionSpec defines the attributes for a workload collection
 type WorkloadCollectionSpec struct {
 	WorkloadSharedSpec
+	Domain              string     `json:"domain"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
 	Components          []string   `json:"components"`
 	Dependencies        []string   `yaml:"dependencies"`
@@ -108,4 +110,12 @@ type Marker struct {
 // access to config values shared across different operator-builder commands
 type Project struct {
 	CliRootCommandName string `json:"cliRootCommandName"`
+}
+
+const ConfigTaxiKey = "configTaxi"
+
+type ConfigTaxi struct {
+	StandaloneConfigPath string
+	CollectionConfigPath string
+	ComponentConfigPath  string
 }

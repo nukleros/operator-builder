@@ -88,6 +88,6 @@ func ProcessAPIConfig(standaloneConfig, componentConfig string) (WorkloadAPIBuil
 		return workload, componentConfig, nil
 
 	} else {
-		return nil, "", errors.New("No workload config proviced, must provide a standalone config OR a component config")
+		return nil, "", errors.New("No workload config provided, must provide a standalone config OR a component config")
 	}
 }

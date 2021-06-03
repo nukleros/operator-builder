@@ -5,6 +5,7 @@ cat > .test/cnp-workload-collection.yaml <<EOF
 name: cloud-native-platform
 kind: WorkloadCollection
 spec:
+  domain: acme.com
   group: platforms
   version: v1alpha1
   kind: CloudNativePlatform
@@ -140,14 +141,10 @@ EOF
 #EOF
 
 operator-builder init \
-    --domain platform.acme.com \
     --workload-config .test/cnp-workload-collection.yaml
 
 operator-builder create api \
     --workload-config .test/cnp-workload-collection.yaml \
-    --group services \
-    --version v1alpha1 \
-    --kind CloudNativePlatform \
     --controller \
     --resource
 

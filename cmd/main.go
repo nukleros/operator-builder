@@ -14,6 +14,7 @@ import (
 	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 
 	opbcli "gitlab.eng.vmware.com/landerr/operator-builder/pkg/cli"
+	configv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/config/v1"
 	licensev1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/license/v1"
 	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1"
 )
@@ -29,6 +30,7 @@ func main() {
 	gov3Bundle, _ := plugin.NewBundle(golang.DefaultNameQualifier, plugin.Version{Number: 3},
 		licensev1.Plugin{},
 		kustomizecommonv1.Plugin{},
+		configv1.Plugin{},
 		golangv3.Plugin{},
 		workloadv1.Plugin{},
 	)
