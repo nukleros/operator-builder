@@ -1,5 +1,19 @@
 package v1
 
+// WorkloadSharedSpec contains fields shared by all workload specs
+type WorkloadSharedSpec struct {
+	Group         string `json:"group"`
+	Version       string `json:"version"`
+	Kind          string `json:"kind"`
+	ClusterScoped bool   `json:"clusterScoped"`
+}
+
+// WorkloadShared contains fields shared by all workloads
+type WorkloadShared struct {
+	Name string `json:"name"`
+	Kind string `json:"kind"`
+}
+
 // CliCommand defines the command name and description for the root command or
 // subcommand of a companion CLI
 type CliCommand struct {
@@ -7,26 +21,45 @@ type CliCommand struct {
 	Description string `json:"description"`
 }
 
-// WorkloadConfigSpec defines the desired state for a WorkloadConfig
-type WorkloadConfigSpec struct {
-	Group               string     `json:"group"`
-	Version             string     `json:"version"`
-	Kind                string     `json:"kind"`
-	ClusterScoped       bool       `json:"clusterScoped"`
-	CompanionCliSubcmd  CliCommand `json:"companionCliSubcmd"` // only with component workloads
-	Resources           []string   `json:"resources"`
-	Collection          bool       `json:"collection"`
+// StandaloneWorkloadSpec defines the attributes for a standalone workload
+type StandaloneWorkloadSpec struct {
+	WorkloadSharedSpec
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
-	Children            []string   `json:"children"`     // when collection: true
-	Dependencies        []string   `yaml:"dependencies"` // when collection: true
+	Resources           []string   `json:"resources"`
 }
 
-// WorkloadConfig defines the attributes of a distinct workload
-// A WorkloadConfig will get an API type and a controller to manage the Kubernetes
-// resourses that constitute that workload
-type WorkloadConfig struct {
-	Name string             `json:"name"`
-	Spec WorkloadConfigSpec `json:"spec"`
+// StandaloneWorkload defines a standalone workload
+type StandaloneWorkload struct {
+	WorkloadShared
+	Spec StandaloneWorkloadSpec `json:"spec"`
+}
+
+// ComponentWorkloadSpec defines the attributes for a workload that is a
+// component of a collection
+type ComponentWorkloadSpec struct {
+	WorkloadSharedSpec
+	CompanionCliSubcmd CliCommand `json:"companionCliRootcmd" `
+	Resources          []string   `json:"resources"`
+}
+
+// ComponentWorkload defines a workload that is a component of a collection
+type ComponentWorkload struct {
+	WorkloadShared
+	Spec ComponentWorkloadSpec `json:"spec"`
+}
+
+// WorkloadCollectionSpec defines the attributes for a workload collection
+type WorkloadCollectionSpec struct {
+	WorkloadSharedSpec
+	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
+	Components          []string   `json:"components"`
+	Dependencies        []string   `yaml:"dependencies"`
+}
+
+// WorkloadCollection defines a workload collection
+type WorkloadCollection struct {
+	WorkloadShared
+	Spec WorkloadCollectionSpec `json:"spec"`
 }
 
 // APISpecField represents a single field in a custom API type
@@ -40,8 +73,8 @@ type APISpecField struct {
 	SampleField       string
 }
 
-// SourceFile is a golang source code file that contains one or more child
-// resource objects
+// SourceFile represents a golang source code file that contains one or more
+// child resource objects
 type SourceFile struct {
 	Filename string
 	Children []ChildResource
@@ -69,4 +102,10 @@ type Marker struct {
 	DataType      string
 	Default       string
 	LeadingSpaces int
+}
+
+// Project contains the project config saved to the WORKLOAD file to allow
+// access to config values shared across different operator-builder commands
+type Project struct {
+	CliRootCommandName string `json:"cliRootCommandName"`
 }

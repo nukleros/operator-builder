@@ -21,17 +21,17 @@ var _ plugins.Scaffolder = &initScaffolder{}
 type initScaffolder struct {
 	config          config.Config
 	boilerplatePath string
-	workloadConfig  workloadv1.WorkloadConfig
+	workload        workloadv1.WorkloadInitializer
 
 	fs machinery.Filesystem
 }
 
 // NewInitScaffolder returns a new Scaffolder for project initialization operations
-func NewInitScaffolder(config config.Config, workloadConfig workloadv1.WorkloadConfig) plugins.Scaffolder {
+func NewInitScaffolder(config config.Config, workload workloadv1.WorkloadInitializer) plugins.Scaffolder {
 	return &initScaffolder{
 		config:          config,
 		boilerplatePath: "hack/boilerplate.go.txt",
-		workloadConfig:  workloadConfig,
+		workload:        workload,
 	}
 }
 
@@ -55,17 +55,20 @@ func (s *initScaffolder) Scaffold() error {
 		machinery.WithBoilerplate(string(boilerplate)),
 	)
 
-	if s.workloadConfig.Spec.CompanionCliRootcmd.Name != "" {
+	if s.workload.HasRootCmdName() {
 		if err = scaffold.Execute(
 			&cli.CliMain{
-				CliRootCmd: s.workloadConfig.Spec.CompanionCliRootcmd.Name,
+				CliRootCmd: s.workload.GetRootCmdName(),
 			},
 			&cli.CliCmdRoot{
-				CliRootCmd:         s.workloadConfig.Spec.CompanionCliRootcmd.Name,
-				CliRootDescription: s.workloadConfig.Spec.CompanionCliRootcmd.Description,
+				CliRootCmd:         s.workload.GetRootCmdName(),
+				CliRootDescription: s.workload.GetRootCmdDescr(),
 			},
 			&templates.Makefile{
-				CliRootCmd: s.workloadConfig.Spec.CompanionCliRootcmd.Name,
+				CliRootCmd: s.workload.GetRootCmdName(),
+			},
+			&templates.Project{
+				CliRootCmd: s.workload.GetRootCmdName(),
 			},
 		); err != nil {
 			return err

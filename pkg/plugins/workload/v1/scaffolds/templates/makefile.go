@@ -139,7 +139,7 @@ rm -rf $$TMP_DIR ;\
 endef
 
 # Build the companion CLI
-build-cli:
+build-{{ .CliRootCmd }}:
 	go build -o bin/{{ .CliRootCmd }} cmd/{{ .CliRootCmd }}/main.go
 
 `

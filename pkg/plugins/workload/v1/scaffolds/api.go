@@ -13,6 +13,7 @@ import (
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/api"
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/api/common"
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/api/resources"
+	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/cli"
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/config/samples"
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/controller"
 	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/controller/phases"
@@ -25,9 +26,11 @@ type apiScaffolder struct {
 	config          config.Config
 	resource        resource.Resource
 	boilerplatePath string
-	workloadConfig  *workloadv1.WorkloadConfig
+	workload        workloadv1.WorkloadAPIBuilder
+	workloadPath    string
 	apiSpecFields   *[]workloadv1.APISpecField
 	sourceFiles     *[]workloadv1.SourceFile
+	project         *workloadv1.Project
 
 	fs machinery.Filesystem
 }
@@ -36,17 +39,21 @@ type apiScaffolder struct {
 func NewAPIScaffolder(
 	config config.Config,
 	res resource.Resource,
-	workloadConfig *workloadv1.WorkloadConfig,
+	workload workloadv1.WorkloadAPIBuilder,
+	workloadPath string,
 	apiSpecFields *[]workloadv1.APISpecField,
 	sourceFiles *[]workloadv1.SourceFile,
+	project *workloadv1.Project,
 ) plugins.Scaffolder {
 	return &apiScaffolder{
 		config:          config,
 		resource:        res,
 		boilerplatePath: "hack/boilerplate.go.txt",
-		workloadConfig:  workloadConfig,
+		workload:        workload,
+		workloadPath:    workloadPath,
 		apiSpecFields:   apiSpecFields,
 		sourceFiles:     sourceFiles,
+		project:         project,
 	}
 }
 
@@ -71,7 +78,11 @@ func (s *apiScaffolder) Scaffold() error {
 		machinery.WithResource(&s.resource),
 	)
 
-	packageName := strings.ToLower(strings.Replace(s.workloadConfig.Name, "-", "_", -1))
+	packageName := strings.ToLower(strings.Replace(s.workload.GetName(), "-", "_", 0))
+	specFields, err := s.workload.GetSpecFields(s.workloadPath)
+	if err != nil {
+		return err
+	}
 
 	var createFuncNames []string
 	for _, sourceFile := range *s.sourceFiles {
@@ -81,20 +92,67 @@ func (s *apiScaffolder) Scaffold() error {
 		}
 	}
 
+	// companion CLI subcommands
+	if s.workload.GetSubcommandName() != "" {
+		// build a subcommand for the component, e.g. `cnpctl init ingress`
+		if err = scaffold.Execute(
+			&cli.CliCmdInit{
+				CliRootCmd: s.project.CliRootCommandName,
+			},
+			&cli.CliCmdInitSub{
+				CliRootCmd:     s.project.CliRootCommandName,
+				CliSubCmdName:  s.workload.GetSubcommandName(),
+				CliSubCmdDescr: s.workload.GetSubcommandDescr(),
+				SpecFields:     specFields,
+			},
+			&cli.CliCmdGenerate{
+				CliRootCmd: s.project.CliRootCommandName,
+			},
+			&cli.CliCmdGenerateSub{
+				CliRootCmd:     s.project.CliRootCommandName,
+				CliSubCmdName:  s.workload.GetSubcommandName(),
+				CliSubCmdDescr: s.workload.GetSubcommandDescr(),
+				PackageName:    packageName,
+			},
+		); err != nil {
+			return err
+		}
+	} else if s.workload.GetRootcommandName() != "" {
+		// build a subcommand for standalone, e.g. `webappctl init`
+		if err = scaffold.Execute(
+			&cli.CliCmdInitSub{
+				CliRootCmd:     s.project.CliRootCommandName,
+				CliSubCmdName:  s.workload.GetSubcommandName(),
+				CliSubCmdDescr: s.workload.GetSubcommandDescr(),
+				SpecFields:     specFields,
+				Component:      s.workload.IsComponent(),
+			},
+			&cli.CliCmdGenerateSub{
+				CliRootCmd:     s.project.CliRootCommandName,
+				CliSubCmdName:  s.workload.GetSubcommandName(),
+				CliSubCmdDescr: s.workload.GetSubcommandDescr(),
+				Component:      s.workload.IsComponent(),
+				PackageName:    packageName,
+			},
+		); err != nil {
+			return err
+		}
+	}
+
 	// API types
-	if !s.workloadConfig.Spec.Collection {
+	if !s.workload.IsComponent() {
 		if err = scaffold.Execute(
 			&api.Types{
-				SpecFields:    s.apiSpecFields,
-				ClusterScoped: s.workloadConfig.Spec.ClusterScoped,
-				Dependencies:  s.workloadConfig.Spec.Dependencies,
+				SpecFields:    specFields,
+				ClusterScoped: s.workload.IsClusterScoped(),
+				Dependencies:  s.workload.GetDependencies(),
 			},
 			&common.Components{},
 			&common.Conditions{},
 			&resources.Resources{
 				PackageName:     packageName,
 				CreateFuncNames: createFuncNames,
-				SpecFields:      s.apiSpecFields,
+				SpecFields:      specFields,
 			},
 			&controller.Controller{
 				PackageName: packageName,
@@ -106,7 +164,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&phases.ResourcePersist{},
 			&phases.ResourceCreateInMemory{},
 			&samples.CRDSample{
-				SpecFields: s.apiSpecFields,
+				SpecFields: specFields,
 			},
 		); err != nil {
 			return err
@@ -128,7 +186,7 @@ func (s *apiScaffolder) Scaffold() error {
 
 		if err = scaffold.Execute(
 			&resources.Definition{
-				ClusterScoped: s.workloadConfig.Spec.ClusterScoped,
+				ClusterScoped: s.workload.IsClusterScoped(),
 				SourceFile:    sourceFile,
 				PackageName:   packageName,
 			},

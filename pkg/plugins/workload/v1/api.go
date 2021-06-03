@@ -20,8 +20,12 @@ type createAPISubcommand struct {
 
 	resource *resource.Resource
 
-	workloadConfigPath string
-	workloadConfig     workloadv1.WorkloadConfig
+	standaloneWorkloadConfigPath string
+	componentWorkloadConfigPath  string
+	workloadConfigPath           string
+
+	workload workloadv1.WorkloadAPIBuilder
+	project  workloadv1.Project
 }
 
 var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
@@ -37,7 +41,8 @@ func (p *createAPISubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdM
 
 func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
 
-	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
+	fs.StringVar(&p.standaloneWorkloadConfigPath, "standalone-workload-config", "", "path to standalone workload config file")
+	fs.StringVar(&p.componentWorkloadConfigPath, "component-workload-config", "", "path to component workload config file")
 }
 
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
@@ -56,18 +61,24 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 
 func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 
-	// unmarshal config file to WorkloadConfig
-	config, err := ioutil.ReadFile(p.workloadConfigPath)
+	// process workload config file
+	workload, pathInUse, err := workloadv1.ProcessAPIConfig(
+		p.standaloneWorkloadConfigPath,
+		p.componentWorkloadConfigPath,
+	)
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(config, &p.workloadConfig)
-	if err != nil {
-		return err
-	}
+	p.workload = workload
+	p.workloadConfigPath = pathInUse
 
-	// validate WorkloadConfig
-	if err := p.workloadConfig.Validate(); err != nil {
+	// get project config file
+	projectFile, err := ioutil.ReadFile("WORKLOAD")
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(projectFile, &p.project)
+	if err != nil {
 		return err
 	}
 
@@ -77,18 +88,20 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 
 	// The specFields contain all fields to build into the API type spec
-	specFields, err := p.workloadConfig.GetSpecFields(p.workloadConfigPath)
+	specFields, err := p.workload.GetSpecFields(p.workloadConfigPath)
 
 	// The sourceFiles contain the information needed to build resource source
 	// code files
-	sourceFiles, err := p.workloadConfig.GetResources(p.workloadConfigPath)
+	sourceFiles, err := p.workload.GetResources(p.workloadConfigPath)
 
 	scaffolder := scaffolds.NewAPIScaffolder(
 		p.config,
 		*p.resource,
-		&p.workloadConfig,
+		p.workload,
+		p.workloadConfigPath,
 		specFields,
 		sourceFiles,
+		&p.project,
 	)
 	scaffolder.InjectFS(fs)
 	err = scaffolder.Scaffold()

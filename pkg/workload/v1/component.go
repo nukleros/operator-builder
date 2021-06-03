@@ -1,0 +1,58 @@
+package v1
+
+func (c ComponentWorkload) GetName() string {
+	return c.Name
+}
+
+func (c ComponentWorkload) GetSubcommandName() string {
+	return c.Spec.CompanionCliSubcmd.Name
+}
+
+func (c ComponentWorkload) GetSubcommandDescr() string {
+	return c.Spec.CompanionCliSubcmd.Description
+}
+
+func (c ComponentWorkload) GetRootcommandName() string {
+	// no root commands for component workloads
+	return ""
+}
+
+func (c ComponentWorkload) IsClusterScoped() bool {
+	if c.Spec.ClusterScoped {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (c ComponentWorkload) IsComponent() bool {
+	return true
+}
+
+func (c ComponentWorkload) GetSpecFields(workloadPath string) (*[]APISpecField, error) {
+
+	return processMarkers(workloadPath, c.Spec.Resources)
+
+}
+
+func (c ComponentWorkload) GetResources(workloadPath string) (*[]SourceFile, error) {
+
+	// each sourceFile is a source code file that contains one or more child
+	// resource definition
+	var sourceFiles []SourceFile
+
+	for _, manifestFile := range c.Spec.Resources {
+		sourceFile, err := processResources(manifestFile, workloadPath)
+		if err != nil {
+			return nil, err
+		}
+
+		sourceFiles = append(sourceFiles, sourceFile)
+	}
+
+	return &sourceFiles, nil
+}
+
+func (c ComponentWorkload) GetDependencies() []string {
+	return []string{}
+}

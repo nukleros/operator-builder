@@ -38,5 +38,8 @@ Testing of Operator Builder is documented [here](docs/testing.md).
 
 ## TODO
 
-* add companion cli build make targets (see https://gitlab.eng.vmware.com/landerr/rpk-operator)
+* sort out how to manage the --group --version --kind flags
+* re-implement workload config validation
+* build API for workload collections
+* build APIs for component workloads
 

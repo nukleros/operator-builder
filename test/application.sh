@@ -2,6 +2,7 @@
 
 cat > .test/workload.yaml <<EOF
 name: webapp
+kind: StandloneWorkload
 spec:
   group: apps
   version: v1alpha1
@@ -66,10 +67,10 @@ EOF
 
 operator-builder init \
     --domain apps.acme.com \
-    --workload-config .test/workload.yaml
+    --standalone-workload-config .test/workload.yaml
 
 operator-builder create api \
-    --workload-config .test/workload.yaml \
+    --standalone-workload-config .test/workload.yaml \
     --group workloads \
     --version v1alpha1 \
     --kind WebApp \
