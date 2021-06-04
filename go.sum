@@ -499,6 +499,8 @@ github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijb
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
+github.com/vmware-tanzu-labs/object-code-generator-for-k8s v0.0.0-20210604152505-0d7a2ec2694e h1:4kamHgln970y+yC7D/5HOEp1a9ZAbEqyOitspEPLZ5A=
+github.com/vmware-tanzu-labs/object-code-generator-for-k8s v0.0.0-20210604152505-0d7a2ec2694e/go.mod h1:ZsnjA0fUTGrmdTi7VbJEZEnr592NnAWv6Bp1/wFhS1E=
 github.com/weppos/publicsuffix-go v0.4.0/go.mod h1:z3LCPQ38eedDQSwmsSRW4Y7t2L8Ln16JPQ02lHAdn5k=
 github.com/weppos/publicsuffix-go v0.13.0 h1:0Tu1uzLBd1jPn4k6OnMmOPZH/l/9bj9kUOMMkoRs6Gg=
 github.com/weppos/publicsuffix-go v0.13.0/go.mod h1:z3LCPQ38eedDQSwmsSRW4Y7t2L8Ln16JPQ02lHAdn5k=
@@ -516,8 +518,6 @@ github.com/zmap/zcrypto v0.0.0-20200911161511-43ff0ea04f21 h1:PIpcdSOg3pMdFJUBg5
 github.com/zmap/zcrypto v0.0.0-20200911161511-43ff0ea04f21/go.mod h1:TxpejqcVKQjQaVVmMGfzx5HnmFMdIU+vLtaCyPBfGI4=
 github.com/zmap/zlint/v2 v2.2.1 h1:b2kI/ToXX16h2wjV2c6Da65eT6aTMtkLHKetXuM9EtI=
 github.com/zmap/zlint/v2 v2.2.1/go.mod h1:ixPWsdq8qLxYRpNUTbcKig3R7WgmspsHGLhCCs6rFAM=
-gitlab.eng.vmware.com/landerr/k8s-object-code-generator v0.0.0-20210512212731-c0af185a493f h1:MfI3HlV6M0O6dMqlAX/+ewWsS/xDxBI2pSsxMD/DlmA=
-gitlab.eng.vmware.com/landerr/k8s-object-code-generator v0.0.0-20210512212731-c0af185a493f/go.mod h1:qmAAsvwP4LVM1DyOjVkVdwbsgVvar9IVwZrqBHGy8ck=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.5/go.mod h1:G5EMThwa9y8QZGBClrRx5EY+Yw9kAhnjy3bSjsnlVTQ=

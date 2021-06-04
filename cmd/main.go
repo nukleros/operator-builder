@@ -13,10 +13,10 @@ import (
 	golangv2 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v2"
 	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 
-	opbcli "gitlab.eng.vmware.com/landerr/operator-builder/pkg/cli"
-	configv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/config/v1"
-	licensev1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/license/v1"
-	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1"
+	opbcli "github.com/vmware-tanzu-labs/operator-builder/pkg/cli"
+	configv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/config/v1"
+	licensev1 "github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/license/v1"
+	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1"
 )
 
 var (

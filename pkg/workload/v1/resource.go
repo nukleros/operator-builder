@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitlab.eng.vmware.com/landerr/k8s-object-code-generator/pkg/generate"
 	"gopkg.in/yaml.v2"
+
+	"github.com/vmware-tanzu-labs/object-code-generator-for-k8s/pkg/generate"
 )
 
 func processResources(manifestFile, workloadPath string) (SourceFile, error) {

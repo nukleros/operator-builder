@@ -5,7 +5,7 @@ import (
 	cfgv3 "sigs.k8s.io/kubebuilder/v3/pkg/config/v3"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
-	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins"
 )
 
 const pluginName = "workload." + plugins.DefaultNameQualifier

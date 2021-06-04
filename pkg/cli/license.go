@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/license"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/license"
 )
 
 func NewUpdateLicenseCmd() *cobra.Command {

@@ -6,7 +6,7 @@ import (
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
-	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/workload/v1"
+	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
 
 var _ machinery.Template = &CRDSample{}

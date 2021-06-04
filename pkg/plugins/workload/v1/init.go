@@ -7,8 +7,8 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
-	"gitlab.eng.vmware.com/landerr/operator-builder/pkg/plugins/workload/v1/scaffolds"
-	workloadv1 "gitlab.eng.vmware.com/landerr/operator-builder/pkg/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds"
+	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
 
 type initSubcommand struct {
