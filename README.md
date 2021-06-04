@@ -36,10 +36,3 @@ info [here](docs/licensing.md).
 
 Testing of Operator Builder is documented [here](docs/testing.md).
 
-## TODO
-
-* use workload kind field to determine which type of workload (rather than
-  differnt flags)
-* build API for workload collections
-* build APIs for component workloads
-
