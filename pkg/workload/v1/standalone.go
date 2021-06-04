@@ -1,5 +1,38 @@
 package v1
 
+import (
+	"errors"
+	"fmt"
+)
+
+func (s StandaloneWorkload) Validate() error {
+
+	missingFields := []string{}
+
+	// required fields
+	if s.Name == "" {
+		missingFields = append(missingFields, "name")
+	}
+	if s.Spec.Domain == "" {
+		missingFields = append(missingFields, "spec.domain")
+	}
+	if s.Spec.Group == "" {
+		missingFields = append(missingFields, "spec.group")
+	}
+	if s.Spec.Version == "" {
+		missingFields = append(missingFields, "spec.version")
+	}
+	if s.Spec.Kind == "" {
+		missingFields = append(missingFields, "spec.kind")
+	}
+	if len(missingFields) > 0 {
+		msg := fmt.Sprintf("Missing required fields: %s", missingFields)
+		return errors.New(msg)
+	}
+
+	return nil
+}
+
 // methods that implement WorkloadInitializer
 func (s StandaloneWorkload) GetDomain() string {
 	return s.Spec.Domain

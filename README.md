@@ -38,8 +38,8 @@ Testing of Operator Builder is documented [here](docs/testing.md).
 
 ## TODO
 
-* sort out how to manage the --group --version --kind flags
-* re-implement workload config validation
+* use workload kind field to determine which type of workload (rather than
+  differnt flags)
 * build API for workload collections
 * build APIs for component workloads
 

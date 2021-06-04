@@ -54,6 +54,7 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 
 func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 
+	// load the workload config
 	workload, err := workloadv1.ProcessInitConfig(
 		p.standaloneWorkloadConfigPath,
 		p.workloadCollectionConfigPath,
@@ -61,6 +62,12 @@ func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 	if err != nil {
 		return err
 	}
+
+	// validate the workload config
+	if err := workload.Validate(); err != nil {
+		return err
+	}
+
 	p.workload = workload
 
 	return nil

@@ -22,7 +22,7 @@ kind: Deployment
 metadata:
   name: webstore-deploy
 spec:
-  replicas: 2  # +workload:webAppReplicas:default=2:type=int
+  replicas: 2  # +workload:webStoreReplicas:default=2:type=int
   selector:
     matchLabels:
       app: webstore
@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
       - name: webstore-container
-        image: nginx:1.17  # +workload:webAppImage:type=string
+        image: nginx:1.17  # +workload:webStoreImage:type=string
         ports:
         - containerPort: 8080
 ---

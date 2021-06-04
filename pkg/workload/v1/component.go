@@ -1,5 +1,35 @@
 package v1
 
+import (
+	"errors"
+	"fmt"
+)
+
+func (c ComponentWorkload) Validate() error {
+
+	missingFields := []string{}
+
+	// required fields
+	if c.Name == "" {
+		missingFields = append(missingFields, "name")
+	}
+	if c.Spec.Group == "" {
+		missingFields = append(missingFields, "spec.group")
+	}
+	if c.Spec.Version == "" {
+		missingFields = append(missingFields, "spec.version")
+	}
+	if c.Spec.Kind == "" {
+		missingFields = append(missingFields, "spec.kind")
+	}
+	if len(missingFields) > 0 {
+		msg := fmt.Sprintf("Missing required fields: %s", missingFields)
+		return errors.New(msg)
+	}
+
+	return nil
+}
+
 func (c ComponentWorkload) GetName() string {
 	return c.Name
 }

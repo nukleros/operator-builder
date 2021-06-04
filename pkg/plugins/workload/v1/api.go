@@ -62,7 +62,7 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 
 func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 
-	// process workload config file
+	// load the workload config
 	workload, pathInUse, err := workloadv1.ProcessAPIConfig(
 		p.standaloneWorkloadConfigPath,
 		p.componentWorkloadConfigPath,
@@ -70,10 +70,16 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 	if err != nil {
 		return err
 	}
+
+	// validate the workload config
+	if err := workload.Validate(); err != nil {
+		return err
+	}
+
 	p.workload = workload
 	p.workloadConfigPath = pathInUse
 
-	// get project config file
+	// get WORKLOAD project config file
 	projectFile, err := ioutil.ReadFile("WORKLOAD")
 	if err != nil {
 		return err
