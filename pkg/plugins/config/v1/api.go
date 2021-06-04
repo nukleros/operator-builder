@@ -11,23 +11,20 @@ import (
 )
 
 type createAPISubcommand struct {
-	standaloneWorkloadConfigPath string
-	componentWorkloadConfigPath  string
+	workloadConfigPath string
 }
 
 var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
 
 func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
 
-	fs.StringVar(&p.standaloneWorkloadConfigPath, "standalone-workload-config", "", "path to standalone workload config file")
-	fs.StringVar(&p.componentWorkloadConfigPath, "component-workload-config", "", "path to component workload config file")
+	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
 }
 
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 
 	taxi := workloadv1.ConfigTaxi{
-		StandaloneConfigPath: p.standaloneWorkloadConfigPath,
-		ComponentConfigPath:  p.componentWorkloadConfigPath,
+		WorkloadConfigPath: p.workloadConfigPath,
 	}
 
 	if err := c.EncodePluginConfig(workloadv1.ConfigTaxiKey, taxi); err != nil {
@@ -39,9 +36,8 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 
 func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 
-	workload, _, err := workloadv1.ProcessAPIConfig(
-		p.standaloneWorkloadConfigPath,
-		p.componentWorkloadConfigPath,
+	workload, err := workloadv1.ProcessAPIConfig(
+		p.workloadConfigPath,
 	)
 	if err != nil {
 		return err

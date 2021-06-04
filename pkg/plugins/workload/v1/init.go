@@ -15,8 +15,7 @@ type initSubcommand struct {
 	config      config.Config
 	commandName string
 
-	standaloneWorkloadConfigPath string
-	workloadCollectionConfigPath string
+	workloadConfigPath string
 
 	workload workloadv1.WorkloadInitializer
 }
@@ -27,8 +26,8 @@ func (p *initSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *
 
 	subcmdMeta.Description = `Add workload management scaffolding to a new project
 `
-	subcmdMeta.Examples = fmt.Sprintf(`  # Add scaffolding defined by a standalone workload config file
-  %[1]s init --standalone-workload-config .source-manifests/workload.yaml
+	subcmdMeta.Examples = fmt.Sprintf(`  # Add project scaffolding defined by a workload config file
+  %[1]s init --workload-config .source-manifests/workload.yaml
 `, cliMeta.CommandName)
 }
 
@@ -46,8 +45,7 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 		return err
 	}
 
-	p.standaloneWorkloadConfigPath = taxi.StandaloneConfigPath
-	p.workloadCollectionConfigPath = taxi.CollectionConfigPath
+	p.workloadConfigPath = taxi.WorkloadConfigPath
 
 	return nil
 }
@@ -56,8 +54,7 @@ func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 
 	// load the workload config
 	workload, err := workloadv1.ProcessInitConfig(
-		p.standaloneWorkloadConfigPath,
-		p.workloadCollectionConfigPath,
+		p.workloadConfigPath,
 	)
 	if err != nil {
 		return err

@@ -10,23 +10,20 @@ import (
 )
 
 type initSubcommand struct {
-	standaloneWorkloadConfigPath string
-	workloadCollectionConfigPath string
+	workloadConfigPath string
 }
 
 var _ plugin.InitSubcommand = &initSubcommand{}
 
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 
-	fs.StringVar(&p.standaloneWorkloadConfigPath, "standalone-workload-config", "", "path to standalone workload config file")
-	fs.StringVar(&p.workloadCollectionConfigPath, "workload-collection-config", "", "path to workload collection config file")
+	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
 
 	taxi := workloadv1.ConfigTaxi{
-		StandaloneConfigPath: p.standaloneWorkloadConfigPath,
-		CollectionConfigPath: p.workloadCollectionConfigPath,
+		WorkloadConfigPath: p.workloadConfigPath,
 	}
 
 	if err := c.EncodePluginConfig(workloadv1.ConfigTaxiKey, taxi); err != nil {
@@ -34,8 +31,7 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 	}
 
 	workload, err := workloadv1.ProcessInitConfig(
-		p.standaloneWorkloadConfigPath,
-		p.workloadCollectionConfigPath,
+		p.workloadConfigPath,
 	)
 	if err != nil {
 		return err

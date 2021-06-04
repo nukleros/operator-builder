@@ -2,7 +2,7 @@
 
 cat > .test/workload.yaml <<EOF
 name: webstore
-kind: StandloneWorkload
+kind: StandaloneWorkload
 spec:
   domain: acme.com
   group: apps
@@ -67,10 +67,10 @@ spec:
 EOF
 
 operator-builder init \
-    --standalone-workload-config .test/workload.yaml
+    --workload-config .test/workload.yaml
 
 operator-builder create api \
-    --standalone-workload-config .test/workload.yaml \
+    --workload-config .test/workload.yaml \
     --controller \
     --resource
 

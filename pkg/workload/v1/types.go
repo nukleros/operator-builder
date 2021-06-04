@@ -1,5 +1,14 @@
 package v1
 
+// WorkloadKind indicates which of the supported workload kinds are being used
+type WorkloadKind string
+
+const (
+	WorkloadKindStandalone WorkloadKind = "StandaloneWorkload"
+	WorkloadKindCollection WorkloadKind = "WorkloadCollection"
+	WorkloadKindComponent  WorkloadKind = "ComponentWorkload"
+)
+
 // WorkloadSharedSpec contains fields shared by all workload specs
 type WorkloadSharedSpec struct {
 	Group         string `json:"group"`
@@ -10,8 +19,8 @@ type WorkloadSharedSpec struct {
 
 // WorkloadShared contains fields shared by all workloads
 type WorkloadShared struct {
-	Name string `json:"name"`
-	Kind string `json:"kind"`
+	Name string       `json:"name"`
+	Kind WorkloadKind `json:"kind"`
 }
 
 // CliCommand defines the command name and description for the root command or
@@ -114,8 +123,7 @@ type Project struct {
 
 const ConfigTaxiKey = "configTaxi"
 
+// ConfigTaxi transports config values from config plugin to workload plugin
 type ConfigTaxi struct {
-	StandaloneConfigPath string
-	CollectionConfigPath string
-	ComponentConfigPath  string
+	WorkloadConfigPath string
 }

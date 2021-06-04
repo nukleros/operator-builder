@@ -19,12 +19,9 @@ type createAPISubcommand struct {
 
 	resource *resource.Resource
 
-	standaloneWorkloadConfigPath string
-	componentWorkloadConfigPath  string
-	workloadConfigPath           string
-
-	workload workloadv1.WorkloadAPIBuilder
-	project  workloadv1.Project
+	workloadConfigPath string
+	workload           workloadv1.WorkloadAPIBuilder
+	project            workloadv1.Project
 }
 
 var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
@@ -47,8 +44,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 		return err
 	}
 
-	p.standaloneWorkloadConfigPath = taxi.StandaloneConfigPath
-	p.componentWorkloadConfigPath = taxi.ComponentConfigPath
+	p.workloadConfigPath = taxi.WorkloadConfigPath
 
 	return nil
 }
@@ -63,9 +59,8 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 
 	// load the workload config
-	workload, pathInUse, err := workloadv1.ProcessAPIConfig(
-		p.standaloneWorkloadConfigPath,
-		p.componentWorkloadConfigPath,
+	workload, err := workloadv1.ProcessAPIConfig(
+		p.workloadConfigPath,
 	)
 	if err != nil {
 		return err
@@ -77,7 +72,6 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 	}
 
 	p.workload = workload
-	p.workloadConfigPath = pathInUse
 
 	// get WORKLOAD project config file
 	projectFile, err := ioutil.ReadFile("WORKLOAD")

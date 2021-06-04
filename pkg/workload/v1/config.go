@@ -2,23 +2,25 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 
 	"sigs.k8s.io/yaml"
 )
 
-func ProcessInitConfig(standaloneConfig, collectionConfig string) (WorkloadInitializer, error) {
+func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 
-	// must provide standalone OR collection
-	if standaloneConfig != "" && collectionConfig != "" {
-		return nil, errors.New("Must provide a standalone config OR a collection config, not both")
+	kind, err := getKind(workloadConfig)
+	if err != nil {
+		return nil, err
 	}
 
-	if standaloneConfig != "" {
+	switch kind {
+	case WorkloadKindStandalone:
 
 		var workload StandaloneWorkload
 
-		config, err := ioutil.ReadFile(standaloneConfig)
+		config, err := ioutil.ReadFile(workloadConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -29,11 +31,11 @@ func ProcessInitConfig(standaloneConfig, collectionConfig string) (WorkloadIniti
 
 		return workload, nil
 
-	} else if collectionConfig != "" {
+	case WorkloadKindCollection:
 
 		var workload WorkloadCollection
 
-		config, err := ioutil.ReadFile(collectionConfig)
+		config, err := ioutil.ReadFile(workloadConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -44,50 +46,97 @@ func ProcessInitConfig(standaloneConfig, collectionConfig string) (WorkloadIniti
 
 		return workload, nil
 
-	} else {
-		return nil, errors.New("No workload config proviced, must provide a standalone config OR a collection config")
+	default:
+		msg := fmt.Sprintf(
+			"Project initialization requires a %s or %s workload config",
+			WorkloadKindStandalone,
+			WorkloadKindCollection,
+		)
+		return nil, errors.New(msg)
 	}
-
 }
 
-func ProcessAPIConfig(standaloneConfig, componentConfig string) (WorkloadAPIBuilder, string, error) {
+func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 
-	// must provide standalone OR collection
-	if standaloneConfig != "" && componentConfig != "" {
-		return nil, "", errors.New("Must provide a standalone config OR a component config, not both")
+	kind, err := getKind(workloadConfig)
+	if err != nil {
+		return nil, err
 	}
 
-	if standaloneConfig != "" {
+	switch kind {
+	case WorkloadKindStandalone:
 
 		var workload StandaloneWorkload
 
-		config, err := ioutil.ReadFile(standaloneConfig)
+		config, err := ioutil.ReadFile(workloadConfig)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		err = yaml.Unmarshal(config, &workload)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
-		return workload, standaloneConfig, nil
+		return workload, nil
 
-	} else if componentConfig != "" {
+	case WorkloadKindComponent:
 
 		var workload ComponentWorkload
 
-		config, err := ioutil.ReadFile(componentConfig)
+		config, err := ioutil.ReadFile(workloadConfig)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		err = yaml.Unmarshal(config, &workload)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
-		return workload, componentConfig, nil
+		return workload, nil
 
-	} else {
-		return nil, "", errors.New("No workload config provided, must provide a standalone config OR a component config")
+	default:
+		msg := fmt.Sprintf(
+			"API creation requires a %s or %s workload config",
+			WorkloadKindStandalone,
+			WorkloadKindComponent,
+		)
+		return nil, errors.New(msg)
+	}
+}
+
+func getKind(workloadConfig string) (WorkloadKind, error) {
+
+	if workloadConfig == "" {
+		return "", errors.New("No workload config provided - workload config required")
+	}
+
+	workload := struct {
+		Kind WorkloadKind `json:"kind"`
+	}{}
+
+	config, err := ioutil.ReadFile(workloadConfig)
+	if err != nil {
+		return "", err
+	}
+	err = yaml.Unmarshal(config, &workload)
+	if err != nil {
+		return "", err
+	}
+
+	switch workload.Kind {
+	case WorkloadKindStandalone:
+		return WorkloadKindStandalone, nil
+	case WorkloadKindCollection:
+		return WorkloadKindCollection, nil
+	case WorkloadKindComponent:
+		return WorkloadKindComponent, nil
+	default:
+		msg := fmt.Sprintf(
+			"Unrecognized workload kind in workload config - valid kinds: %s, %s, %s,",
+			WorkloadKindStandalone,
+			WorkloadKindCollection,
+			WorkloadKindComponent,
+		)
+		return "", errors.New(msg)
 	}
 }
