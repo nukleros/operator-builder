@@ -37,7 +37,11 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 
 		manifests := extractManifests(manifestContent)
 
-		for _, manifest := range manifests {
+		// generate a unique name for the resource using the kind and name
+		resourceUniqueName := strings.Replace(strings.Title(resourceName), "-", "", -1)
+		resourceUniqueName = strings.Replace(resourceUniqueName, ".", "", -1)
+		resourceUniqueName = strings.Replace(resourceUniqueName, ":", "", -1)
+		resourceUniqueName = fmt.Sprintf("%s%s", resourceKind, resourceUniqueName)
 
 			// unmarshal yaml to get attributes
 			var rawContent interface{}
