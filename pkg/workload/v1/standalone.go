@@ -99,27 +99,11 @@ func (s StandaloneWorkload) IsComponent() bool {
 }
 
 func (s StandaloneWorkload) GetSpecFields(workloadPath string) (*[]APISpecField, error) {
-
 	return processMarkers(workloadPath, s.Spec.Resources)
 }
 
-func (s StandaloneWorkload) GetResources(workloadPath string) (*[]SourceFile, error) {
-
-	// each sourceFile is a source code file that contains one or more child
-	// resource definition
-	var sourceFiles []SourceFile
-
-	for _, manifestFile := range s.Spec.Resources {
-		sourceFile, err := processResources(manifestFile, workloadPath)
-		if err != nil {
-			return &[]SourceFile{}, err
-		}
-
-		sourceFiles = append(sourceFiles, sourceFile)
-
-	}
-
-	return &sourceFiles, nil
+func (s StandaloneWorkload) GetResources(workloadPath string) (*[]SourceFile, *[]RBACRule, error) {
+	return processResources(workloadPath, s.Spec.Resources)
 }
 
 func (s StandaloneWorkload) GetDependencies() []string {

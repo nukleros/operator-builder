@@ -115,6 +115,13 @@ type Marker struct {
 	LeadingSpaces int
 }
 
+// RBACRule contains the info needed to create the kubebuilder:rbac markers in
+// the controller
+type RBACRule struct {
+	Group    string
+	Resource string
+}
+
 // Project contains the project config saved to the WORKLOAD file to allow
 // access to config values shared across different operator-builder commands
 type Project struct {

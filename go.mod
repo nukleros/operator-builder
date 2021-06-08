@@ -3,6 +3,7 @@ module github.com/vmware-tanzu-labs/operator-builder
 go 1.15
 
 require (
+	github.com/gertd/go-pluralize v0.1.7
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v1.1.3

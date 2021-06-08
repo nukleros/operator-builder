@@ -30,6 +30,7 @@ type apiScaffolder struct {
 	workloadPath    string
 	apiSpecFields   *[]workloadv1.APISpecField
 	sourceFiles     *[]workloadv1.SourceFile
+	rbacRules       *[]workloadv1.RBACRule
 	project         *workloadv1.Project
 
 	fs machinery.Filesystem
@@ -43,6 +44,7 @@ func NewAPIScaffolder(
 	workloadPath string,
 	apiSpecFields *[]workloadv1.APISpecField,
 	sourceFiles *[]workloadv1.SourceFile,
+	rbacRules *[]workloadv1.RBACRule,
 	project *workloadv1.Project,
 ) plugins.Scaffolder {
 	return &apiScaffolder{
@@ -53,6 +55,7 @@ func NewAPIScaffolder(
 		workloadPath:    workloadPath,
 		apiSpecFields:   apiSpecFields,
 		sourceFiles:     sourceFiles,
+		rbacRules:       rbacRules,
 		project:         project,
 	}
 }
@@ -79,10 +82,6 @@ func (s *apiScaffolder) Scaffold() error {
 	)
 
 	packageName := strings.ToLower(strings.Replace(s.workload.GetName(), "-", "_", 0))
-	specFields, err := s.workload.GetSpecFields(s.workloadPath)
-	if err != nil {
-		return err
-	}
 
 	var createFuncNames []string
 	for _, sourceFile := range *s.sourceFiles {
@@ -103,7 +102,7 @@ func (s *apiScaffolder) Scaffold() error {
 				CliRootCmd:     s.project.CliRootCommandName,
 				CliSubCmdName:  s.workload.GetSubcommandName(),
 				CliSubCmdDescr: s.workload.GetSubcommandDescr(),
-				SpecFields:     specFields,
+				SpecFields:     s.apiSpecFields,
 			},
 			&cli.CliCmdGenerate{
 				CliRootCmd: s.project.CliRootCommandName,
@@ -124,7 +123,7 @@ func (s *apiScaffolder) Scaffold() error {
 				CliRootCmd:     s.project.CliRootCommandName,
 				CliSubCmdName:  s.workload.GetSubcommandName(),
 				CliSubCmdDescr: s.workload.GetSubcommandDescr(),
-				SpecFields:     specFields,
+				SpecFields:     s.apiSpecFields,
 				Component:      s.workload.IsComponent(),
 			},
 			&cli.CliCmdGenerateSub{
@@ -143,7 +142,7 @@ func (s *apiScaffolder) Scaffold() error {
 	if !s.workload.IsComponent() {
 		if err = scaffold.Execute(
 			&api.Types{
-				SpecFields:    specFields,
+				SpecFields:    s.apiSpecFields,
 				ClusterScoped: s.workload.IsClusterScoped(),
 				Dependencies:  s.workload.GetDependencies(),
 			},
@@ -152,10 +151,11 @@ func (s *apiScaffolder) Scaffold() error {
 			&resources.Resources{
 				PackageName:     packageName,
 				CreateFuncNames: createFuncNames,
-				SpecFields:      specFields,
+				SpecFields:      s.apiSpecFields,
 			},
 			&controller.Controller{
 				PackageName: packageName,
+				RBACRules:   s.rbacRules,
 			},
 			&controller.Common{},
 			&phases.Types{},
@@ -164,7 +164,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&phases.ResourcePersist{},
 			&phases.ResourceCreateInMemory{},
 			&samples.CRDSample{
-				SpecFields: specFields,
+				SpecFields: s.apiSpecFields,
 			},
 		); err != nil {
 			return err

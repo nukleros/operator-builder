@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+
+	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
 
 var _ machinery.Template = &Controller{}
@@ -18,6 +20,7 @@ type Controller struct {
 	machinery.ResourceMixin
 
 	PackageName string
+	RBACRules   *[]workloadv1.RBACRule
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -67,8 +70,11 @@ type {{ .Resource.Kind }}Reconciler struct {
 	Component *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}
 }
 
-// +kubebuilder:rbac:groups={{ .Resource.Domain }},resources={{ .Resource.Plural }},verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups={{ .Resource.Domain }},resources={{ .Resource.Plural }}/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }},verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }}/status,verbs=get;update;patch
+{{ range .RBACRules -}}
+// +kubebuilder:rbac:groups={{ .Group }},resources={{ .Resource }},verbs=get;list;watch;create;update;patch;delete
+{{ end }}
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

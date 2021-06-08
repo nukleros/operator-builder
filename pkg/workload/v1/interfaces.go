@@ -24,6 +24,6 @@ type WorkloadAPIBuilder interface {
 	IsClusterScoped() bool
 	IsComponent() bool
 	GetSpecFields(workloadPath string) (*[]APISpecField, error)
-	GetResources(workloadPath string) (*[]SourceFile, error)
+	GetResources(workloadPath string) (*[]SourceFile, *[]RBACRule, error)
 	GetDependencies() []string
 }

@@ -93,7 +93,7 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 
 	// The sourceFiles contain the information needed to build resource source
 	// code files
-	sourceFiles, err := p.workload.GetResources(p.workloadConfigPath)
+	sourceFiles, rbacRules, err := p.workload.GetResources(p.workloadConfigPath)
 
 	scaffolder := scaffolds.NewAPIScaffolder(
 		p.config,
@@ -102,6 +102,7 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 		p.workloadConfigPath,
 		specFields,
 		sourceFiles,
+		rbacRules,
 		&p.project,
 	)
 	scaffolder.InjectFS(fs)
