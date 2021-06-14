@@ -11,16 +11,17 @@ const (
 
 // WorkloadSharedSpec contains fields shared by all workload specs
 type WorkloadSharedSpec struct {
-	Group         string `json:"group"`
-	Version       string `json:"version"`
-	Kind          string `json:"kind"`
+	APIGroup      string `json:"apiGroup"`
+	APIVersion    string `json:"apiVersion"`
+	APIKind       string `json:"apiKind"`
 	ClusterScoped bool   `json:"clusterScoped"`
 }
 
 // WorkloadShared contains fields shared by all workloads
 type WorkloadShared struct {
-	Name string       `json:"name"`
-	Kind WorkloadKind `json:"kind"`
+	Name        string       `json:"name"`
+	Kind        WorkloadKind `json:"kind"`
+	PackageName string
 }
 
 // CliCommand defines the command name and description for the root command or
@@ -28,6 +29,8 @@ type WorkloadShared struct {
 type CliCommand struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	VarName     string
+	FileName    string
 }
 
 // StandaloneWorkloadSpec defines the attributes for a standalone workload
@@ -36,6 +39,9 @@ type StandaloneWorkloadSpec struct {
 	Domain              string     `json:"domain"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
 	Resources           []string   `json:"resources"`
+	APISpecFields       []APISpecField
+	SourceFiles         []SourceFile
+	RBACRules           []RBACRule
 }
 
 // StandaloneWorkload defines a standalone workload
@@ -48,8 +54,11 @@ type StandaloneWorkload struct {
 // component of a collection
 type ComponentWorkloadSpec struct {
 	WorkloadSharedSpec
-	CompanionCliSubcmd CliCommand `json:"companionCliRootcmd" `
+	CompanionCliSubcmd CliCommand `json:"companionCliSubcmd" `
 	Resources          []string   `json:"resources"`
+	APISpecFields      []APISpecField
+	SourceFiles        []SourceFile
+	RBACRules          []RBACRule
 }
 
 // ComponentWorkload defines a workload that is a component of a collection
@@ -63,8 +72,9 @@ type WorkloadCollectionSpec struct {
 	WorkloadSharedSpec
 	Domain              string     `json:"domain"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
-	Components          []string   `json:"components"`
-	Dependencies        []string   `yaml:"dependencies"`
+	ComponentNames      []string   `json:"componentNames"`
+	Dependencies        []string   `json:"dependencies"`
+	Components          []ComponentWorkload
 }
 
 // WorkloadCollection defines a workload collection

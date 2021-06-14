@@ -6,26 +6,27 @@ import (
 	"path/filepath"
 	"strings"
 
-	pluralize "github.com/gertd/go-pluralize"
 	"gopkg.in/yaml.v2"
 
 	"github.com/vmware-tanzu-labs/object-code-generator-for-k8s/pkg/generate"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
-//func processResources(manifestFile, workloadPath string) (SourceFile, error) {
 func processResources(workloadPath string, resources []string) (*[]SourceFile, *[]RBACRule, error) {
 
 	// each sourceFile is a source code file that contains one or more child
 	// resource definition
 	var sourceFiles []SourceFile
 	var rbacRules []RBACRule
-	pluralize := pluralize.NewClient()
 
 	for _, manifestFile := range resources {
 
 		// determine sourceFile filename
 		var sourceFile SourceFile
-		sourceFile.Filename = strings.Replace(strings.Split(manifestFile, ".")[0]+".go", "-", "_", -1)
+		sourceFile.Filename = filepath.Base(manifestFile)                // get filename from path
+		sourceFile.Filename = strings.Split(sourceFile.Filename, ".")[0] // strip ".yaml"
+		sourceFile.Filename += ".go"                                     // add correct file ext
+		sourceFile.Filename = utils.ToFileName(sourceFile.Filename)      // kebab-case to snake_case
 
 		var childResources []ChildResource
 
@@ -69,13 +70,12 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 				resourceGroup = "core"
 				resourceVersion = apiVersionElements[0]
 			} else {
-				//resourceGroup = strings.Replace(apiVersionElements[0], ".k8s.io", "", -1)
 				resourceGroup = apiVersionElements[0]
 				resourceVersion = apiVersionElements[1]
 			}
 
 			// determine group and resource for RBAC rule generation
-			resourcePlural := strings.ToLower(pluralize.Plural(resourceKind))
+			resourcePlural := utils.PluralizeKind(resourceKind)
 			newRBACRule := RBACRule{
 				Group:    resourceGroup,
 				Resource: resourcePlural,

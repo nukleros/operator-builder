@@ -4,121 +4,212 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 )
 
 func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 
-	kind, err := getKind(workloadConfig)
+	workloads, err := parseConfig(workloadConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	switch kind {
-	case WorkloadKindStandalone:
+	var workload WorkloadInitializer
+	standaloneFound := false
+	collectionFound := false
 
-		var workload StandaloneWorkload
+	for _, w := range *workloads {
 
-		config, err := ioutil.ReadFile(workloadConfig)
-		if err != nil {
-			return nil, err
+		switch w.GetWorkloadKind() {
+		case WorkloadKindStandalone:
+			if standaloneFound {
+				msg := fmt.Sprintf(
+					"Multiple %s configs provided - must provide only one",
+					WorkloadKindStandalone,
+				)
+				return nil, errors.New(msg)
+			}
+			workload = w.(*StandaloneWorkload)
+			standaloneFound = true
+
+		case WorkloadKindCollection:
+			if collectionFound {
+				msg := fmt.Sprintf(
+					"Multiple %s configs provided - must provide only one",
+					WorkloadKindCollection,
+				)
+				return nil, errors.New(msg)
+			}
+			workload = w.(*WorkloadCollection)
+			collectionFound = true
 		}
-		err = yaml.Unmarshal(config, &workload)
-		if err != nil {
-			return nil, err
-		}
-
-		return workload, nil
-
-	case WorkloadKindCollection:
-
-		var workload WorkloadCollection
-
-		config, err := ioutil.ReadFile(workloadConfig)
-		if err != nil {
-			return nil, err
-		}
-		err = yaml.Unmarshal(config, &workload)
-		if err != nil {
-			return nil, err
-		}
-
-		return workload, nil
-
-	default:
-		msg := fmt.Sprintf(
-			"Project initialization requires a %s or %s workload config",
-			WorkloadKindStandalone,
-			WorkloadKindCollection,
-		)
-		return nil, errors.New(msg)
-	}
-}
-
-func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
-
-	kind, err := getKind(workloadConfig)
-	if err != nil {
-		return nil, err
 	}
 
-	switch kind {
-	case WorkloadKindStandalone:
-
-		var workload StandaloneWorkload
-
-		config, err := ioutil.ReadFile(workloadConfig)
-		if err != nil {
-			return nil, err
-		}
-		err = yaml.Unmarshal(config, &workload)
-		if err != nil {
-			return nil, err
-		}
-
-		return workload, nil
-
-	case WorkloadKindComponent:
-
-		var workload ComponentWorkload
-
-		config, err := ioutil.ReadFile(workloadConfig)
-		if err != nil {
-			return nil, err
-		}
-		err = yaml.Unmarshal(config, &workload)
-		if err != nil {
-			return nil, err
-		}
-
-		return workload, nil
-
-	default:
+	if standaloneFound == true && collectionFound == true {
 		msg := fmt.Sprintf(
-			"API creation requires a %s or %s workload config",
+			"%s and %s both provided - must provide one *or* the other",
 			WorkloadKindStandalone,
 			WorkloadKindComponent,
 		)
 		return nil, errors.New(msg)
 	}
+
+	workload.SetNames()
+	return workload, nil
 }
 
-func getKind(workloadConfig string) (WorkloadKind, error) {
+func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
+
+	workloads, err := parseConfig(workloadConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	var workload WorkloadAPIBuilder
+	var components []ComponentWorkload
+	standaloneFound := false
+	collectionFound := false
+
+	for _, w := range *workloads {
+
+		switch w.GetWorkloadKind() {
+		case WorkloadKindStandalone:
+			if standaloneFound {
+				msg := fmt.Sprintf(
+					"Multiple %s configs provided - must provide only one",
+					WorkloadKindStandalone,
+				)
+				return nil, errors.New(msg)
+			}
+
+			workload = w.(*StandaloneWorkload)
+			workload.SetSpecFields(workloadConfig)
+			workload.SetResources(workloadConfig)
+			workload.SetNames()
+			standaloneFound = true
+
+		case WorkloadKindCollection:
+			if collectionFound {
+				msg := fmt.Sprintf(
+					"Multiple %s configs provided - must provide only one",
+					WorkloadKindCollection,
+				)
+				return nil, errors.New(msg)
+			}
+			workload = w.(*WorkloadCollection)
+			workload.SetNames()
+			collectionFound = true
+
+		case WorkloadKindComponent:
+			component := w.(*ComponentWorkload)
+			component.SetSpecFields(workloadConfig)
+			component.SetResources(workloadConfig)
+			component.SetNames()
+			components = append(components, *component)
+		}
+	}
+
+	if standaloneFound == true && collectionFound == true {
+		msg := fmt.Sprintf(
+			"%s and %s both provided - must provide one *or* the other",
+			WorkloadKindStandalone,
+			WorkloadKindComponent,
+		)
+		return nil, errors.New(msg)
+	} else if collectionFound == true {
+		if err := workload.SetComponents(&components); err != nil {
+			return nil, err
+		}
+	}
+
+	return workload, nil
+}
+
+func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 
 	if workloadConfig == "" {
-		return "", errors.New("No workload config provided - workload config required")
+		return nil, errors.New("No workload config provided - workload config required")
 	}
 
-	workload := struct {
-		Kind WorkloadKind `json:"kind"`
-	}{}
-
-	config, err := ioutil.ReadFile(workloadConfig)
+	configContent, err := ioutil.ReadFile(workloadConfig)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	err = yaml.Unmarshal(config, &workload)
+
+	var configs []string
+
+	lines := strings.Split(string(configContent), "\n")
+
+	var config string
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "---" {
+			if len(config) > 0 {
+				configs = append(configs, config)
+				config = ""
+			}
+
+		} else {
+			config = config + "\n" + line
+		}
+	}
+	if len(config) > 0 {
+		configs = append(configs, config)
+	}
+
+	var workloads []WorkloadIdentifier
+
+	for _, c := range configs {
+		kind, err := idWorkload(c)
+		if err != nil {
+			return nil, err
+		}
+
+		switch kind {
+		case WorkloadKindStandalone:
+
+			workload := &StandaloneWorkload{}
+
+			err = yaml.Unmarshal([]byte(c), workload)
+			if err != nil {
+				return nil, err
+			}
+
+			workloads = append(workloads, workload)
+
+		case WorkloadKindComponent:
+
+			workload := &ComponentWorkload{}
+
+			err = yaml.Unmarshal([]byte(c), workload)
+			if err != nil {
+				return nil, err
+			}
+
+			workloads = append(workloads, workload)
+
+		case WorkloadKindCollection:
+
+			workload := &WorkloadCollection{}
+
+			err = yaml.Unmarshal([]byte(c), workload)
+			if err != nil {
+				return nil, err
+			}
+
+			workloads = append(workloads, workload)
+		}
+	}
+
+	return &workloads, nil
+}
+
+func idWorkload(configContent string) (WorkloadKind, error) {
+
+	var workload WorkloadShared
+
+	err := yaml.Unmarshal([]byte(configContent), &workload)
 	if err != nil {
 		return "", err
 	}

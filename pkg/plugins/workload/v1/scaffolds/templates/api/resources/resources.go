@@ -15,6 +15,7 @@ var _ machinery.Template = &Resources{}
 type Resources struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
+	machinery.RepositoryMixin
 	machinery.ResourceMixin
 
 	PackageName     string

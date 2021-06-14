@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
@@ -18,11 +19,14 @@ type CliCmdInitSub struct {
 	machinery.BoilerplateMixin
 	machinery.ResourceMixin
 
-	CliRootCmd     string
-	CliSubCmdName  string
-	CliSubCmdDescr string
-	SpecFields     *[]workloadv1.APISpecField
-	Component      bool
+	CliRootCmd        string
+	CliSubCmdName     string
+	CliSubCmdDescr    string
+	CliSubCmdVarName  string
+	CliSubCmdFileName string
+	SpecFields        *[]workloadv1.APISpecField
+	IsComponent       bool
+	ComponentResource *resource.Resource
 
 	InitCommandName  string
 	InitCommandDescr string
@@ -30,11 +34,12 @@ type CliCmdInitSub struct {
 
 func (f *CliCmdInitSub) SetTemplateDefaults() error {
 
-	if f.Component {
+	if f.IsComponent {
 		f.Path = filepath.Join(
 			"cmd", f.CliRootCmd, "commands",
-			fmt.Sprintf("%s_init.go", f.CliSubCmdName),
+			fmt.Sprintf("%s_init.go", f.CliSubCmdFileName),
 		)
+		f.Resource = f.ComponentResource
 	} else {
 		f.Path = filepath.Join("cmd", f.CliRootCmd, "commands", "init.go")
 	}
@@ -57,7 +62,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const defaultManifest = ` + "`" + `apiVersion: {{ .Resource.QualifiedGroup }}/{{ .Resource.Version }}
+const defaultManifest{{ .CliSubCmdVarName }} = ` + "`" + `apiVersion: {{ .Resource.QualifiedGroup }}/{{ .Resource.Version }}
 kind: {{ .Resource.Kind }}
 metadata:
   name: {{ lower .Resource.Kind }}-sample
@@ -68,8 +73,8 @@ spec:
 ` + "`" + `
 
 // {{ .CliSubCmdName }}InitCmd represents the {{ .CliSubCmdName }} init subcommand
-var {{ .CliSubCmdName }}InitCmd = &cobra.Command{
-	{{ if .Component -}}
+var {{ .CliSubCmdVarName }}InitCmd = &cobra.Command{
+	{{ if .IsComponent -}}
 	Use:   "{{ .CliSubCmdName }}",
 	Short: "{{ .CliSubCmdDescr }}",
 	Long: "{{ .CliSubCmdDescr }}",
@@ -79,14 +84,15 @@ var {{ .CliSubCmdName }}InitCmd = &cobra.Command{
 	Long: "{{ .InitCommandDescr }}",
 	{{- end }}
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(defaultManifest)
+		fmt.Println(defaultManifest{{ .CliSubCmdVarName }})
 	},
 }
+
 func init() {
-	{{ if .Component -}}
-	initCmd.AddCommand({{ .CliSubCmdName }}InitCmd)
+	{{ if .IsComponent -}}
+	initCmd.AddCommand({{ .CliSubCmdVarName }}InitCmd)
 	{{- else -}}
-	rootCmd.AddCommand({{ .CliSubCmdName }}InitCmd)
+	rootCmd.AddCommand({{ .CliSubCmdVarName }}InitCmd)
 	{{- end -}}
 }
 `

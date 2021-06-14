@@ -45,14 +45,14 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 
 	// set from config file if not provided with command line flag
 	if res.Group == "" {
-		res.Group = workload.GetGroup()
+		res.Group = workload.GetAPIGroup()
 	}
 	if res.Version == "" {
-		res.Version = workload.GetVersion()
+		res.Version = workload.GetAPIVersion()
 	}
 	if res.Kind == "" {
-		res.Kind = workload.GetKind()
-		res.Plural = resource.RegularPlural(workload.GetKind())
+		res.Kind = workload.GetAPIKind()
+		res.Plural = resource.RegularPlural(workload.GetAPIKind())
 	}
 
 	return nil

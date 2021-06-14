@@ -6,35 +6,66 @@ name: cloud-native-platform
 kind: WorkloadCollection
 spec:
   domain: acme.com
-  group: platforms
-  version: v1alpha1
-  kind: CloudNativePlatform
+  apiGroup: platforms
+  apiVersion: v1alpha1
+  apiKind: CloudNativePlatform
   clusterScoped: true
   companionCliRootcmd:
     name: cnpctl
     description: Manage platform stuff like a boss
-  components:
+  componentNames:
   - ns-operator-component
   - contour-component
-EOF
-
-# tenancy
-cat > .test/ns-operator-workload.yaml <<EOF
+  #componentFiles:
+  #- ingress/stuff.yaml
+---
 name: ns-operator-component
 kind: ComponentWorkload
 spec:
-  group: tenancy
-  version: v1alpha1
-  kind: NsOperator
+  apiGroup: tenancy
+  apiVersion: v1alpha1
+  apiKind: NsOperator
   clusterScoped: true
   companionCliSubcmd:
     name: ns-operator
     description: Manage namespace operator component
   resources:
-  - ns-operator-deploy.yaml
+  - tenancy/ns-operator-deploy.yaml
+---
+name: contour-component
+kind: ComponentWorkload
+spec:
+  apiGroup: ingress
+  apiVersion: v1alpha1
+  apiKind: Contour
+  clusterScoped: true
+  companionCliSubcmd:
+    name: contour
+    description: Manage contour component
+  resources:
+  - ingress/contour-deploy.yaml
+  - ingress/contour-svc.yaml
+  - ingress/envoy-ds.yaml
 EOF
 
-cat > .test/ns-operator-deploy.yaml <<EOF
+## tenancy
+#cat > .test/ns-operator-workload.yaml <<EOF
+#name: ns-operator-component
+#kind: ComponentWorkload
+#spec:
+#  apiGroup: tenancy
+#  apiVersion: v1alpha1
+#  apiKind: NsOperator
+#  clusterScoped: true
+#  companionCliSubcmd:
+#    name: ns-operator
+#    description: Manage namespace operator component
+#  resources:
+#  - ns-operator-deploy.yaml
+#EOF
+
+mkdir .test/tenancy
+cat > .test/tenancy/ns-operator-deploy.yaml <<EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,23 +84,18 @@ spec:
         app.kubernetes.io/name: namespace-operator
       name: namespace-operator
     spec:
-      serviceAccountName: namespace-operator
       containers:
         - name: namespace-operator
           image: nginx:1.17  # +workload:nsOperatorImage:type=string
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 65532
-            runAsGroup: 65532
 EOF
 
 ## ingress
 #cat > .test/contour-workload.yaml <<EOF
 #name: contour-component
 #spec:
-#  group: ingress
-#  version: v1alpha1
-#  kind: Contour
+#  apiGroup: ingress
+#  apiVersion: v1alpha1
+#  apiKind: Contour
 #  clusterScoped: true
 #  companionCliSubcmd:
 #    name: contour
@@ -79,66 +105,67 @@ EOF
 #  - contour-svc.yaml
 #  - envoy-ds.yaml
 #EOF
-#
-#cat > .test/contour-deploy.yaml <<EOF
-#apiVersion: apps/v1
-#kind: Deployment
-#metadata:
-#  name: contour-deploy
-#  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
-#spec:
-#  replicas: 2  # +workload:ContourReplicas:default=2:type=int
-#  selector:
-#    matchLabels:
-#      app: contour
-#  template:
-#    metadata:
-#      labels:
-#        app: contour
-#    spec:
-#      containers:
-#      - name: contour
-#        image: nginx:1.17  # +workload:ContourImage:type=string
-#        ports:
-#        - containerPort: 8080
-#EOF
-#
-#cat > .test/contour-svc.yaml <<EOF
-#kind: Service
-#apiVersion: v1
-#metadata:
-#  name: contour-svc
-#  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
-#spec:
-#  selector:
-#    app: contour
-#  ports:
-#  - protocol: TCP
-#    port: 80
-#    targetPort: 8080
-#EOF
-#
-#cat > .test/envoy-ds.yaml <<EOF
-#apiVersion: apps/v1
-#kind: DaemonSet
-#metadata:
-#  labels:
-#    app.kubernetes.io/name: envoy
-#  name: envoy-ds
-#  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
-#spec:
-#  selector:
-#    matchLabels:
-#      app.kubernetes.io/name: envoy
-#  template:
-#    metadata:
-#      labels:
-#        app.kubernetes.io/name: envoy
-#    spec:
-#      containers:
-#      - name: envoy
-#        image: nginx:1.17  # +workload:EnvoyImage:type=string
-#EOF
+
+mkdir .test/ingress
+cat > .test/ingress/contour-deploy.yaml <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contour-deploy
+  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+spec:
+  replicas: 2  # +workload:ContourReplicas:default=2:type=int
+  selector:
+    matchLabels:
+      app: contour
+  template:
+    metadata:
+      labels:
+        app: contour
+    spec:
+      containers:
+      - name: contour
+        image: nginx:1.17  # +workload:ContourImage:type=string
+        ports:
+        - containerPort: 8080
+EOF
+
+cat > .test/ingress/contour-svc.yaml <<EOF
+kind: Service
+apiVersion: v1
+metadata:
+  name: contour-svc
+  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+spec:
+  selector:
+    app: contour
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+EOF
+
+cat > .test/ingress/envoy-ds.yaml <<EOF
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubernetes.io/name: envoy
+  name: envoy-ds
+  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: envoy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: envoy
+    spec:
+      containers:
+      - name: envoy
+        image: nginx:1.17  # +workload:EnvoyImage:type=string
+EOF
 
 operator-builder init \
     --workload-config .test/cnp-workload-collection.yaml

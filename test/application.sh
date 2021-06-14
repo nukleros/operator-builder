@@ -5,9 +5,9 @@ name: webstore
 kind: StandaloneWorkload
 spec:
   domain: acme.com
-  group: apps
-  version: v1alpha1
-  kind: WebStore
+  apiGroup: apps
+  apiVersion: v1alpha1
+  apiKind: WebStore
   clusterScoped: false
   companionCliRootcmd:
     name: webstorectl

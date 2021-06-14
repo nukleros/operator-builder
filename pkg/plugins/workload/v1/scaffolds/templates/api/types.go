@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
@@ -30,7 +31,7 @@ func (f *Types) SetTemplateDefaults() error {
 		"apis",
 		f.Resource.Group,
 		f.Resource.Version,
-		fmt.Sprintf("%s_types.go", f.Resource.Kind),
+		fmt.Sprintf("%s_types.go", strings.ToLower(f.Resource.Kind)),
 	)
 
 	f.TemplateBody = typesTemplate
@@ -40,6 +41,7 @@ func (f *Types) SetTemplateDefaults() error {
 }
 
 var typesTemplate = `{{ .Boilerplate }}
+
 package {{ .Resource.Version }}
 
 import (

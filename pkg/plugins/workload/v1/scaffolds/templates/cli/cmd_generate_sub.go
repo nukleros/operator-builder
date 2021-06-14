@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 )
 
 var _ machinery.Template = &CliCmdGenerateSub{}
@@ -14,13 +15,17 @@ var _ machinery.Template = &CliCmdGenerateSub{}
 type CliCmdGenerateSub struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
+	machinery.RepositoryMixin
 	machinery.ResourceMixin
 
-	CliRootCmd     string
-	CliSubCmdName  string
-	CliSubCmdDescr string
-	Component      bool
-	PackageName    string
+	PackageName       string
+	CliRootCmd        string
+	CliSubCmdName     string
+	CliSubCmdDescr    string
+	CliSubCmdVarName  string
+	CliSubCmdFileName string
+	IsComponent       bool
+	ComponentResource *resource.Resource
 
 	GenerateCommandName  string
 	GenerateCommandDescr string
@@ -28,11 +33,12 @@ type CliCmdGenerateSub struct {
 
 func (f *CliCmdGenerateSub) SetTemplateDefaults() error {
 
-	if f.Component {
+	if f.IsComponent {
 		f.Path = filepath.Join(
 			"cmd", f.CliRootCmd, "commands",
-			fmt.Sprintf("%s_generate.go", f.CliSubCmdName),
+			fmt.Sprintf("%s_generate.go", f.CliSubCmdFileName),
 		)
+		f.Resource = f.ComponentResource
 	} else {
 		f.Path = filepath.Join("cmd", f.CliRootCmd, "commands", "generate.go")
 	}
@@ -66,13 +72,13 @@ import (
 	"{{ .Resource.Path }}/{{ .PackageName }}"
 )
 
-{{ if not .Component -}}
+{{ if not .IsComponent -}}
 var workloadManifest string
 {{ end }}
 
-// {{ .CliSubCmdName }}GenerateCmd represents the {{ .CliSubCmdName }} generate subcommand
-var {{ .CliSubCmdName }}GenerateCmd = &cobra.Command{
-	{{ if .Component -}}
+// {{ .CliSubCmdVarName }}GenerateCmd represents the {{ .CliSubCmdName }} generate subcommand
+var {{ .CliSubCmdVarName }}GenerateCmd = &cobra.Command{
+	{{ if .IsComponent -}}
 	Use:   "{{ .CliSubCmdName }}",
 	Short: "{{ .CliSubCmdDescr }}",
 	Long: "{{ .CliSubCmdDescr }}",
@@ -97,15 +103,6 @@ var {{ .CliSubCmdName }}GenerateCmd = &cobra.Command{
 
 		e := json.NewYAMLSerializer(json.DefaultMetaFactory, nil, nil)
 
-		//objects := {{ .Resource.Kind | lower }}.Create()
-		//for _, o := range objects {
-		//	fmt.Println("---")
-		//	err := e.Encode(o.(runtime.Object), os.Stdout)
-		//	if err != nil {
-		//		panic(err)
-		//	}
-		//}
-
 		var resourceObjects []metav1.Object
 		for _, f := range {{ .PackageName }}.CreateFuncs {
 			resource, err := f(&workload)
@@ -125,12 +122,12 @@ var {{ .CliSubCmdName }}GenerateCmd = &cobra.Command{
 	},
 }
 func init() {
-	{{ if .Component -}}
-	generateCmd.AddCommand({{ .CliSubCmdName }}GenerateCmd)
+	{{ if .IsComponent -}}
+	generateCmd.AddCommand({{ .CliSubCmdVarName }}GenerateCmd)
 	{{- else -}}
-	rootCmd.AddCommand({{ .CliSubCmdName }}GenerateCmd)
+	rootCmd.AddCommand({{ .CliSubCmdVarName }}GenerateCmd)
 
-	{{ .CliSubCmdName }}GenerateCmd.Flags().StringVarP(&workloadManifest, "workload-manifest", "w", "", "Filepath to the workload manifest to generate child resources for.")
+	{{ .CliSubCmdVarName }}GenerateCmd.Flags().StringVarP(&workloadManifest, "workload-manifest", "w", "", "Filepath to the workload manifest to generate child resources for.")
 	{{- end -}}
 }
 `

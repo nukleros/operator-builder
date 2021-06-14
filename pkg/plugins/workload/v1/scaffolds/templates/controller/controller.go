@@ -19,8 +19,9 @@ type Controller struct {
 	machinery.RepositoryMixin
 	machinery.ResourceMixin
 
-	PackageName string
-	RBACRules   *[]workloadv1.RBACRule
+	PackageName       string
+	RBACRules         *[]workloadv1.RBACRule
+	HasChildResources bool
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -53,7 +54,9 @@ import (
 
 	"{{ .Repo }}/apis/common"
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
+	{{- if .HasChildResources }}
 	"{{ .Resource.Path }}/{{ .PackageName }}"
+	{{ end }}
 	"{{ .Repo }}/controllers"
 	"{{ .Repo }}/controllers/phases"
 	//"{{ .Repo }}/pkg/dependencies"
@@ -111,6 +114,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 
 // GetResources will create and return the resources in memory
 func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) ([]metav1.Object, error) {
+{{ if .HasChildResources }}
 	var resourceObjects []metav1.Object
 
 	// create resources in memory
@@ -123,6 +127,9 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) (
 	}
 
 	return resourceObjects, nil
+{{- else -}}
+	return []metav1.Object{}, nil
+{{ end -}}
 }
 
 // SetRefAndCreateIfNotPresent creates a resource if does not already exist

@@ -1,29 +1,60 @@
 package v1
 
+import "sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+
+// WorkloadIdentifier defines an interface for identifying any workload
+type WorkloadIdentifier interface {
+	GetName() string
+	GetWorkloadKind() WorkloadKind
+}
+
 // WorkloadInitializer defines the interface that must be implemented by a
 // workload being used to configure project initialization
 type WorkloadInitializer interface {
 	Validate() error
-	GetDomain() string
+
 	HasRootCmdName() bool
+
+	GetDomain() string
 	GetRootCmdName() string
 	GetRootCmdDescr() string
+
+	SetNames()
 }
 
 // WorkloadAPIBuilder defines the interface that must be implemented by a
 // workload being used to configure API and controller creation
 type WorkloadAPIBuilder interface {
 	Validate() error
+
+	IsClusterScoped() bool
+	IsStandalone() bool
+	IsComponent() bool
+	IsCollection() bool
+
+	HasSubCmdName() bool
+	HasChildResources() bool
+
 	GetName() string
-	GetGroup() string
-	GetVersion() string
-	GetKind() string
+	GetPackageName() string
+	GetDomain() string
+	GetAPIGroup() string
+	GetAPIVersion() string
+	GetAPIKind() string
 	GetSubcommandName() string
 	GetSubcommandDescr() string
+	GetSubcommandVarName() string
+	GetSubcommandFileName() string
 	GetRootcommandName() string
-	IsClusterScoped() bool
-	IsComponent() bool
-	GetSpecFields(workloadPath string) (*[]APISpecField, error)
-	GetResources(workloadPath string) (*[]SourceFile, *[]RBACRule, error)
 	GetDependencies() []string
+	GetComponents() *[]ComponentWorkload
+	GetSourceFiles() *[]SourceFile
+	GetAPISpecFields() *[]APISpecField
+	GetRBACRules() *[]RBACRule
+	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
+
+	SetNames()
+	SetSpecFields(workloadPath string) error
+	SetResources(workloadPath string) error
+	SetComponents(components *[]ComponentWorkload) error
 }
