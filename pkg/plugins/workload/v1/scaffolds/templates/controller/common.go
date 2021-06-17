@@ -14,6 +14,8 @@ type Common struct {
 	machinery.BoilerplateMixin
 	machinery.RepositoryMixin
 	machinery.ResourceMixin
+
+	IsStandalone bool
 }
 
 func (f *Common) SetTemplateDefaults() error {
@@ -47,11 +49,15 @@ func IgnoreNotFound(err error) error {
 // CreatePhases defines the phases for create and the order in which they run during the reconcile process
 func CreatePhases() []phases.Phase {
 	return []phases.Phase{
-		//&phases.DependencyPhase{},
-		//&phases.PreFlightPhase{},
+		{{- if not .IsStandalone }}
+		&phases.DependencyPhase{},
+		&phases.PreFlightPhase{},
+		{{ end -}}
 		&phases.CreateResourcesPhase{},
-		//&phases.CheckReadyPhase{},
-		//&phases.CompletePhase{},
+		{{- if not .IsStandalone }}
+		&phases.CheckReadyPhase{},
+		&phases.CompletePhase{},
+		{{ end -}}
 	}
 }
 

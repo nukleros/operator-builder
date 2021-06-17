@@ -111,6 +111,20 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		}
 	}
 
+	// attach component dependencies
+	for i, component := range components {
+		for _, dependencyName := range component.Spec.Dependencies {
+			for _, comp := range components {
+				if comp.Name == dependencyName {
+					components[i].Spec.ComponentDependencies = append(
+						components[i].Spec.ComponentDependencies,
+						comp,
+					)
+				}
+			}
+		}
+	}
+
 	if standaloneFound == true && collectionFound == true {
 		msg := fmt.Sprintf(
 			"%s and %s both provided - must provide one *or* the other",
@@ -159,14 +173,29 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 	}
 
 	var workloads []WorkloadIdentifier
+	var workloadNames []string
 
 	for _, c := range configs {
-		kind, err := idWorkload(c)
+
+		var workloadID WorkloadShared
+
+		err := yaml.Unmarshal([]byte(c), &workloadID)
 		if err != nil {
 			return nil, err
 		}
 
-		switch kind {
+		for _, n := range workloadNames {
+			if workloadID.Name == n {
+				msg := fmt.Sprintf(
+					"%s name used on multiple workloads - each workload name must be unique",
+					workloadID.Name,
+				)
+				return nil, errors.New(msg)
+			}
+		}
+		workloadNames = append(workloadNames, workloadID.Name)
+
+		switch workloadID.Kind {
 		case WorkloadKindStandalone:
 
 			workload := &StandaloneWorkload{}
@@ -199,35 +228,17 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 			}
 
 			workloads = append(workloads, workload)
+
+		default:
+			msg := fmt.Sprintf(
+				"Unrecognized workload kind in workload config - valid kinds: %s, %s, %s,",
+				WorkloadKindStandalone,
+				WorkloadKindCollection,
+				WorkloadKindComponent,
+			)
+			return nil, errors.New(msg)
 		}
 	}
 
 	return &workloads, nil
-}
-
-func idWorkload(configContent string) (WorkloadKind, error) {
-
-	var workload WorkloadShared
-
-	err := yaml.Unmarshal([]byte(configContent), &workload)
-	if err != nil {
-		return "", err
-	}
-
-	switch workload.Kind {
-	case WorkloadKindStandalone:
-		return WorkloadKindStandalone, nil
-	case WorkloadKindCollection:
-		return WorkloadKindCollection, nil
-	case WorkloadKindComponent:
-		return WorkloadKindComponent, nil
-	default:
-		msg := fmt.Sprintf(
-			"Unrecognized workload kind in workload config - valid kinds: %s, %s, %s,",
-			WorkloadKindStandalone,
-			WorkloadKindCollection,
-			WorkloadKindComponent,
-		)
-		return "", errors.New(msg)
-	}
 }

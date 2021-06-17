@@ -46,7 +46,7 @@ type WorkloadAPIBuilder interface {
 	GetSubcommandVarName() string
 	GetSubcommandFileName() string
 	GetRootcommandName() string
-	GetDependencies() []string
+	GetDependencies() *[]ComponentWorkload
 	GetComponents() *[]ComponentWorkload
 	GetSourceFiles() *[]SourceFile
 	GetAPISpecFields() *[]APISpecField

@@ -156,8 +156,8 @@ func (s *StandaloneWorkload) SetResources(workloadPath string) error {
 	return nil
 }
 
-func (s StandaloneWorkload) GetDependencies() []string {
-	return []string{}
+func (s StandaloneWorkload) GetDependencies() *[]ComponentWorkload {
+	return &[]ComponentWorkload{}
 }
 
 func (s *StandaloneWorkload) SetComponents(components *[]ComponentWorkload) error {

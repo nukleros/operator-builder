@@ -21,7 +21,8 @@ type Types struct {
 
 	SpecFields    *[]workloadv1.APISpecField
 	ClusterScoped bool
-	Dependencies  []string
+	Dependencies  *[]workloadv1.ComponentWorkload
+	IsStandalone  bool
 }
 
 // SetTemplateDefaults implements file.Template
@@ -45,10 +46,13 @@ var typesTemplate = `{{ .Boilerplate }}
 package {{ .Resource.Version }}
 
 import (
-	common "{{ .Repo }}/apis/common"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	//"k8s.io/apimachinery/pkg/runtime/schema"
+	{{ if not .IsStandalone }}"k8s.io/apimachinery/pkg/runtime/schema"{{ end }}
+
+	common "{{ .Repo }}/apis/common"
+	{{- $Repo := .Repo }}{{- range .Dependencies }}
+	{{ .Spec.APIGroup }}{{ .Spec.APIVersion }} "{{ $Repo }}/apis/{{ .Spec.APIGroup }}/{{ .Spec.APIVersion }}"
+	{{ end }}
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -86,18 +90,18 @@ type {{ .Resource.Kind }}Status struct {
 // +kubebuilder:resource:scope=Cluster
 {{ end }}
 
-// {{.Resource.Kind}} is the Schema for the {{ .Resource.Plural }} API
-type {{.Resource.Kind}} struct {
+// {{ .Resource.Kind }} is the Schema for the {{ .Resource.Plural }} API
+type {{ .Resource.Kind }} struct {
 	metav1.TypeMeta   ` + "`" + `json:",inline"` + "`" + `
 	metav1.ObjectMeta ` + "`" + `json:"metadata,omitempty"` + "`" + `
-	Spec   {{.Resource.Kind}}Spec   ` + "`" + `json:"spec,omitempty"` + "`" + `
-	Status {{.Resource.Kind}}Status ` + "`" + `json:"status,omitempty"` + "`" + `
+	Spec   {{ .Resource.Kind }}Spec   ` + "`" + `json:"spec,omitempty"` + "`" + `
+	Status {{ .Resource.Kind }}Status ` + "`" + `json:"status,omitempty"` + "`" + `
 }
 
 // +kubebuilder:object:root=true
 
-// {{.Resource.Kind}}List contains a list of {{.Resource.Kind}}
-type {{.Resource.Kind}}List struct {
+// {{ .Resource.Kind }}List contains a list of {{ .Resource.Kind }}
+type {{ .Resource.Kind }}List struct {
 	metav1.TypeMeta ` + "`" + `json:",inline"` + "`" + `
 	metav1.ListMeta ` + "`" + `json:"metadata,omitempty"` + "`" + `
 	Items           []{{ .Resource.Kind }} ` + "`" + `json:"items"` + "`" + `
@@ -106,54 +110,58 @@ type {{.Resource.Kind}}List struct {
 // interface methods
 
 // GetReadyStatus returns the ready status for a component
-func (component {{.Resource.Kind}}) GetReadyStatus() bool {
+func (component {{ .Resource.Kind }}) GetReadyStatus() bool {
 	return component.Status.Created
 }
 
-//// SetReadyStatus sets the ready status for a component
-//func (component *{{.Resource.Kind}}) SetReadyStatus(status bool) {
-//	component.Status.Created = status
-//}
+{{- if not .IsStandalone }}
+// SetReadyStatus sets the ready status for a component
+func (component *{{ .Resource.Kind }}) SetReadyStatus(status bool) {
+	component.Status.Created = status
+}
 
-//// GetDependencyStatus returns the dependency status for a component
-//func (component *{{.Resource.Kind}}) GetDependencyStatus() bool {
-//	return component.Status.DependenciesSatisfied
-//}
+// GetDependencyStatus returns the dependency status for a component
+func (component *{{ .Resource.Kind }}) GetDependencyStatus() bool {
+	return component.Status.DependenciesSatisfied
+}
 
-//// SetDependencyStatus sets the dependency status for a component
-//func (component *{{.Resource.Kind}}) SetDependencyStatus(dependencyStatus bool) {
-//	component.Status.DependenciesSatisfied = dependencyStatus
-//}
+// SetDependencyStatus sets the dependency status for a component
+func (component *{{ .Resource.Kind }}) SetDependencyStatus(dependencyStatus bool) {
+	component.Status.DependenciesSatisfied = dependencyStatus
+}
+{{ end }}
 
 // GetStatusConditions returns the status conditions for a component
-func (component {{.Resource.Kind}}) GetStatusConditions() []common.Condition {
+func (component {{ .Resource.Kind }}) GetStatusConditions() []common.Condition {
 	return component.Status.Conditions
 }
 
 // SetStatusConditions sets the status conditions for a component
-func (component *{{.Resource.Kind}}) SetStatusConditions(condition common.Condition) {
+func (component *{{ .Resource.Kind }}) SetStatusConditions(condition common.Condition) {
 	component.Status.Conditions = append(component.Status.Conditions, condition)
 }
 
-//// GetDependencies returns the dependencies for a component
-//func (component {{.Resource.Kind}}) GetDependencies() []common.Component {
-//	return []common.Component{
-//		{{ range .Dependencies }}
-//			&{{- . -}}{},
-//		{{ end }}
-//	}
-//}
+{{- if not .IsStandalone }}
+// GetDependencies returns the dependencies for a component
+func (component {{ .Resource.Kind }}) GetDependencies() []common.Component {
+	return []common.Component{
+		{{ range .Dependencies }}
+			&{{ .Spec.APIGroup }}{{ .Spec.APIVersion }}.{{ .Spec.APIKind }}{},
+		{{ end }}
+	}
+}
 
-//// GetComponentGVK returns a GVK object for the component
-//func (component {{.Resource.Kind}}) GetComponentGVK() schema.GroupVersionKind {
-//	return schema.GroupVersionKind{
-//		Group:   GroupVersion.Group,
-//		Version: GroupVersion.Version,
-//		Kind:    "{{.Resource.Kind}}",
-//	}
-//}
+// GetComponentGVK returns a GVK object for the component
+func (component {{ .Resource.Kind }}) GetComponentGVK() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   GroupVersion.Group,
+		Version: GroupVersion.Version,
+		Kind:    "{{ .Resource.Kind }}",
+	}
+}
+{{ end }}
 
 func init() {
-	SchemeBuilder.Register(&{{.Resource.Kind}}{}, &{{.Resource.Kind}}List{})
+	SchemeBuilder.Register(&{{ .Resource.Kind }}{}, &{{ .Resource.Kind }}List{})
 }
 `

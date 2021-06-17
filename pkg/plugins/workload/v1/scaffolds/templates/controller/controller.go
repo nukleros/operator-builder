@@ -3,10 +3,10 @@ package controller
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
 
@@ -22,6 +22,7 @@ type Controller struct {
 	PackageName       string
 	RBACRules         *[]workloadv1.RBACRule
 	HasChildResources bool
+	IsStandalone      bool
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -29,7 +30,7 @@ func (f *Controller) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
 		"controllers",
 		f.Resource.Group,
-		fmt.Sprintf("%s_controller.go", strings.ToLower(f.Resource.Kind)),
+		fmt.Sprintf("%s_controller.go", utils.ToFileName(f.Resource.Kind)),
 	)
 
 	f.TemplateBody = controllerTemplate
@@ -44,6 +45,7 @@ package {{ .Resource.Group }}
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -59,9 +61,11 @@ import (
 	{{ end }}
 	"{{ .Repo }}/controllers"
 	"{{ .Repo }}/controllers/phases"
-	//"{{ .Repo }}/pkg/dependencies"
-	//"{{ .Repo }}/pkg/mutate"
-	//"{{ .Repo }}/pkg/wait"
+	{{ if not .IsStandalone }}
+	"{{ .Repo }}/pkg/dependencies"
+	"{{ .Repo }}/pkg/mutate"
+	"{{ .Repo }}/pkg/wait"
+	{{ end }}
 )
 
 // {{ .Resource.Kind }}Reconciler reconciles a {{ .Resource.Kind }} object
@@ -105,6 +109,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 
 		// return only if we have an error or are told not to proceed
 		if err != nil || !proceed {
+			log.V(0).Info(fmt.Sprintf("Not proceeding - will try again in %s", result.RequeueAfter))
 			return result, err
 		}
 	}
@@ -201,24 +206,26 @@ func (r *{{ .Resource.Kind }}Reconciler) UpdateStatus(
 	return nil
 }
 
-//// CheckReady will return whether a component is ready
-//func (r *{{ .Resource.Kind }}Reconciler) CheckReady() (bool, error) {
-//	return dependencies.{{ .Resource.Kind }}CheckReady(r)
-//}
+{{- if not .IsStandalone }}
+// CheckReady will return whether a component is ready
+func (r *{{ .Resource.Kind }}Reconciler) CheckReady() (bool, error) {
+	return dependencies.{{ .Resource.Kind }}CheckReady(r)
+}
 
-//// Mutate will run the mutate phase of a resource
-//func (r *{{ .Resource.Kind }}Reconciler) Mutate(
-//	object *metav1.Object,
-//) ([]metav1.Object, bool, error) {
-//	return mutate.{{ .Resource.Kind }}Mutate(r, object)
-//}
+// Mutate will run the mutate phase of a resource
+func (r *{{ .Resource.Kind }}Reconciler) Mutate(
+	object *metav1.Object,
+) ([]metav1.Object, bool, error) {
+	return mutate.{{ .Resource.Kind }}Mutate(r, object)
+}
 
-//// Wait will run the wait phase of a resource
-//func (r *{{ .Resource.Kind }}Reconciler) Wait(
-//	object *metav1.Object,
-//) (bool, error) {
-//	return wait.{{ .Resource.Kind }}Wait(r, object)
-//}
+// Wait will run the wait phase of a resource
+func (r *{{ .Resource.Kind }}Reconciler) Wait(
+	object *metav1.Object,
+) (bool, error) {
+	return wait.{{ .Resource.Kind }}Wait(r, object)
+}
+{{ end }}
 
 func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

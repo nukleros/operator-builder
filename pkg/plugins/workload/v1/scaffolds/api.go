@@ -19,6 +19,10 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/config/samples"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/controller"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/controller/phases"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/dependencies"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/helpers"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/mutate"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/wait"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
@@ -167,8 +171,11 @@ func (s *apiScaffolder) Scaffold() error {
 				SpecFields:    s.workload.GetAPISpecFields(),
 				ClusterScoped: s.workload.IsClusterScoped(),
 				Dependencies:  s.workload.GetDependencies(),
+				IsStandalone:  s.workload.IsStandalone(),
 			},
-			&common.Components{},
+			&common.Components{
+				IsStandalone: s.workload.IsStandalone(),
+			},
 			&common.Conditions{},
 			&resources.Resources{
 				PackageName:     s.workload.GetPackageName(),
@@ -179,15 +186,18 @@ func (s *apiScaffolder) Scaffold() error {
 				PackageName:       s.workload.GetPackageName(),
 				RBACRules:         s.workload.GetRBACRules(),
 				HasChildResources: s.workload.HasChildResources(),
+				IsStandalone:      s.workload.IsStandalone(),
 			},
-			&controller.Common{},
+			&controller.Common{
+				IsStandalone: s.workload.IsStandalone(),
+			},
 			&phases.Types{},
 			&phases.Common{},
-			&phases.CreateResource{},
-			&phases.ResourcePersist{},
-			&phases.ResourceCreateInMemory{
-				HasChildResources: s.workload.HasChildResources(),
+			&phases.CreateResource{
+				IsStandalone: s.workload.IsStandalone(),
 			},
+			&phases.ResourcePersist{},
+			&phases.ResourceCreateInMemory{},
 			&samples.CRDSample{
 				SpecFields: s.workload.GetAPISpecFields(),
 			},
@@ -211,14 +221,38 @@ func (s *apiScaffolder) Scaffold() error {
 				SpecFields:    s.workload.GetAPISpecFields(),
 				ClusterScoped: s.workload.IsClusterScoped(),
 				Dependencies:  s.workload.GetDependencies(),
+				IsStandalone:  s.workload.IsStandalone(),
 			},
-			&common.Components{},
+			&common.Components{
+				IsStandalone: s.workload.IsStandalone(),
+			},
 			&common.Conditions{},
 			&controller.Controller{
 				PackageName:       s.workload.GetPackageName(),
 				RBACRules:         &[]workloadv1.RBACRule{},
 				HasChildResources: s.workload.HasChildResources(),
+				IsStandalone:      s.workload.IsStandalone(),
 			},
+			&controller.Common{
+				IsStandalone: s.workload.IsStandalone(),
+			},
+			&phases.Types{},
+			&phases.Common{},
+			&phases.CreateResource{
+				IsStandalone: s.workload.IsStandalone(),
+			},
+			&phases.ResourcePersist{},
+			&phases.ResourceCreateInMemory{},
+			&phases.Dependencies{},
+			&phases.PreFlight{},
+			&phases.ResourceMutate{},
+			&phases.ResourceWait{},
+			&phases.CheckReady{},
+			&phases.Complete{},
+			&helpers.Common{},
+			&dependencies.Component{},
+			&mutate.Component{},
+			&wait.Component{},
 			&crd.Kustomization{
 				CRDSampleFilenames: crdSampleFilenames,
 			},
@@ -264,6 +298,7 @@ func (s *apiScaffolder) Scaffold() error {
 					SpecFields:    &component.Spec.APISpecFields,
 					ClusterScoped: component.IsClusterScoped(),
 					Dependencies:  component.GetDependencies(),
+					IsStandalone:  component.IsStandalone(),
 				},
 				&api.Group{},
 				&resources.Resources{
@@ -275,15 +310,11 @@ func (s *apiScaffolder) Scaffold() error {
 					PackageName:       component.GetPackageName(),
 					RBACRules:         component.GetRBACRules(),
 					HasChildResources: component.HasChildResources(),
+					IsStandalone:      component.IsStandalone(),
 				},
-				&controller.Common{},
-				&phases.Types{},
-				&phases.Common{},
-				&phases.CreateResource{},
-				&phases.ResourcePersist{},
-				&phases.ResourceCreateInMemory{
-					HasChildResources: component.HasChildResources(),
-				},
+				&dependencies.Component{},
+				&mutate.Component{},
+				&wait.Component{},
 				&samples.CRDSample{
 					SpecFields: &component.Spec.APISpecFields,
 				},

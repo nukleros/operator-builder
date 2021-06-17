@@ -140,8 +140,8 @@ func (c *WorkloadCollection) SetResources(workloadPath string) error {
 	return errors.New("Workload collections do not have child resources to be set")
 }
 
-func (c WorkloadCollection) GetDependencies() []string {
-	return []string{}
+func (c WorkloadCollection) GetDependencies() *[]ComponentWorkload {
+	return &[]ComponentWorkload{}
 }
 
 func (c *WorkloadCollection) SetComponents(components *[]ComponentWorkload) error {

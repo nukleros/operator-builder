@@ -13,6 +13,8 @@ type CreateResource struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 	machinery.RepositoryMixin
+
+	IsStandalone bool
 }
 
 func (f *CreateResource) SetTemplateDefaults() error {
@@ -72,12 +74,13 @@ func (phase *CreateResourcesPhase) GetDefaultRequeueResult() ctrl.Result {
 // createResourcePhases defines the phases for resource creation and the order in which they run during the reconcile process
 func createResourcePhases() []ResourcePhase {
 	return []ResourcePhase{
-		//// wait for other resources before attempting to create
-		//&WaitForResourcePhase{},
+		{{- if not .IsStandalone }}
+		// wait for other resources before attempting to create
+		&WaitForResourcePhase{},
 
-		//// update fields within a resource
-		//&MutateResourcePhase{},
-
+		// update fields within a resource
+		&MutateResourcePhase{},
+		{{ end }}
 		// create the resource in the cluster
 		&PersistResourcePhase{},
 	}

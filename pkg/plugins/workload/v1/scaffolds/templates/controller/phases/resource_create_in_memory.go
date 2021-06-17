@@ -13,8 +13,6 @@ type ResourceCreateInMemory struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 	machinery.RepositoryMixin
-
-	HasChildResources bool
 }
 
 func (f *ResourceCreateInMemory) SetTemplateDefaults() error {
@@ -31,10 +29,6 @@ var resourceCreateInMemoryTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	{{- if not .HasChildResources }}
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	{{ end }}
-
 	"{{ .Repo }}/apis/common"
 )
 
@@ -43,14 +37,10 @@ func (phase *CreateResourcesInMemoryPhase) Execute(
 	r common.ComponentReconciler,
 	parentPhase *CreateResourcesPhase,
 ) (proceedToNextPhase bool, err error) {
-	{{- if .HasChildResources }}
 	resources, err := r.GetResources(r.GetComponent())
 	if err != nil {
 		return false, err
 	}
-	{{ else }}
-	var resources []metav1.Object
-	{{ end }}
 
 	// update the resources on the parent phase object
 	setResources(parentPhase, resources)

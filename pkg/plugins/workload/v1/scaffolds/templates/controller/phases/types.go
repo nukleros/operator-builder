@@ -25,6 +25,7 @@ func (f *Types) SetTemplateDefaults() error {
 }
 
 var typesTemplate = `{{ .Boilerplate }}
+
 package phases
 
 import (

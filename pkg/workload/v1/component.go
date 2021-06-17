@@ -123,8 +123,8 @@ func (c *ComponentWorkload) SetResources(workloadPath string) error {
 	return nil
 }
 
-func (c ComponentWorkload) GetDependencies() []string {
-	return []string{}
+func (c ComponentWorkload) GetDependencies() *[]ComponentWorkload {
+	return &c.Spec.ComponentDependencies
 }
 
 func (c *ComponentWorkload) SetComponents(components *[]ComponentWorkload) error {

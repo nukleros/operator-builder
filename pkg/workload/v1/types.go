@@ -54,11 +54,13 @@ type StandaloneWorkload struct {
 // component of a collection
 type ComponentWorkloadSpec struct {
 	WorkloadSharedSpec
-	CompanionCliSubcmd CliCommand `json:"companionCliSubcmd" `
-	Resources          []string   `json:"resources"`
-	APISpecFields      []APISpecField
-	SourceFiles        []SourceFile
-	RBACRules          []RBACRule
+	CompanionCliSubcmd    CliCommand `json:"companionCliSubcmd" `
+	Resources             []string   `json:"resources"`
+	Dependencies          []string   `json:"dependencies"`
+	ComponentDependencies []ComponentWorkload
+	APISpecFields         []APISpecField
+	SourceFiles           []SourceFile
+	RBACRules             []RBACRule
 }
 
 // ComponentWorkload defines a workload that is a component of a collection
@@ -73,7 +75,6 @@ type WorkloadCollectionSpec struct {
 	Domain              string     `json:"domain"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
 	ComponentNames      []string   `json:"componentNames"`
-	Dependencies        []string   `json:"dependencies"`
 	Components          []ComponentWorkload
 }
 

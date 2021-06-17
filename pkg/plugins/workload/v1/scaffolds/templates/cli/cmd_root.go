@@ -71,9 +71,9 @@ func initConfig() {
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".rpkctl" (without extension).
+		// Search config in home directory with name ".{{ .CliRootCmd }}" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".rpkctl")
+		viper.SetConfigName(".{{ .CliRootCmd }}")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

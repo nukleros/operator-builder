@@ -46,6 +46,8 @@ spec:
   - ingress/contour-deploy.yaml
   - ingress/contour-svc.yaml
   - ingress/envoy-ds.yaml
+  dependencies:
+  - ns-operator-component
 EOF
 
 ## tenancy
