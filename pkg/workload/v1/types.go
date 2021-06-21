@@ -74,7 +74,7 @@ type WorkloadCollectionSpec struct {
 	WorkloadSharedSpec
 	Domain              string     `json:"domain"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
-	ComponentNames      []string   `json:"componentNames"`
+	ComponentFiles      []string   `json:"componentFiles"`
 	Components          []ComponentWorkload
 }
 

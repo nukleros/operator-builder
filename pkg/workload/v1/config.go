@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"sigs.k8s.io/yaml"
@@ -85,8 +86,12 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 			}
 
 			workload = w.(*StandaloneWorkload)
-			workload.SetSpecFields(workloadConfig)
-			workload.SetResources(workloadConfig)
+			if err := workload.SetSpecFields(workloadConfig); err != nil {
+				return nil, err
+			}
+			if err := workload.SetResources(workloadConfig); err != nil {
+				return nil, err
+			}
 			workload.SetNames()
 			standaloneFound = true
 
@@ -104,8 +109,12 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 
 		case WorkloadKindComponent:
 			component := w.(*ComponentWorkload)
-			component.SetSpecFields(workloadConfig)
-			component.SetResources(workloadConfig)
+			if err := component.SetSpecFields(workloadConfig); err != nil {
+				return nil, err
+			}
+			if err := component.SetResources(workloadConfig); err != nil {
+				return nil, err
+			}
 			component.SetNames()
 			components = append(components, *component)
 		}
@@ -234,6 +243,17 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 			err = yaml.Unmarshal([]byte(c), workload)
 			if err != nil {
 				return nil, err
+			}
+
+			for _, componentFile := range workload.Spec.ComponentFiles {
+				componentPath := filepath.Dir(workloadConfig)
+				componentWorkloads, err := parseConfig(filepath.Join(componentPath, componentFile))
+				if err != nil {
+					return nil, err
+				}
+				for _, component := range *componentWorkloads {
+					workloads = append(workloads, component)
+				}
 			}
 
 			workloads = append(workloads, workload)

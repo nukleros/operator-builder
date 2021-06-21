@@ -12,13 +12,12 @@ spec:
   companionCliRootcmd:
     name: cnpctl
     description: Manage platform stuff like a boss
-  componentNames:
-  - ns-operator-component
-  - contour-component
-  #componentFiles:
-  #- ns_operator-component.yaml
-  #- contour-component.yaml
----
+  componentFiles:
+  - ns-operator-component.yaml
+  - contour-component.yaml
+EOF
+
+cat > .test/ns-operator-component.yaml <<EOF
 name: ns-operator-component
 kind: ComponentWorkload
 spec:
@@ -31,7 +30,9 @@ spec:
     description: Manage namespace operator component
   resources:
   - tenancy/ns-operator-deploy.yaml
----
+EOF
+
+cat > .test/contour-component.yaml <<EOF
 name: contour-component
 kind: ComponentWorkload
 spec:
@@ -74,23 +75,6 @@ spec:
         - name: namespace-operator
           image: nginx:1.17  # +workload:nsOperatorImage:type=string
 EOF
-
-## ingress
-#cat > .test/contour-workload.yaml <<EOF
-#name: contour-component
-#spec:
-#  apiGroup: ingress
-#  apiVersion: v1alpha1
-#  apiKind: Contour
-#  clusterScoped: true
-#  companionCliSubcmd:
-#    name: contour
-#    description: Manage contour component
-#  resources:
-#  - contour-deploy.yaml
-#  - contour-svc.yaml
-#  - envoy-ds.yaml
-#EOF
 
 mkdir .test/ingress
 cat > .test/ingress/contour-deploy.yaml <<EOF
