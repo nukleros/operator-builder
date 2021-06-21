@@ -122,6 +122,15 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 					)
 				}
 			}
+			if len(components[i].Spec.ComponentDependencies) < 1 {
+				msg := fmt.Sprintf(
+					"%s component listed as a dependency for %s but no component workload config for %s provied",
+					dependencyName,
+					component.Name,
+					dependencyName,
+				)
+				return nil, errors.New(msg)
+			}
 		}
 	}
 

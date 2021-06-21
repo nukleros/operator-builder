@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# collection
 cat > .test/cnp-workload-collection.yaml <<EOF
 name: cloud-native-platform
 kind: WorkloadCollection
@@ -17,7 +16,8 @@ spec:
   - ns-operator-component
   - contour-component
   #componentFiles:
-  #- ingress/stuff.yaml
+  #- ns_operator-component.yaml
+  #- contour-component.yaml
 ---
 name: ns-operator-component
 kind: ComponentWorkload
@@ -49,22 +49,6 @@ spec:
   dependencies:
   - ns-operator-component
 EOF
-
-## tenancy
-#cat > .test/ns-operator-workload.yaml <<EOF
-#name: ns-operator-component
-#kind: ComponentWorkload
-#spec:
-#  apiGroup: tenancy
-#  apiVersion: v1alpha1
-#  apiKind: NsOperator
-#  clusterScoped: true
-#  companionCliSubcmd:
-#    name: ns-operator
-#    description: Manage namespace operator component
-#  resources:
-#  - ns-operator-deploy.yaml
-#EOF
 
 mkdir .test/tenancy
 cat > .test/tenancy/ns-operator-deploy.yaml <<EOF
