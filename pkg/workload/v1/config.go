@@ -109,10 +109,10 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 
 		case WorkloadKindComponent:
 			component := w.(*ComponentWorkload)
-			if err := component.SetSpecFields(workloadConfig); err != nil {
+			if err := component.SetSpecFields(component.Spec.ConfigPath); err != nil {
 				return nil, err
 			}
-			if err := component.SetResources(workloadConfig); err != nil {
+			if err := component.SetResources(component.Spec.ConfigPath); err != nil {
 				return nil, err
 			}
 			component.SetNames()
@@ -246,13 +246,15 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 			}
 
 			for _, componentFile := range workload.Spec.ComponentFiles {
-				componentPath := filepath.Dir(workloadConfig)
-				componentWorkloads, err := parseConfig(filepath.Join(componentPath, componentFile))
+				componentPath := filepath.Join(filepath.Dir(workloadConfig), componentFile)
+				componentWorkloads, err := parseConfig(componentPath)
 				if err != nil {
 					return nil, err
 				}
 				for _, component := range *componentWorkloads {
-					workloads = append(workloads, component)
+					cw := component.(*ComponentWorkload)
+					cw.Spec.ConfigPath = componentPath
+					workloads = append(workloads, cw)
 				}
 			}
 

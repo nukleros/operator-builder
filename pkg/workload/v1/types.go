@@ -57,6 +57,7 @@ type ComponentWorkloadSpec struct {
 	CompanionCliSubcmd    CliCommand `json:"companionCliSubcmd" `
 	Resources             []string   `json:"resources"`
 	Dependencies          []string   `json:"dependencies"`
+	ConfigPath            string
 	ComponentDependencies []ComponentWorkload
 	APISpecFields         []APISpecField
 	SourceFiles           []SourceFile
