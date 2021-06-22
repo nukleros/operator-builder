@@ -33,7 +33,7 @@ spec:
     name: tenancy-common
     description: Manage common tenancy component
   resources:
-  - tenancy/ns-operator-ns.yaml
+  - ns-operator-ns.yaml
 EOF
 
 cat > .test/ns-operator-component.yaml <<EOF
@@ -48,8 +48,8 @@ spec:
     name: ns-operator
     description: Manage namespace operator component
   resources:
-  - tenancy/ns-operator-crd.yaml
-  - tenancy/ns-operator-deploy.yaml
+  - ns-operator-crd.yaml
+  - ns-operator-deploy.yaml
   dependencies:
   - tenancy-common-component
 EOF
