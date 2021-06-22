@@ -51,7 +51,9 @@ import (
 
 	common "{{ .Repo }}/apis/common"
 	{{- $Repo := .Repo }}{{- range .Dependencies }}
+	{{- if ne .Spec.APIGroup $.Resource.Group }}
 	{{ .Spec.APIGroup }}{{ .Spec.APIVersion }} "{{ $Repo }}/apis/{{ .Spec.APIGroup }}/{{ .Spec.APIVersion }}"
+	{{ end }}
 	{{ end }}
 )
 
@@ -146,7 +148,11 @@ func (component *{{ .Resource.Kind }}) SetStatusConditions(condition common.Cond
 func (component {{ .Resource.Kind }}) GetDependencies() []common.Component {
 	return []common.Component{
 		{{ range .Dependencies }}
+		{{- if eq .Spec.APIGroup $.Resource.Group }}
+			&{{ .Spec.APIKind }}{},
+		{{ else }}
 			&{{ .Spec.APIGroup }}{{ .Spec.APIVersion }}.{{ .Spec.APIKind }}{},
+		{{ end }}
 		{{ end }}
 	}
 }
