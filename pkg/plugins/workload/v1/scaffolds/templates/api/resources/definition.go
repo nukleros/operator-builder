@@ -20,6 +20,7 @@ type Definition struct {
 	ClusterScoped bool
 	SourceFile    workloadv1.SourceFile
 	PackageName   string
+	SpecFields    *[]workloadv1.APISpecField
 }
 
 func (f *Definition) SetTemplateDefaults() error {
@@ -43,13 +44,51 @@ const definitionTemplate = `{{ .Boilerplate }}
 package {{ .PackageName }}
 
 import (
+	{{ if .SourceFile.HasStatic }}
+	"text/template"
+	{{ end }}
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	{{ if .SourceFile.HasStatic }}
+	k8s_yaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
+	{{ end }}
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
 )
 
 {{ range .SourceFile.Children }}
+{{ if .StaticCreateStrategy }}
+const resource{{ .UniqueName }} = ` + "`" + `
+{{ .StaticContent }}
+` + "`" + `
+
+// Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource
+func Create{{ .UniqueName }}(parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }}) (metav1.Object, error) {
+
+	fmap := template.FuncMap{
+		{{ range $.SpecFields }}
+		{{- if .DefaultVal -}}
+		"default{{ .FieldName }}": default{{ .FieldName }},
+		{{- end }}
+		{{ end }}
+	}
+
+	childContent, err := runTemplate("{{ .Name }}", resource{{ .UniqueName }}, parent, fmap)
+	if err != nil {
+		return nil, err
+	}
+
+	// decode YAML into unstructured.Unstructured
+	resourceObj := &unstructured.Unstructured{}
+	decode := k8s_yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+	_, _, err = decode.Decode([]byte(childContent), nil, resourceObj)
+	if err != nil {
+		return nil, err
+	}
+
+	return resourceObj, nil
+}
+{{ else }}
 // Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource
 func Create{{ .UniqueName }} (parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }}) (metav1.Object, error) {
 
@@ -61,5 +100,6 @@ func Create{{ .UniqueName }} (parent *{{ $.Resource.ImportAlias }}.{{ $.Resource
 
 	return resourceObj, nil
 }
+{{ end }}
 {{ end }}
 `

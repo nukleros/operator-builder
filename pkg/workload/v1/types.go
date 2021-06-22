@@ -98,9 +98,9 @@ type APISpecField struct {
 // SourceFile represents a golang source code file that contains one or more
 // child resource objects
 type SourceFile struct {
-	Filename string
-	Children []ChildResource
-	Legacy   bool
+	Filename  string
+	Children  []ChildResource
+	HasStatic bool
 }
 
 // ChildResource contains attributes for resources created by the custom resource.
@@ -113,7 +113,7 @@ type ChildResource struct {
 	Kind                 string
 	StaticContent        string
 	SourceCode           string
-	LegacyCreateStrategy bool
+	StaticCreateStrategy bool
 }
 
 // Marker contains the attributes of a workload marker from a static manifest

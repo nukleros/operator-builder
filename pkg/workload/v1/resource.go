@@ -12,6 +12,8 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
+var staticTypes = []string{"CustomResourceDefinition"}
+
 func processResources(workloadPath string, resources []string) (*[]SourceFile, *[]RBACRule, error) {
 
 	// each sourceFile is a source code file that contains one or more child
@@ -85,26 +87,54 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 				rbacRules = append(rbacRules, newRBACRule)
 			}
 
-			// generate object source code
-			resourceDefinition, err := generate.Generate([]byte(manifest), "resourceObj")
-			if err != nil {
-				return nil, nil, err
-			}
-
-			// add variables based on commented markers
-			resourceDefinition, err = addVariables(resourceDefinition)
-			if err != nil {
-				return nil, nil, err
+			// identify when we need to use a staticCreateStrategy
+			// NOTE: we have to use staticCreateStrategy for manifests which contain multi-line strings or those
+			// identified in the staticTypes variable
+			staticCreateStrategy := strings.Contains(manifest, "|")
+			for _, staticType := range staticTypes {
+				if staticType == resourceKind {
+					staticCreateStrategy = true
+					break
+				}
 			}
 
 			resource := ChildResource{
-				Name:          resourceName,
-				UniqueName:    resourceUniqueName,
-				Group:         resourceGroup,
-				Version:       resourceVersion,
-				Kind:          resourceKind,
-				StaticContent: manifest,
-				SourceCode:    resourceDefinition,
+				Name:                 resourceName,
+				UniqueName:           resourceUniqueName,
+				Group:                resourceGroup,
+				Version:              resourceVersion,
+				Kind:                 resourceKind,
+				StaticCreateStrategy: staticCreateStrategy,
+			}
+
+			// generate correct source code or static code based on if we are using a static create strategy or not
+			if staticCreateStrategy {
+				// add the static, templated content to the resource replacing values which are improperly escaped
+				// during templating
+				templatedContent, err := addTemplating(strings.Replace(manifest, "`", `\"`, -1))
+				if err != nil {
+					return nil, nil, err
+				}
+				resource.StaticContent = templatedContent
+
+				// identify the source file as having static manifests
+				sourceFile.HasStatic = true
+			} else {
+				// generate the object source code
+				resourceDefinition, err := generate.Generate([]byte(manifest), "resourceObj")
+				if err != nil {
+					return nil, nil, err
+				}
+
+				// add variables based on commented markers
+				resourceDefinition, err = addVariables(resourceDefinition)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				// add the source code to the resource
+				resource.SourceCode = resourceDefinition
+				resource.StaticContent = manifest
 			}
 
 			childResources = append(childResources, resource)
@@ -164,4 +194,35 @@ func groupResourceRecorded(rbacRules *[]RBACRule, newRBACRule *RBACRule) bool {
 	}
 
 	return false
+}
+
+func addTemplating(rawContent string) (string, error) {
+
+	lines := strings.Split(string(rawContent), "\n")
+	for i, line := range lines {
+		if containsMarker(line) {
+			marker, err := processMarker(line)
+			if err != nil {
+				return "", err
+			}
+			var paddingStr string
+			paddingLen := marker.LeadingSpaces
+			for paddingLen > 0 {
+				paddingStr = paddingStr + " "
+				paddingLen--
+			}
+			if containsDefault(line) {
+				lines[i] = fmt.Sprintf("%s%s: {{ .Spec.%s | default%s }}",
+					paddingStr, marker.Key, strings.Title(marker.FieldName),
+					strings.Title(marker.FieldName),
+				)
+			} else {
+				lines[i] = fmt.Sprintf("%s%s: {{ .Spec.%s }}",
+					paddingStr, marker.Key, strings.Title(marker.FieldName),
+				)
+			}
+		}
+	}
+
+	return strings.Join(lines, "\n"), nil
 }

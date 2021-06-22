@@ -343,6 +343,7 @@ func (s *apiScaffolder) Scaffold() error {
 						ClusterScoped: component.IsClusterScoped(),
 						SourceFile:    sourceFile,
 						PackageName:   component.GetPackageName(),
+						SpecFields:    component.GetAPISpecFields(),
 					},
 				); err != nil {
 					return err
@@ -366,6 +367,7 @@ func (s *apiScaffolder) Scaffold() error {
 				ClusterScoped: s.workload.IsClusterScoped(),
 				SourceFile:    sourceFile,
 				PackageName:   s.workload.GetPackageName(),
+				SpecFields:    s.workload.GetAPISpecFields(),
 			},
 		); err != nil {
 			return err

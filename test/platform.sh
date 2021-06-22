@@ -29,6 +29,8 @@ spec:
     name: ns-operator
     description: Manage namespace operator component
   resources:
+  - tenancy/ns-operator-ns.yaml
+  - tenancy/ns-operator-crd.yaml
   - tenancy/ns-operator-deploy.yaml
 EOF
 
@@ -44,6 +46,8 @@ spec:
     name: contour
     description: Manage contour component
   resources:
+  - ingress/ingress-ns.yaml
+  - ingress/contour-config.yaml
   - ingress/contour-deploy.yaml
   - ingress/contour-svc.yaml
   - ingress/envoy-ds.yaml
@@ -52,6 +56,222 @@ spec:
 EOF
 
 mkdir .test/tenancy
+cat > .test/tenancy/ns-operator-ns.yaml <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenancy-system  # +workload:namespace:default=tenancy-system:type=string
+EOF
+
+cat > .test/tenancy/ns-operator-crd.yaml <<EOF
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  name: tanzunamespaces.tenancy.platform.cnr.vmware.com
+spec:
+  group: tenancy.platform.cnr.vmware.com
+  names:
+    kind: TanzuNamespace
+    listKind: TanzuNamespaceList
+    plural: tanzunamespaces
+    singular: tanzunamespace
+    shortNames:
+      - tns
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: TanzuNamespace is the Schema for the tanzunamespaces API
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: TanzuNamespaceSpec defines the desired state of TanzuNamespace
+              properties:
+                #
+                # common
+                #
+                # NOTE: pick one or the other, but not both.  name is primary. defaults to the name of the CRD object.
+                name:
+                  type: string
+                tanzuNamespaceName:
+                  type: string
+                #
+                # network policies
+                #
+                networkPolicies:
+                  default: []
+                  items:
+                    description: NetworkPolicy defines an individual network policy which belongs to an array of NetworkPolicies
+                    properties:
+                      egressNamespaceLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                      egressPodLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                      egressTCPPorts:
+                        items:
+                          type: integer
+                        type: array
+                        default: []
+                      egressUDPPorts:
+                        items:
+                          type: integer
+                        type: array
+                        default: []
+                      ingressNamespaceLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                      ingressPodLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                      ingressTCPPorts:
+                        items:
+                          type: integer
+                        type: array
+                        default: []
+                      ingressUDPPorts:
+                        items:
+                          type: integer
+                        type: array
+                        default: []
+                      targetPodLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                    type: object
+                  type: array
+                #
+                # limit range
+                #
+                # NOTE: backwards compatibility
+                tanzuLimitRangeDefaultCpuLimit:
+                  default: 125m
+                  type: string
+                tanzuLimitRangeDefaultCpuRequest:
+                  default: 125m
+                  type: string
+                tanzuLimitRangeDefaultMemoryLimit:
+                  default: 64Mi
+                  type: string
+                tanzuLimitRangeDefaultMemoryRequest:
+                  default: 64Mi
+                  type: string
+                tanzuLimitRangeMaxCpuLimit:
+                  default: 1000m
+                  type: string
+                tanzuLimitRangeMaxMemoryLimit:
+                  default: 2Gi
+                  type: string
+                # NOTE: new object for limitRange*
+                limitRange:
+                  default: {}
+                  type: object
+                  properties:
+                    defaultCPULimit:
+                      type: string
+                    defaultCPURequest:
+                      type: string
+                    defaultMemoryLimit:
+                      type: string
+                    defaultMemoryRequest:
+                      type: string
+                    maxCPULimit:
+                      type: string
+                    maxMemoryLimit:
+                      type: string
+                #
+                # resource quota
+                #
+                # NOTE: backwards compatibility
+                tanzuResourceQuotaCpuLimits:
+                  default: 2000m
+                  type: string
+                tanzuResourceQuotaCpuRequests:
+                  default: 2000m
+                  type: string
+                tanzuResourceQuotaMemoryLimits:
+                  default: 4Gi
+                  type: string
+                tanzuResourceQuotaMemoryRequests:
+                  default: 4Gi
+                  type: string
+                # NOTE: new object for resourceQuota*
+                resourceQuota:
+                  default: {}
+                  type: object
+                  properties:
+                    limitsCPU:
+                      type: string
+                    limitsMemory:
+                      type: string
+                    requestsCPU:
+                      type: string
+                    requestsMemory:
+                      type: string
+                #
+                # rbac
+                #
+                rbac:
+                  default: []
+                  items:
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - namespace-admin
+                          - developer
+                          - read-only
+                          # - "custom"  # TODO: support this later
+                      create:
+                        type: boolean
+                        default: false
+                      user:
+                        type: string
+                        default: ""
+                      role:
+                        type: string
+                        default: ""
+                      roleBinding:
+                        type: string
+                        default: ""
+                    type: object
+                  type: array
+              required: []
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+EOF
+
 cat > .test/tenancy/ns-operator-deploy.yaml <<EOF
 apiVersion: apps/v1
 kind: Deployment
@@ -77,6 +297,34 @@ spec:
 EOF
 
 mkdir .test/ingress
+cat > .test/ingress/ingress-ns.yaml <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-system  # +workload:namespace:default=ingress-system:type=string
+EOF
+
+cat > .test/ingress/contour-config.yaml <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contour-configmap
+  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+data:
+  config.yaml: |
+    someoption: myoption
+    anotheroption: another
+    justtesting: multistringyaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: contour-secret
+  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+stringData:
+  some: secretstuff
+EOF
+
 cat > .test/ingress/contour-deploy.yaml <<EOF
 apiVersion: apps/v1
 kind: Deployment
@@ -136,6 +384,8 @@ spec:
       - name: envoy
         image: nginx:1.17  # +workload:EnvoyImage:type=string
 EOF
+
+go mod init testdomain.test/operator-builder-test
 
 operator-builder init \
     --workload-config .test/cnp-workload-collection.yaml
