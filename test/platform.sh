@@ -385,7 +385,10 @@ spec:
         image: nginx:1.17  # +workload:EnvoyImage:type=string
 EOF
 
-go mod init testdomain.test/operator-builder-test
+# TODO: domain flag exists as part of workload-collection but is not
+# properly being pulled in during init
+# see https://github.com/vmware-tanzu-labs/operator-builder/issues/11
+go mod init acme.com/operator-builder-test
 
 operator-builder init \
     --workload-config .test/cnp-workload-collection.yaml

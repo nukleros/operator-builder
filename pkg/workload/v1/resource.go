@@ -12,8 +12,6 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
-var staticTypes = []string{"CustomResourceDefinition"}
-
 func processResources(workloadPath string, resources []string) (*[]SourceFile, *[]RBACRule, error) {
 
 	// each sourceFile is a source code file that contains one or more child
@@ -90,13 +88,7 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 			// identify when we need to use a staticCreateStrategy
 			// NOTE: we have to use staticCreateStrategy for manifests which contain multi-line strings or those
 			// identified in the staticTypes variable
-			staticCreateStrategy := strings.Contains(manifest, "|")
-			for _, staticType := range staticTypes {
-				if staticType == resourceKind {
-					staticCreateStrategy = true
-					break
-				}
-			}
+			staticCreateStrategy := isStaticType(manifest, resourceKind)
 
 			resource := ChildResource{
 				Name:                 resourceName,
@@ -145,6 +137,22 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 	}
 
 	return &sourceFiles, &rbacRules, nil
+}
+
+func isStaticType(manifestContent string, kind string) bool {
+	staticTypes := []string{"CustomResourceDefinition"}
+
+	// if the manifest belongs to the staticTypes array, it is required to be generated
+	// as a static manifest
+	for _, staticType := range staticTypes {
+		if staticType == kind {
+			return true
+		}
+	}
+
+	// if the manifest has a multi-line string, it also is required to be generated
+	// as a static manifest
+	return strings.Contains(manifestContent, "|")
 }
 
 func extractManifests(manifestContent []byte) []string {

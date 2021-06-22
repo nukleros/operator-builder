@@ -49,7 +49,7 @@ import (
 	{{ end }}
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	{{ if .SourceFile.HasStatic }}
+	{{- if .SourceFile.HasStatic }}
 	k8s_yaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	{{ end }}
 
@@ -86,20 +86,18 @@ func Create{{ .UniqueName }}(parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.
 		return nil, err
 	}
 
-	return resourceObj, nil
-}
 {{ else }}
 // Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource
 func Create{{ .UniqueName }} (parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }}) (metav1.Object, error) {
 
 	{{ .SourceCode }}
 
+{{ end }}
 	{{ if not $.ClusterScoped }}
 	resourceObj.SetNamespace(parent.Namespace)
 	{{ end }}
 
 	return resourceObj, nil
 }
-{{ end }}
 {{ end }}
 `
