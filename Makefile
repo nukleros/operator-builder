@@ -1,12 +1,19 @@
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
+
 build:
-	$(GOROOT)/bin/go build -o bin/operator-builder cmd/main.go
+	go build -o bin/operator-builder cmd/main.go
 
 test-install: build
-	$(GOROOT)/bin/go test -cover -coverprofile=./bin/coverage.out ./...
+	go test -cover -coverprofile=./bin/coverage.out ./...
 	sudo cp bin/operator-builder /usr/local/bin/operator-builder
 
 test-coverage-view: test-install
-	$(GOROOT)/bin/go tool cover -html=./bin/coverage.out	
+	go tool cover -html=./bin/coverage.out	
 
 TEST_PATH ?= /tmp
 TEST_SCRIPT ?= default.sh
