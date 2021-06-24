@@ -63,7 +63,8 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 	}
 
 	// validate the workload config
-	if err := workload.Validate(); err != nil {
+	err = workload.Validate()
+	if err != nil {
 		return err
 	}
 
@@ -74,6 +75,7 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 	if err != nil {
 		return err
 	}
+
 	err = yaml.Unmarshal(projectFile, &p.project)
 	if err != nil {
 		return err
@@ -90,8 +92,8 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 		&p.project,
 	)
 	scaffolder.InjectFS(fs)
-	err := scaffolder.Scaffold()
-	if err != nil {
+
+	if err := scaffolder.Scaffold(); err != nil {
 		return err
 	}
 

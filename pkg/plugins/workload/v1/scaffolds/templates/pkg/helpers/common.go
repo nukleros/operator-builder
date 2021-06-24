@@ -8,7 +8,7 @@ import (
 
 var _ machinery.Template = &Common{}
 
-// Common scaffolds the helper functions
+// Common scaffolds the helper functions.
 type Common struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin

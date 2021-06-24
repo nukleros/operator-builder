@@ -51,7 +51,7 @@ func (f *CliCmdInitSub) SetTemplateDefaults() error {
 	return nil
 }
 
-var cliCmdInitSubTemplate = `{{ .Boilerplate }}
+const cliCmdInitSubTemplate = `{{ .Boilerplate }}
 
 package commands
 

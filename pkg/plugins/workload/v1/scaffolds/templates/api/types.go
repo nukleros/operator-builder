@@ -12,7 +12,7 @@ import (
 
 var _ machinery.Template = &Types{}
 
-// Types scaffolds a workload's API type
+// Types scaffolds a workload's API type.
 type Types struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -25,7 +25,7 @@ type Types struct {
 	IsStandalone  bool
 }
 
-// SetTemplateDefaults implements file.Template
+// SetTemplateDefaults implements file.Template.
 func (f *Types) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
 		"apis",
@@ -40,7 +40,7 @@ func (f *Types) SetTemplateDefaults() error {
 	return nil
 }
 
-var typesTemplate = `{{ .Boilerplate }}
+const typesTemplate = `{{ .Boilerplate }}
 
 package {{ .Resource.Version }}
 

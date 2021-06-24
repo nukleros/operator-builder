@@ -6,7 +6,7 @@ import (
 
 var _ machinery.Template = &Project{}
 
-// Project scaffolds the WORKLOAD project config
+// Project scaffolds the WORKLOAD project config.
 type Project struct {
 	machinery.TemplateMixin
 

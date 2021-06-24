@@ -12,7 +12,7 @@ import (
 
 var _ machinery.Template = &Controller{}
 
-// Controller scaffolds the workload's controller
+// Controller scaffolds the workload's controller.
 type Controller struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -38,7 +38,8 @@ func (f *Controller) SetTemplateDefaults() error {
 	return nil
 }
 
-var controllerTemplate = `{{ .Boilerplate }}
+//nolint: lll
+const controllerTemplate = `{{ .Boilerplate }}
 
 package {{ .Resource.Group }}
 

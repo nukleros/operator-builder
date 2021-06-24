@@ -8,7 +8,7 @@ import (
 
 var _ machinery.Template = &Common{}
 
-// Common scaffolds common phase operations
+// Common scaffolds common phase operations.
 type Common struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -23,12 +23,13 @@ func (f *Common) SetTemplateDefaults() error {
 	return nil
 }
 
-var commonTemplate = `{{ .Boilerplate }}
+const commonTemplate = `{{ .Boilerplate }}
 
 package phases
 
 import (
 	"fmt"
+	"relect"
 	"strings"
 	"time"
 
@@ -57,7 +58,7 @@ func conditionExists(
 ) bool {
 
 	for _, currentCondition := range currentConditions {
-		if condition.Message == currentCondition.Message && condition.Type == currentCondition.Type && condition.Status == currentCondition.Status {
+		if relect.DeepEquals(*condition, currentCondition) {
 			return true
 		}
 	}

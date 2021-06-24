@@ -15,7 +15,7 @@ var _ machinery.Template = &CliCmdInit{}
 
 // CliCmdInit scaffolds the companion CLI's init subcommand for
 // comopnent workloads.  The init logic will live in the workload's
-// subcommand to this command; see cmd_init_sub.go
+// subcommand to this command; see cmd_init_sub.go.
 type CliCmdInit struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -37,7 +37,7 @@ func (f *CliCmdInit) SetTemplateDefaults() error {
 	return nil
 }
 
-var cliCmdInitTemplate = `{{ .Boilerplate }}
+const cliCmdInitTemplate = `{{ .Boilerplate }}
 
 package commands
 

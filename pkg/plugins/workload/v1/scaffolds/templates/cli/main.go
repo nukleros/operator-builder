@@ -8,7 +8,7 @@ import (
 
 var _ machinery.Template = &CliMain{}
 
-// CliMain scaffolds the main package for the companion CLI
+// CliMain scaffolds the main package for the companion CLI.
 type CliMain struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -26,7 +26,7 @@ func (f *CliMain) SetTemplateDefaults() error {
 	return nil
 }
 
-var cliMainTemplate = `{{ .Boilerplate }}
+const cliMainTemplate = `{{ .Boilerplate }}
 
 package main
 

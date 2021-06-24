@@ -12,7 +12,7 @@ import (
 var _ machinery.Template = &Component{}
 
 // Component scaffolds the workload's check ready function that is called by
-// components with a dependency on the workload
+// components with a dependency on the workload.
 type Component struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin

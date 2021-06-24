@@ -6,7 +6,7 @@ import (
 
 var _ machinery.Template = &GoMod{}
 
-// GoMod scaffolds a file that defines the project dependencies
+// GoMod scaffolds a file that defines the project dependencies.
 type GoMod struct {
 	machinery.TemplateMixin
 	machinery.RepositoryMixin

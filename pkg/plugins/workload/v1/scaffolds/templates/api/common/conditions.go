@@ -8,7 +8,7 @@ import (
 
 var _ machinery.Template = &Conditions{}
 
-// Conditions scaffolds the conditions for all workloads
+// Conditions scaffolds the conditions for all workloads.
 type Conditions struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -22,7 +22,7 @@ func (f *Conditions) SetTemplateDefaults() error {
 	return nil
 }
 
-var conditionsTemplate = `{{ .Boilerplate }}
+const conditionsTemplate = `{{ .Boilerplate }}
 
 package common
 

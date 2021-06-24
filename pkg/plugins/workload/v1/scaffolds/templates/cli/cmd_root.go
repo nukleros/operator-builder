@@ -8,7 +8,7 @@ import (
 
 var _ machinery.Template = &CliCmdRoot{}
 
-// CliCmdRoot scaffolds the root command file for the companion CLI
+// CliCmdRoot scaffolds the root command file for the companion CLI.
 type CliCmdRoot struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -27,7 +27,7 @@ func (f *CliCmdRoot) SetTemplateDefaults() error {
 	return nil
 }
 
-var cliCmdRootTemplate = `{{ .Boilerplate }}
+const cliCmdRootTemplate = `{{ .Boilerplate }}
 
 package commands
 

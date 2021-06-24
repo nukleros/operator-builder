@@ -8,6 +8,7 @@ import (
 
 func NewUpdateLicenseCmd() *cobra.Command {
 	var projectLicensePath string
+
 	var sourceHeaderPath string
 
 	cmd := &cobra.Command{
@@ -16,14 +17,14 @@ func NewUpdateLicenseCmd() *cobra.Command {
 		Long:  `Update a project license.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// project license
-			if len(projectLicensePath) != 0 {
+			if projectLicensePath != "" {
 				if err := license.UpdateProjectLicense(projectLicensePath); err != nil {
 					return err
 				}
 			}
 
 			// source header license
-			if len(sourceHeaderPath) != 0 {
+			if sourceHeaderPath != "" {
 				// boilerplate
 				if err := license.UpdateSourceHeader(sourceHeaderPath); err != nil {
 					return err

@@ -26,21 +26,21 @@ type initScaffolder struct {
 	fs machinery.Filesystem
 }
 
-// NewInitScaffolder returns a new Scaffolder for project initialization operations
-func NewInitScaffolder(config config.Config, workload workloadv1.WorkloadInitializer) plugins.Scaffolder {
+// NewInitScaffolder returns a new Scaffolder for project initialization operations.
+func NewInitScaffolder(cfg config.Config, workload workloadv1.WorkloadInitializer) plugins.Scaffolder {
 	return &initScaffolder{
-		config:          config,
+		config:          cfg,
 		boilerplatePath: "hack/boilerplate.go.txt",
 		workload:        workload,
 	}
 }
 
-// InjectFS implements cmdutil.Scaffolder
+// InjectFS implements cmdutil.Scaffolder.
 func (s *initScaffolder) InjectFS(fs machinery.Filesystem) {
 	s.fs = fs
 }
 
-// scaffold implements cmdutil.Scaffolder
+// scaffold implements cmdutil.Scaffolder.
 func (s *initScaffolder) Scaffold() error {
 	fmt.Println("Adding workload scaffolding...")
 
@@ -56,7 +56,7 @@ func (s *initScaffolder) Scaffold() error {
 	)
 
 	if s.workload.HasRootCmdName() {
-		if err = scaffold.Execute(
+		err = scaffold.Execute(
 			&cli.CliMain{
 				CliRootCmd: s.workload.GetRootCmdName(),
 			},
@@ -70,17 +70,19 @@ func (s *initScaffolder) Scaffold() error {
 			&templates.Project{
 				CliRootCmd: s.workload.GetRootCmdName(),
 			},
-		); err != nil {
+		)
+		if err != nil {
 			return err
 		}
 	}
 
-	if err = scaffold.Execute(
+	err = scaffold.Execute(
 		&templates.GoMod{
 			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,
 			CobraVersion:             CobraVersion,
 		},
-	); err != nil {
+	)
+	if err != nil {
 		return err
 	}
 

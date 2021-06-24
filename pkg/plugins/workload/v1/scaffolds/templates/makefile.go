@@ -8,7 +8,7 @@ var _ machinery.Template = &Makefile{}
 
 const crdOptions = "crd:preserveUnknownFields=false,crdVersions=v1,trivialVersions=true"
 
-// Makefile scaffolds the project Makefile
+// Makefile scaffolds the project Makefile.
 type Makefile struct {
 	machinery.TemplateMixin
 
@@ -29,6 +29,7 @@ func (f *Makefile) SetTemplateDefaults() error {
 	return nil
 }
 
+//nolint: lll
 const makefileTemplate = `
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest

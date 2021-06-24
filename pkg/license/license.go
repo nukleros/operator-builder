@@ -1,6 +1,7 @@
 package license
 
 import (
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -9,7 +10,7 @@ import (
 )
 
 // UpdateProjectLicense writes a new project license file using a local file or
-// HTTP URL as the source for license content
+// HTTP URL as the source for license content.
 func UpdateProjectLicense(source string) error {
 	sourceLicense, err := getSourceLicense(source)
 	if err != nil {
@@ -21,14 +22,17 @@ func UpdateProjectLicense(source string) error {
 		return err
 	}
 	defer licenseF.Close()
-	licenseF.WriteString(string(sourceLicense))
+
+	if _, err := licenseF.WriteString(string(sourceLicense)); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // UpdateSourceHeader writes the license boilerplate used by Kubebuilder for the
 // licensing header in source code files.  It uses a local file or HTTP URL as
-// the source for the header content
+// the source for the header content.
 func UpdateSourceHeader(source string) error {
 	sourceLicense, err := getSourceLicense(source)
 	if err != nil {
@@ -47,30 +51,40 @@ func UpdateSourceHeader(source string) error {
 		return err
 	}
 	defer licenseB.Close()
-	licenseB.WriteString(string(sourceLicense) + "\n")
+
+	if _, err := licenseB.WriteString(string(sourceLicense) + "\n"); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // UpdateExistingSourceHeader rewrites the licensing header for all pre-existing
 // source code files.  It uses a local file or HTTP URL as the source for the
-// header content
+// header content.
 func UpdateExistingSourceHeader(source string) error {
 	sourceLicense, err := getSourceLicense(source)
 	if err != nil {
 		return err
 	}
 
-	filepath.Walk("./", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		filename := info.Name()
-		if len(filename) > 3 && filename[len(filename)-3:] == ".go" {
-			replaceLicenseHeader(path, sourceLicense)
-		}
-		return nil
-	})
+	if err := filepath.WalkDir("./",
+		func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			filename := d.Name()
+			if len(filename) > 3 && filename[len(filename)-3:] == ".go" {
+				if err := replaceLicenseHeader(path, sourceLicense); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
+	); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -85,10 +99,12 @@ func getSourceLicense(source string) ([]byte, error) {
 			return []byte{}, err
 		}
 		defer resp.Body.Close()
+
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return []byte{}, err
 		}
+
 		sourceLicense = body
 	} else {
 		// source is local file
@@ -102,8 +118,8 @@ func getSourceLicense(source string) ([]byte, error) {
 	return sourceLicense, nil
 }
 
-func replaceLicenseHeader(filepath string, header []byte) error {
-	input, err := ioutil.ReadFile(filepath)
+func replaceLicenseHeader(file string, header []byte) error {
+	input, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
 	}
@@ -111,7 +127,9 @@ func replaceLicenseHeader(filepath string, header []byte) error {
 	lines := strings.Split(string(input), "\n")
 
 	sourceBeginningFound := false
+
 	var output string
+
 	for _, line := range lines {
 		if !sourceBeginningFound {
 			if len(line) > 7 && line[0:7] == "package" {
@@ -123,7 +141,7 @@ func replaceLicenseHeader(filepath string, header []byte) error {
 		}
 	}
 
-	err = ioutil.WriteFile(filepath, []byte(output), 600)
+	err = ioutil.WriteFile(file, []byte(output), 0600)
 	if err != nil {
 		return err
 	}

@@ -12,8 +12,7 @@ import (
 )
 
 type initSubcommand struct {
-	config      config.Config
-	commandName string
+	config config.Config
 
 	workloadConfigPath string
 
@@ -70,8 +69,8 @@ func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 	scaffolder := scaffolds.NewInitScaffolder(p.config, p.workload)
 	scaffolder.InjectFS(fs)
-	err := scaffolder.Scaffold()
-	if err != nil {
+
+	if err := scaffolder.Scaffold(); err != nil {
 		return err
 	}
 

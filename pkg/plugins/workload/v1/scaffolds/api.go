@@ -39,15 +39,15 @@ type apiScaffolder struct {
 	fs machinery.Filesystem
 }
 
-// NewAPIScaffolder returns a new Scaffolder for project initialization operations
+// NewAPIScaffolder returns a new Scaffolder for project initialization operations.
 func NewAPIScaffolder(
-	config config.Config,
+	cfg config.Config,
 	res resource.Resource,
 	workload workloadv1.WorkloadAPIBuilder,
 	project *workloadv1.Project,
 ) plugins.Scaffolder {
 	return &apiScaffolder{
-		config:          config,
+		config:          cfg,
 		resource:        res,
 		boilerplatePath: "hack/boilerplate.go.txt",
 		workload:        workload,
@@ -55,12 +55,12 @@ func NewAPIScaffolder(
 	}
 }
 
-// InjectFS implements cmdutil.Scaffolder
+// InjectFS implements cmdutil.Scaffolder.
 func (s *apiScaffolder) InjectFS(fs machinery.Filesystem) {
 	s.fs = fs
 }
 
-// scaffold implements cmdutil.Scaffolder
+// scaffold implements cmdutil.Scaffolder.
 func (s *apiScaffolder) Scaffold() error {
 	fmt.Println("Building API...")
 
@@ -76,6 +76,7 @@ func (s *apiScaffolder) Scaffold() error {
 	)
 
 	var createFuncNames []string
+
 	for _, sourceFile := range *s.workload.GetSourceFiles() {
 		for _, childResource := range sourceFile.Children {
 			funcName := fmt.Sprintf("Create%s", childResource.UniqueName)
@@ -88,7 +89,7 @@ func (s *apiScaffolder) Scaffold() error {
 	// companion CLI
 	if s.workload.IsStandalone() && s.workload.GetRootcommandName() != "" {
 		// build a subcommand for standalone, e.g. `webstorectl init`
-		if err = scaffold.Execute(
+		err = scaffold.Execute(
 			&cli.CliCmdInitSub{
 				CliRootCmd:        s.project.CliRootCommandName,
 				CliSubCmdName:     s.workload.GetSubcommandName(),
@@ -110,24 +111,27 @@ func (s *apiScaffolder) Scaffold() error {
 				CliSubCmdDescr: s.workload.GetSubcommandDescr(),
 				IsComponent:    s.workload.IsComponent(),
 			},
-		); err != nil {
+		)
+		if err != nil {
 			return err
 		}
 	} else if s.workload.IsCollection() && s.workload.GetRootcommandName() != "" {
-		if err = scaffold.Execute(
+		err = scaffold.Execute(
 			&cli.CliCmdInit{
 				CliRootCmd: s.project.CliRootCommandName,
 			},
 			&cli.CliCmdGenerate{
 				CliRootCmd: s.project.CliRootCommandName,
 			},
-		); err != nil {
+		)
+		if err != nil {
 			return err
 		}
+
 		for _, component := range *s.workload.GetComponents() {
 			if component.GetSubcommandName() != "" {
 				// build a subcommand for the component, e.g. `cnpctl init ingress`
-				if err = scaffold.Execute(
+				err = scaffold.Execute(
 					&cli.CliCmdInitSub{
 						CliRootCmd:        s.project.CliRootCommandName,
 						CliSubCmdName:     component.GetSubcommandName(),
@@ -156,7 +160,8 @@ func (s *apiScaffolder) Scaffold() error {
 							s.workload.IsClusterScoped(),
 						),
 					},
-				); err != nil {
+				)
+				if err != nil {
 					return err
 				}
 			}
@@ -165,7 +170,7 @@ func (s *apiScaffolder) Scaffold() error {
 
 	// API types
 	if s.workload.IsStandalone() {
-		if err = scaffold.Execute(
+		err = scaffold.Execute(
 			&api.Types{
 				SpecFields:    s.workload.GetAPISpecFields(),
 				ClusterScoped: s.workload.IsClusterScoped(),
@@ -200,7 +205,8 @@ func (s *apiScaffolder) Scaffold() error {
 			&samples.CRDSample{
 				SpecFields: s.workload.GetAPISpecFields(),
 			},
-		); err != nil {
+		)
+		if err != nil {
 			return err
 		}
 	} else {
@@ -215,7 +221,7 @@ func (s *apiScaffolder) Scaffold() error {
 			)),
 		)
 
-		if err = scaffold.Execute(
+		err = scaffold.Execute(
 			&api.Types{
 				SpecFields:    s.workload.GetAPISpecFields(),
 				ClusterScoped: s.workload.IsClusterScoped(),
@@ -255,9 +261,11 @@ func (s *apiScaffolder) Scaffold() error {
 			&crd.Kustomization{
 				CRDSampleFilenames: crdSampleFilenames,
 			},
-		); err != nil {
+		)
+		if err != nil {
 			return err
 		}
+
 		for _, component := range *s.workload.GetComponents() {
 
 			componentScaffold := machinery.NewScaffold(s.fs,
@@ -288,7 +296,7 @@ func (s *apiScaffolder) Scaffold() error {
 				)),
 			)
 
-			if err = componentScaffold.Execute(
+			err = componentScaffold.Execute(
 				&templates.MainUpdater{
 					WireResource:   true,
 					WireController: true,
@@ -320,13 +328,14 @@ func (s *apiScaffolder) Scaffold() error {
 				&crd.Kustomization{
 					CRDSampleFilenames: crdSampleFilenames,
 				},
-			); err != nil {
+			)
+			if err != nil {
 				return err
 			}
+
 			// component child resource definition files
 			// these are the resources defined in the static yaml manifests
 			for _, sourceFile := range *component.GetSourceFiles() {
-
 				scaffold := machinery.NewScaffold(s.fs,
 					machinery.WithConfig(s.config),
 					machinery.WithBoilerplate(string(boilerplate)),
@@ -337,14 +346,15 @@ func (s *apiScaffolder) Scaffold() error {
 					)),
 				)
 
-				if err = scaffold.Execute(
+				err = scaffold.Execute(
 					&resources.Definition{
 						ClusterScoped: component.IsClusterScoped(),
 						SourceFile:    sourceFile,
 						PackageName:   component.GetPackageName(),
 						SpecFields:    component.GetAPISpecFields(),
 					},
-				); err != nil {
+				)
+				if err != nil {
 					return err
 				}
 			}
@@ -354,21 +364,21 @@ func (s *apiScaffolder) Scaffold() error {
 	// child resource definition files
 	// these are the resources defined in the static yaml manifests
 	for _, sourceFile := range *s.workload.GetSourceFiles() {
-
 		scaffold := machinery.NewScaffold(s.fs,
 			machinery.WithConfig(s.config),
 			machinery.WithBoilerplate(string(boilerplate)),
 			machinery.WithResource(&s.resource),
 		)
 
-		if err = scaffold.Execute(
+		err = scaffold.Execute(
 			&resources.Definition{
 				ClusterScoped: s.workload.IsClusterScoped(),
 				SourceFile:    sourceFile,
 				PackageName:   s.workload.GetPackageName(),
 				SpecFields:    s.workload.GetAPISpecFields(),
 			},
-		); err != nil {
+		)
+		if err != nil {
 			return err
 		}
 	}

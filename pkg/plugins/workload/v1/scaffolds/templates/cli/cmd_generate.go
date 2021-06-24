@@ -15,7 +15,7 @@ var _ machinery.Template = &CliCmdGenerate{}
 
 // CliCmdGenerate scaffolds the companion CLI's generate subcommand for
 // comopnent workloads.  The generate logic will live in the workload's
-// subcommand to this command; see cmd_generate_sub.go
+// subcommand to this command; see cmd_generate_sub.go.
 type CliCmdGenerate struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -37,7 +37,7 @@ func (f *CliCmdGenerate) SetTemplateDefaults() error {
 	return nil
 }
 
-var cliCmdGenerateTemplate = `{{ .Boilerplate }}
+const cliCmdGenerateTemplate = `{{ .Boilerplate }}
 
 package commands
 
@@ -57,6 +57,12 @@ var generateCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(generateCmd)
 
-	generateCmd.PersistentFlags().StringVarP(&workloadManifest, "workload-manifest", "w", "", "Filepath to the workload manifest to generate child resources for.")
+	generateCmd.PersistentFlags().StringVarP(
+		&workloadManifest,
+		"workload-manifest",
+		"w",
+		"",
+		"Filepath to the workload manifest to generate child resources for."
+	)
 }
 `

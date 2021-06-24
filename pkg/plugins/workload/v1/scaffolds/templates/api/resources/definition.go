@@ -10,7 +10,7 @@ import (
 
 var _ machinery.Template = &Definition{}
 
-// Types scaffolds the child resource definition files
+// Types scaffolds the child resource definition files.
 type Definition struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin

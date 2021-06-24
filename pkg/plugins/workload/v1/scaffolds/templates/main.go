@@ -15,7 +15,7 @@ const (
 
 var _ machinery.Template = &Main{}
 
-// Main adds API-specific scaffolding to main.go
+// Main adds API-specific scaffolding to main.go.
 type Main struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -128,6 +128,7 @@ func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 
 	// Generate setup code fragments
 	setup := make([]string, 0)
+
 	if f.WireController {
 		if !f.MultiGroup || f.Resource.Group == "" {
 			setup = append(setup, fmt.Sprintf(reconcilerSetupCodeFragment,
@@ -137,6 +138,7 @@ func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 				f.Resource.PackageName(), f.Resource.Kind, f.Resource.Group, f.Resource.Kind, f.Resource.Kind))
 		}
 	}
+
 	if f.WireWebhook {
 		setup = append(setup, fmt.Sprintf(webhookSetupCodeFragment,
 			f.Resource.ImportAlias(), f.Resource.Kind, f.Resource.Kind))
@@ -146,9 +148,11 @@ func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	if len(imports) != 0 {
 		fragments[machinery.NewMarkerFor(defaultMainPath, importMarker)] = imports
 	}
+
 	if len(addScheme) != 0 {
 		fragments[machinery.NewMarkerFor(defaultMainPath, addSchemeMarker)] = addScheme
 	}
+
 	if len(setup) != 0 {
 		fragments[machinery.NewMarkerFor(defaultMainPath, setupMarker)] = setup
 	}
@@ -156,7 +160,7 @@ func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	return fragments
 }
 
-var mainTemplate = `{{ .Boilerplate }}
+const mainTemplate = `{{ .Boilerplate }}
 
 package main
 

@@ -12,7 +12,7 @@ import (
 
 var _ machinery.Template = &CRDSample{}
 
-// CRDSample scaffolds a file that defines a sample manifest for the CRD
+// CRDSample scaffolds a file that defines a sample manifest for the CRD.
 type CRDSample struct {
 	machinery.TemplateMixin
 	machinery.ResourceMixin

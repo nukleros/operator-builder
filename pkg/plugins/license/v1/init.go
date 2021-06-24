@@ -14,8 +14,7 @@ import (
 var _ plugin.InitSubcommand = &initSubcommand{}
 
 type initSubcommand struct {
-	config      config.Config
-	commandName string
+	config config.Config
 
 	// license files
 	projectLicensePath string
@@ -45,14 +44,14 @@ func (p *initSubcommand) InjectConfig(c config.Config) {
 
 func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 	// project license
-	if len(p.projectLicensePath) != 0 {
+	if p.projectLicensePath != "" {
 		if err := license.UpdateProjectLicense(p.projectLicensePath); err != nil {
 			return err
 		}
 	}
 
 	// source header license
-	if len(p.sourceHeaderPath) != 0 {
+	if p.sourceHeaderPath != "" {
 		if err := license.UpdateSourceHeader(p.sourceHeaderPath); err != nil {
 			return err
 		}

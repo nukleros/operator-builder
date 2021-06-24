@@ -8,7 +8,7 @@ import (
 
 var _ machinery.Template = &Dependencies{}
 
-// Dependencies scaffolds the dependency phase methods
+// Dependencies scaffolds the dependency phase methods.
 type Dependencies struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -23,7 +23,7 @@ func (f *Dependencies) SetTemplateDefaults() error {
 	return nil
 }
 
-var dependenciesTemplate = `{{ .Boilerplate }}
+const dependenciesTemplate = `{{ .Boilerplate }}
 
 package phases
 
@@ -151,7 +151,10 @@ func collectionConfigIsReady(
 
 	// configuration is not ready if we do not have exactly one configuration
 	if len(collectionConfigs.Items) != 1 {
-		r.GetLogger().V(0).Info("expected only 1 resource of kind: [" + helpers.CollectionAPIKind + "]; found " + strconv.Itoa(len(collectionConfigs.Items)))
+		r.GetLogger().V(0).Info(
+			fmt.Sprintf("expected only 1 resource of kind: [%s]; found %d", helpers.CollectionAPIKind, strconv.Itoa(len(collectionConfigs.Items)),
+		)
+		
 		return false
 	}
 
