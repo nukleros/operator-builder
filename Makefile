@@ -1,8 +1,12 @@
 build:
-	go build -o bin/operator-builder cmd/main.go
+	$(GOROOT)/bin/go build -o bin/operator-builder cmd/main.go
 
 test-install: build
-	cp bin/operator-builder /usr/local/bin/operator-builder
+	$(GOROOT)/bin/go test -cover -coverprofile=./bin/coverage.out ./...
+	sudo cp bin/operator-builder /usr/local/bin/operator-builder
+
+test-coverage-view: test-install
+	$(GOROOT)/bin/go tool cover -html=./bin/coverage.out	
 
 TEST_PATH ?= /tmp
 TEST_SCRIPT ?= default.sh
