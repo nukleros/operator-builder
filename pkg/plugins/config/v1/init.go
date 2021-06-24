@@ -16,12 +16,10 @@ type initSubcommand struct {
 var _ plugin.InitSubcommand = &initSubcommand{}
 
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
-
 	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
-
 	taxi := workloadv1.ConfigTaxi{
 		WorkloadConfigPath: p.workloadConfigPath,
 	}

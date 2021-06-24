@@ -10,7 +10,6 @@ import (
 )
 
 func (c ComponentWorkload) Validate() error {
-
 	missingFields := []string{}
 
 	// required fields
@@ -101,7 +100,6 @@ func (c ComponentWorkload) IsCollection() bool {
 }
 
 func (c *ComponentWorkload) SetSpecFields(workloadPath string) error {
-
 	apiSpecFields, err := processMarkers(workloadPath, c.Spec.Resources)
 	if err != nil {
 		return err
@@ -112,7 +110,6 @@ func (c *ComponentWorkload) SetSpecFields(workloadPath string) error {
 }
 
 func (c *ComponentWorkload) SetResources(workloadPath string) error {
-
 	sourceFiles, rbacRules, err := processResources(workloadPath, c.Spec.Resources)
 	if err != nil {
 		return err
@@ -155,7 +152,6 @@ func (c ComponentWorkload) GetRBACRules() *[]RBACRule {
 }
 
 func (c ComponentWorkload) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
-
 	var namespaced bool
 	if clusterScoped {
 		namespaced = false

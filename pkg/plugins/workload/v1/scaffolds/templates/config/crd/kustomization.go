@@ -17,7 +17,6 @@ type Kustomization struct {
 }
 
 func (f *Kustomization) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("config", "crd", "kustomization.yaml")
 	f.TemplateBody = kustomizationTemplate
 	f.IfExistsAction = machinery.OverwriteFile

@@ -18,7 +18,6 @@ type Common struct {
 }
 
 func (f *Common) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("pkg", "helpers", "common.go")
 	f.TemplateBody = commonTemplate
 

@@ -10,7 +10,6 @@ import (
 )
 
 func (s StandaloneWorkload) Validate() error {
-
 	missingFields := []string{}
 
 	// required fields
@@ -47,7 +46,6 @@ func (s StandaloneWorkload) GetDomain() string {
 }
 
 func (s StandaloneWorkload) HasRootCmdName() bool {
-
 	if s.Spec.CompanionCliRootcmd.Name != "" {
 		return true
 	} else {
@@ -134,7 +132,6 @@ func (s StandaloneWorkload) IsCollection() bool {
 }
 
 func (s *StandaloneWorkload) SetSpecFields(workloadPath string) error {
-
 	apiSpecFields, err := processMarkers(workloadPath, s.Spec.Resources)
 	if err != nil {
 		return err
@@ -145,7 +142,6 @@ func (s *StandaloneWorkload) SetSpecFields(workloadPath string) error {
 }
 
 func (s *StandaloneWorkload) SetResources(workloadPath string) error {
-
 	sourceFiles, rbacRules, err := processResources(workloadPath, s.Spec.Resources)
 	if err != nil {
 		return err

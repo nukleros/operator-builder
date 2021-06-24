@@ -24,7 +24,6 @@ type Definition struct {
 }
 
 func (f *Definition) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join(
 		"apis",
 		f.Resource.Group,

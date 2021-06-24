@@ -18,7 +18,6 @@ type CreateResource struct {
 }
 
 func (f *CreateResource) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("controllers", "phases", "create_resource.go")
 
 	f.TemplateBody = createResourceTemplate

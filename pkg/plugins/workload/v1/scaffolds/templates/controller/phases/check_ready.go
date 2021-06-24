@@ -16,7 +16,6 @@ type CheckReady struct {
 }
 
 func (f *CheckReady) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("controllers", "phases", "check_ready.go")
 
 	f.TemplateBody = checkReadyTemplate

@@ -23,7 +23,6 @@ type initSubcommand struct {
 var _ plugin.InitSubcommand = &initSubcommand{}
 
 func (p *initSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *plugin.SubcommandMetadata) {
-
 	subcmdMeta.Description = `Add workload management scaffolding to a new project
 `
 	subcmdMeta.Examples = fmt.Sprintf(`  # Add project scaffolding defined by a workload config file
@@ -32,7 +31,6 @@ func (p *initSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
-
 	p.config = c
 
 	// operator builder always uses multi-group APIs
@@ -51,7 +49,6 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 }
 
 func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
-
 	// load the workload config
 	workload, err := workloadv1.ProcessInitConfig(
 		p.workloadConfigPath,
@@ -71,7 +68,6 @@ func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 }
 
 func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
-
 	scaffolder := scaffolds.NewInitScaffolder(p.config, p.workload)
 	scaffolder.InjectFS(fs)
 	err := scaffolder.Scaffold()

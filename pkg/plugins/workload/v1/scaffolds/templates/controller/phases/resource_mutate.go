@@ -15,7 +15,6 @@ type ResourceMutate struct {
 }
 
 func (f *ResourceMutate) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("controllers", "phases", "resource_mutate.go")
 
 	f.TemplateBody = resourceMutateTemplate

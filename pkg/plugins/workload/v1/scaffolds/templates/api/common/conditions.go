@@ -15,7 +15,6 @@ type Conditions struct {
 }
 
 func (f *Conditions) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("apis", "common", "conditions.go")
 
 	f.TemplateBody = conditionsTemplate

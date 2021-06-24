@@ -19,7 +19,6 @@ type Common struct {
 }
 
 func (f *Common) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("controllers", "common.go")
 
 	f.TemplateBody = controllerCommonTemplate

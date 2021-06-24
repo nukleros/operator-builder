@@ -9,7 +9,6 @@ import (
 // ToVarName will convert a kebab-case string to a camelCase name appropriate to
 // use as a go varaiable name
 func ToVarName(name string) string {
-
 	var output string
 	makeUpper := false
 

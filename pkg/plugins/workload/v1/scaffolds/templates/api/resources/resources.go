@@ -24,7 +24,6 @@ type Resources struct {
 }
 
 func (f *Resources) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join(
 		"apis",
 		f.Resource.Group,
@@ -40,7 +39,6 @@ func (f *Resources) SetTemplateDefaults() error {
 }
 
 func (f Resources) GetFuncMap() template.FuncMap {
-
 	funcMap := machinery.DefaultFuncMap()
 	funcMap["quotestr"] = func(value string) string {
 		if string(value[0]) != `"` {

@@ -26,7 +26,6 @@ type Controller struct {
 }
 
 func (f *Controller) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join(
 		"controllers",
 		f.Resource.Group,

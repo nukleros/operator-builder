@@ -125,7 +125,6 @@ func (s *apiScaffolder) Scaffold() error {
 			return err
 		}
 		for _, component := range *s.workload.GetComponents() {
-
 			if component.GetSubcommandName() != "" {
 				// build a subcommand for the component, e.g. `cnpctl init ingress`
 				if err = scaffold.Execute(

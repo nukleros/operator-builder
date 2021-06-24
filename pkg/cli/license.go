@@ -7,7 +7,6 @@ import (
 )
 
 func NewUpdateLicenseCmd() *cobra.Command {
-
 	var projectLicensePath string
 	var sourceHeaderPath string
 
@@ -16,7 +15,6 @@ func NewUpdateLicenseCmd() *cobra.Command {
 		Short: "Update a project license",
 		Long:  `Update a project license.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			// project license
 			if len(projectLicensePath) != 0 {
 				if err := license.UpdateProjectLicense(projectLicensePath); err != nil {

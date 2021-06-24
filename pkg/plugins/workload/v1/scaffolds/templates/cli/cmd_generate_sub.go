@@ -32,7 +32,6 @@ type CliCmdGenerateSub struct {
 }
 
 func (f *CliCmdGenerateSub) SetTemplateDefaults() error {
-
 	if f.IsComponent {
 		f.Path = filepath.Join(
 			"cmd", f.CliRootCmd, "commands",

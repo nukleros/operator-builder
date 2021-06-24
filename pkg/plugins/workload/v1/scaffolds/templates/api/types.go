@@ -27,7 +27,6 @@ type Types struct {
 
 // SetTemplateDefaults implements file.Template
 func (f *Types) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join(
 		"apis",
 		f.Resource.Group,

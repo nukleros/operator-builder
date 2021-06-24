@@ -10,7 +10,6 @@ import (
 )
 
 func (c WorkloadCollection) Validate() error {
-
 	missingFields := []string{}
 
 	// required fields

@@ -17,7 +17,6 @@ type Components struct {
 }
 
 func (f *Components) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("apis", "common", "components.go")
 
 	f.TemplateBody = commonTemplate

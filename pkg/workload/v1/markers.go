@@ -17,7 +17,6 @@ func SupportedMarkerDataTypes() []string {
 }
 
 func processMarkers(workloadPath string, resources []string) (*[]APISpecField, error) {
-
 	var specFields []APISpecField
 
 	for _, manifestFile := range resources {
@@ -73,7 +72,6 @@ func processMarkers(workloadPath string, resources []string) (*[]APISpecField, e
 }
 
 func processManifest(manifest string) ([]Marker, error) {
-
 	var markers []Marker
 	lines := strings.Split(string(manifest), "\n")
 	for _, line := range lines {
@@ -90,7 +88,6 @@ func processManifest(manifest string) ([]Marker, error) {
 }
 
 func processMarkedComments(line string) (processed string) {
-
 	codeCommentSplit := strings.Split(line, "//")
 	code := codeCommentSplit[0]
 	comment := codeCommentSplit[1]
@@ -110,7 +107,6 @@ func processMarkedComments(line string) (processed string) {
 }
 
 func processMarker(line string) (Marker, error) {
-
 	var marker Marker
 
 	// count leading spaces
@@ -172,7 +168,6 @@ func processMarker(line string) (Marker, error) {
 	}
 
 	return marker, nil
-
 }
 
 // zeroValue returns the zero value for the data type as a string.

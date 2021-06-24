@@ -21,7 +21,6 @@ type CRDSample struct {
 }
 
 func (f *CRDSample) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join(
 		"config",
 		"samples",

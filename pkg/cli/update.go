@@ -5,7 +5,6 @@ import (
 )
 
 func NewUpdateCmd() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update an existing project",

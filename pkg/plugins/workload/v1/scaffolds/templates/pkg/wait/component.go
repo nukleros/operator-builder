@@ -20,7 +20,6 @@ type Component struct {
 }
 
 func (f *Component) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join(
 		"pkg",
 		"wait",

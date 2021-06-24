@@ -11,7 +11,6 @@ import (
 // UpdateProjectLicense writes a new project license file using a local file or
 // HTTP URL as the source for license content
 func UpdateProjectLicense(source string) error {
-
 	sourceLicense, err := getSourceLicense(source)
 	if err != nil {
 		return err
@@ -31,7 +30,6 @@ func UpdateProjectLicense(source string) error {
 // licensing header in source code files.  It uses a local file or HTTP URL as
 // the source for the header content
 func UpdateSourceHeader(source string) error {
-
 	sourceLicense, err := getSourceLicense(source)
 	if err != nil {
 		return err
@@ -58,7 +56,6 @@ func UpdateSourceHeader(source string) error {
 // source code files.  It uses a local file or HTTP URL as the source for the
 // header content
 func UpdateExistingSourceHeader(source string) error {
-
 	sourceLicense, err := getSourceLicense(source)
 	if err != nil {
 		return err
@@ -79,7 +76,6 @@ func UpdateExistingSourceHeader(source string) error {
 }
 
 func getSourceLicense(source string) ([]byte, error) {
-
 	var sourceLicense []byte
 
 	if source[0:4] == "http" {
@@ -107,7 +103,6 @@ func getSourceLicense(source string) ([]byte, error) {
 }
 
 func replaceLicenseHeader(filepath string, header []byte) error {
-
 	input, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return err

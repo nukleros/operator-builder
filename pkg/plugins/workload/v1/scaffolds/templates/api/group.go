@@ -17,7 +17,6 @@ type Group struct {
 }
 
 func (f *Group) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join(
 		"apis",
 		f.Resource.Group,

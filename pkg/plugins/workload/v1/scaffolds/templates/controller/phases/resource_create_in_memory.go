@@ -16,7 +16,6 @@ type ResourceCreateInMemory struct {
 }
 
 func (f *ResourceCreateInMemory) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("controllers", "phases", "resource_create_in_memory.go")
 
 	f.TemplateBody = resourceCreateInMemoryTemplate

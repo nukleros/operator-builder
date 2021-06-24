@@ -16,7 +16,6 @@ type Types struct {
 }
 
 func (f *Types) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("controllers", "phases", "types.go")
 
 	f.TemplateBody = typesTemplate

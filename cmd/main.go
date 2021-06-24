@@ -19,14 +19,11 @@ import (
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1"
 )
 
-var (
-	commands = []*cobra.Command{
-		opbcli.NewUpdateCmd(),
-	}
-)
+var commands = []*cobra.Command{
+	opbcli.NewUpdateCmd(),
+}
 
 func main() {
-
 	gov3Bundle, _ := plugin.NewBundle(golang.DefaultNameQualifier, plugin.Version{Number: 3},
 		licensev1.Plugin{},
 		kustomizecommonv1.Plugin{},

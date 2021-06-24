@@ -16,7 +16,6 @@ type ResourceWait struct {
 }
 
 func (f *ResourceWait) SetTemplateDefaults() error {
-
 	f.Path = filepath.Join("controllers", "phases", "resource_wait.go")
 
 	f.TemplateBody = resourceWaitTemplate
