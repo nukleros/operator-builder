@@ -132,7 +132,7 @@ func (s StandaloneWorkload) IsCollection() bool {
 }
 
 func (s *StandaloneWorkload) SetSpecFields(workloadPath string) error {
-	apiSpecFields, err := processMarkers(workloadPath, s.Spec.Resources)
+	apiSpecFields, err := processMarkers(workloadPath, workloadMarkerStr, s.Spec.Resources)
 	if err != nil {
 		return err
 	}

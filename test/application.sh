@@ -67,7 +67,8 @@ spec:
 EOF
 
 operator-builder init \
-    --workload-config .test/workload.yaml
+    --workload-config .test/workload.yaml \
+    --skip-go-version-check
 
 operator-builder create api \
     --workload-config .test/workload.yaml \

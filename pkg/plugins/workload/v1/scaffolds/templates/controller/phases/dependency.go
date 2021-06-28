@@ -28,7 +28,7 @@ const dependenciesTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	"strconv"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -152,9 +152,9 @@ func collectionConfigIsReady(
 	// configuration is not ready if we do not have exactly one configuration
 	if len(collectionConfigs.Items) != 1 {
 		r.GetLogger().V(0).Info(
-			fmt.Sprintf("expected only 1 resource of kind: [%s]; found %d", helpers.CollectionAPIKind, strconv.Itoa(len(collectionConfigs.Items)),
+			fmt.Sprintf("expected only 1 resource of kind: [%s]; found %v", helpers.CollectionAPIKind, len(collectionConfigs.Items)),
 		)
-		
+
 		return false
 	}
 

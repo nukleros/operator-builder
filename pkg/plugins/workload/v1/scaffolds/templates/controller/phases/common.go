@@ -29,7 +29,6 @@ package phases
 
 import (
 	"fmt"
-	"relect"
 	"strings"
 	"time"
 
@@ -58,7 +57,7 @@ func conditionExists(
 ) bool {
 
 	for _, currentCondition := range currentConditions {
-		if relect.DeepEquals(*condition, currentCondition) {
+		if condition.Message == currentCondition.Message && condition.Type == currentCondition.Type && condition.Status == currentCondition.Status {
 			return true
 		}
 	}

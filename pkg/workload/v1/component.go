@@ -100,7 +100,7 @@ func (c ComponentWorkload) IsCollection() bool {
 }
 
 func (c *ComponentWorkload) SetSpecFields(workloadPath string) error {
-	apiSpecFields, err := processMarkers(workloadPath, c.Spec.Resources)
+	apiSpecFields, err := processMarkers(workloadPath, workloadMarkerStr, c.Spec.Resources)
 	if err != nil {
 		return err
 	}

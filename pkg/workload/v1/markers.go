@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
-const markerStr = "+workload"
+const (
+	workloadMarkerStr   = "+workload"
+	collectionMarkerStr = "+collection"
+)
 
 // SupportedMarkerDataTypes returns the supported data types that can be used in
 // workload markers
@@ -16,7 +19,38 @@ func SupportedMarkerDataTypes() []string {
 	return []string{"bool", "string", "int", "int32", "int64", "float32", "float64"}
 }
 
-func processMarkers(workloadPath string, resources []string) (*[]APISpecField, error) {
+func processCollectionMarkers(workloadPath string, components []ComponentWorkload) (*[]APISpecField, error) {
+
+	var specFields []APISpecField
+
+	for _, component := range components {
+		componentSpecFields, err := processMarkers(
+			component.Spec.ConfigPath,
+			collectionMarkerStr,
+			component.Spec.Resources,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// add to spec fields if not present
+		for _, csf := range *componentSpecFields {
+			fieldPresent := false
+			for _, sf := range specFields {
+				if csf == sf {
+					fieldPresent = true
+				}
+			}
+			if !fieldPresent {
+				specFields = append(specFields, csf)
+			}
+		}
+	}
+
+	return &specFields, nil
+}
+
+func processMarkers(workloadPath, markerStr string, resources []string) (*[]APISpecField, error) {
 	var specFields []APISpecField
 
 	for _, manifestFile := range resources {
@@ -24,13 +58,13 @@ func processMarkers(workloadPath string, resources []string) (*[]APISpecField, e
 		// capture entire resource manifest file content
 		manifestContent, err := ioutil.ReadFile(filepath.Join(filepath.Dir(workloadPath), manifestFile))
 		if err != nil {
-			return &[]APISpecField{}, err
+			return nil, err
 		}
 
-		// extract all markers from yaml content
-		markers, err := processManifest(string(manifestContent))
+		// extract all workload markers from yaml content
+		markers, err := processManifest(string(manifestContent), markerStr)
 		if err != nil {
-			return &[]APISpecField{}, err
+			return nil, err
 		}
 
 	MARKERS:
@@ -71,12 +105,12 @@ func processMarkers(workloadPath string, resources []string) (*[]APISpecField, e
 	return &specFields, nil
 }
 
-func processManifest(manifest string) ([]Marker, error) {
+func processManifest(manifest, markerStr string) ([]Marker, error) {
 	var markers []Marker
 	lines := strings.Split(string(manifest), "\n")
 	for _, line := range lines {
-		if containsMarker(line) {
-			marker, err := processMarker(line)
+		if containsMarker(line, markerStr) {
+			marker, err := processMarker(line, markerStr)
 			if err != nil {
 				return nil, err
 			}
@@ -87,13 +121,19 @@ func processManifest(manifest string) ([]Marker, error) {
 	return markers, nil
 }
 
-func processMarkedComments(line string) (processed string) {
+func processMarkedComments(line, markerStr string) (processed string) {
 	codeCommentSplit := strings.Split(line, "//")
 	code := codeCommentSplit[0]
 	comment := codeCommentSplit[1]
 	commentSplit := strings.Split(comment, ":")
 	fieldName := commentSplit[1]
-	fieldPath := fmt.Sprintf("parent.Spec.%s", strings.Title(fieldName))
+
+	var fieldPath string
+	if markerStr == workloadMarkerStr {
+		fieldPath = fmt.Sprintf("parent.Spec.%s", strings.Title(fieldName))
+	} else if markerStr == collectionMarkerStr {
+		fieldPath = fmt.Sprintf("collection.Spec.%s", strings.Title(fieldName))
+	}
 
 	if strings.Contains(code, ":") {
 		keyValSplit := strings.Split(code, ":")
@@ -106,7 +146,7 @@ func processMarkedComments(line string) (processed string) {
 	return processed
 }
 
-func processMarker(line string) (Marker, error) {
+func processMarker(line, markerStr string) (Marker, error) {
 	var marker Marker
 
 	// count leading spaces
@@ -185,7 +225,7 @@ func zeroValue(val interface{}) (string, error) {
 	}
 }
 
-func containsMarker(line string) bool {
+func containsMarker(line, markerStr string) bool {
 	return strings.Contains(line, markerStr)
 }
 

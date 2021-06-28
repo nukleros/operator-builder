@@ -21,6 +21,8 @@ type Resources struct {
 	PackageName     string
 	CreateFuncNames []string
 	SpecFields      *[]workloadv1.APISpecField
+	IsComponent     bool
+	Collection      *workloadv1.WorkloadCollection
 }
 
 func (f *Resources) SetTemplateDefaults() error {
@@ -67,9 +69,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
+	{{- if .IsComponent }}
+	{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }} "{{ .Repo }}/apis/{{ .Collection.Spec.APIGroup }}/{{ .Collection.Spec.APIVersion }}"
+	{{ end -}}
 )
 
-var CreateFuncs = []func(*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}) (metav1.Object, error){
+var CreateFuncs = []func(
+	*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
+	{{- if $.IsComponent }}
+	*{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }},
+	{{ end -}}
+) (metav1.Object, error){
+
 	{{ range .CreateFuncNames }}
 		{{- . -}},
 	{{ end }}

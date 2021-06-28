@@ -6,6 +6,8 @@ import (
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+
+	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
 
 var _ machinery.Template = &CliCmdGenerateSub{}
@@ -26,6 +28,7 @@ type CliCmdGenerateSub struct {
 	CliSubCmdFileName string
 	IsComponent       bool
 	ComponentResource *resource.Resource
+	Collection        *workloadv1.WorkloadCollection
 
 	GenerateCommandName  string
 	GenerateCommandDescr string
@@ -69,6 +72,9 @@ import (
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
 	"{{ .Resource.Path }}/{{ .PackageName }}"
+	{{- if .IsComponent }}
+	{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }} "{{ .Repo }}/apis/{{ .Collection.Spec.APIGroup }}/{{ .Collection.Spec.APIVersion }}"
+	{{ end -}}
 )
 
 {{ if not .IsComponent -}}
@@ -87,6 +93,44 @@ var {{ .CliSubCmdVarName }}GenerateCmd = &cobra.Command{
 	Long: "{{ .GenerateCommandDescr }}",
 	{{- end }}
 	Run: func(cmd *cobra.Command, args []string) {
+		{{ if .IsComponent }}
+		// component workload
+		wkFilename, _ := filepath.Abs(workloadManifest)
+		wkYamlFile, err := ioutil.ReadFile(wkFilename)
+		if err != nil {
+			panic(err)
+		}
+
+		var workload {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}
+
+		err = yaml.Unmarshal(wkYamlFile, &workload)
+		if err != nil {
+			panic(err)
+		}
+
+		// workload colleciton
+		colFilename, _ := filepath.Abs(collectionManifest)
+		colYamlFile, err := ioutil.ReadFile(colFilename)
+		if err != nil {
+			panic(err)
+		}
+
+		var collection {{ $.Collection.Spec.APIGroup }}{{ $.Collection.Spec.APIVersion }}.{{ $.Collection.Spec.APIKind }}
+
+		err = yaml.Unmarshal(colYamlFile, &collection)
+		if err != nil {
+			panic(err)
+		}
+
+		var resourceObjects []metav1.Object
+		for _, f := range {{ .PackageName }}.CreateFuncs {
+			resource, err := f(&workload, &collection)
+			if err != nil {
+				log.Fatal(err)
+			}
+			resourceObjects = append(resourceObjects, resource)
+		}
+		{{ else }}
 		filename, _ := filepath.Abs(workloadManifest)
 		yamlFile, err := ioutil.ReadFile(filename)
 		if err != nil {
@@ -100,8 +144,6 @@ var {{ .CliSubCmdVarName }}GenerateCmd = &cobra.Command{
 			panic(err)
 		}
 
-		e := json.NewYAMLSerializer(json.DefaultMetaFactory, nil, nil)
-
 		var resourceObjects []metav1.Object
 		for _, f := range {{ .PackageName }}.CreateFuncs {
 			resource, err := f(&workload)
@@ -110,7 +152,9 @@ var {{ .CliSubCmdVarName }}GenerateCmd = &cobra.Command{
 			}
 			resourceObjects = append(resourceObjects, resource)
 		}
+		{{ end }}
 
+		e := json.NewYAMLSerializer(json.DefaultMetaFactory, nil, nil)
 		for _, o := range resourceObjects {
 			fmt.Println("---")
 			err := e.Encode(o.(runtime.Object), os.Stdout)
@@ -131,7 +175,7 @@ func init() {
 		"workload-manifest",
 		"w",
 		"",
-		"Filepath to the workload manifest to generate child resources for."
+		"Filepath to the workload manifest to generate child resources for.",
 	)
 	{{- end -}}
 }

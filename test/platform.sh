@@ -80,6 +80,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: tenancy-system  # +workload:namespace:default=tenancy-system:type=string
+  labels:
+    workload-collection: default-collection
 EOF
 
 cat > .test/tenancy/ns-operator-crd.yaml <<EOF
@@ -90,6 +92,8 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   name: tanzunamespaces.tenancy.platform.cnr.vmware.com
+  labels:
+    workload-collection: default-collection
 spec:
   group: tenancy.platform.cnr.vmware.com
   names:
@@ -297,6 +301,7 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: namespace-operator
+    workload-collection: default-collection
   name: namespace-operator
   namespace: tenancy-system  # +workload:namespace:default=tenancy-system:type=string
 spec:
@@ -308,6 +313,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: namespace-operator
+        workload-collection: default-collection
       name: namespace-operator
     spec:
       containers:
@@ -320,6 +326,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  labels:
+    workload-collection: default-collection  #+collection:collectionLabel:type=string
 EOF
 
 cat > .test/ingress/contour-config.yaml <<EOF
@@ -328,6 +336,8 @@ kind: ConfigMap
 metadata:
   name: contour-configmap
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  labels:
+    workload-collection: default-collection  #+collection:collectionLabel:type=string
 data:
   config.yaml: |
     someoption: myoption
@@ -339,6 +349,8 @@ kind: Secret
 metadata:
   name: contour-secret
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  labels:
+    workload-collection: default-collection  #+collection:collectionLabel:type=string
 stringData:
   some: secretstuff
 EOF
@@ -349,6 +361,8 @@ kind: Deployment
 metadata:
   name: contour-deploy
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  labels:
+    workload-collection: default-collection  #+collection:collectionLabel:type=string
 spec:
   replicas: 2  # +workload:ContourReplicas:default=2:type=int
   selector:
@@ -372,6 +386,8 @@ apiVersion: v1
 metadata:
   name: contour-svc
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  labels:
+    workload-collection: default-collection  #+collection:collectionLabel:type=string
 spec:
   selector:
     app: contour
@@ -387,6 +403,7 @@ kind: DaemonSet
 metadata:
   labels:
     app.kubernetes.io/name: envoy
+    workload-collection: default-collection  #+collection:collectionLabel:type=string
   name: envoy-ds
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
 spec:
@@ -397,6 +414,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: envoy
+        workload-collection: default-collection  #+collection:collectionLabel:type=string
     spec:
       containers:
       - name: envoy
@@ -409,7 +427,8 @@ EOF
 go mod init acme.com/operator-builder-test
 
 operator-builder init \
-    --workload-config .test/cnp-workload-collection.yaml
+    --workload-config .test/cnp-workload-collection.yaml \
+    --skip-go-version-check
 
 operator-builder create api \
     --workload-config .test/cnp-workload-collection.yaml \

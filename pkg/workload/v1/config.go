@@ -150,6 +150,9 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		if err := workload.SetComponents(&components); err != nil {
 			return nil, err
 		}
+		if err := workload.SetSpecFields(workloadConfig); err != nil {
+			return nil, err
+		}
 	}
 
 	return workload, nil

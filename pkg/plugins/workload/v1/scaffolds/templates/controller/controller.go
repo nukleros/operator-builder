@@ -23,6 +23,8 @@ type Controller struct {
 	RBACRules         *[]workloadv1.RBACRule
 	HasChildResources bool
 	IsStandalone      bool
+	IsComponent       bool
+	Collection        *workloadv1.WorkloadCollection
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -46,22 +48,28 @@ package {{ .Resource.Group }}
 import (
 	"context"
 	"fmt"
+	{{- if .IsComponent }}
+	"time"
+	{{ end }}
 
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"{{ .Repo }}/apis/common"
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
-	{{- if .HasChildResources }}
-	"{{ .Resource.Path }}/{{ .PackageName }}"
+	{{ if .IsComponent -}}
+	{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }} "{{ .Repo }}/apis/{{ .Collection.Spec.APIGroup }}/{{ .Collection.Spec.APIVersion }}"
 	{{ end }}
+	{{- if .HasChildResources -}}
+	"{{ .Resource.Path }}/{{ .PackageName }}"
+	{{ end -}}
 	"{{ .Repo }}/controllers"
 	"{{ .Repo }}/controllers/phases"
-	{{ if not .IsStandalone }}
+	{{- if not .IsStandalone }}
 	"{{ .Repo }}/pkg/dependencies"
 	"{{ .Repo }}/pkg/mutate"
 	"{{ .Repo }}/pkg/wait"
@@ -71,10 +79,13 @@ import (
 // {{ .Resource.Kind }}Reconciler reconciles a {{ .Resource.Kind }} object
 type {{ .Resource.Kind }}Reconciler struct {
 	client.Client
-	Log       logr.Logger
-	Scheme    *runtime.Scheme
-	Context   context.Context
-	Component *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}
+	Log        logr.Logger
+	Scheme     *runtime.Scheme
+	Context    context.Context
+	Component  *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}
+	{{- if .IsComponent }}
+	Collection *{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }}
+	{{ end }}
 }
 
 // +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }},verbs=get;list;watch;create;update;patch;delete
@@ -102,6 +113,21 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, controllers.IgnoreNotFound(err)
 	}
 
+	{{- if .IsComponent }}
+	var collectionList {{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }}List
+	if err := r.List(r.Context, &collectionList); err != nil {
+		return ctrl.Result{}, err
+	}
+	if len(collectionList.Items) == 0 {
+		log.V(0).Info("no collections available - will try again in 10 seconds")
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+	} else if len(collectionList.Items) > 1 {
+		log.V(0).Info("multiple collections found - cannot proceded")
+		return ctrl.Result{}, nil
+	}
+	r.Collection = &collectionList.Items[0]
+	{{ end }}
+
 	// execute the phases
 	for _, phase := range controllers.Phases(r.Component) {
 		proceed, err := phase.Execute(r)
@@ -124,7 +150,11 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) (
 
 	// create resources in memory
 	for _, f := range {{ .PackageName }}.CreateFuncs {
+		{{- if .IsComponent }}
+		resource, err := f(r.Component, r.Collection)
+		{{ else }}
 		resource, err := f(r.Component)
+		{{ end }}
 		if err != nil {
 			return nil, err
 		}

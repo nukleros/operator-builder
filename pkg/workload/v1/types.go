@@ -77,6 +77,7 @@ type WorkloadCollectionSpec struct {
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
 	ComponentFiles      []string   `json:"componentFiles"`
 	Components          []ComponentWorkload
+	APISpecFields       []APISpecField
 }
 
 // WorkloadCollection defines a workload collection
