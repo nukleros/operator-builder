@@ -214,18 +214,41 @@ func addTemplating(rawContent string) (string, error) {
 				paddingStr = paddingStr + " "
 				paddingLen--
 			}
-			if containsDefault(line) {
-				lines[i] = fmt.Sprintf("%s%s: {{ .Spec.%s | default%s }}",
-					paddingStr, marker.Key, strings.Title(marker.FieldName),
-					strings.Title(marker.FieldName),
-				)
-			} else {
-				lines[i] = fmt.Sprintf("%s%s: {{ .Spec.%s }}",
-					paddingStr, marker.Key, strings.Title(marker.FieldName),
-				)
-			}
+
+			lines[i] = lineWithTemplate(paddingStr, marker, line)
 		}
 	}
 
 	return strings.Join(lines, "\n"), nil
+}
+
+func lineWithTemplate(
+	padding string,
+	marker Marker,
+	line string,
+) string {
+	var functionTemplate string
+	if containsDefault(line) {
+		functionTemplate = fmt.Sprintf(
+			"{{ .Spec.%s | default%s }}",
+			strings.Title(marker.FieldName),
+			strings.Title(marker.FieldName),
+		)
+	} else {
+		functionTemplate = fmt.Sprintf(
+			"{{ .Spec.%s }}",
+			strings.Title(marker.FieldName),
+		)
+	}
+
+	// TODO: this handle key/value pairs, and an array of key/value pairs but a value
+	//       in an array will still be problematic
+	var templatedLine string
+	if strings.HasPrefix(strings.TrimSpace(line), "-") {
+		templatedLine = fmt.Sprintf("%s- %s: %s", padding, marker.Key, functionTemplate)
+	} else {
+		templatedLine = fmt.Sprintf("%s%s: %s", padding, marker.Key, functionTemplate)
+	}
+
+	return templatedLine
 }
