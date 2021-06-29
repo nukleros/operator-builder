@@ -161,7 +161,8 @@ func extractManifests(manifestContent []byte) []string {
 
 	var manifest string
 	for _, line := range lines {
-		if strings.TrimSpace(line) == "---" {
+		//if strings.TrimSpace(line) == "---" {
+		if strings.TrimRight(line, " ") == "---" {
 			if len(manifest) > 0 {
 				manifests = append(manifests, manifest)
 				manifest = ""

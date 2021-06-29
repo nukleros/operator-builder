@@ -340,6 +340,7 @@ metadata:
     workload-collection: default-collection  #+collection:collectionLabel:type=string
 data:
   config.yaml: |
+    ---
     someoption: myoption
     anotheroption: another
     justtesting: multistringyaml
