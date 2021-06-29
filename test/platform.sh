@@ -327,7 +327,7 @@ kind: Namespace
 metadata:
   name: ingress-system  # +workload:namespace:default=ingress-system:type=string
   labels:
-    workload-collection: default-collection  #+collection:collectionLabel:type=string
+    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
 EOF
 
 cat > .test/ingress/contour-config.yaml <<EOF
@@ -336,8 +336,6 @@ kind: ConfigMap
 metadata:
   name: contour-configmap
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
-  labels:
-    workload-collection: default-collection  #+collection:collectionLabel:type=string
 data:
   config.yaml: |
     ---
@@ -351,7 +349,7 @@ metadata:
   name: contour-secret
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
   labels:
-    workload-collection: default-collection  #+collection:collectionLabel:type=string
+    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
 stringData:
   some: secretstuff
 EOF
@@ -363,7 +361,7 @@ metadata:
   name: contour-deploy
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
   labels:
-    workload-collection: default-collection  #+collection:collectionLabel:type=string
+    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
 spec:
   replicas: 2  # +workload:ContourReplicas:default=2:type=int
   selector:
@@ -388,7 +386,7 @@ metadata:
   name: contour-svc
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
   labels:
-    workload-collection: default-collection  #+collection:collectionLabel:type=string
+    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
 spec:
   selector:
     app: contour
@@ -404,7 +402,7 @@ kind: DaemonSet
 metadata:
   labels:
     app.kubernetes.io/name: envoy
-    workload-collection: default-collection  #+collection:collectionLabel:type=string
+    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
   name: envoy-ds
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
 spec:
@@ -415,7 +413,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: envoy
-        workload-collection: default-collection  #+collection:collectionLabel:type=string
+        workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
     spec:
       containers:
       - name: envoy

@@ -126,6 +126,7 @@ type Marker struct {
 	DataType      string
 	Default       string
 	LeadingSpaces int
+	Collection    bool
 }
 
 // RBACRule contains the info needed to create the kubebuilder:rbac markers in

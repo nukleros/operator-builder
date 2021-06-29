@@ -8,10 +8,7 @@ import (
 	"strings"
 )
 
-const (
-	workloadMarkerStr   = "+workload"
-	collectionMarkerStr = "+collection"
-)
+const markerStr = "+workload"
 
 // SupportedMarkerDataTypes returns the supported data types that can be used in
 // workload markers
@@ -19,38 +16,7 @@ func SupportedMarkerDataTypes() []string {
 	return []string{"bool", "string", "int", "int32", "int64", "float32", "float64"}
 }
 
-func processCollectionMarkers(workloadPath string, components []ComponentWorkload) (*[]APISpecField, error) {
-
-	var specFields []APISpecField
-
-	for _, component := range components {
-		componentSpecFields, err := processMarkers(
-			component.Spec.ConfigPath,
-			collectionMarkerStr,
-			component.Spec.Resources,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// add to spec fields if not present
-		for _, csf := range *componentSpecFields {
-			fieldPresent := false
-			for _, sf := range specFields {
-				if csf == sf {
-					fieldPresent = true
-				}
-			}
-			if !fieldPresent {
-				specFields = append(specFields, csf)
-			}
-		}
-	}
-
-	return &specFields, nil
-}
-
-func processMarkers(workloadPath, markerStr string, resources []string) (*[]APISpecField, error) {
+func processMarkers(workloadPath string, resources []string, collection bool) (*[]APISpecField, error) {
 	var specFields []APISpecField
 
 	for _, manifestFile := range resources {
@@ -62,7 +28,7 @@ func processMarkers(workloadPath, markerStr string, resources []string) (*[]APIS
 		}
 
 		// extract all workload markers from yaml content
-		markers, err := processManifest(string(manifestContent), markerStr)
+		markers, err := processManifest(string(manifestContent))
 		if err != nil {
 			return nil, err
 		}
@@ -73,6 +39,14 @@ func processMarkers(workloadPath, markerStr string, resources []string) (*[]APIS
 				if r.ManifestFieldName == m.FieldName {
 					continue MARKERS
 				}
+			}
+
+			// only include collection markers if processing for a collection
+			// and vise versa
+			if collection && !m.Collection {
+				continue MARKERS
+			} else if !collection && m.Collection {
+				continue MARKERS
 			}
 
 			var specField APISpecField
@@ -105,12 +79,12 @@ func processMarkers(workloadPath, markerStr string, resources []string) (*[]APIS
 	return &specFields, nil
 }
 
-func processManifest(manifest, markerStr string) ([]Marker, error) {
+func processManifest(manifest string) ([]Marker, error) {
 	var markers []Marker
 	lines := strings.Split(string(manifest), "\n")
 	for _, line := range lines {
-		if containsMarker(line, markerStr) {
-			marker, err := processMarker(line, markerStr)
+		if containsMarker(line) {
+			marker, err := processMarkerLine(line)
 			if err != nil {
 				return nil, err
 			}
@@ -121,7 +95,7 @@ func processManifest(manifest, markerStr string) ([]Marker, error) {
 	return markers, nil
 }
 
-func processMarkedComments(line, markerStr string) (processed string) {
+func processMarkedComments(line string) (processed string) {
 	codeCommentSplit := strings.Split(line, "//")
 	code := codeCommentSplit[0]
 	comment := codeCommentSplit[1]
@@ -129,10 +103,10 @@ func processMarkedComments(line, markerStr string) (processed string) {
 	fieldName := commentSplit[1]
 
 	var fieldPath string
-	if markerStr == workloadMarkerStr {
-		fieldPath = fmt.Sprintf("parent.Spec.%s", strings.Title(fieldName))
-	} else if markerStr == collectionMarkerStr {
+	if strings.Contains(line, "collection=true") {
 		fieldPath = fmt.Sprintf("collection.Spec.%s", strings.Title(fieldName))
+	} else {
+		fieldPath = fmt.Sprintf("parent.Spec.%s", strings.Title(fieldName))
 	}
 
 	if strings.Contains(code, ":") {
@@ -146,7 +120,7 @@ func processMarkedComments(line, markerStr string) (processed string) {
 	return processed
 }
 
-func processMarker(line, markerStr string) (Marker, error) {
+func processMarkerLine(line string) (Marker, error) {
 	var marker Marker
 
 	// count leading spaces
@@ -202,6 +176,18 @@ func processMarker(line, markerStr string) (Marker, error) {
 			marker.DataType = strings.Split(element, "=")[1]
 		} else if strings.Contains(element, "default=") {
 			marker.Default = strings.Split(element, "=")[1]
+		} else if strings.Contains(element, "collection=") {
+			collectionVal := strings.Split(element, "=")[1]
+			switch collectionVal {
+			case "true":
+				marker.Collection = true
+			case "false":
+				marker.Collection = false
+			default:
+				msg := fmt.Sprintf("collection value %s found - must be either 'true' or 'false'", collectionVal)
+				return marker, errors.New(msg)
+			}
+			//marker.Collection = strings.Split(element, "=")[1]
 		} else {
 			marker.FieldName = element
 		}
@@ -225,7 +211,7 @@ func zeroValue(val interface{}) (string, error) {
 	}
 }
 
-func containsMarker(line, markerStr string) bool {
+func containsMarker(line string) bool {
 	return strings.Contains(line, markerStr)
 }
 

@@ -132,12 +132,33 @@ func (c WorkloadCollection) IsCollection() bool {
 }
 
 func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
+	var specFields []APISpecField
 
-	apiSpecFields, err := processCollectionMarkers(workloadPath, c.Spec.Components)
-	if err != nil {
-		return err
+	for _, component := range c.Spec.Components {
+		componentSpecFields, err := processMarkers(
+			component.Spec.ConfigPath,
+			component.Spec.Resources,
+			true,
+		)
+		if err != nil {
+			return err
+		}
+
+		// add to spec fields if not present
+		for _, csf := range *componentSpecFields {
+			fieldPresent := false
+			for _, sf := range specFields {
+				if csf == sf {
+					fieldPresent = true
+				}
+			}
+			if !fieldPresent {
+				specFields = append(specFields, csf)
+			}
+		}
 	}
-	c.Spec.APISpecFields = *apiSpecFields
+
+	c.Spec.APISpecFields = specFields
 
 	return nil
 }
