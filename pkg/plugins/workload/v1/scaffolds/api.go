@@ -204,7 +204,7 @@ func (s *apiScaffolder) Scaffold() error {
 				IsStandalone: s.workload.IsStandalone(),
 			},
 			&phases.ResourcePersist{},
-			&phases.ResourceCreateInMemory{},
+			&phases.ResourceConstruct{},
 			&samples.CRDSample{
 				SpecFields: s.workload.GetAPISpecFields(),
 			},
@@ -251,7 +251,7 @@ func (s *apiScaffolder) Scaffold() error {
 				IsStandalone: s.workload.IsStandalone(),
 			},
 			&phases.ResourcePersist{},
-			&phases.ResourceCreateInMemory{},
+			&phases.ResourceConstruct{},
 			&phases.Dependencies{},
 			&phases.PreFlight{},
 			&phases.ResourceMutate{},

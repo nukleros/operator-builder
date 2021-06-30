@@ -92,7 +92,7 @@ func (phase *CreateResourcesPhase) Execute(
 	component := r.GetComponent()
 
 	// get the resources which we will act upon
-	proceed, err := new(CreateResourcesInMemoryPhase).Execute(r, phase)
+	proceed, err := new(ConstructPhase).Execute(r, phase)
 	if err != nil || !proceed {
 		return false, err
 	}

@@ -76,8 +76,8 @@ type CreateResourcesPhase struct {
 	ReplacedResources []metav1.Object
 }
 
-// CreateResourcesInMemoryPhase defines an object specific to the in memory resource creation phase of reconciliation
-type CreateResourcesInMemoryPhase struct{}
+// ConstructPhase defines an object specific to the in memory resource creation phase of reconciliation
+type ConstructPhase struct{}
 
 // MutateResourcePhase defines an object specific to the resource mutation phase of reconciliation
 type MutateResourcePhase struct{}
