@@ -116,26 +116,35 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		}
 	}
 
-	// attach component dependencies
+	// attach component dependencies and check for missing dependencies
 	for i, component := range components {
+		missingDependencies := component.Spec.Dependencies
 		for _, dependencyName := range component.Spec.Dependencies {
 			for _, comp := range components {
 				if comp.Name == dependencyName {
+					// add the component object to ComponentDependencies
 					components[i].Spec.ComponentDependencies = append(
 						components[i].Spec.ComponentDependencies,
 						comp,
 					)
+					// pop the name from the missingDependencies slice
+					for i, name := range missingDependencies {
+						if name == dependencyName {
+							missingDependencies = append(missingDependencies[:i], missingDependencies[i+1:]...)
+							break
+						}
+					}
 				}
 			}
-			if len(components[i].Spec.ComponentDependencies) < 1 {
-				msg := fmt.Sprintf(
-					"%s component listed as a dependency for %s but no component workload config for %s provied",
-					dependencyName,
-					component.Name,
-					dependencyName,
-				)
-				return nil, errors.New(msg)
-			}
+		}
+		if len(missingDependencies) > 0 {
+			msg := fmt.Sprintf(
+				"%s component/s listed in dependencies for %s but no component workload config for %s provided",
+				missingDependencies,
+				component.Name,
+				missingDependencies,
+			)
+			return nil, errors.New(msg)
 		}
 	}
 
