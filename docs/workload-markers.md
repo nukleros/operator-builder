@@ -5,16 +5,21 @@ The fields for a custom resource kind are created when it finds a `+workload`
 marker in a source manifest.
 
 A workload marker is commented out so the manifest is still valid and can be
-used if needed.  The marker must begin with `+worload` followed by some
+used if needed.  The marker must begin with `+workload` followed by some
 colon-separated fields:
-- API Field: The first field is requried.  It should be provided as you want it
+
+- API Field: The first field is required. It should be provided as you want it
   to be in the spec of the resulting custom resource.
 - Type Field: This field is provided as `type=[value]`.  It is also a required
   field.  The supported data types:
   - bool
   - string
   - int
-- Default Field; This field is provided `default=[value]`.  It is an optional
+  - int32
+  - int64
+  - float32
+  - float64
+- Default Field: This field is provided as `default=[value]`.  It is an optional
   field.  If provided it will make the field optional in the custom resource and
   when not included will get the default value provided.
 
@@ -42,10 +47,11 @@ Consider the following Deployment:
             ports:
             - containerPort: 8080
 
-In this case, operator-builder will create add three fields to the custom
+In this case, operator-builder will create and add three fields to the custom
 resource:
+
 - A `production` field that is a boolean.  It will have a default of `false` and
-  will inform the value of the label when the Deployment is configured.
+  will inform the value of the label when the deployment is configured.
 - A `webAppReplicas` field that will default to `2` and allow the user to
   specify the number of replicas for the deployment in the custom resource
   manifest.
@@ -61,5 +67,4 @@ similar to the following to configure the deployment created:
 	spec:
       production: false
       webAppReplicas: 2
-      WebAppImage: acmerepo/webapp:3.5.3
-
+      webAppImage: acmerepo/webapp:3.5.3
