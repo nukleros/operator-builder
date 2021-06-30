@@ -259,6 +259,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&phases.CheckReady{},
 			&phases.Complete{},
 			&helpers.Common{},
+			&helpers.Component{},
 			&dependencies.Component{},
 			&mutate.Component{},
 			&wait.Component{},
@@ -332,6 +333,7 @@ func (s *apiScaffolder) Scaffold() error {
 				},
 				&dependencies.Component{},
 				&mutate.Component{},
+				&helpers.Component{},
 				&wait.Component{},
 				&samples.CRDSample{
 					SpecFields: &component.Spec.APISpecFields,
