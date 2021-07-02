@@ -116,27 +116,17 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		}
 	}
 
-	// attach component dependencies and check for missing dependencies
+	// get a list of existing component names in the config
+	var componentNames []string
+	for _, component := range components {
+		componentNames = append(componentNames, component.Name)
+	}
+
+	// check the dependencies against the actual components
 	for i, component := range components {
-		missingDependencies := component.Spec.Dependencies
-		for _, dependencyName := range component.Spec.Dependencies {
-			for _, comp := range components {
-				if comp.Name == dependencyName {
-					// add the component object to ComponentDependencies
-					components[i].Spec.ComponentDependencies = append(
-						components[i].Spec.ComponentDependencies,
-						comp,
-					)
-					// pop the name from the missingDependencies slice
-					for i, name := range missingDependencies {
-						if name == dependencyName {
-							missingDependencies = append(missingDependencies[:i], missingDependencies[i+1:]...)
-							break
-						}
-					}
-				}
-			}
-		}
+		missingDependencies := missingDependencies(component.Spec.Dependencies, componentNames)
+
+		// return an error if any dependencies are not satisfied
 		if len(missingDependencies) > 0 {
 			msg := fmt.Sprintf(
 				"%s component/s listed in dependencies for %s but no component workload config for %s provided",
@@ -145,6 +135,19 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 				missingDependencies,
 			)
 			return nil, errors.New(msg)
+		}
+
+		// add the component dependencies to the object
+		for _, dependency := range component.Spec.Dependencies {
+			for _, innerComponent := range components {
+				if innerComponent.Name == dependency {
+					// add the component object to ComponentDependencies
+					components[i].Spec.ComponentDependencies = append(
+						components[i].Spec.ComponentDependencies,
+						innerComponent,
+					)
+				}
+			}
 		}
 	}
 
@@ -165,6 +168,26 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 	}
 
 	return workload, nil
+}
+
+func missingDependencies(expected []string, actual []string) []string {
+	var missing []string
+
+	for _, expectedDependency := range expected {
+		var found bool
+		for _, actualDependency := range actual {
+			if actualDependency == expectedDependency {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			missing = append(missing, expectedDependency)
+		}
+	}
+
+	return missing
 }
 
 func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {

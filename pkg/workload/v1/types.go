@@ -108,14 +108,13 @@ type SourceFile struct {
 // ChildResource contains attributes for resources created by the custom resource.
 // These definitions are inferred from the resource manfiests.
 type ChildResource struct {
-	Name                 string
-	UniqueName           string
-	Group                string
-	Version              string
-	Kind                 string
-	StaticContent        string
-	SourceCode           string
-	StaticCreateStrategy bool
+	Name          string
+	UniqueName    string
+	Group         string
+	Version       string
+	Kind          string
+	StaticContent string
+	SourceCode    string
 }
 
 // Marker contains the attributes of a workload marker from a static manifest

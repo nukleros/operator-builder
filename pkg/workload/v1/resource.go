@@ -84,49 +84,29 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 				rbacRules = append(rbacRules, newRBACRule)
 			}
 
-			// identify when we need to use a staticCreateStrategy
-			// NOTE: we have to use staticCreateStrategy for manifests which contain multi-line strings or those
-			// identified in the staticTypes variable
-			staticCreateStrategy := isStaticType(manifest, resourceKind)
-
 			resource := ChildResource{
-				Name:                 resourceName,
-				UniqueName:           resourceUniqueName,
-				Group:                resourceGroup,
-				Version:              resourceVersion,
-				Kind:                 resourceKind,
-				StaticCreateStrategy: staticCreateStrategy,
+				Name:       resourceName,
+				UniqueName: resourceUniqueName,
+				Group:      resourceGroup,
+				Version:    resourceVersion,
+				Kind:       resourceKind,
 			}
 
-			// generate correct source code or static code based on if we are using a static create strategy or not
-			if staticCreateStrategy {
-				// add the static, templated content to the resource replacing values which are improperly escaped
-				// during templating
-				templatedContent, err := addTemplating(strings.Replace(manifest, "`", `\"`, -1))
-				if err != nil {
-					return nil, nil, err
-				}
-				resource.StaticContent = templatedContent
-
-				// identify the source file as having static manifests
-				sourceFile.HasStatic = true
-			} else {
-				// generate the object source code
-				resourceDefinition, err := generate.Generate([]byte(manifest), "resourceObj")
-				if err != nil {
-					return nil, nil, err
-				}
-
-				// add variables based on commented markers
-				resourceDefinition, err = addVariables(resourceDefinition)
-				if err != nil {
-					return nil, nil, err
-				}
-
-				// add the source code to the resource
-				resource.SourceCode = resourceDefinition
-				resource.StaticContent = manifest
+			// generate the object source code
+			resourceDefinition, err := generate.Generate([]byte(manifest), "resourceObj")
+			if err != nil {
+				return nil, nil, err
 			}
+
+			// add variables based on commented markers
+			resourceDefinition, err = addVariables(resourceDefinition)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// add the source code to the resource
+			resource.SourceCode = resourceDefinition
+			resource.StaticContent = manifest
 
 			childResources = append(childResources, resource)
 		}
@@ -138,22 +118,6 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 	return &sourceFiles, &rbacRules, nil
 }
 
-func isStaticType(manifestContent string, kind string) bool {
-	staticTypes := []string{"CustomResourceDefinition"}
-
-	// if the manifest belongs to the staticTypes array, it is required to be generated
-	// as a static manifest
-	for _, staticType := range staticTypes {
-		if staticType == kind {
-			return true
-		}
-	}
-
-	// if the manifest has a multi-line string, it also is required to be generated
-	// as a static manifest
-	return strings.Contains(manifestContent, "|")
-}
-
 func extractManifests(manifestContent []byte) []string {
 	var manifests []string
 
@@ -161,7 +125,6 @@ func extractManifests(manifestContent []byte) []string {
 
 	var manifest string
 	for _, line := range lines {
-		//if strings.TrimSpace(line) == "---" {
 		if strings.TrimRight(line, " ") == "---" {
 			if len(manifest) > 0 {
 				manifests = append(manifests, manifest)

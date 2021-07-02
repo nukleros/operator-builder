@@ -61,41 +61,6 @@ import (
 )
 
 {{ range .SourceFile.Children }}
-{{ if .StaticCreateStrategy }}
-const resource{{ .UniqueName }} = ` + "`" + `
-{{ .StaticContent }}
-` + "`" + `
-
-// Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource
-func Create{{ .UniqueName }}(
-	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
-	{{- if $.IsComponent }}
-	collection *{{ $.Collection.Spec.APIGroup }}{{ $.Collection.Spec.APIVersion }}.{{ $.Collection.Spec.APIKind }},
-	{{ end -}}
-) (metav1.Object, error) {
-
-	fmap := template.FuncMap{
-		{{ range $.SpecFields }}
-		{{- if .DefaultVal -}}
-		"default{{ .FieldName }}": default{{ .FieldName }},
-		{{- end }}
-		{{ end }}
-	}
-
-	childContent, err := runTemplate("{{ .Name }}", resource{{ .UniqueName }}, parent, fmap)
-	if err != nil {
-		return nil, err
-	}
-
-	// decode YAML into unstructured.Unstructured
-	resourceObj := &unstructured.Unstructured{}
-	decode := k8s_yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-	_, _, err = decode.Decode([]byte(childContent), nil, resourceObj)
-	if err != nil {
-		return nil, err
-	}
-
-{{ else }}
 // Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource
 func Create{{ .UniqueName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
@@ -106,7 +71,6 @@ func Create{{ .UniqueName }} (
 
 	{{ .SourceCode }}
 
-{{ end }}
 	{{ if not $.ClusterScoped }}
 	resourceObj.SetNamespace(parent.Namespace)
 	{{ end }}
