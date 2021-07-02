@@ -120,9 +120,9 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	}
 	if len(collectionList.Items) == 0 {
 		log.V(0).Info("no collections available - will try again in 10 seconds")
-		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+		return ctrl.Result{Requeue: true}, nil
 	} else if len(collectionList.Items) > 1 {
-		log.V(0).Info("multiple collections found - cannot proceded")
+		log.V(0).Info("multiple collections found - cannot proceed")
 		return ctrl.Result{}, nil
 	}
 	r.Collection = &collectionList.Items[0]
@@ -135,7 +135,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 
 		// return only if we have an error or are told not to proceed
 		if err != nil || !proceed {
-			log.V(0).Info(fmt.Sprintf("Not proceeding - will try again in %s", result.RequeueAfter))
+			log.V(4).Info("not proceeding - requeuing")
 			return result, err
 		}
 	}

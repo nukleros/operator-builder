@@ -60,19 +60,17 @@ func (phase *PersistResourcePhase) Execute(
 		for _, replacedResource := range resource.ReplacedResources {
 			err := persistResource(resource.ComponentReconciler, replacedResource)
 			if err != nil {
-				if isOptimisticLockError(err) {
-					return ctrl.Result{RequeueAfter: time.Second * 1}, true, nil
+				if !isOptimisticLockError(err) {
+					return ctrl.Result{}, false, err
 				}
-				return ctrl.Result{}, false, err
 			}
 		}
 	} else {
 		err := persistResource(resource.ComponentReconciler, *resource.OriginalResource)
 		if err != nil {
-			if isOptimisticLockError(err) {
-				return ctrl.Result{RequeueAfter: time.Second * 1}, true, nil
+			if !isOptimisticLockError(err) {
+				return ctrl.Result{}, false, err
 			}
-			return ctrl.Result{}, false, err
 		}
 	}
 

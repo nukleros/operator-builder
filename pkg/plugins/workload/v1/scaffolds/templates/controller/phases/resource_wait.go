@@ -40,7 +40,7 @@ import (
 
 // defaultWaitRequeue defines the default requeue result for this phase
 func defaultWaitRequeue() ctrl.Result {
-	return ctrl.Result{RequeueAfter: 3 * time.Second}
+	return ctrl.Result{Requeue: true}
 }
 
 // WaitForResourcePhase.Execute executes waiting for a resource to be ready before continuing

@@ -63,9 +63,9 @@ func (phase *CompletePhase) GetFailCondition() common.Condition {
 	}
 }
 
-// GetDefaultRequeueResult defines the result return when a requeue is needed
-func (phase *CompletePhase) GetDefaultRequeueResult() ctrl.Result {
-	return DefaultRequeueResult()
+// Requeue defines the result return when a requeue is needed
+func (phase *CompletePhase) Requeue() ctrl.Result {
+	return Requeue()
 }
 
 // CompletePhase.Execute executes the completion of a reconciliation loop

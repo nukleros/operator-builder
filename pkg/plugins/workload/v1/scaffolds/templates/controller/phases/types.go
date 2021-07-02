@@ -46,7 +46,7 @@ type PhaseHandler interface {
 	GetSuccessCondition() common.Condition
 	GetPendingCondition() common.Condition
 	GetFailCondition() common.Condition
-	GetDefaultRequeueResult() ctrl.Result
+	Requeue() ctrl.Result
 }
 
 // ResourcePhase defines the specific phase of reconcilication associated with creating resources

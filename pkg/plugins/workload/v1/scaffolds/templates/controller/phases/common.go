@@ -29,6 +29,7 @@ package phases
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -40,9 +41,9 @@ import (
 
 const optimisticLockErrorMsg = "the object has been modified; please apply your changes to the latest version and try again"
 
-// DefaultRequeueResult will return the default result to requeue a reconciler request when needed
-func DefaultRequeueResult() ctrl.Result {
-	return ctrl.Result{RequeueAfter: 10 * time.Second}
+// Requeue will return the default result to requeue a reconciler request when needed
+func Requeue() ctrl.Result {
+	return ctrl.Result{Requeue: true}
 }
 
 // DefaultReconcileResult will return the default reconcile result when requeuing is not needed
@@ -57,7 +58,7 @@ func conditionExists(
 ) bool {
 
 	for _, currentCondition := range currentConditions {
-		if condition.Message == currentCondition.Message && condition.Type == currentCondition.Type && condition.Status == currentCondition.Status {
+		if reflect.DeepEqual(currentCondition, *condition) {
 			return true
 		}
 	}
@@ -98,7 +99,7 @@ func HandlePhaseExit(
 		result = DefaultReconcileResult()
 	case !phaseIsReady:
 		condition = phaseHandler.GetPendingCondition()
-		result = phaseHandler.GetDefaultRequeueResult()
+		result = phaseHandler.Requeue()
 	default:
 		condition = phaseHandler.GetSuccessCondition()
 		result = DefaultReconcileResult()
@@ -106,11 +107,6 @@ func HandlePhaseExit(
 
 	// update the status conditions and return any errors
 	if updateError := updateStatusConditions(reconciler, &condition); updateError != nil {
-		// override and set a short requeue time if we hit optimistic locking problems
-		if isOptimisticLockError(updateError) {
-			result = ctrl.Result{RequeueAfter: time.Second * 1}
-		}
-
 		// adjust the message if we had both an update error and a phase error
 		if phaseError != nil {
 			phaseError = fmt.Errorf("failed to update status conditions; %v; %v", updateError, phaseError)
