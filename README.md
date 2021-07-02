@@ -30,13 +30,21 @@ Get the source code.
     git clone git@github.com:vmware-tanzu-labs/operator-builder.git
     cd operator-builder
 
+> **NOTE:** Since the object-code-generator-for-k8s repository is still an internal Github repository you will have to do the following to build the project:  
+`export  GOPRIVATE=github.com/vmware-tanzu-labs/object-code-generator-for-k8s`  
+Add the following configuration to your ~/.gitconfig file:  
+```
+[url "git@github.com:"]
+	insteadOf = https://github.com/
+```
+
 Build the binary.
 
     make build
 
 Put the binary on your path.
 
-    sudo mv bin/operator-builder /usr/local/bin/
+    mv bin/operator-builder /usr/local/bin/
 
 ## Getting Started
 
@@ -221,6 +229,7 @@ your operator project.  This guide uses a [standalone
 workload](docs/standalone-workloads.md). Save this file to your
 `.source-manifests` directory.
 
+    # .source-manifests/workload.yaml
     name: webstore
     kind: StandaloneWorkload
     spec:
