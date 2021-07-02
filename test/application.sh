@@ -68,6 +68,7 @@ EOF
 
 operator-builder init \
     --workload-config .test/workload.yaml \
+    --repo github.com/acme/acme-webstore-mgr \
     --skip-go-version-check
 
 operator-builder create api \
