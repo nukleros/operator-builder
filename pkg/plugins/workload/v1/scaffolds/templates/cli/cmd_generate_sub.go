@@ -108,7 +108,7 @@ var {{ .CliSubCmdVarName }}GenerateCmd = &cobra.Command{
 			panic(err)
 		}
 
-		// workload colleciton
+		// workload collection
 		colFilename, _ := filepath.Abs(collectionManifest)
 		colYamlFile, err := ioutil.ReadFile(colFilename)
 		if err != nil {

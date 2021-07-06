@@ -47,10 +47,6 @@ package {{ .Resource.Group }}
 
 import (
 	"context"
-	"fmt"
-	{{- if .IsComponent }}
-	"time"
-	{{ end }}
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"

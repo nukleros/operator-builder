@@ -66,8 +66,8 @@ func (phase *CreateResourcesPhase) GetFailCondition() common.Condition {
 }
 
 // GetDefaultRequeueResult defines the result return when a requeue is needed
-func (phase *CreateResourcesPhase) GetDefaultRequeueResult() ctrl.Result {
-	return DefaultRequeueResult()
+func (phase *CreateResourcesPhase) Requeue() ctrl.Result {
+	return Requeue()
 }
 
 // createResourcePhases defines the phases for resource creation and the order in which they run during the reconcile process
