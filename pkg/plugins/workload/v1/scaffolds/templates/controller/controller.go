@@ -172,11 +172,7 @@ func (r *{{ .Resource.Kind }}Reconciler) SetRefAndCreateIfNotPresent(
 		return err
 	}
 
-	//objectKey, err := client.ObjectKeyFromObject(resource.(runtime.Object))
 	objectKey := client.ObjectKeyFromObject(resource.(client.Object))
-	//if err != nil {
-	//	return err
-	//}
 	if err := r.Get(r.Context, objectKey, resource.(client.Object)); err != nil {
 		if errors.IsNotFound(err) {
 			r.GetLogger().V(0).Info("creating resource with name: [" + resource.GetName() + "] of kind: [" + resource.(runtime.Object).GetObjectKind().GroupVersionKind().Kind + "]")
