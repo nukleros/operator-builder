@@ -28,8 +28,6 @@ const preFlightTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	ctrl "sigs.k8s.io/controller-runtime"
-
 	common "{{ .Repo }}/apis/common"
 )
 
@@ -61,11 +59,6 @@ func (phase *PreFlightPhase) GetFailCondition() common.Condition {
 		Status:  common.ConditionStatusTrue,
 		Message: "Failed Phase " + string(common.ConditionPhasePreFlight),
 	}
-}
-
-// GetDefaultRequeueResult defines the result return when a requeue is needed
-func (phase *PreFlightPhase) GetDefaultRequeueResult() ctrl.Result {
-	return DefaultRequeueResult()
 }
 
 // PreFlightPhase.Execute executes pre-flight and fail-fast conditions prior to attempting resource creation

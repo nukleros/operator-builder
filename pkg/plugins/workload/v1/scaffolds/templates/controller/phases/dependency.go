@@ -31,7 +31,6 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	common "{{ .Repo }}/apis/common"
@@ -66,11 +65,6 @@ func (phase *DependencyPhase) GetFailCondition() common.Condition {
 		Status:  common.ConditionStatusTrue,
 		Message: "Failed Phase " + string(common.ConditionPhaseDependency),
 	}
-}
-
-// GetDefaultRequeueResult defines the result return when a requeue is needed
-func (phase *DependencyPhase) GetDefaultRequeueResult() ctrl.Result {
-	return DefaultRequeueResult()
 }
 
 // DependencyPhase.Execute executes a dependency check prior to attempting to create resources

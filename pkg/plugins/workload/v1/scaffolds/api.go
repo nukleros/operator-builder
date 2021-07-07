@@ -194,6 +194,7 @@ func (s *apiScaffolder) Scaffold() error {
 				HasChildResources: s.workload.HasChildResources(),
 				IsStandalone:      s.workload.IsStandalone(),
 				IsComponent:       s.workload.IsComponent(),
+				SourceFiles:       s.workload.GetSourceFiles(),
 			},
 			&controller.Common{
 				IsStandalone: s.workload.IsStandalone(),
@@ -241,6 +242,7 @@ func (s *apiScaffolder) Scaffold() error {
 				HasChildResources: s.workload.HasChildResources(),
 				IsStandalone:      s.workload.IsStandalone(),
 				IsComponent:       s.workload.IsComponent(),
+				SourceFiles:       s.workload.GetSourceFiles(),
 			},
 			&controller.Common{
 				IsStandalone: s.workload.IsStandalone(),
@@ -287,7 +289,8 @@ func (s *apiScaffolder) Scaffold() error {
 			)
 
 			var createFuncNames []string
-			for _, sourceFile := range *component.GetSourceFiles() {
+
+			for _, sourceFile := range *s.workload.GetSourceFiles() {
 				for _, childResource := range sourceFile.Children {
 					funcName := fmt.Sprintf("Create%s", childResource.UniqueName)
 					createFuncNames = append(createFuncNames, funcName)
@@ -330,6 +333,7 @@ func (s *apiScaffolder) Scaffold() error {
 					IsStandalone:      component.IsStandalone(),
 					IsComponent:       component.IsComponent(),
 					Collection:        s.workload.(*workloadv1.WorkloadCollection),
+					SourceFiles:       component.GetSourceFiles(),
 				},
 				&dependencies.Component{},
 				&mutate.Component{},

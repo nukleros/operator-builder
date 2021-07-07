@@ -28,8 +28,6 @@ const checkReadyTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	ctrl "sigs.k8s.io/controller-runtime"
-
 	common "{{ .Repo }}/apis/common"
 )
 
@@ -61,11 +59,6 @@ func (phase *CheckReadyPhase) GetFailCondition() common.Condition {
 		Status:  common.ConditionStatusTrue,
 		Message: "Failed Phase " + string(common.ConditionPhaseCheckReady),
 	}
-}
-
-// GetDefaultRequeueResult defines the result return when a requeue is needed
-func (phase *CheckReadyPhase) GetDefaultRequeueResult() ctrl.Result {
-	return DefaultRequeueResult()
 }
 
 // CheckReadyPhase.Execute executes checking for a parent components readiness status

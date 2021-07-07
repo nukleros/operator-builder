@@ -62,8 +62,8 @@ func CreatePhases() []phases.Phase {
 
 // UpdatePhases defines the phases for update and the order in which they run during the reconcile process
 func UpdatePhases() []phases.Phase {
-	// we have nothing to do for updating at this point
-	return []phases.Phase{}
+	// at this time create/update are identical; return the create phases
+	return CreatePhases()
 }
 
 // Phases returns which phases to run given the component

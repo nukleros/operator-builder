@@ -25,6 +25,7 @@ type Controller struct {
 	IsStandalone      bool
 	IsComponent       bool
 	Collection        *workloadv1.WorkloadCollection
+	SourceFiles       *[]workloadv1.SourceFile
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -54,6 +55,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	{{ if .HasChildResources -}}
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	{{ end }}
 
 	"{{ .Repo }}/apis/common"
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
