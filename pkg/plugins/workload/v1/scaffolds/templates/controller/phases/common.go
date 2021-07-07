@@ -29,7 +29,6 @@ package phases
 
 import (
 	"fmt"
-	"time"
 	"reflect"
 	"strings"
 
@@ -43,7 +42,7 @@ const optimisticLockErrorMsg = "the object has been modified; please apply your 
 
 // Requeue will return the default result to requeue a reconciler request when needed
 func Requeue() ctrl.Result {
-	return ctrl.Result{RequeueAfter: 10 * time.Second}
+	return ctrl.Result{Requeue: true}
 }
 
 // DefaultReconcileResult will return the default reconcile result when requeuing is not needed

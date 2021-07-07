@@ -256,6 +256,15 @@ func (r *{{ .Resource.Kind }}Reconciler) Wait(
 func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
+		{{- range .SourceFiles }}
+		{{- range .Children }}
+		{{- if eq .Group "core" }}
+		Owns(&unstructured.Unstructured{Object: map[string]interface{}{"kind": "{{ .Kind }}", "apiVersion": "{{ .Version }}"}}).
+		{{- else }}
+		Owns(&unstructured.Unstructured{Object: map[string]interface{}{"kind": "{{ .Kind }}", "apiVersion": "{{ .Group }}/{{ .Version }}"}}).
+		{{ end -}}
+		{{ end -}}
+		{{ end -}}
 		Complete(r)
 }
 `
