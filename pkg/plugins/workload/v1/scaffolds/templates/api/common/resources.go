@@ -6,7 +6,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 )
 
-var _ machinery.Template = &Conditions{}
+var _ machinery.Template = &Resources{}
 
 // Resources scaffolds the resources for all workloads.
 type Resources struct {
