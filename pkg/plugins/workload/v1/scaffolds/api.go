@@ -181,6 +181,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&common.Components{
 				IsStandalone: s.workload.IsStandalone(),
 			},
+			&common.Resources{},
 			&common.Conditions{},
 			&resources.Resources{
 				PackageName:     s.workload.GetPackageName(),
@@ -191,10 +192,10 @@ func (s *apiScaffolder) Scaffold() error {
 			&controller.Controller{
 				PackageName:       s.workload.GetPackageName(),
 				RBACRules:         s.workload.GetRBACRules(),
+				OwnershipRules:    s.workload.GetOwnershipRules(),
 				HasChildResources: s.workload.HasChildResources(),
 				IsStandalone:      s.workload.IsStandalone(),
 				IsComponent:       s.workload.IsComponent(),
-				SourceFiles:       s.workload.GetSourceFiles(),
 			},
 			&controller.Common{
 				IsStandalone: s.workload.IsStandalone(),
@@ -235,14 +236,15 @@ func (s *apiScaffolder) Scaffold() error {
 			&common.Components{
 				IsStandalone: s.workload.IsStandalone(),
 			},
+			&common.Resources{},
 			&common.Conditions{},
 			&controller.Controller{
 				PackageName:       s.workload.GetPackageName(),
 				RBACRules:         &[]workloadv1.RBACRule{},
+				OwnershipRules:    s.workload.GetOwnershipRules(),
 				HasChildResources: s.workload.HasChildResources(),
 				IsStandalone:      s.workload.IsStandalone(),
 				IsComponent:       s.workload.IsComponent(),
-				SourceFiles:       s.workload.GetSourceFiles(),
 			},
 			&controller.Common{
 				IsStandalone: s.workload.IsStandalone(),
@@ -329,11 +331,11 @@ func (s *apiScaffolder) Scaffold() error {
 				&controller.Controller{
 					PackageName:       component.GetPackageName(),
 					RBACRules:         component.GetRBACRules(),
+					OwnershipRules:    component.GetOwnershipRules(),
 					HasChildResources: component.HasChildResources(),
 					IsStandalone:      component.IsStandalone(),
 					IsComponent:       component.IsComponent(),
 					Collection:        s.workload.(*workloadv1.WorkloadCollection),
-					SourceFiles:       component.GetSourceFiles(),
 				},
 				&dependencies.Component{},
 				&mutate.Component{},

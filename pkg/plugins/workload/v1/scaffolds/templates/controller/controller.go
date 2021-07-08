@@ -21,11 +21,11 @@ type Controller struct {
 
 	PackageName       string
 	RBACRules         *[]workloadv1.RBACRule
+	OwnershipRules    *[]workloadv1.OwnershipRule
 	HasChildResources bool
 	IsStandalone      bool
 	IsComponent       bool
 	Collection        *workloadv1.WorkloadCollection
-	SourceFiles       *[]workloadv1.SourceFile
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -48,6 +48,7 @@ package {{ .Resource.Group }}
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -130,14 +131,16 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 
 	// execute the phases
 	for _, phase := range controllers.Phases(r.Component) {
+		r.GetLogger().V(7).Info(fmt.Sprintf("enter phase: %T", phase))
 		proceed, err := phase.Execute(r)
 		result, err := phases.HandlePhaseExit(r, phase.(phases.PhaseHandler), proceed, err)
 
 		// return only if we have an error or are told not to proceed
 		if err != nil || !proceed {
-			log.V(4).Info("not proceeding - requeuing")
+			log.V(4).Info(fmt.Sprintf("not ready; requeuing phase: %T", phase))
 			return result, err
 		}
+		r.GetLogger().V(5).Info(fmt.Sprintf("completed phase: %T", phase))
 	}
 
 	return phases.DefaultReconcileResult(), nil
@@ -184,6 +187,7 @@ func (r *{{ .Resource.Kind }}Reconciler) SetRefAndCreateIfNotPresent(
 				r.GetLogger().V(0).Info("unable to create resource")
 				return err
 			}
+		// TODO: this is bad logic that needs to be fixed for resources that are being updated
 		} else {
 			r.GetLogger().V(0).Info("updating resource with name: [" + resource.GetName() + "] of kind: [" + resource.(runtime.Object).GetObjectKind().GroupVersionKind().Kind + "]")
 			if err := r.Update(r.Context, resource.(client.Object)); err != nil {
@@ -256,14 +260,8 @@ func (r *{{ .Resource.Kind }}Reconciler) Wait(
 func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
-		{{- range .SourceFiles }}
-		{{- range .Children }}
-		{{- if eq .Group "core" }}
+		{{- range .OwnershipRules }}
 		Owns(&unstructured.Unstructured{Object: map[string]interface{}{"kind": "{{ .Kind }}", "apiVersion": "{{ .Version }}"}}).
-		{{- else }}
-		Owns(&unstructured.Unstructured{Object: map[string]interface{}{"kind": "{{ .Kind }}", "apiVersion": "{{ .Group }}/{{ .Version }}"}}).
-		{{ end -}}
-		{{ end -}}
 		{{ end -}}
 		Complete(r)
 }

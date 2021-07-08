@@ -51,6 +51,7 @@ type WorkloadAPIBuilder interface {
 	GetSourceFiles() *[]SourceFile
 	GetAPISpecFields() *[]APISpecField
 	GetRBACRules() *[]RBACRule
+	GetOwnershipRules() *[]OwnershipRule
 	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
 
 	SetNames()

@@ -42,6 +42,7 @@ type StandaloneWorkloadSpec struct {
 	APISpecFields       []APISpecField
 	SourceFiles         []SourceFile
 	RBACRules           []RBACRule
+	OwnershipRules      []OwnershipRule
 }
 
 // StandaloneWorkload defines a standalone workload
@@ -62,6 +63,7 @@ type ComponentWorkloadSpec struct {
 	APISpecFields         []APISpecField
 	SourceFiles           []SourceFile
 	RBACRules             []RBACRule
+	OwnershipRules        []OwnershipRule
 }
 
 // ComponentWorkload defines a workload that is a component of a collection
@@ -106,7 +108,7 @@ type SourceFile struct {
 }
 
 // ChildResource contains attributes for resources created by the custom resource.
-// These definitions are inferred from the resource manfiests.
+// These definitions are inferred from the resource manifests.
 type ChildResource struct {
 	Name          string
 	UniqueName    string
@@ -133,6 +135,14 @@ type Marker struct {
 type RBACRule struct {
 	Group    string
 	Resource string
+}
+
+// OwnershipRule contains the info needed to create the controller ownership
+// functionality when setting up the controller with the manager.  This allows
+// the controller to reconcile the state of a deleted resource that it manages.
+type OwnershipRule struct {
+	Version string
+	Kind    string
 }
 
 // Project contains the project config saved to the WORKLOAD file to allow

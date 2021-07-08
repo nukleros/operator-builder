@@ -110,12 +110,13 @@ func (c *ComponentWorkload) SetSpecFields(workloadPath string) error {
 }
 
 func (c *ComponentWorkload) SetResources(workloadPath string) error {
-	sourceFiles, rbacRules, err := processResources(workloadPath, c.Spec.Resources)
+	sourceFiles, rbacRules, ownershipRules, err := processResources(workloadPath, c.Spec.Resources)
 	if err != nil {
 		return err
 	}
 	c.Spec.SourceFiles = *sourceFiles
 	c.Spec.RBACRules = *rbacRules
+	c.Spec.OwnershipRules = *ownershipRules
 
 	return nil
 }
@@ -149,6 +150,10 @@ func (c ComponentWorkload) GetAPISpecFields() *[]APISpecField {
 
 func (c ComponentWorkload) GetRBACRules() *[]RBACRule {
 	return &c.Spec.RBACRules
+}
+
+func (c ComponentWorkload) GetOwnershipRules() *[]OwnershipRule {
+	return &c.Spec.OwnershipRules
 }
 
 func (c ComponentWorkload) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {

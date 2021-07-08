@@ -197,6 +197,10 @@ func (c WorkloadCollection) GetRBACRules() *[]RBACRule {
 	return &[]RBACRule{}
 }
 
+func (c WorkloadCollection) GetOwnershipRules() *[]OwnershipRule {
+	return &[]OwnershipRule{}
+}
+
 func (c WorkloadCollection) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
 	return &resource.Resource{}
 }

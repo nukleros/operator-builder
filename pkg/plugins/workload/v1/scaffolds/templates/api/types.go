@@ -95,6 +95,7 @@ type {{ .Resource.Kind }}Status struct {
 	Created               bool               ` + "`" + `json:"created,omitempty"` + "`" + `
 	DependenciesSatisfied bool               ` + "`" + `json:"dependenciesSatisfied,omitempty"` + "`" + `
 	Conditions            []common.Condition ` + "`" + `json:"conditions,omitempty"` + "`" + `
+	Resources             []common.Resources ` + "`" + `json:"resources,omitempty"` + "`" + `
 }
 
 // +kubebuilder:object:root=true

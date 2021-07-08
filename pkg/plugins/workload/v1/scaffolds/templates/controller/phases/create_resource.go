@@ -30,6 +30,8 @@ const createResourceTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
+	"fmt"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"{{ .Repo }}/apis/common"
@@ -92,6 +94,7 @@ func (phase *CreateResourcesPhase) Execute(
 	component := r.GetComponent()
 
 	// get the resources which we will act upon
+	r.GetLogger().V(2).Info("constructing resources in memory")
 	proceed, err := new(ConstructPhase).Execute(r, phase)
 	if err != nil || !proceed {
 		return false, err
@@ -106,12 +109,14 @@ func (phase *CreateResourcesPhase) Execute(
 			OriginalResource:    &resource,
 		}
 		for _, resourcePhase := range createResourcePhases() {
+			r.GetLogger().V(7).Info(fmt.Sprintf("enter resource phase: %T", resourcePhase))
 			_, proceed, err := resourcePhase.Execute(componentResource)
 
 			// return the error and result on error
 			if err != nil || !proceed {
 				return false, err
 			}
+			r.GetLogger().V(5).Info(fmt.Sprintf("completed resource phase: %T", resourcePhase))
 		}
 	}
 
