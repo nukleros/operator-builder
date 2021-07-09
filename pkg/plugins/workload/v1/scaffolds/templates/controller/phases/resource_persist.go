@@ -44,7 +44,7 @@ func persistExitSuccessCondition(objectName string, objectKind string) *common.C
 	}
 }
 
-// PersistResourcePhase.Execute executes persisting resources to the Kubernetes database
+// PersistResourcePhase.Execute executes persisting resources to the Kubernetes database.
 func (phase *PersistResourcePhase) Execute(
 	resource *ComponentResource,
 ) (ctrl.Result, bool, error) {
@@ -75,7 +75,7 @@ func (phase *PersistResourcePhase) Execute(
 	return ctrl.Result{}, true, nil
 }
 
-// persistResource persists a single resource to the Kubernetes database
+// persistResource persists a single resource to the Kubernetes database.
 func persistResource(
 	r common.ComponentReconciler,
 	resource metav1.Object,

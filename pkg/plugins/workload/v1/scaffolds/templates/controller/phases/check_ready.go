@@ -31,7 +31,7 @@ import (
 	common "{{ .Repo }}/apis/common"
 )
 
-// GetSuccessCondition defines the success condition for the phase
+// GetSuccessCondition defines the success condition for the phase.
 func (phase *CheckReadyPhase) GetSuccessCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseCheckReady,
@@ -41,7 +41,7 @@ func (phase *CheckReadyPhase) GetSuccessCondition() common.Condition {
 	}
 }
 
-// GetPendingCondition defines the pending condition for the phase
+// GetPendingCondition defines the pending condition for the phase.
 func (phase *CheckReadyPhase) GetPendingCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseCheckReady,
@@ -51,7 +51,7 @@ func (phase *CheckReadyPhase) GetPendingCondition() common.Condition {
 	}
 }
 
-// GetFailCondition defines the fail condition for the phase
+// GetFailCondition defines the fail condition for the phase.
 func (phase *CheckReadyPhase) GetFailCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhasePreFlight,
@@ -61,7 +61,7 @@ func (phase *CheckReadyPhase) GetFailCondition() common.Condition {
 	}
 }
 
-// CheckReadyPhase.Execute executes checking for a parent components readiness status
+// CheckReadyPhase.Execute executes checking for a parent components readiness status.
 func (phase *CheckReadyPhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {

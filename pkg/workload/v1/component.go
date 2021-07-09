@@ -37,7 +37,7 @@ func (c ComponentWorkload) GetWorkloadKind() WorkloadKind {
 	return c.Kind
 }
 
-// methods that implement WorkloadAPIBuilder
+// methods that implement WorkloadAPIBuilder.
 func (c ComponentWorkload) GetName() string {
 	return c.Name
 }

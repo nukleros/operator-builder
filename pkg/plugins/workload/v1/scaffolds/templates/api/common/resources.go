@@ -26,7 +26,7 @@ const resourcesTemplate = `{{ .Boilerplate }}
 
 package common
 
-// Resource describes a Kubernetes resource managed by the parent object
+// Resource describes a Kubernetes resource managed by the parent object.
 type Resource struct {
 	Created      bool   ` + "`" + `json:"created"` + "`" + `
 	Kind         string ` + "`" + `json:"kind"` + "`" + `

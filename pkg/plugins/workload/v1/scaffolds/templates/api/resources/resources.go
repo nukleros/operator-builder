@@ -86,7 +86,7 @@ var CreateFuncs = []func(
 	{{ end }}
 }
 
-// runTemplate renders a template for a child object to the custom resource
+// runTemplate renders a template for a child object to the custom resource.
 func runTemplate(templateName, templateValue string, data *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
 	funcMap template.FuncMap) (string, error) {
 

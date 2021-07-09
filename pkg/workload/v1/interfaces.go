@@ -2,14 +2,14 @@ package v1
 
 import "sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
-// WorkloadIdentifier defines an interface for identifying any workload
+// WorkloadIdentifier defines an interface for identifying any workload.
 type WorkloadIdentifier interface {
 	GetName() string
 	GetWorkloadKind() WorkloadKind
 }
 
 // WorkloadInitializer defines the interface that must be implemented by a
-// workload being used to configure project initialization
+// workload being used to configure project initialization.
 type WorkloadInitializer interface {
 	Validate() error
 
@@ -23,7 +23,7 @@ type WorkloadInitializer interface {
 }
 
 // WorkloadAPIBuilder defines the interface that must be implemented by a
-// workload being used to configure API and controller creation
+// workload being used to configure API and controller creation.
 type WorkloadAPIBuilder interface {
 	Validate() error
 

@@ -11,7 +11,7 @@ import (
 const markerStr = "+workload"
 
 // SupportedMarkerDataTypes returns the supported data types that can be used in
-// workload markers
+// workload markers.
 func SupportedMarkerDataTypes() []string {
 	return []string{"bool", "string", "int", "int32", "int64", "float32", "float64"}
 }
@@ -187,7 +187,7 @@ func processMarkerLine(line string) (Marker, error) {
 				msg := fmt.Sprintf("collection value %s found - must be either 'true' or 'false'", collectionVal)
 				return marker, errors.New(msg)
 			}
-			//marker.Collection = strings.Split(element, "=")[1]
+			// marker.Collection = strings.Split(element, "=")[1]
 		} else {
 			marker.FieldName = element
 		}

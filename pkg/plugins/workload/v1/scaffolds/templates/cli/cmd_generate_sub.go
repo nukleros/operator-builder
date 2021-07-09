@@ -81,7 +81,7 @@ import (
 var workloadManifest string
 {{ end }}
 
-// {{ .CliSubCmdVarName }}GenerateCmd represents the {{ .CliSubCmdName }} generate subcommand
+// {{ .CliSubCmdVarName }}GenerateCmd represents the {{ .CliSubCmdName }} generate subcommand.
 var {{ .CliSubCmdVarName }}GenerateCmd = &cobra.Command{
 	{{ if .IsComponent -}}
 	Use:   "{{ .CliSubCmdName }}",

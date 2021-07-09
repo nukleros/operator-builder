@@ -26,7 +26,7 @@ const conditionsTemplate = `{{ .Boilerplate }}
 
 package common
 
-// ConditionPhase defines the phase in which the condition was set
+// ConditionPhase defines the phase in which the condition was set.
 // +kubebuilder:validation:Enum=Dependency;PreFlight;CreateResources;Mutate;Persist;Wait;CheckReady;Complete
 type ConditionPhase string
 
@@ -41,7 +41,7 @@ const (
 	ConditionPhaseComplete        ConditionPhase = "Complete"
 )
 
-// ConditionType defines the type of condition
+// ConditionType defines the type of condition.
 // +kubebuilder:validation:Enum=Ready;Reconciling;Failed;Pending
 type ConditionType string
 
@@ -52,7 +52,7 @@ const (
 	ConditionTypePending     ConditionType = "Pending"
 )
 
-// ConditionStatus defines the status of the condition
+// ConditionStatus defines the status of the condition.
 // +kubebuilder:validation:Enum=True;False
 type ConditionStatus string
 
@@ -61,7 +61,7 @@ const (
 	ConditionStatusFalse ConditionStatus = "False"
 )
 
-// Condition describes an event that has occurred against the object
+// Condition describes an event that has occurred against the object.
 type Condition struct {
 	Type    ConditionType   ` + "`" + `json:"type"` + "`" + `
 	Status  ConditionStatus ` + "`" + `json:"status"` + "`" + `

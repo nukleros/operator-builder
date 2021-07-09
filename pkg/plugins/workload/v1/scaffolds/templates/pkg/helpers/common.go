@@ -48,14 +48,14 @@ const (
 	CollectionAPIKind    = "{{ .Resource.Kind }}"
 )
 
-// SkipResourceCreation skips the resource creation during the mutate phase
+// SkipResourceCreation skips the resource creation during the mutate phase.
 func SkipResourceCreation(
 	err error,
 ) ([]metav1.Object, bool, error) {
 	return []metav1.Object{}, true, err
 }
 
-// GetProperObject gets a proper object type given an existing source metav1.object
+// GetProperObject gets a proper object type given an existing source metav1.object.
 func GetProperObject(destination metav1.Object, source metav1.Object) error {
 	// convert the source object to an unstructured type
 	unstructuredObject, err := runtime.DefaultUnstructuredConverter.ToUnstructured(source)
@@ -67,7 +67,7 @@ func GetProperObject(destination metav1.Object, source metav1.Object) error {
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredObject, destination)
 }
 
-// getValueFromCollection gets a specific value from the {{ .Resource.Kind }} resource
+// getValueFromCollection gets a specific value from the {{ .Resource.Kind }} resource.
 func getValueFromCollection(reconciler common.ComponentReconciler, path ...string) (string, error) {
 	// retrieve a list of platform configs
 	collectionConfigs, err := GetCollectionConfigs(reconciler)
@@ -91,7 +91,7 @@ func getValueFromCollection(reconciler common.ComponentReconciler, path ...strin
 	return collectionConfigValue, nil
 }
 
-// GetCollectionConfigs returns all of the collection resources from the cluster
+// GetCollectionConfigs returns all of the collection resources from the cluster.
 func GetCollectionConfigs(
 	r common.ComponentReconciler,
 ) (unstructured.UnstructuredList, error) {
@@ -111,7 +111,7 @@ func GetCollectionConfigs(
 	return collectionConfigs, nil
 }
 
-// GetCollectionName returns the name of the platform from the {{ .Resource.Kind }} resource
+// GetCollectionName returns the name of the platform from the {{ .Resource.Kind }} resource.
 func GetCollectionName(r common.ComponentReconciler) (string, error) {
 	return getValueFromCollection(r, "metadata", "name")
 }

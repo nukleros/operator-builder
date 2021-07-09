@@ -37,12 +37,12 @@ import (
 	common "{{ .Repo }}/apis/common"
 )
 
-// defaultWaitRequeue defines the default requeue result for this phase
+// defaultWaitRequeue defines the default requeue result for this phase.
 func defaultWaitRequeue() ctrl.Result {
 	return ctrl.Result{Requeue: true}
 }
 
-// WaitForResourcePhase.Execute executes waiting for a resource to be ready before continuing
+// WaitForResourcePhase.Execute executes waiting for a resource to be ready before continuing.
 func (phase *WaitForResourcePhase) Execute(
 	resource *ComponentResource,
 ) (ctrl.Result, bool, error) {
@@ -76,7 +76,7 @@ func (phase *WaitForResourcePhase) Execute(
 	return ctrl.Result{}, true, nil
 }
 
-// commonWait applies all common waiting functions for known resources
+// commonWait applies all common waiting functions for known resources.
 func commonWait(
 	r common.ComponentReconciler,
 	ctx context.Context,
@@ -89,7 +89,7 @@ func commonWait(
 	return true, nil
 }
 
-// namespaceIsReady waits for a namespace object to exist
+// namespaceIsReady waits for a namespace object to exist.
 func namespaceIsReady(
 	r common.ComponentReconciler,
 	ctx context.Context,

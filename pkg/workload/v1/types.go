@@ -1,6 +1,6 @@
 package v1
 
-// WorkloadKind indicates which of the supported workload kinds are being used
+// WorkloadKind indicates which of the supported workload kinds are being used.
 type WorkloadKind string
 
 const (
@@ -9,7 +9,7 @@ const (
 	WorkloadKindComponent  WorkloadKind = "ComponentWorkload"
 )
 
-// WorkloadSharedSpec contains fields shared by all workload specs
+// WorkloadSharedSpec contains fields shared by all workload specs.
 type WorkloadSharedSpec struct {
 	APIGroup      string `json:"apiGroup"`
 	APIVersion    string `json:"apiVersion"`
@@ -17,7 +17,7 @@ type WorkloadSharedSpec struct {
 	ClusterScoped bool   `json:"clusterScoped"`
 }
 
-// WorkloadShared contains fields shared by all workloads
+// WorkloadShared contains fields shared by all workloads.
 type WorkloadShared struct {
 	Name        string       `json:"name"`
 	Kind        WorkloadKind `json:"kind"`
@@ -25,7 +25,7 @@ type WorkloadShared struct {
 }
 
 // CliCommand defines the command name and description for the root command or
-// subcommand of a companion CLI
+// subcommand of a companion CLI.
 type CliCommand struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -33,7 +33,7 @@ type CliCommand struct {
 	FileName    string
 }
 
-// StandaloneWorkloadSpec defines the attributes for a standalone workload
+// StandaloneWorkloadSpec defines the attributes for a standalone workload.
 type StandaloneWorkloadSpec struct {
 	WorkloadSharedSpec
 	Domain              string     `json:"domain"`
@@ -45,14 +45,14 @@ type StandaloneWorkloadSpec struct {
 	OwnershipRules      []OwnershipRule
 }
 
-// StandaloneWorkload defines a standalone workload
+// StandaloneWorkload defines a standalone workload.
 type StandaloneWorkload struct {
 	WorkloadShared
 	Spec StandaloneWorkloadSpec `json:"spec"`
 }
 
 // ComponentWorkloadSpec defines the attributes for a workload that is a
-// component of a collection
+// component of a collection.
 type ComponentWorkloadSpec struct {
 	WorkloadSharedSpec
 	CompanionCliSubcmd    CliCommand `json:"companionCliSubcmd" `
@@ -66,13 +66,13 @@ type ComponentWorkloadSpec struct {
 	OwnershipRules        []OwnershipRule
 }
 
-// ComponentWorkload defines a workload that is a component of a collection
+// ComponentWorkload defines a workload that is a component of a collection.
 type ComponentWorkload struct {
 	WorkloadShared
 	Spec ComponentWorkloadSpec `json:"spec"`
 }
 
-// WorkloadCollectionSpec defines the attributes for a workload collection
+// WorkloadCollectionSpec defines the attributes for a workload collection.
 type WorkloadCollectionSpec struct {
 	WorkloadSharedSpec
 	Domain              string     `json:"domain"`
@@ -82,13 +82,13 @@ type WorkloadCollectionSpec struct {
 	APISpecFields       []APISpecField
 }
 
-// WorkloadCollection defines a workload collection
+// WorkloadCollection defines a workload collection.
 type WorkloadCollection struct {
 	WorkloadShared
 	Spec WorkloadCollectionSpec `json:"spec"`
 }
 
-// APISpecField represents a single field in a custom API type
+// APISpecField represents a single field in a custom API type.
 type APISpecField struct {
 	FieldName         string
 	ManifestFieldName string
@@ -100,7 +100,7 @@ type APISpecField struct {
 }
 
 // SourceFile represents a golang source code file that contains one or more
-// child resource objects
+// child resource objects.
 type SourceFile struct {
 	Filename  string
 	Children  []ChildResource
@@ -119,7 +119,7 @@ type ChildResource struct {
 	SourceCode    string
 }
 
-// Marker contains the attributes of a workload marker from a static manifest
+// Marker contains the attributes of a workload marker from a static manifest.
 type Marker struct {
 	Key           string
 	Value         string
@@ -131,7 +131,7 @@ type Marker struct {
 }
 
 // RBACRule contains the info needed to create the kubebuilder:rbac markers in
-// the controller
+// the controller.
 type RBACRule struct {
 	Group    string
 	Resource string
@@ -146,14 +146,14 @@ type OwnershipRule struct {
 }
 
 // Project contains the project config saved to the WORKLOAD file to allow
-// access to config values shared across different operator-builder commands
+// access to config values shared across different operator-builder commands.
 type Project struct {
 	CliRootCommandName string `json:"cliRootCommandName"`
 }
 
 const ConfigTaxiKey = "configTaxi"
 
-// ConfigTaxi transports config values from config plugin to workload plugin
+// ConfigTaxi transports config values from config plugin to workload plugin.
 type ConfigTaxi struct {
 	WorkloadConfigPath string
 }

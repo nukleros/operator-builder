@@ -33,7 +33,7 @@ import (
 	common "{{ .Repo }}/apis/common"
 )
 
-// GetSuccessCondition defines the success condition for the phase
+// GetSuccessCondition defines the success condition for the phase.
 func (phase *CompletePhase) GetSuccessCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseComplete,
@@ -43,7 +43,7 @@ func (phase *CompletePhase) GetSuccessCondition() common.Condition {
 	}
 }
 
-// GetPendingCondition defines the pending condition for the phase
+// GetPendingCondition defines the pending condition for the phase.
 func (phase *CompletePhase) GetPendingCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhasePreFlight,
@@ -53,7 +53,7 @@ func (phase *CompletePhase) GetPendingCondition() common.Condition {
 	}
 }
 
-// GetFailCondition defines the fail condition for the phase
+// GetFailCondition defines the fail condition for the phase.
 func (phase *CompletePhase) GetFailCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseComplete,
@@ -63,12 +63,12 @@ func (phase *CompletePhase) GetFailCondition() common.Condition {
 	}
 }
 
-// Requeue defines the result return when a requeue is needed
+// Requeue defines the result return when a requeue is needed.
 func (phase *CompletePhase) Requeue() ctrl.Result {
 	return Requeue()
 }
 
-// CompletePhase.Execute executes the completion of a reconciliation loop
+// CompletePhase.Execute executes the completion of a reconciliation loop.
 func (phase *CompletePhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {

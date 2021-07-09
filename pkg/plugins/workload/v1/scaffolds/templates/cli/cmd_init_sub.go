@@ -71,7 +71,7 @@ spec:
 {{ end }}
 ` + "`" + `
 
-// {{ .CliSubCmdName }}InitCmd represents the {{ .CliSubCmdName }} init subcommand
+// {{ .CliSubCmdName }}InitCmd represents the {{ .CliSubCmdName }} init subcommand.
 var {{ .CliSubCmdVarName }}InitCmd = &cobra.Command{
 	{{ if .IsComponent -}}
 	Use:   "{{ .CliSubCmdName }}",

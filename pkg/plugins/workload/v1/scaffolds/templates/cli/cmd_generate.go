@@ -14,7 +14,7 @@ const (
 var _ machinery.Template = &CliCmdGenerate{}
 
 // CliCmdGenerate scaffolds the companion CLI's generate subcommand for
-// comopnent workloads.  The generate logic will live in the workload's
+// component workloads.  The generate logic will live in the workload's
 // subcommand to this command; see cmd_generate_sub.go.
 type CliCmdGenerate struct {
 	machinery.TemplateMixin
@@ -50,7 +50,7 @@ var (
 	collectionManifest string
 )
 
-// generateCmd represents the generate command
+// generateCmd represents the generate command.
 var generateCmd = &cobra.Command{
 	Use:   "{{ .GenerateCommandName }}",
 	Short: "{{ .GenerateCommandDescr }}",

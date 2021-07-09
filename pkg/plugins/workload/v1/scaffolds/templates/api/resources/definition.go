@@ -61,7 +61,7 @@ import (
 )
 
 {{ range .SourceFile.Children }}
-// Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource
+// Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource.
 func Create{{ .UniqueName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
 	{{- if $.IsComponent }}

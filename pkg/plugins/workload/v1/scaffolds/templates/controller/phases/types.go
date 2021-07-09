@@ -36,24 +36,24 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-// Phase defines a phase of the reconciliation process
+// Phase defines a phase of the reconciliation process.
 type Phase interface {
 	Execute(common.ComponentReconciler) (bool, error)
 }
 
-// PhaseHandler defines an object which can handle the outcome of a phase execution
+// PhaseHandler defines an object which can handle the outcome of a phase execution.
 type PhaseHandler interface {
 	GetSuccessCondition() common.Condition
 	GetPendingCondition() common.Condition
 	GetFailCondition() common.Condition
 }
 
-// ResourcePhase defines the specific phase of reconcilication associated with creating resources
+// ResourcePhase defines the specific phase of reconcilication associated with creating resources.
 type ResourcePhase interface {
 	Execute(*ComponentResource) (ctrl.Result, bool, error)
 }
 
-// ComponentResource defines a resource which is created by the parent Component custom resource
+// ComponentResource defines a resource which is created by the parent Component custom resource.
 type ComponentResource struct {
 	Component           *common.Component
 	ComponentReconciler common.ComponentReconciler
@@ -63,33 +63,33 @@ type ComponentResource struct {
 	Skip                bool
 }
 
-// DependencyPhase defines an object specific to the depenency phase of reconciliation
+// DependencyPhase defines an object specific to the depenency phase of reconciliation.
 type DependencyPhase struct{}
 
-// DependencyPhase defines an object specific to the preflight phase of reconciliation
+// DependencyPhase defines an object specific to the preflight phase of reconciliation.
 type PreFlightPhase struct{}
 
-// CreateResourcesPhase defines an object specific to the create resources phase of reconciliation
+// CreateResourcesPhase defines an object specific to the create resources phase of reconciliation.
 type CreateResourcesPhase struct {
 	Resources []metav1.Object
 	ReplacedResources []metav1.Object
 }
 
-// ConstructPhase defines an object specific to the in memory resource creation phase of reconciliation
+// ConstructPhase defines an object specific to the in memory resource creation phase of reconciliation.
 type ConstructPhase struct{}
 
-// MutateResourcePhase defines an object specific to the resource mutation phase of reconciliation
+// MutateResourcePhase defines an object specific to the resource mutation phase of reconciliation.
 type MutateResourcePhase struct{}
 
-// PersistResourcePhase defines an object specific to the resource persistence phase of reconciliation
+// PersistResourcePhase defines an object specific to the resource persistence phase of reconciliation.
 type PersistResourcePhase struct{}
 
-// WaitForResourcePhase defines an object specific to the resource waiting phase of reconciliation
+// WaitForResourcePhase defines an object specific to the resource waiting phase of reconciliation.
 type WaitForResourcePhase struct{}
 
-// CheckReadyPhase defines an object specific to the resource checking to see if the object is ready
+// CheckReadyPhase defines an object specific to the resource checking to see if the object is ready.
 type CheckReadyPhase struct{}
 
-// CompletePhase defines an object specific to the completion phase of reconciliation
+// CompletePhase defines an object specific to the completion phase of reconciliation.
 type CompletePhase struct{}
 `

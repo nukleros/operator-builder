@@ -40,7 +40,7 @@ func (c WorkloadCollection) GetWorkloadKind() WorkloadKind {
 	return c.Kind
 }
 
-// methods that implement WorkloadInitializer
+// methods that implement WorkloadInitializer.
 func (c WorkloadCollection) GetDomain() string {
 	return c.Spec.Domain
 }
@@ -66,7 +66,7 @@ func (c WorkloadCollection) GetRootCmdDescr() string {
 	return c.Spec.CompanionCliRootcmd.Description
 }
 
-// methods that implement WorkloadAPIBuilder
+// methods that implement WorkloadAPIBuilder.
 func (c WorkloadCollection) GetName() string {
 	return c.Name
 }

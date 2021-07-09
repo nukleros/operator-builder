@@ -7,7 +7,7 @@ import (
 )
 
 // ToVarName will convert a kebab-case string to a camelCase name appropriate to
-// use as a go varaiable name
+// use as a go varaiable name.
 func ToVarName(name string) string {
 	var output string
 	makeUpper := false
@@ -29,18 +29,18 @@ func ToVarName(name string) string {
 }
 
 // ToFileName will convert a kebab-case string to a snake_case name appropriate to
-// use in a go filename
+// use in a go filename.
 func ToFileName(name string) string {
 	return strings.ToLower(strings.Replace(name, "-", "_", -1))
 }
 
 // ToPackageName will convert a kebab-case string to an alllower name
-// appropriate for directory and package names
+// appropriate for directory and package names.
 func ToPackageName(name string) string {
 	return strings.ToLower(strings.Replace(name, "-", "", -1))
 }
 
-// PluralizeKind returns the plural version of a kind in lowercase
+// PluralizeKind returns the plural version of a kind in lowercase.
 func PluralizeKind(kind string) string {
 	pluralize := pluralize.NewClient()
 	return strings.ToLower(pluralize.Plural(kind))

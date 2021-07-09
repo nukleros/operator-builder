@@ -30,7 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-// MutateResourcePhase.Execute executes the mutation of a resource
+// MutateResourcePhase.Execute executes the mutation of a resource.
 func (phase *MutateResourcePhase) Execute(
 	resource *ComponentResource,
 ) (ctrl.Result, bool, error) {

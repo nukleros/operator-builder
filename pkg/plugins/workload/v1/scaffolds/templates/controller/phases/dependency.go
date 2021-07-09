@@ -37,7 +37,7 @@ import (
 	helpers "{{ .Repo }}/pkg/helpers"
 )
 
-// GetSuccessCondition defines the success condition for the phase
+// GetSuccessCondition defines the success condition for the phase.
 func (phase *DependencyPhase) GetSuccessCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseDependency,
@@ -47,7 +47,7 @@ func (phase *DependencyPhase) GetSuccessCondition() common.Condition {
 	}
 }
 
-// GetPendingCondition defines the pending condition for the phase
+// GetPendingCondition defines the pending condition for the phase.
 func (phase *DependencyPhase) GetPendingCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseDependency,
@@ -57,7 +57,7 @@ func (phase *DependencyPhase) GetPendingCondition() common.Condition {
 	}
 }
 
-// GetFailCondition defines the fail condition for the phase
+// GetFailCondition defines the fail condition for the phase.
 func (phase *DependencyPhase) GetFailCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseDependency,
@@ -67,7 +67,7 @@ func (phase *DependencyPhase) GetFailCondition() common.Condition {
 	}
 }
 
-// DependencyPhase.Execute executes a dependency check prior to attempting to create resources
+// DependencyPhase.Execute executes a dependency check prior to attempting to create resources.
 func (phase *DependencyPhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {
@@ -91,7 +91,7 @@ func (phase *DependencyPhase) Execute(
 	return true, nil
 }
 
-// dependenciesSatisfied will return whether or not all dependencies are satisfied for a component
+// dependenciesSatisfied will return whether or not all dependencies are satisfied for a component.
 func dependenciesSatisfied(
 	r common.ComponentReconciler,
 ) (bool, error) {
@@ -106,7 +106,7 @@ func dependenciesSatisfied(
 	return true, nil
 }
 
-// dependencySatisfied will return whether or not an individual dependency is satisfied
+// dependencySatisfied will return whether or not an individual dependency is satisfied.
 func dependencySatisfied(
 	r common.ComponentReconciler,
 	dependency common.Component,
@@ -132,7 +132,7 @@ func dependencySatisfied(
 	return status, nil
 }
 
-// collectionConfigIsReady determines if a component's collection is ready
+// collectionConfigIsReady determines if a component's collection is ready.
 func collectionConfigIsReady(
 	r common.ComponentReconciler,
 ) bool {

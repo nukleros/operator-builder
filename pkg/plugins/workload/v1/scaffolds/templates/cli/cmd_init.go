@@ -14,7 +14,7 @@ const (
 var _ machinery.Template = &CliCmdInit{}
 
 // CliCmdInit scaffolds the companion CLI's init subcommand for
-// comopnent workloads.  The init logic will live in the workload's
+// component workloads.  The init logic will live in the workload's
 // subcommand to this command; see cmd_init_sub.go.
 type CliCmdInit struct {
 	machinery.TemplateMixin
@@ -45,7 +45,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// initCmd represents the init command
+// initCmd represents the init command.
 var initCmd = &cobra.Command{
 	Use:   "{{ .InitCommandName }}",
 	Short: "{{ .InitCommandDescr }}",

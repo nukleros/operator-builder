@@ -31,7 +31,7 @@ import (
 	common "{{ .Repo }}/apis/common"
 )
 
-// GetSuccessCondition defines the success condition for the phase
+// GetSuccessCondition defines the success condition for the phase.
 func (phase *PreFlightPhase) GetSuccessCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhasePreFlight,
@@ -41,7 +41,7 @@ func (phase *PreFlightPhase) GetSuccessCondition() common.Condition {
 	}
 }
 
-// GetPendingCondition defines the pending condition for the phase
+// GetPendingCondition defines the pending condition for the phase.
 func (phase *PreFlightPhase) GetPendingCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhasePreFlight,
@@ -51,7 +51,7 @@ func (phase *PreFlightPhase) GetPendingCondition() common.Condition {
 	}
 }
 
-// GetFailCondition defines the fail condition for the phase
+// GetFailCondition defines the fail condition for the phase.
 func (phase *PreFlightPhase) GetFailCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhasePreFlight,
@@ -61,7 +61,7 @@ func (phase *PreFlightPhase) GetFailCondition() common.Condition {
 	}
 }
 
-// PreFlightPhase.Execute executes pre-flight and fail-fast conditions prior to attempting resource creation
+// PreFlightPhase.Execute executes pre-flight and fail-fast conditions prior to attempting resource creation.
 func (phase *PreFlightPhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {

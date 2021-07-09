@@ -41,7 +41,7 @@ import (
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
 )
 
-// {{ .Resource.Kind }}Unique returns only one {{ .Resource.Kind }} and returns an error if more than one are found
+// {{ .Resource.Kind }}Unique returns only one {{ .Resource.Kind }} and returns an error if more than one are found.
 func {{ .Resource.Kind }}Unique(
 	reconciler common.ComponentReconciler,
 ) (
@@ -62,7 +62,7 @@ func {{ .Resource.Kind }}Unique(
 	return &component, nil
 }
 
-// {{ .Resource.Kind }}List gets a {{ .Resource.Kind }}List from the cluster
+// {{ .Resource.Kind }}List gets a {{ .Resource.Kind }}List from the cluster.
 func {{ .Resource.Kind }}List(
 	reconciler common.ComponentReconciler,
 ) (

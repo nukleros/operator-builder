@@ -77,7 +77,7 @@ import (
 	{{ end }}
 )
 
-// {{ .Resource.Kind }}Reconciler reconciles a {{ .Resource.Kind }} object
+// {{ .Resource.Kind }}Reconciler reconciles a {{ .Resource.Kind }} object.
 type {{ .Resource.Kind }}Reconciler struct {
 	client.Client
 	Log        logr.Logger
@@ -146,7 +146,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	return phases.DefaultReconcileResult(), nil
 }
 
-// GetResources will create and return the resources in memory
+// GetResources will create and return the resources in memory.
 func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) ([]metav1.Object, error) {
 {{ if .HasChildResources }}
 	var resourceObjects []metav1.Object
@@ -170,7 +170,7 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) (
 {{ end -}}
 }
 
-// SetRefAndCreateIfNotPresent creates a resource if does not already exist
+// SetRefAndCreateIfNotPresent creates a resource if does not already exist.
 func (r *{{ .Resource.Kind }}Reconciler) SetRefAndCreateIfNotPresent(
 	resource metav1.Object,
 ) error {
@@ -200,32 +200,32 @@ func (r *{{ .Resource.Kind }}Reconciler) SetRefAndCreateIfNotPresent(
 	return nil
 }
 
-// GetLogger returns the logger from the reconciler
+// GetLogger returns the logger from the reconciler.
 func (r *{{ .Resource.Kind }}Reconciler) GetLogger() logr.Logger {
 	return r.Log
 }
 
-// GetClient returns the client from the reconciler
+// GetClient returns the client from the reconciler.
 func (r *{{ .Resource.Kind }}Reconciler) GetClient() client.Client {
 	return r.Client
 }
 
-// GetScheme returns the scheme from the reconciler
+// GetScheme returns the scheme from the reconciler.
 func (r *{{ .Resource.Kind }}Reconciler) GetScheme() *runtime.Scheme {
 	return r.Scheme
 }
 
-// GetContext returns the context from the reconciler
+// GetContext returns the context from the reconciler.
 func (r *{{ .Resource.Kind }}Reconciler) GetContext() context.Context {
 	return r.Context
 }
 
-// GetComponent returns the component the reconciler is operating against
+// GetComponent returns the component the reconciler is operating against.
 func (r *{{ .Resource.Kind }}Reconciler) GetComponent() common.Component {
 	return r.Component
 }
 
-// UpdateStatus updates the status for a component
+// UpdateStatus updates the status for a component.
 func (r *{{ .Resource.Kind }}Reconciler) UpdateStatus(
 	ctx context.Context,
 	parent common.Component,
@@ -237,19 +237,19 @@ func (r *{{ .Resource.Kind }}Reconciler) UpdateStatus(
 }
 
 {{- if not .IsStandalone }}
-// CheckReady will return whether a component is ready
+// CheckReady will return whether a component is ready.
 func (r *{{ .Resource.Kind }}Reconciler) CheckReady() (bool, error) {
 	return dependencies.{{ .Resource.Kind }}CheckReady(r)
 }
 
-// Mutate will run the mutate phase of a resource
+// Mutate will run the mutate phase of a resource.
 func (r *{{ .Resource.Kind }}Reconciler) Mutate(
 	object *metav1.Object,
 ) ([]metav1.Object, bool, error) {
 	return mutate.{{ .Resource.Kind }}Mutate(r, object)
 }
 
-// Wait will run the wait phase of a resource
+// Wait will run the wait phase of a resource.
 func (r *{{ .Resource.Kind }}Reconciler) Wait(
 	object *metav1.Object,
 ) (bool, error) {

@@ -41,7 +41,7 @@ import (
 	common "{{ .Repo }}/apis/common"
 )
 
-// {{ .Resource.Kind }}Mutate performs the logic to mutate resources that belong to the parent
+// {{ .Resource.Kind }}Mutate performs the logic to mutate resources that belong to the parent.
 func {{ .Resource.Kind }}Mutate(reconciler common.ComponentReconciler,
 	object *metav1.Object,
 ) (replacedObjects []metav1.Object, skip bool, err error) {

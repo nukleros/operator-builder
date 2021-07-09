@@ -31,7 +31,7 @@ import (
 	"{{ .Repo }}/apis/common"
 )
 
-// ConstructPhase.Execute executes the creation of resources in memory, prior to mutating or persisting them to the database
+// ConstructPhase.Execute executes the creation of resources in memory, prior to mutating or persisting them to the database.
 func (phase *ConstructPhase) Execute(
 	r common.ComponentReconciler,
 	parentPhase *CreateResourcesPhase,

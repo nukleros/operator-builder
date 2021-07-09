@@ -37,7 +37,7 @@ import (
 	"{{ .Repo }}/apis/common"
 )
 
-// GetSuccessCondition defines the success condition for the phase
+// GetSuccessCondition defines the success condition for the phase.
 func (phase *CreateResourcesPhase) GetSuccessCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseCreateResources,
@@ -47,7 +47,7 @@ func (phase *CreateResourcesPhase) GetSuccessCondition() common.Condition {
 	}
 }
 
-// GetPendingCondition defines the pending condition for the phase
+// GetPendingCondition defines the pending condition for the phase.
 func (phase *CreateResourcesPhase) GetPendingCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseCreateResources,
@@ -57,7 +57,7 @@ func (phase *CreateResourcesPhase) GetPendingCondition() common.Condition {
 	}
 }
 
-// GetFailCondition defines the fail condition for the phase
+// GetFailCondition defines the fail condition for the phase.
 func (phase *CreateResourcesPhase) GetFailCondition() common.Condition {
 	return common.Condition{
 		Phase:   common.ConditionPhaseCreateResources,
@@ -67,12 +67,12 @@ func (phase *CreateResourcesPhase) GetFailCondition() common.Condition {
 	}
 }
 
-// GetDefaultRequeueResult defines the result return when a requeue is needed
+// Requeue defines the result return when a requeue is needed.
 func (phase *CreateResourcesPhase) Requeue() ctrl.Result {
 	return Requeue()
 }
 
-// createResourcePhases defines the phases for resource creation and the order in which they run during the reconcile process
+// createResourcePhases defines the phases for resource creation and the order in which they run during the reconcile process.
 func createResourcePhases() []ResourcePhase {
 	return []ResourcePhase{
 		{{- if not .IsStandalone }}
@@ -87,7 +87,7 @@ func createResourcePhases() []ResourcePhase {
 	}
 }
 
-// CreateResourcesPhase.Execute executes executes sub-phases which are required to create the resources
+// CreateResourcesPhase.Execute executes executes sub-phases which are required to create the resources.
 func (phase *CreateResourcesPhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {

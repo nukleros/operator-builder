@@ -40,7 +40,7 @@ import (
 	common "{{ .Repo }}/apis/common"
 )
 
-// {{ .Resource.Kind }}CheckReady performs the logic to determine if a {{ .Resource.Kind }} object is ready
+// {{ .Resource.Kind }}CheckReady performs the logic to determine if a {{ .Resource.Kind }} object is ready.
 func {{ .Resource.Kind }}CheckReady(reconciler common.ComponentReconciler) (bool, error) {
 	return true, nil
 }
