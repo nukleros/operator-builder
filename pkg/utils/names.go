@@ -43,7 +43,7 @@ func ToPackageName(name string) string {
 
 // PluralizeKind returns the plural version of a kind in lowercase.
 func PluralizeKind(kind string) string {
-	pluralize := pluralize.NewClient()
+	p := pluralize.NewClient()
 
-	return strings.ToLower(pluralize.Plural(kind))
+	return strings.ToLower(p.Plural(kind))
 }

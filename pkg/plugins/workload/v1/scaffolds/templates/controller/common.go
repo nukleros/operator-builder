@@ -35,7 +35,7 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 
 	apiscommon "{{ .Repo }}/apis/common"
-	phases "{{ .Repo }}/controllers/phases"
+	controllerphases "{{ .Repo }}/controllers/phases"
 )
 
 func IgnoreNotFound(err error) error {
@@ -47,29 +47,29 @@ func IgnoreNotFound(err error) error {
 }
 
 // CreatePhases defines the phases for create and the order in which they run during the reconcile process.
-func CreatePhases() []phases.Phase {
-	return []phases.Phase{
+func CreatePhases() []controllerphases.Phase {
+	return []controllerphases.Phase{
 		{{- if not .IsStandalone }}
-		&phases.DependencyPhase{},
-		&phases.PreFlightPhase{},
+		&controllerphases.DependencyPhase{},
+		&controllerphases.PreFlightPhase{},
 		{{ end -}}
-		&phases.CreateResourcesPhase{},
+		&controllerphases.CreateResourcesPhase{},
 		{{- if not .IsStandalone }}
-		&phases.CheckReadyPhase{},
-		&phases.CompletePhase{},
+		&controllerphases.CheckReadyPhase{},
+		&controllerphases.CompletePhase{},
 		{{ end -}}
 	}
 }
 
 // UpdatePhases defines the phases for update and the order in which they run during the reconcile process.
-func UpdatePhases() []phases.Phase {
+func UpdatePhases() []controllerphases.Phase {
 	// at this time create/update are identical; return the create phases
 	return CreatePhases()
 }
 
 // Phases returns which phases to run given the component.
-func Phases(component apiscommon.Component) []phases.Phase {
-	var phases []phases.Phase
+func Phases(component apiscommon.Component) []controllerphases.Phase {
+	var phases []controllerphases.Phase
 	if !component.GetReadyStatus() {
 		phases = CreatePhases()
 	} else {
