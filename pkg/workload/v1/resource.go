@@ -201,7 +201,7 @@ func addTemplating(rawContent string) (string, error) {
 			paddingLen := marker.LeadingSpaces
 
 			for paddingLen > 0 {
-				paddingStr = paddingStr + " "
+				paddingStr += " "
 				paddingLen--
 			}
 

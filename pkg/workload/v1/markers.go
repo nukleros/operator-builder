@@ -157,7 +157,7 @@ func processMarkerLine(line string) (Marker, error) {
 		if valElements > 1 {
 			manifestVal = manifestVal + ":" + v
 		} else {
-			manifestVal = manifestVal + v
+			manifestVal += v
 		}
 	}
 
