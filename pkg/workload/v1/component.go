@@ -85,11 +85,7 @@ func (c ComponentWorkload) GetRootcommandName() string {
 }
 
 func (c ComponentWorkload) IsClusterScoped() bool {
-	if c.Spec.ClusterScoped {
-		return true
-	} else {
-		return false
-	}
+	return c.Spec.ClusterScoped
 }
 
 func (c ComponentWorkload) IsStandalone() bool {
@@ -137,11 +133,7 @@ func (c *ComponentWorkload) SetComponents(components *[]ComponentWorkload) error
 }
 
 func (c ComponentWorkload) HasChildResources() bool {
-	if len(c.Spec.Resources) > 0 {
-		return true
-	}
-
-	return false
+	return len(c.Spec.Resources) > 0
 }
 
 func (c ComponentWorkload) GetComponents() *[]ComponentWorkload {
@@ -197,11 +189,7 @@ func (c ComponentWorkload) GetComponentResource(domain, repo string, clusterScop
 }
 
 func (c ComponentWorkload) HasSubCmdName() bool {
-	if c.Spec.CompanionCliSubcmd.Name != "" {
-		return true
-	} else {
-		return false
-	}
+	return c.Spec.CompanionCliSubcmd.Name != ""
 }
 
 func (c *ComponentWorkload) SetNames() {

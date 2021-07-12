@@ -51,11 +51,7 @@ func (s StandaloneWorkload) GetDomain() string {
 }
 
 func (s StandaloneWorkload) HasRootCmdName() bool {
-	if s.Spec.CompanionCliRootcmd.Name != "" {
-		return true
-	} else {
-		return false
-	}
+	return s.Spec.CompanionCliRootcmd.Name != ""
 }
 
 func (s StandaloneWorkload) HasSubCmdName() bool {
@@ -117,11 +113,7 @@ func (s StandaloneWorkload) GetRootcommandName() string {
 }
 
 func (s StandaloneWorkload) IsClusterScoped() bool {
-	if s.Spec.ClusterScoped {
-		return true
-	} else {
-		return false
-	}
+	return s.Spec.ClusterScoped
 }
 
 func (s StandaloneWorkload) IsStandalone() bool {
@@ -169,11 +161,7 @@ func (s *StandaloneWorkload) SetComponents(components *[]ComponentWorkload) erro
 }
 
 func (s StandaloneWorkload) HasChildResources() bool {
-	if len(s.Spec.Resources) > 0 {
-		return true
-	}
-
-	return false
+	return len(s.Spec.Resources) > 0
 }
 
 func (s StandaloneWorkload) GetComponents() *[]ComponentWorkload {

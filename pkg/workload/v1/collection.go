@@ -51,11 +51,7 @@ func (c WorkloadCollection) GetDomain() string {
 }
 
 func (c WorkloadCollection) HasRootCmdName() bool {
-	if c.Spec.CompanionCliRootcmd.Name != "" {
-		return true
-	} else {
-		return false
-	}
+	return c.Spec.CompanionCliRootcmd.Name != ""
 }
 
 func (c WorkloadCollection) HasSubCmdName() bool {
@@ -117,11 +113,7 @@ func (c WorkloadCollection) GetRootcommandName() string {
 }
 
 func (c WorkloadCollection) IsClusterScoped() bool {
-	if c.Spec.ClusterScoped {
-		return true
-	} else {
-		return false
-	}
+	return c.Spec.ClusterScoped
 }
 
 func (c WorkloadCollection) IsStandalone() bool {
