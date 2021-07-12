@@ -51,7 +51,7 @@ func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 		}
 	}
 
-	if standaloneFound == true && collectionFound == true {
+	if standaloneFound && collectionFound {
 		msg := fmt.Sprintf(
 			"%s and %s both provided - must provide one *or* the other",
 			WorkloadKindStandalone,
@@ -170,7 +170,7 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		}
 	}
 
-	if standaloneFound == true && collectionFound == true {
+	if standaloneFound && collectionFound {
 		msg := fmt.Sprintf(
 			"%s and %s both provided - must provide one *or* the other",
 			WorkloadKindStandalone,
@@ -178,7 +178,7 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		)
 
 		return nil, errors.New(msg)
-	} else if collectionFound == true {
+	} else if collectionFound {
 		if err := workload.SetComponents(&components); err != nil {
 			return nil, err
 		}
