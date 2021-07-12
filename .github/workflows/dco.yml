@@ -2,6 +2,7 @@
 name: DCO Check
 'on':
   - pull_request
+  - push
 
 jobs:
   commits_check_job:
