@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
 var _ machinery.Template = &Common{}
