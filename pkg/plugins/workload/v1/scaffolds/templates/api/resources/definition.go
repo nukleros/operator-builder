@@ -40,6 +40,7 @@ func (f *Definition) SetTemplateDefaults() error {
 	return nil
 }
 
+//nolint:lll
 const definitionTemplate = `{{ .Boilerplate }}
 
 package {{ .PackageName }}
@@ -68,8 +69,7 @@ func Create{{ .UniqueName }} (
 	collection *{{ $.Collection.Spec.APIGroup }}{{ $.Collection.Spec.APIVersion }}.{{ $.Collection.Spec.APIKind }},
 	{{ end -}}
 ) (metav1.Object, error) {
-
-	{{ .SourceCode }}
+	{{- .SourceCode }}
 
 	{{ if not $.ClusterScoped }}
 	resourceObj.SetNamespace(parent.Namespace)

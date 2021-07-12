@@ -46,6 +46,7 @@ func (f Types) GetFuncMap() template.FuncMap {
 	funcMap["containsString"] = func(value string, in string) bool {
 		return strings.Contains(in, value)
 	}
+
 	return funcMap
 }
 

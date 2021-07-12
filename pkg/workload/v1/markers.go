@@ -81,6 +81,7 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 
 func processManifest(manifest string) ([]Marker, error) {
 	var markers []Marker
+
 	lines := strings.Split(string(manifest), "\n")
 	for _, line := range lines {
 		if containsMarker(line) {
@@ -88,6 +89,7 @@ func processManifest(manifest string) ([]Marker, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			markers = append(markers, marker)
 		}
 	}
@@ -125,6 +127,7 @@ func processMarkerLine(line string) (Marker, error) {
 
 	// count leading spaces
 	var spaces int
+
 	for _, char := range line {
 		if char == ' ' {
 			spaces++
@@ -132,6 +135,7 @@ func processMarkerLine(line string) (Marker, error) {
 			break
 		}
 	}
+
 	marker.LeadingSpaces = spaces
 
 	commentedLine := strings.Split(line, "#")
@@ -143,8 +147,11 @@ func processMarkerLine(line string) (Marker, error) {
 	keyVal := commentedLine[0]
 	keyValSlice := strings.Split(keyVal, ":")
 	manifestKey := strings.Replace(keyValSlice[0], "- ", "", 1)
+
 	var manifestVal string
+
 	var valElements int
+
 	for _, v := range keyValSlice[1:] {
 		valElements++
 		if valElements > 1 {
@@ -153,12 +160,14 @@ func processMarkerLine(line string) (Marker, error) {
 			manifestVal = manifestVal + v
 		}
 	}
+
 	marker.Key = strings.TrimSpace(manifestKey)
 	marker.Value = strings.TrimSpace(manifestVal)
 
 	// parse marker elements
 	// marker elements are colon-separated
 	markerLine := commentedLine[1]
+
 	markerElements := strings.Split(markerLine, ":")
 	for i, element := range markerElements {
 		if strings.HasSuffix(element, `\`) {

@@ -57,6 +57,7 @@ func (f *Resources) GetFuncMap() template.FuncMap {
 	return funcMap
 }
 
+//nolint:lll
 const resourcesTemplate = `{{ .Boilerplate }}
 
 package {{ .PackageName }}
@@ -80,7 +81,6 @@ var CreateFuncs = []func(
 	*{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }},
 	{{ end -}}
 ) (metav1.Object, error){
-
 	{{ range .CreateFuncNames }}
 		{{- . -}},
 	{{ end }}
@@ -89,7 +89,6 @@ var CreateFuncs = []func(
 // runTemplate renders a template for a child object to the custom resource.
 func runTemplate(templateName, templateValue string, data *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
 	funcMap template.FuncMap) (string, error) {
-
 	t, err := template.New(templateName).Funcs(funcMap).Parse(templateValue)
 	if err != nil {
 		return "", fmt.Errorf("error parsing template %s: %v", templateName, err)
@@ -112,7 +111,6 @@ const {{ .ManifestFieldName }}Default = {{ .DefaultVal }}
 {{ end }}
 
 func default{{ .FieldName }}(value {{ .DataType }}) {{ .DataType }} {
-
 	if value == {{ .ZeroVal }} {
 		return {{ .ManifestFieldName }}Default
 	}

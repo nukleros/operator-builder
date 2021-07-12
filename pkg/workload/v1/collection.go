@@ -16,18 +16,23 @@ func (c WorkloadCollection) Validate() error {
 	if c.Name == "" {
 		missingFields = append(missingFields, "name")
 	}
+
 	if c.Spec.Domain == "" {
 		missingFields = append(missingFields, "spec.domain")
 	}
+
 	if c.Spec.APIGroup == "" {
 		missingFields = append(missingFields, "spec.apiGroup")
 	}
+
 	if c.Spec.APIVersion == "" {
 		missingFields = append(missingFields, "spec.apiVersion")
 	}
+
 	if c.Spec.APIKind == "" {
 		missingFields = append(missingFields, "spec.apiKind")
 	}
+
 	if len(missingFields) > 0 {
 		msg := fmt.Sprintf("Missing required fields: %s", missingFields)
 		return errors.New(msg)
@@ -147,11 +152,13 @@ func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
 		// add to spec fields if not present
 		for _, csf := range *componentSpecFields {
 			fieldPresent := false
+
 			for _, sf := range specFields {
 				if csf == sf {
 					fieldPresent = true
 				}
 			}
+
 			if !fieldPresent {
 				specFields = append(specFields, csf)
 			}
@@ -173,6 +180,7 @@ func (c WorkloadCollection) GetDependencies() *[]ComponentWorkload {
 
 func (c *WorkloadCollection) SetComponents(components *[]ComponentWorkload) error {
 	c.Spec.Components = *components
+
 	return nil
 }
 

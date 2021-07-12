@@ -72,6 +72,7 @@ func {{ .Resource.Kind }}List(
 	components := &{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}List{}
 	if err := reconciler.List(reconciler.GetContext(), components); err != nil {
 		reconciler.GetLogger().V(0).Info("unable to retrieve {{ .Resource.Kind }}List from cluster")
+
 		return nil, err
 	}
 

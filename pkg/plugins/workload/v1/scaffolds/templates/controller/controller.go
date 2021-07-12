@@ -111,21 +111,27 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	r.Component = &{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}
 	if err := r.Get(r.Context, req.NamespacedName, r.Component); err != nil {
 		log.V(0).Info("unable to fetch {{ .Resource.Kind }}")
+
 		return ctrl.Result{}, controllers.IgnoreNotFound(err)
 	}
 
-	{{- if .IsComponent }}
+	{{ if .IsComponent }}
 	var collectionList {{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }}List
+	
 	if err := r.List(r.Context, &collectionList); err != nil {
 		return ctrl.Result{}, err
 	}
+
 	if len(collectionList.Items) == 0 {
 		log.V(0).Info("no collections available - will try again in 10 seconds")
+
 		return ctrl.Result{Requeue: true}, nil
 	} else if len(collectionList.Items) > 1 {
 		log.V(0).Info("multiple collections found - cannot proceed")
+
 		return ctrl.Result{}, nil
 	}
+
 	r.Collection = &collectionList.Items[0]
 	{{ end }}
 
@@ -138,8 +144,10 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 		// return only if we have an error or are told not to proceed
 		if err != nil || !proceed {
 			log.V(4).Info(fmt.Sprintf("not ready; requeuing phase: %T", phase))
+
 			return result, err
 		}
+
 		r.GetLogger().V(5).Info(fmt.Sprintf("completed phase: %T", phase))
 	}
 
@@ -153,14 +161,11 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) (
 
 	// create resources in memory
 	for _, f := range {{ .PackageName }}.CreateFuncs {
-		{{- if .IsComponent }}
-		resource, err := f(r.Component, r.Collection)
-		{{ else }}
-		resource, err := f(r.Component)
-		{{ end }}
+		resource, err := f(r.Component{{ if .IsComponent }}, r.Collection){{ else }}){{ end }}
 		if err != nil {
 			return nil, err
 		}
+
 		resourceObjects = append(resourceObjects, resource)
 	}
 
@@ -176,6 +181,7 @@ func (r *{{ .Resource.Kind }}Reconciler) SetRefAndCreateIfNotPresent(
 ) error {
 	if err := ctrl.SetControllerReference(r.Component, resource, r.Scheme); err != nil {
 		r.GetLogger().V(0).Info("unable to set owner reference on resource")
+
 		return err
 	}
 
@@ -183,15 +189,19 @@ func (r *{{ .Resource.Kind }}Reconciler) SetRefAndCreateIfNotPresent(
 	if err := r.Get(r.Context, objectKey, resource.(client.Object)); err != nil {
 		if errors.IsNotFound(err) {
 			r.GetLogger().V(0).Info("creating resource with name: [" + resource.GetName() + "] of kind: [" + resource.(runtime.Object).GetObjectKind().GroupVersionKind().Kind + "]")
+
 			if err := r.Create(r.Context, resource.(client.Object)); err != nil {
 				r.GetLogger().V(0).Info("unable to create resource")
+
 				return err
 			}
 		// TODO: this is bad logic that needs to be fixed for resources that are being updated
 		} else {
 			r.GetLogger().V(0).Info("updating resource with name: [" + resource.GetName() + "] of kind: [" + resource.(runtime.Object).GetObjectKind().GroupVersionKind().Kind + "]")
+
 			if err := r.Update(r.Context, resource.(client.Object)); err != nil {
 				r.GetLogger().V(0).Info("unable to update resource")
+
 				return err
 			}
 		}
@@ -233,6 +243,7 @@ func (r *{{ .Resource.Kind }}Reconciler) UpdateStatus(
 	if err := r.Status().Update(ctx, r.Component); err != nil {
 		return err
 	}
+
 	return nil
 }
 

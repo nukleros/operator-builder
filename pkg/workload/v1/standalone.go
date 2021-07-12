@@ -16,18 +16,23 @@ func (s StandaloneWorkload) Validate() error {
 	if s.Name == "" {
 		missingFields = append(missingFields, "name")
 	}
+
 	if s.Spec.Domain == "" {
 		missingFields = append(missingFields, "spec.domain")
 	}
+
 	if s.Spec.APIGroup == "" {
 		missingFields = append(missingFields, "spec.apiGroup")
 	}
+
 	if s.Spec.APIVersion == "" {
 		missingFields = append(missingFields, "spec.apiVersion")
 	}
+
 	if s.Spec.APIKind == "" {
 		missingFields = append(missingFields, "spec.apiKind")
 	}
+
 	if len(missingFields) > 0 {
 		msg := fmt.Sprintf("Missing required fields: %s", missingFields)
 		return errors.New(msg)
@@ -136,6 +141,7 @@ func (s *StandaloneWorkload) SetSpecFields(workloadPath string) error {
 	if err != nil {
 		return err
 	}
+
 	s.Spec.APISpecFields = *apiSpecFields
 
 	return nil
@@ -146,6 +152,7 @@ func (s *StandaloneWorkload) SetResources(workloadPath string) error {
 	if err != nil {
 		return err
 	}
+
 	s.Spec.SourceFiles = *sourceFiles
 	s.Spec.RBACRules = *rbacRules
 	s.Spec.OwnershipRules = *ownershipRules
@@ -165,6 +172,7 @@ func (s StandaloneWorkload) HasChildResources() bool {
 	if len(s.Spec.Resources) > 0 {
 		return true
 	}
+
 	return false
 }
 

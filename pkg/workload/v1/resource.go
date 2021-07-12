@@ -16,11 +16,12 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 	// each sourceFile is a source code file that contains one or more child
 	// resource definition
 	var sourceFiles []SourceFile
+
 	var rbacRules []RBACRule
+
 	var ownershipRules []OwnershipRule
 
 	for _, manifestFile := range resources {
-
 		// determine sourceFile filename
 		var sourceFile SourceFile
 		sourceFile.Filename = filepath.Base(manifestFile)                // get filename from path
@@ -38,14 +39,10 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 
 		manifests := extractManifests(manifestContent)
 
-		// generate a unique name for the resource using the kind and name
-		resourceUniqueName := strings.Replace(strings.Title(resourceName), "-", "", -1)
-		resourceUniqueName = strings.Replace(resourceUniqueName, ".", "", -1)
-		resourceUniqueName = strings.Replace(resourceUniqueName, ":", "", -1)
-		resourceUniqueName = fmt.Sprintf("%s%s", resourceKind, resourceUniqueName)
-
+		for _, manifest := range manifests {
 			// unmarshal yaml to get attributes
 			var rawContent interface{}
+
 			err = yaml.Unmarshal([]byte(manifest), &rawContent)
 			if err != nil {
 				return nil, nil, nil, err
@@ -65,6 +62,7 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 			apiVersionElements := strings.Split(apiVersion, "/")
 
 			var resourceGroup string
+
 			var resourceVersion string
 
 			if len(apiVersionElements) == 1 {
@@ -81,6 +79,7 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 				Group:    resourceGroup,
 				Resource: resourcePlural,
 			}
+
 			rbacExists := groupResourceRecorded(&rbacRules, &newRBACRule)
 			if !rbacExists {
 				rbacRules = append(rbacRules, newRBACRule)
@@ -91,6 +90,7 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 				Version: apiVersion,
 				Kind:    resourceKind,
 			}
+
 			ownershipExists := versionKindRecorded(&ownershipRules, &newOwnershipRule)
 			if !ownershipExists {
 				ownershipRules = append(ownershipRules, newOwnershipRule)
@@ -136,6 +136,7 @@ func extractManifests(manifestContent []byte) []string {
 	lines := strings.Split(string(manifestContent), "\n")
 
 	var manifest string
+
 	for _, line := range lines {
 		if strings.TrimRight(line, " ") == "---" {
 			if len(manifest) > 0 {
@@ -146,6 +147,7 @@ func extractManifests(manifestContent []byte) []string {
 			manifest = manifest + "\n" + line
 		}
 	}
+
 	if len(manifest) > 0 {
 		manifests = append(manifests, manifest)
 	}
@@ -193,8 +195,11 @@ func addTemplating(rawContent string) (string, error) {
 			if err != nil {
 				return "", err
 			}
+
 			var paddingStr string
+
 			paddingLen := marker.LeadingSpaces
+
 			for paddingLen > 0 {
 				paddingStr = paddingStr + " "
 				paddingLen--

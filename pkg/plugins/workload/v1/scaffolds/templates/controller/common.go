@@ -42,6 +42,7 @@ func IgnoreNotFound(err error) error {
 	if apierrs.IsNotFound(err) {
 		return nil
 	}
+
 	return err
 }
 

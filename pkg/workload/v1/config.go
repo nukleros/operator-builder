@@ -17,6 +17,7 @@ func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 	}
 
 	var workload WorkloadInitializer
+
 	standaloneFound := false
 	collectionFound := false
 
@@ -28,8 +29,10 @@ func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 					"Multiple %s configs provided - must provide only one",
 					WorkloadKindStandalone,
 				)
+
 				return nil, errors.New(msg)
 			}
+
 			workload = w.(*StandaloneWorkload)
 			standaloneFound = true
 
@@ -39,8 +42,10 @@ func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 					"Multiple %s configs provided - must provide only one",
 					WorkloadKindCollection,
 				)
+
 				return nil, errors.New(msg)
 			}
+
 			workload = w.(*WorkloadCollection)
 			collectionFound = true
 		}
@@ -52,10 +57,12 @@ func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 			WorkloadKindStandalone,
 			WorkloadKindComponent,
 		)
+
 		return nil, errors.New(msg)
 	}
 
 	workload.SetNames()
+
 	return workload, nil
 }
 
@@ -66,7 +73,9 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 	}
 
 	var workload WorkloadAPIBuilder
+
 	var components []ComponentWorkload
+
 	standaloneFound := false
 	collectionFound := false
 
@@ -78,6 +87,7 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 					"Multiple %s configs provided - must provide only one",
 					WorkloadKindStandalone,
 				)
+
 				return nil, errors.New(msg)
 			}
 
@@ -85,10 +95,13 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 			if err := workload.SetSpecFields(workloadConfig); err != nil {
 				return nil, err
 			}
+
 			if err := workload.SetResources(workloadConfig); err != nil {
 				return nil, err
 			}
+
 			workload.SetNames()
+
 			standaloneFound = true
 
 		case WorkloadKindCollection:
@@ -97,10 +110,13 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 					"Multiple %s configs provided - must provide only one",
 					WorkloadKindCollection,
 				)
+
 				return nil, errors.New(msg)
 			}
+
 			workload = w.(*WorkloadCollection)
 			workload.SetNames()
+
 			collectionFound = true
 
 		case WorkloadKindComponent:
@@ -108,9 +124,11 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 			if err := component.SetSpecFields(component.Spec.ConfigPath); err != nil {
 				return nil, err
 			}
+
 			if err := component.SetResources(component.Spec.ConfigPath); err != nil {
 				return nil, err
 			}
+
 			component.SetNames()
 			components = append(components, *component)
 		}
@@ -134,6 +152,7 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 				component.Name,
 				missingDependencies,
 			)
+
 			return nil, errors.New(msg)
 		}
 
@@ -157,6 +176,7 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 			WorkloadKindStandalone,
 			WorkloadKindComponent,
 		)
+
 		return nil, errors.New(msg)
 	} else if collectionFound == true {
 		if err := workload.SetComponents(&components); err != nil {
@@ -175,9 +195,11 @@ func missingDependencies(expected []string, actual []string) []string {
 
 	for _, expectedDependency := range expected {
 		var found bool
+
 		for _, actualDependency := range actual {
 			if actualDependency == expectedDependency {
 				found = true
+
 				break
 			}
 		}
@@ -205,6 +227,7 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 	lines := strings.Split(string(configContent), "\n")
 
 	var config string
+
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "---" {
 			if len(config) > 0 {
@@ -215,15 +238,16 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 			config = config + "\n" + line
 		}
 	}
+
 	if len(config) > 0 {
 		configs = append(configs, config)
 	}
 
 	var workloads []WorkloadIdentifier
+
 	var workloadNames []string
 
 	for _, c := range configs {
-
 		var workloadID WorkloadShared
 
 		err := yaml.Unmarshal([]byte(c), &workloadID)
@@ -237,14 +261,15 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 					"%s name used on multiple workloads - each workload name must be unique",
 					workloadID.Name,
 				)
+
 				return nil, errors.New(msg)
 			}
 		}
+
 		workloadNames = append(workloadNames, workloadID.Name)
 
 		switch workloadID.Kind {
 		case WorkloadKindStandalone:
-
 			workload := &StandaloneWorkload{}
 
 			err = yaml.Unmarshal([]byte(c), workload)
@@ -255,7 +280,6 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 			workloads = append(workloads, workload)
 
 		case WorkloadKindComponent:
-
 			workload := &ComponentWorkload{}
 
 			err = yaml.Unmarshal([]byte(c), workload)
@@ -266,7 +290,6 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 			workloads = append(workloads, workload)
 
 		case WorkloadKindCollection:
-
 			workload := &WorkloadCollection{}
 
 			err = yaml.Unmarshal([]byte(c), workload)
@@ -276,10 +299,12 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 
 			for _, componentFile := range workload.Spec.ComponentFiles {
 				componentPath := filepath.Join(filepath.Dir(workloadConfig), componentFile)
+
 				componentWorkloads, err := parseConfig(componentPath)
 				if err != nil {
 					return nil, err
 				}
+
 				for _, component := range *componentWorkloads {
 					cw := component.(*ComponentWorkload)
 					cw.Spec.ConfigPath = componentPath
@@ -296,6 +321,7 @@ func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
 				WorkloadKindCollection,
 				WorkloadKindComponent,
 			)
+
 			return nil, errors.New(msg)
 		}
 	}

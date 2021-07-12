@@ -53,6 +53,7 @@ func (f *CliCmdGenerateSub) SetTemplateDefaults() error {
 	return nil
 }
 
+//nolint: lll
 const cliCmdGenerateSubTemplate = `{{ .Boilerplate }}
 
 package commands

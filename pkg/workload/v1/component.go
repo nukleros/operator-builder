@@ -16,17 +16,22 @@ func (c ComponentWorkload) Validate() error {
 	if c.Name == "" {
 		missingFields = append(missingFields, "name")
 	}
+
 	if c.Spec.APIGroup == "" {
 		missingFields = append(missingFields, "spec.apiGroup")
 	}
+
 	if c.Spec.APIVersion == "" {
 		missingFields = append(missingFields, "spec.apiVersion")
 	}
+
 	if c.Spec.APIKind == "" {
 		missingFields = append(missingFields, "spec.apiKind")
 	}
+
 	if len(missingFields) > 0 {
 		msg := fmt.Sprintf("Missing required fields: %s", missingFields)
+
 		return errors.New(msg)
 	}
 
@@ -104,6 +109,7 @@ func (c *ComponentWorkload) SetSpecFields(workloadPath string) error {
 	if err != nil {
 		return err
 	}
+
 	c.Spec.APISpecFields = *apiSpecFields
 
 	return nil
@@ -114,6 +120,7 @@ func (c *ComponentWorkload) SetResources(workloadPath string) error {
 	if err != nil {
 		return err
 	}
+
 	c.Spec.SourceFiles = *sourceFiles
 	c.Spec.RBACRules = *rbacRules
 	c.Spec.OwnershipRules = *ownershipRules
@@ -133,6 +140,7 @@ func (c ComponentWorkload) HasChildResources() bool {
 	if len(c.Spec.Resources) > 0 {
 		return true
 	}
+
 	return false
 }
 
@@ -163,10 +171,12 @@ func (c ComponentWorkload) GetComponentResource(domain, repo string, clusterScop
 	} else {
 		namespaced = true
 	}
+
 	api := resource.API{
 		CRDVersion: "v1",
 		Namespaced: namespaced,
 	}
+
 	return &resource.Resource{
 		GVK: resource.GVK{
 			Domain:  domain,

@@ -30,10 +30,10 @@ package phases
 import (
 	"context"
 
-	"{{ .Repo }}/apis/common"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"{{ .Repo }}/apis/common"
 )
 
 // Phase defines a phase of the reconciliation process.

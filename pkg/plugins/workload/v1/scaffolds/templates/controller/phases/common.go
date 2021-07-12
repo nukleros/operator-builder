@@ -55,12 +55,12 @@ func conditionExists(
 	currentConditions []common.Condition,
 	condition *common.Condition,
 ) bool {
-
 	for _, currentCondition := range currentConditions {
 		if reflect.DeepEqual(currentCondition, *condition) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -90,6 +90,7 @@ func HandlePhaseExit(
 	phaseError error,
 ) (ctrl.Result, error) {
 	var condition common.Condition
+
 	var result ctrl.Result
 
 	switch {
@@ -121,10 +122,7 @@ func isOptimisticLockError(err error) bool {
 }
 
 // setResources will set the resources against a CreateResourcePhase.
-func setResources(
-	parent *CreateResourcesPhase,
-	resources []metav1.Object,
-) {
+func setResources(parent *CreateResourcesPhase, resources []metav1.Object) {
 	parent.Resources = resources
 }
 

@@ -86,6 +86,7 @@ func commonWait(
 	if resource.GetNamespace() != "" {
 		return namespaceIsReady(r, ctx, resource)
 	}
+
 	return true, nil
 }
 
@@ -96,6 +97,7 @@ func namespaceIsReady(
 	resource metav1.Object,
 ) (bool, error) {
 	var namespaces v1.NamespaceList
+
 	err := r.List(ctx, &namespaces)
 	if err != nil {
 		return false, err
@@ -108,6 +110,7 @@ func namespaceIsReady(
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 `

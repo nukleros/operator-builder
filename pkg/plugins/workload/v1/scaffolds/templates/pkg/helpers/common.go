@@ -104,6 +104,7 @@ func GetCollectionConfigs(
 
 	// get a list of configurations from the cluster
 	collectionConfigs.SetGroupVersionKind(collectionConfigGVK)
+
 	if err := r.List(r.GetContext(), &collectionConfigs, &client.ListOptions{}); err != nil {
 		return collectionConfigs, err
 	}

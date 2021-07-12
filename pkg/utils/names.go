@@ -10,6 +10,7 @@ import (
 // use as a go varaiable name.
 func ToVarName(name string) string {
 	var output string
+
 	makeUpper := false
 
 	for _, letter := range name {
@@ -43,5 +44,6 @@ func ToPackageName(name string) string {
 // PluralizeKind returns the plural version of a kind in lowercase.
 func PluralizeKind(kind string) string {
 	pluralize := pluralize.NewClient()
+
 	return strings.ToLower(pluralize.Plural(kind))
 }
