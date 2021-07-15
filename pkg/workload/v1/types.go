@@ -143,6 +143,7 @@ type RBACRule struct {
 type OwnershipRule struct {
 	Version string
 	Kind    string
+	CoreAPI bool
 }
 
 // Project contains the project config saved to the WORKLOAD file to allow

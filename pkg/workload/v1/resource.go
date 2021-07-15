@@ -12,6 +12,33 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
+func coreAPIs() []string {
+	return []string{
+		"apps", "batch", "autoscaling", "extensions", "policy",
+	}
+}
+
+func isCoreAPI(group string) bool {
+	// return if the group is missing or labeled as core
+	if group == "" || group == "core" {
+		return true
+	}
+
+	// return if the group contains the kubernetes api group strings
+	if strings.Contains(group, "k8s.io") || strings.Contains(group, "kubernetes.io") {
+		return true
+	}
+
+	// loop through known groups and return true if found
+	for _, coreGroup := range coreAPIs() {
+		if group == coreGroup {
+			return true
+		}
+	}
+
+	return false
+}
+
 func processResources(workloadPath string, resources []string) (*[]SourceFile, *[]RBACRule, *[]OwnershipRule, error) {
 	// each sourceFile is a source code file that contains one or more child
 	// resource definition
@@ -89,6 +116,7 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 			newOwnershipRule := OwnershipRule{
 				Version: apiVersion,
 				Kind:    resourceKind,
+				CoreAPI: isCoreAPI(resourceGroup),
 			}
 
 			ownershipExists := versionKindRecorded(&ownershipRules, &newOwnershipRule)
