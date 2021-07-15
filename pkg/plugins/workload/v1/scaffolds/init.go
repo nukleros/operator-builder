@@ -77,6 +77,7 @@ func (s *initScaffolder) Scaffold() error {
 	}
 
 	err = scaffold.Execute(
+		&templates.Main{},
 		&templates.GoMod{
 			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,
 			CobraVersion:             CobraVersion,
