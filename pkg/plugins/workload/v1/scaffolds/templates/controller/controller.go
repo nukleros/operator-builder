@@ -57,7 +57,12 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	{{ if .HasChildResources -}}
+	{{- $Added := false }}
+	{{- range .OwnershipRules }}
+	{{- if .CoreAPI }}{{- if not $Added }}{{- $Added = true }}
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	{{ end }}{{ end }}
+	{{ end }}
 	{{ end }}
 
 	"{{ .Repo }}/apis/common"
@@ -269,11 +274,19 @@ func (r *{{ .Resource.Kind }}Reconciler) Wait(
 {{ end }}
 
 func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// TODO: only resources which belong to the kubernetes core api are able to be owned, as custom resource definitions and their
+	// associated custom resources cannot be owned because they do not exist yet; comment out non-core resources for now and find
+	// a way to own them at a later time.  This means that we cannot reconcile updates or child resource deletion against objects
+	// that are not part of the core api group.
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
 		{{- range .OwnershipRules }}
+		{{- if .CoreAPI }}
 		Owns(&unstructured.Unstructured{Object: map[string]interface{}{"kind": "{{ .Kind }}", "apiVersion": "{{ .Version }}"}}).
-		{{ end -}}
+		{{- else }}
+		// Owns(&unstructured.Unstructured{Object: map[string]interface{}{"kind": "{{ .Kind }}", "apiVersion": "{{ .Version }}"}}).
+		{{- end -}}
+		{{ end }}
 		Complete(r)
 }
 `
