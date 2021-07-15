@@ -72,10 +72,8 @@ func (phase *CompletePhase) Requeue() ctrl.Result {
 func (phase *CompletePhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {
-	component := r.GetComponent()
-
-	component.SetReadyStatus(true)
-	r.GetLogger().V(0).Info("new resources created")
+	r.GetComponent().SetReadyStatus(true)
+	r.GetLogger().V(0).Info("successfully reconciled")
 
 	return true, nil
 }
