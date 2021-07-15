@@ -84,7 +84,7 @@ func commonWait(
 ) (bool, error) {
 	// Namespace
 	if resource.GetNamespace() != "" {
-		return namespaceIsReady(r, ctx, resource)
+		return namespaceIsReady(r, resource)
 	}
 
 	return true, nil
@@ -93,21 +93,19 @@ func commonWait(
 // namespaceIsReady waits for a namespace object to exist.
 func namespaceIsReady(
 	r common.ComponentReconciler,
-	ctx context.Context,
 	resource metav1.Object,
 ) (bool, error) {
 	var namespaces v1.NamespaceList
-
-	err := r.List(ctx, &namespaces)
-	if err != nil {
+	if err := r.List(r.GetContext(), &namespaces); err != nil {
 		return false, err
 	}
 
-	// ensure the namespace exists
+	// ensure the namespace exists and is not terminating
 	for _, namespace := range namespaces.Items {
 		if namespace.Name == resource.GetNamespace() {
-			// we found a matching namespace for the resource
-			return true, nil
+			if namespace.Status.Phase != v1.NamespaceTerminating {
+				return true, nil
+			}
 		}
 	}
 
