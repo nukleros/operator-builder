@@ -82,6 +82,7 @@ func (s *initScaffolder) Scaffold() error {
 			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,
 			CobraVersion:             CobraVersion,
 		},
+		&templates.Dockerfile{},
 	)
 	if err != nil {
 		return err
