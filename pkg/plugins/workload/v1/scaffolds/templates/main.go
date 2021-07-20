@@ -33,15 +33,9 @@ func (f *Main) SetTemplateDefaults() error {
 		machinery.NewMarkerFor(f.Path, setupMarker),
 	)
 
+	f.IfExistsAction = machinery.OverwriteFile
+
 	return nil
-}
-
-func (*Main) GetPath() string {
-	return defaultMainPath
-}
-
-func (*Main) GetIfExistsAction() machinery.IfExistsAction {
-	return machinery.OverwriteFile
 }
 
 var _ machinery.Inserter = &MainUpdater{}

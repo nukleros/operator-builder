@@ -133,8 +133,10 @@ type Marker struct {
 // RBACRule contains the info needed to create the kubebuilder:rbac markers in
 // the controller.
 type RBACRule struct {
-	Group    string
-	Resource string
+	Group      string
+	Resource   string
+	Verbs      []string
+	VerbString string
 }
 
 // OwnershipRule contains the info needed to create the controller ownership

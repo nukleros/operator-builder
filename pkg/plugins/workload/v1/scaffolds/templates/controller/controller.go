@@ -97,7 +97,7 @@ type {{ .Resource.Kind }}Reconciler struct {
 // +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }},verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }}/status,verbs=get;update;patch
 {{ range .RBACRules -}}
-// +kubebuilder:rbac:groups={{ .Group }},resources={{ .Resource }},verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups={{ .Group }},resources={{ .Resource }},verbs={{ .VerbString }}
 {{ end }}
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to

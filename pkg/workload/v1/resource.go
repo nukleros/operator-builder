@@ -12,6 +12,16 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
+const (
+	coreRBACGroup = "core"
+)
+
+func defaultResourceVerbs() []string {
+	return []string{
+		"get", "list", "watch", "create", "update", "patch", "delete",
+	}
+}
+
 func coreAPIs() []string {
 	return []string{
 		"apps", "batch", "autoscaling", "extensions", "policy",
@@ -76,41 +86,20 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 			}
 
 			// determine resource kind and name
-			resourceKind := fmt.Sprintf("%s", rawContent.(interface{}).(map[interface{}]interface{})["kind"])
-			resourceName := fmt.Sprintf("%s", rawContent.(interface{}).(map[interface{}]interface{})["metadata"].(interface{}).(map[interface{}]interface{})["name"])
+			resourceKind := fmt.Sprintf("%s", rawContent.(map[interface{}]interface{})["kind"])
+			resourceName := fmt.Sprintf("%s", rawContent.(map[interface{}]interface{})["metadata"].(map[interface{}]interface{})["name"])
 
 			// generate a unique name for the resource using the kind and name
 			resourceUniqueName := strings.Replace(strings.Title(resourceName), "-", "", -1)
 			resourceUniqueName = strings.Replace(resourceUniqueName, ".", "", -1)
 			resourceUniqueName = fmt.Sprintf("%s%s", resourceKind, resourceUniqueName)
 
-			// deteremine resource group and version
-			apiVersion := fmt.Sprintf("%s", rawContent.(interface{}).(map[interface{}]interface{})["apiVersion"])
-			apiVersionElements := strings.Split(apiVersion, "/")
-
-			var resourceGroup string
-
-			var resourceVersion string
-
-			if len(apiVersionElements) == 1 {
-				resourceGroup = "core"
-				resourceVersion = apiVersionElements[0]
-			} else {
-				resourceGroup = apiVersionElements[0]
-				resourceVersion = apiVersionElements[1]
-			}
+			// determine resource group and version
+			apiVersion := fmt.Sprintf("%s", rawContent.(map[interface{}]interface{})["apiVersion"])
+			resourceVersion, resourceGroup := versionGroupFromAPIVersion(apiVersion)
 
 			// determine group and resource for RBAC rule generation
-			resourcePlural := utils.PluralizeKind(resourceKind)
-			newRBACRule := RBACRule{
-				Group:    resourceGroup,
-				Resource: resourcePlural,
-			}
-
-			rbacExists := groupResourceRecorded(&rbacRules, &newRBACRule)
-			if !rbacExists {
-				rbacRules = append(rbacRules, newRBACRule)
-			}
+			rbacRulesForManifest(resourceKind, resourceGroup, rawContent, &rbacRules)
 
 			// determine group and kind for ownership rule generation
 			newOwnershipRule := OwnershipRule{
@@ -184,7 +173,7 @@ func extractManifests(manifestContent []byte) []string {
 }
 
 func addVariables(resourceContent string) (string, error) {
-	lines := strings.Split(string(resourceContent), "\n")
+	lines := strings.Split(resourceContent, "\n")
 	for i, line := range lines {
 		if containsMarker(line) {
 			markedLine := processMarkedComments(line)
@@ -193,16 +182,6 @@ func addVariables(resourceContent string) (string, error) {
 	}
 
 	return strings.Join(lines, "\n"), nil
-}
-
-func groupResourceRecorded(rbacRules *[]RBACRule, newRBACRule *RBACRule) bool {
-	for _, r := range *rbacRules {
-		if r.Group == newRBACRule.Group && r.Resource == newRBACRule.Resource {
-			return true
-		}
-	}
-
-	return false
 }
 
 func versionKindRecorded(ownershipRules *[]OwnershipRule, newOwnershipRule *OwnershipRule) bool {
@@ -215,58 +194,16 @@ func versionKindRecorded(ownershipRules *[]OwnershipRule, newOwnershipRule *Owne
 	return false
 }
 
-func addTemplating(rawContent string) (string, error) {
-	lines := strings.Split(string(rawContent), "\n")
-	for i, line := range lines {
-		if containsMarker(line) {
-			marker, err := processMarkerLine(line)
-			if err != nil {
-				return "", err
-			}
+func versionGroupFromAPIVersion(apiVersion string) (version, group string) {
+	apiVersionElements := strings.Split(apiVersion, "/")
 
-			var paddingStr string
-
-			paddingLen := marker.LeadingSpaces
-
-			for paddingLen > 0 {
-				paddingStr += " "
-				paddingLen--
-			}
-
-			lines[i] = lineWithTemplate(paddingStr, marker, line)
-		}
-	}
-
-	return strings.Join(lines, "\n"), nil
-}
-
-func lineWithTemplate(
-	padding string,
-	marker Marker,
-	line string,
-) string {
-	var functionTemplate string
-	if containsDefault(line) {
-		functionTemplate = fmt.Sprintf(
-			"{{ .Spec.%s | default%s }}",
-			strings.Title(marker.FieldName),
-			strings.Title(marker.FieldName),
-		)
+	if len(apiVersionElements) == 1 {
+		version = apiVersionElements[0]
+		group = coreRBACGroup
 	} else {
-		functionTemplate = fmt.Sprintf(
-			"{{ .Spec.%s }}",
-			strings.Title(marker.FieldName),
-		)
+		version = apiVersionElements[1]
+		group = rbacGroupFromGroup(apiVersionElements[0])
 	}
 
-	// TODO: this handle key/value pairs, and an array of key/value pairs but a value
-	//       in an array will still be problematic
-	var templatedLine string
-	if strings.HasPrefix(strings.TrimSpace(line), "-") {
-		templatedLine = fmt.Sprintf("%s- %s: %s", padding, marker.Key, functionTemplate)
-	} else {
-		templatedLine = fmt.Sprintf("%s%s: %s", padding, marker.Key, functionTemplate)
-	}
-
-	return templatedLine
+	return version, group
 }
