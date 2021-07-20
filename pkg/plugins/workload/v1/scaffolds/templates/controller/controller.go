@@ -49,6 +49,7 @@ package {{ .Resource.Group }}
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -56,6 +57,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	{{ if .HasChildResources -}}
 	{{- $Added := false }}
 	{{- range .OwnershipRules }}
@@ -278,7 +280,12 @@ func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) erro
 	// associated custom resources cannot be owned because they do not exist yet; comment out non-core resources for now and find
 	// a way to own them at a later time.  This means that we cannot reconcile updates or child resource deletion against objects
 	// that are not part of the core api group.
+	options := controller.Options{
+		RateLimiter: controllers.NewDefaultRateLimiter(5*time.Microsecond, 5*time.Minute),
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
+		WithOptions(options).
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
 		{{- range .OwnershipRules }}
 		{{- if .CoreAPI }}

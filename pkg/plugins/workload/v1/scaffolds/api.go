@@ -200,6 +200,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&controller.Common{
 				IsStandalone: s.workload.IsStandalone(),
 			},
+			&controller.RateLimiter{},
 			&phases.Types{},
 			&phases.Common{},
 			&phases.CreateResource{
@@ -249,6 +250,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&controller.Common{
 				IsStandalone: s.workload.IsStandalone(),
 			},
+			&controller.RateLimiter{},
 			&phases.Types{},
 			&phases.Common{},
 			&phases.CreateResource{
