@@ -79,6 +79,8 @@ cat > .test/tenancy/ns-operator-ns.yaml <<EOF
 apiVersion: v1
 kind: Namespace
 metadata:
+  #+docs: Defines the namespace in which all resources of this
+  # component belong
   name: tenancy-system  # +workload:namespace:default=tenancy-system:type=string
   labels:
     workload-collection: default-collection
@@ -361,6 +363,8 @@ metadata:
   name: contour-deploy
   namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
   labels:
+    #+docs: Defines the collection label
+    # component belong
     workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
 spec:
   replicas: 2  # +workload:ContourReplicas:default=2:type=int
@@ -374,6 +378,8 @@ spec:
     spec:
       containers:
       - name: contour
+        #+docs: Defines the image for contour
+        # component belong
         image: nginx:1.17  # +workload:ContourImage:type=string
         ports:
         - containerPort: 8080

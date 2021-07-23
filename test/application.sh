@@ -33,6 +33,7 @@ spec:
     spec:
       containers:
       - name: webstore-container
+        #+docs: Defines the web store image
         image: nginx:1.17  # +workload:webStoreImage:type=string
         ports:
         - containerPort: 8080

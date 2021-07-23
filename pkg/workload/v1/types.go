@@ -90,13 +90,14 @@ type WorkloadCollection struct {
 
 // APISpecField represents a single field in a custom API type.
 type APISpecField struct {
-	FieldName         string
-	ManifestFieldName string
-	DataType          string
-	DefaultVal        string
-	ZeroVal           string
-	ApiSpecContent    string
-	SampleField       string
+	FieldName          string
+	ManifestFieldName  string
+	DataType           string
+	DefaultVal         string
+	ZeroVal            string
+	ApiSpecContent     string
+	SampleField        string
+	DocumentationLines []string
 }
 
 // SourceFile represents a golang source code file that contains one or more
@@ -121,13 +122,14 @@ type ChildResource struct {
 
 // Marker contains the attributes of a workload marker from a static manifest.
 type Marker struct {
-	Key           string
-	Value         string
-	FieldName     string
-	DataType      string
-	Default       string
-	LeadingSpaces int
-	Collection    bool
+	Key                string
+	Value              string
+	FieldName          string
+	DataType           string
+	Default            string
+	LeadingSpaces      int
+	Collection         bool
+	DocumentationLines []string
 }
 
 // RBACRule contains the info needed to create the kubebuilder:rbac markers in

@@ -145,8 +145,12 @@ func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
 		for _, csf := range *componentSpecFields {
 			fieldPresent := false
 
-			for _, sf := range specFields {
-				if csf == sf {
+			for i, sf := range specFields {
+				if sf.FieldName == csf.FieldName {
+					if len(csf.DocumentationLines) > 0 {
+						specFields[i].DocumentationLines = csf.DocumentationLines
+					}
+
 					fieldPresent = true
 				}
 			}

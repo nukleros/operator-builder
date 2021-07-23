@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
-const markerStr = "+workload"
+const (
+	markerStr    = "+workload"
+	docMarkerStr = "+workload-docs:"
+)
 
 // SupportedMarkerDataTypes returns the supported data types that can be used in
 // workload markers.
@@ -35,43 +38,50 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 
 	MARKERS:
 		for _, m := range markers {
-			for _, r := range specFields {
+			// define all the cases in which we skip processing this marker
+			switch {
+			case collection && !m.Collection:
+				continue
+			case !collection && m.Collection:
+				continue
+			}
+
+			for i, r := range specFields {
 				if r.ManifestFieldName == m.FieldName {
+					if len(m.DocumentationLines) > 0 {
+						specFields[i].DocumentationLines = m.DocumentationLines
+					}
+
 					continue MARKERS
 				}
 			}
 
-			// only include collection markers if processing for a collection
-			// and vise versa
-			if collection && !m.Collection {
-				continue MARKERS
-			} else if !collection && m.Collection {
-				continue MARKERS
+			specField := APISpecField{
+				FieldName:          strings.Title(m.FieldName),
+				ManifestFieldName:  m.FieldName,
+				DataType:           m.DataType,
+				DocumentationLines: m.DocumentationLines,
+				ApiSpecContent: fmt.Sprintf(
+					"%s %s `json:\"%s\"`",
+					strings.Title(m.FieldName),
+					m.DataType,
+					m.FieldName,
+				),
 			}
 
-			var specField APISpecField
-			specField.FieldName = strings.Title(m.FieldName)
-			specField.ManifestFieldName = m.FieldName
-			specField.DataType = m.DataType
-			if m.Default != "" {
-				specField.DefaultVal = m.Default
-			}
 			zv, err := zeroValue(m.DataType)
 			if err != nil {
 				return nil, err
 			}
 			specField.ZeroVal = zv
-			specField.ApiSpecContent = fmt.Sprintf(
-				"%s %s `json:\"%s\"`",
-				strings.Title(m.FieldName),
-				m.DataType,
-				m.FieldName,
-			)
+
 			if m.Default != "" {
+				specField.DefaultVal = m.Default
 				specField.SampleField = fmt.Sprintf("%s: %s", m.FieldName, m.Default)
 			} else {
 				specField.SampleField = fmt.Sprintf("%s: %s", m.FieldName, m.Value)
 			}
+
 			specFields = append(specFields, specField)
 		}
 	}
@@ -81,13 +91,27 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 
 func processManifest(manifest string) ([]Marker, error) {
 	var markers []Marker
+	var startIndex int
+	var hasDocs bool
 
-	lines := strings.Split(string(manifest), "\n")
-	for _, line := range lines {
+	lines := strings.Split(manifest, "\n")
+	for i, line := range lines {
+		if containsDocumentMarker(line) {
+			hasDocs = true
+			startIndex = i
+		}
+
 		if containsMarker(line) {
 			marker, err := processMarkerLine(line)
 			if err != nil {
 				return nil, err
+			}
+
+			if hasDocs {
+				marker.DocumentationLines = processDocLines(lines, startIndex, i-1)
+
+				// reset the hasDocs variable
+				hasDocs = false
 			}
 
 			markers = append(markers, marker)
@@ -120,6 +144,24 @@ func processMarkedComments(line string) (processed string) {
 	}
 
 	return processed
+}
+
+func processDocLines(lines []string, start, end int) []string {
+	docLines := []string{}
+
+	for i := start; i <= end; i++ {
+		line := strings.TrimLeft(lines[i], " ")
+		if strings.HasPrefix(line, "#") {
+			docLine := strings.TrimLeft(line, "#")
+			docLine = strings.TrimLeft(docLine, " ")
+			docLine = strings.TrimLeft(docLine, docMarkerStr)
+			docLine = strings.TrimLeft(docLine, " ")
+
+			docLines = append(docLines, docLine)
+		}
+	}
+
+	return docLines
 }
 
 func processMarkerLine(line string) (Marker, error) {
@@ -196,7 +238,6 @@ func processMarkerLine(line string) (Marker, error) {
 				msg := fmt.Sprintf("collection value %s found - must be either 'true' or 'false'", collectionVal)
 				return marker, errors.New(msg)
 			}
-			// marker.Collection = strings.Split(element, "=")[1]
 		} else {
 			marker.FieldName = element
 		}
@@ -216,10 +257,14 @@ func zeroValue(val interface{}) (string, error) {
 	case "int", "int32", "int64", "float32", "float64":
 		return "0", nil
 	default:
-		return "", fmt.Errorf("unsupported data type in workload marker.  Support data types: %v", SupportedMarkerDataTypes())
+		return "", fmt.Errorf("unsupported data type in workload marker; supported data types: %v", SupportedMarkerDataTypes())
 	}
 }
 
 func containsMarker(line string) bool {
-	return strings.Contains(line, markerStr)
+	return strings.Contains(line, markerStr+":")
+}
+
+func containsDocumentMarker(line string) bool {
+	return strings.Contains(line, docMarkerStr)
 }

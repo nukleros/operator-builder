@@ -81,10 +81,11 @@ type {{ .Resource.Kind }}Spec struct {
 		{{ if .DefaultVal }}
 			// +kubebuilder:default={{ .DefaultVal }}
 			// +kubebuilder:validation:Optional
-			{{ .ApiSpecContent }}
-		{{ else }}
-			{{ .ApiSpecContent }}
+		{{- end -}}
+		{{- range .DocumentationLines }}
+			// {{ . -}}
 		{{ end }}
+		{{ .ApiSpecContent }}
 	{{ end }}
 }
 
