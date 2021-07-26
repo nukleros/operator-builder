@@ -6,7 +6,7 @@ GOBIN=$(shell go env GOBIN)
 endif
 
 build:
-	go build -o bin/operator-builder cmd/operator-builder
+	go build -o bin/operator-builder cmd/operator-builder/main.go
 
 test-install: build
 	go test -cover -coverprofile=./bin/coverage.out ./...
