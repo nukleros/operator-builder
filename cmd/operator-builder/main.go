@@ -23,6 +23,8 @@ var commands = []*cobra.Command{
 	opbcli.NewUpdateCmd(),
 }
 
+var version = "unstable"
+
 func main() {
 	gov3Bundle, _ := plugin.NewBundle(golang.DefaultNameQualifier, plugin.Version{Number: 3},
 		licensev1.Plugin{},
@@ -34,7 +36,7 @@ func main() {
 
 	c, err := cli.New(
 		cli.WithCommandName("operator-builder"),
-		cli.WithVersion(versionString()),
+		cli.WithVersion(version),
 		cli.WithPlugins(
 			golangv2.Plugin{},
 			gov3Bundle,
@@ -56,8 +58,4 @@ func main() {
 	if err := c.Run(); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func versionString() string {
-	return "v1"
 }
