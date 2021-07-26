@@ -1,0 +1,41 @@
+---
+builds:
+  - id: operator-builder
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    main: ./cmd/operator-builder
+    binary: operator-builder
+    ldflags:
+      - -s -w -X main.version={{.Version}} -extldflags '-static'
+
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+    name_template: "operator-builder_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Version }}-snapshot-{{.ShortCommit}}"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs(\(.*\))?:'
+      - '^test(\(.*\))?:'
+      - '^ci(\(.*\))?:'
+      - '^chore(\(.*\))?:'
+      - '^build(\(.*\))?:'
