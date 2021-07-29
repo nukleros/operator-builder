@@ -2,60 +2,17 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"sigs.k8s.io/kubebuilder/v3/pkg/cli"
-	cfgv2 "sigs.k8s.io/kubebuilder/v3/pkg/config/v2"
-	cfgv3 "sigs.k8s.io/kubebuilder/v3/pkg/config/v3"
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
-	kustomizecommonv1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/common/kustomize/v1"
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang"
-	declarativev1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/declarative/v1"
-	golangv2 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v2"
-	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 
-	opbcli "github.com/vmware-tanzu-labs/operator-builder/pkg/cli"
-	configv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/config/v1"
-	licensev1 "github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/license/v1"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/cli"
 )
 
-var commands = []*cobra.Command{
-	opbcli.NewUpdateCmd(),
-}
-
-var version = "unstable"
-
 func main() {
-	gov3Bundle, _ := plugin.NewBundle(golang.DefaultNameQualifier, plugin.Version{Number: 3},
-		licensev1.Plugin{},
-		kustomizecommonv1.Plugin{},
-		configv1.Plugin{},
-		golangv3.Plugin{},
-		workloadv1.Plugin{},
-	)
-
-	c, err := cli.New(
-		cli.WithCommandName("operator-builder"),
-		cli.WithVersion(version),
-		cli.WithPlugins(
-			golangv2.Plugin{},
-			gov3Bundle,
-			&licensev1.Plugin{},
-			&kustomizecommonv1.Plugin{},
-			&declarativev1.Plugin{},
-			&workloadv1.Plugin{},
-		),
-		cli.WithDefaultPlugins(cfgv2.Version, golangv2.Plugin{}),
-		cli.WithDefaultPlugins(cfgv3.Version, gov3Bundle),
-		cli.WithDefaultProjectVersion(cfgv3.Version),
-		cli.WithExtraCommands(commands...),
-		cli.WithCompletion(),
-	)
+	command, err := cli.NewKubebuilderCLI()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := c.Run(); err != nil {
+	if err := command.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
