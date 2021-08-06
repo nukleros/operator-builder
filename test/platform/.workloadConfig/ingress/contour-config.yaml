@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contour-configmap
+  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+data:
+  config.yaml: |
+    ---
+    someoption: myoption
+    anotheroption: another
+    justtesting: multistringyaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: contour-secret
+  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  labels:
+    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
+stringData:
+  some: secretstuff

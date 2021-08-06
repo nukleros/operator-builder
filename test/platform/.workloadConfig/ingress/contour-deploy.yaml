@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contour-deploy
+  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  labels:
+    #+docs: Defines the collection label
+    # component belong
+    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
+spec:
+  replicas: 2  # +workload:ContourReplicas:default=2:type=int
+  selector:
+    matchLabels:
+      app: contour
+  template:
+    metadata:
+      labels:
+        app: contour
+    spec:
+      containers:
+      - name: contour
+        #+docs: Defines the image for contour
+        # component belong
+        image: nginx:1.17  # +workload:ContourImage:type=string
+        ports:
+        - containerPort: 8080

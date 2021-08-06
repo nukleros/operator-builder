@@ -1,0 +1,68 @@
+{
+	"configurations": [
+	{
+		"name": "Test Platform Init",
+		"type": "go",
+		"request": "launch",
+		"mode": "debug",
+		"program": "${workspaceFolder}/cmd/operator-builder",
+		"args": [
+			"init",
+			"--workload-config",
+			"${workspaceFolder}/test/platform/.workloadConfig/workload.yaml",
+			"--repo",
+			"github.com/acme/acme-cnp-mgr",
+			"--skip-go-version-check"
+		],
+		"cwd": "${workspaceFolder}/test/platform",
+	},
+	{
+		"name": "Test Platform Create",
+		"type": "go",
+		"request": "launch",
+		"mode": "debug",
+		"program": "${workspaceFolder}/cmd/operator-builder",
+		"args": [
+			"create",
+			"api",
+			"--workload-config",
+			"${workspaceFolder}/test/platform/.workloadConfig/workload.yaml",
+			"--controller",
+			"--resource"
+		],
+		"cwd": "${workspaceFolder}/test/platform",
+	},
+	{
+		"name": "Test Application Init",
+		"type": "go",
+		"request": "launch",
+		"mode": "debug",
+		"program": "${workspaceFolder}/cmd/operator-builder",
+		"args": [
+			"init",
+			"--workload-config",
+			"${workspaceFolder}/test/application/.workloadConfig/workload.yaml",
+			"--repo",
+			"github.com/acme/acme-cnp-mgr",
+			"--skip-go-version-check"
+		],
+		"cwd": "${workspaceFolder}/test/application",
+	},
+	{
+		"name": "Test Application Create",
+		"type": "go",
+		"request": "launch",
+		"mode": "debug",
+		"program": "${workspaceFolder}/cmd/operator-builder",
+		"args": [
+			"create",
+			"api",
+			"--workload-config",
+			"${workspaceFolder}/test/application/.workloadConfig/workload.yaml",
+			"--controller",
+			"--resource"
+		],
+		"cwd": "${workspaceFolder}/test/application",
+	},
+]
+}

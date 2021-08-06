@@ -1,0 +1,15 @@
+name: cloud-native-platform
+kind: WorkloadCollection
+spec:
+  domain: acme.com
+  apiGroup: platforms
+  apiVersion: v1alpha1
+  apiKind: CloudNativePlatform
+  clusterScoped: true
+  companionCliRootcmd:
+    name: cnpctl
+    description: Manage platform stuff like a boss
+  componentFiles:
+  - tenancy/tenancy-common-component.yaml
+  - tenancy/ns-operator-component.yaml
+  - ingress/contour-component.yaml

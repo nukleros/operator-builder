@@ -1,0 +1,18 @@
+name: contour-component
+kind: ComponentWorkload
+spec:
+  apiGroup: ingress
+  apiVersion: v1alpha1
+  apiKind: Contour
+  clusterScoped: true
+  companionCliSubcmd:
+    name: contour
+    description: Manage contour component
+  resources:
+  - ingress-ns.yaml
+  - contour-config.yaml
+  - contour-deploy.yaml
+  - contour-svc.yaml
+  - envoy-ds.yaml
+  dependencies:
+  - ns-operator-component
