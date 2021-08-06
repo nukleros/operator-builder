@@ -27,3 +27,20 @@ test-clean:
 	rm -rf $(TEST_PATH)/*
 	rm -rf $(TEST_PATH)/.test
 
+DEBUG_PATH ?= test/application
+
+debug-clean:
+	rm -rf $(DEBUG_PATH)/*
+
+debug-init: debug-clean
+	dlv debug ./cmd/operator-builder --wd $(DEBUG_PATH) -- init \
+		--workload-config .workloadConfig/workload.yaml \
+   		--repo github.com/acme/acme-cnp-mgr \
+        	--skip-go-version-check
+debug-create:
+	dlv debug ./cmd/operator-builder --wd $(DEBUG_PATH) -- create api \
+		--workload-config .workloadConfig/workload.yaml \
+		--controller \
+		--resource
+
+debug: debug-init debug-create
