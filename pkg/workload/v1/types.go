@@ -11,34 +11,34 @@ const (
 
 // WorkloadSharedSpec contains fields shared by all workload specs.
 type WorkloadSharedSpec struct {
-	APIGroup      string `json:"apiGroup"`
-	APIVersion    string `json:"apiVersion"`
-	APIKind       string `json:"apiKind"`
-	ClusterScoped bool   `json:"clusterScoped"`
+	APIGroup      string `json:"apiGroup" yaml:"apiGroup"`
+	APIVersion    string `json:"apiVersion" yaml:"apiVersion"`
+	APIKind       string `json:"apiKind" yaml:"apiKind"`
+	ClusterScoped bool   `json:"clusterScoped" yaml:"clusterScoped"`
 }
 
 // WorkloadShared contains fields shared by all workloads.
 type WorkloadShared struct {
-	Name        string       `json:"name"`
-	Kind        WorkloadKind `json:"kind"`
+	Name        string       `json:"name"  yaml:"name" validate:"required"`
+	Kind        WorkloadKind `json:"kind"  yaml:"kind" validate:"required"`
 	PackageName string
 }
 
 // CliCommand defines the command name and description for the root command or
 // subcommand of a companion CLI.
 type CliCommand struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" yaml:"name" validate:"required_with=Description"`
+	Description string `json:"description" yaml:"description" validate:"required_with=Name"`
 	VarName     string
 	FileName    string
 }
 
 // StandaloneWorkloadSpec defines the attributes for a standalone workload.
 type StandaloneWorkloadSpec struct {
-	WorkloadSharedSpec
-	Domain              string     `json:"domain"`
-	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
-	Resources           []string   `json:"resources"`
+	WorkloadSharedSpec  `yaml:",inline"`
+	Domain              string     `json:"domain" yaml:"domain" validate:"required"`
+	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
+	Resources           []string   `json:"resources" yaml:"resources"`
 	APISpecFields       []APISpecField
 	SourceFiles         []SourceFile
 	RBACRules           []RBACRule
@@ -47,17 +47,17 @@ type StandaloneWorkloadSpec struct {
 
 // StandaloneWorkload defines a standalone workload.
 type StandaloneWorkload struct {
-	WorkloadShared
-	Spec StandaloneWorkloadSpec `json:"spec"`
+	WorkloadShared `yaml:",inline"`
+	Spec           StandaloneWorkloadSpec `json:"spec" yaml:"spec" validate:"required"`
 }
 
 // ComponentWorkloadSpec defines the attributes for a workload that is a
 // component of a collection.
 type ComponentWorkloadSpec struct {
-	WorkloadSharedSpec
-	CompanionCliSubcmd    CliCommand `json:"companionCliSubcmd" `
-	Resources             []string   `json:"resources"`
-	Dependencies          []string   `json:"dependencies"`
+	WorkloadSharedSpec    `yaml:",inline"`
+	CompanionCliSubcmd    CliCommand `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
+	Resources             []string   `json:"resources" yaml:"resources"`
+	Dependencies          []string   `json:"dependencies" yaml:"dependencies"`
 	ConfigPath            string
 	ComponentDependencies []ComponentWorkload
 	APISpecFields         []APISpecField
@@ -68,24 +68,24 @@ type ComponentWorkloadSpec struct {
 
 // ComponentWorkload defines a workload that is a component of a collection.
 type ComponentWorkload struct {
-	WorkloadShared
-	Spec ComponentWorkloadSpec `json:"spec"`
+	WorkloadShared `yaml:",inline"`
+	Spec           ComponentWorkloadSpec `json:"spec" yaml:"spec" validate:"required"`
 }
 
 // WorkloadCollectionSpec defines the attributes for a workload collection.
 type WorkloadCollectionSpec struct {
-	WorkloadSharedSpec
-	Domain              string     `json:"domain"`
-	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" `
-	ComponentFiles      []string   `json:"componentFiles"`
+	WorkloadSharedSpec  `yaml:",inline"`
+	Domain              string     `json:"domain" yaml:"domain" validate:"required"`
+	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
+	ComponentFiles      []string   `json:"componentFiles" yaml:"componentFiles"`
 	Components          []ComponentWorkload
 	APISpecFields       []APISpecField
 }
 
 // WorkloadCollection defines a workload collection.
 type WorkloadCollection struct {
-	WorkloadShared
-	Spec WorkloadCollectionSpec `json:"spec"`
+	WorkloadShared `yaml:",inline"`
+	Spec           WorkloadCollectionSpec `json:"spec" yaml:"spec" validate:"required"`
 }
 
 // APISpecField represents a single field in a custom API type.
@@ -95,7 +95,7 @@ type APISpecField struct {
 	DataType           string
 	DefaultVal         string
 	ZeroVal            string
-	ApiSpecContent     string
+	APISpecContent     string
 	SampleField        string
 	DocumentationLines []string
 }

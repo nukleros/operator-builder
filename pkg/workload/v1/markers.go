@@ -61,7 +61,7 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 				ManifestFieldName:  m.FieldName,
 				DataType:           m.DataType,
 				DocumentationLines: m.DocumentationLines,
-				ApiSpecContent: fmt.Sprintf(
+				APISpecContent: fmt.Sprintf(
 					"%s %s `json:\"%s\"`",
 					strings.Title(m.FieldName),
 					m.DataType,

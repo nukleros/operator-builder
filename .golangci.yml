@@ -67,7 +67,7 @@ linters:
   enable:
     - asciicheck
     - bodyclose
-    - cyclop
+    #- cyclop
     - deadcode
     - depguard
     - dogsled

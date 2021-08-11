@@ -1,13 +1,24 @@
 package v1
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"path/filepath"
-	"strings"
 
-	"sigs.k8s.io/yaml"
+	"github.com/go-playground/validator"
+	"gopkg.in/yaml.v3"
+)
+
+var (
+	ErrNamesMustBeUnique   = errors.New("each workload name must be unique")
+	ErrConfigMustExist     = errors.New("no workload config provided - workload config required")
+	ErrInvalidKind         = errors.New("unrecognized workload kind in workload config")
+	ErrMultipleConfigs     = errors.New("multiple configs found - please provide only one standalone or collection workload")
+	ErrCollectionRequired  = errors.New("a WorkloadCollection is required when using WorkloadComponents")
+	ErrMissingWorkload     = errors.New("could not find either standalone or collection workload, please provide one")
+	ErrMissingDependencies = errors.New("missing dependencies - no workload config provided")
 )
 
 func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
@@ -18,47 +29,17 @@ func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 
 	var workload WorkloadInitializer
 
-	standaloneFound := false
-	collectionFound := false
-
-	for _, w := range *workloads {
-		switch w.GetWorkloadKind() {
-		case WorkloadKindStandalone:
-			if standaloneFound {
-				msg := fmt.Sprintf(
-					"Multiple %s configs provided - must provide only one",
-					WorkloadKindStandalone,
-				)
-
-				return nil, errors.New(msg)
+	for k := range workloads {
+		for _, w := range workloads[k] {
+			switch v := w.(type) {
+			case *StandaloneWorkload:
+				workload = v
+			case *WorkloadCollection:
+				workload = v
+			case *ComponentWorkload:
+				continue
 			}
-
-			workload = w.(*StandaloneWorkload)
-			standaloneFound = true
-
-		case WorkloadKindCollection:
-			if collectionFound {
-				msg := fmt.Sprintf(
-					"Multiple %s configs provided - must provide only one",
-					WorkloadKindCollection,
-				)
-
-				return nil, errors.New(msg)
-			}
-
-			workload = w.(*WorkloadCollection)
-			collectionFound = true
 		}
-	}
-
-	if standaloneFound && collectionFound {
-		msg := fmt.Sprintf(
-			"%s and %s both provided - must provide one *or* the other",
-			WorkloadKindStandalone,
-			WorkloadKindComponent,
-		)
-
-		return nil, errors.New(msg)
 	}
 
 	workload.SetNames()
@@ -76,121 +57,55 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 
 	var components []ComponentWorkload
 
-	standaloneFound := false
-	collectionFound := false
-
-	for _, w := range *workloads {
-		switch w.GetWorkloadKind() {
-		case WorkloadKindStandalone:
-			if standaloneFound {
-				msg := fmt.Sprintf(
-					"Multiple %s configs provided - must provide only one",
-					WorkloadKindStandalone,
-				)
-
-				return nil, errors.New(msg)
-			}
-
-			workload = w.(*StandaloneWorkload)
-			if err := workload.SetSpecFields(workloadConfig); err != nil {
-				return nil, err
-			}
-
-			if err := workload.SetResources(workloadConfig); err != nil {
-				return nil, err
-			}
-
-			workload.SetNames()
-
-			standaloneFound = true
-
-		case WorkloadKindCollection:
-			if collectionFound {
-				msg := fmt.Sprintf(
-					"Multiple %s configs provided - must provide only one",
-					WorkloadKindCollection,
-				)
-
-				return nil, errors.New(msg)
-			}
-
-			workload = w.(*WorkloadCollection)
-			workload.SetNames()
-
-			collectionFound = true
-
-		case WorkloadKindComponent:
-			component := w.(*ComponentWorkload)
-			if err := component.SetSpecFields(component.Spec.ConfigPath); err != nil {
-				return nil, err
-			}
-
-			if err := component.SetResources(component.Spec.ConfigPath); err != nil {
-				return nil, err
-			}
-
-			component.SetNames()
-			components = append(components, *component)
-		}
-	}
-
-	// get a list of existing component names in the config
-	var componentNames []string
-	for _, component := range components {
-		componentNames = append(componentNames, component.Name)
-	}
-
-	// check the dependencies against the actual components
-	for i, component := range components {
-		missingDependencies := missingDependencies(component.Spec.Dependencies, componentNames)
-
-		// return an error if any dependencies are not satisfied
-		if len(missingDependencies) > 0 {
-			msg := fmt.Sprintf(
-				"%s component/s listed in dependencies for %s but no component workload config for %s provided",
-				missingDependencies,
-				component.Name,
-				missingDependencies,
-			)
-
-			return nil, errors.New(msg)
-		}
-
-		// add the component dependencies to the object
-		for _, dependency := range component.Spec.Dependencies {
-			for _, innerComponent := range components {
-				if innerComponent.Name == dependency {
-					// add the component object to ComponentDependencies
-					components[i].Spec.ComponentDependencies = append(
-						components[i].Spec.ComponentDependencies,
-						innerComponent,
-					)
+	for kind := range workloads {
+		for _, w := range workloads[kind] {
+			switch v := w.(type) {
+			case *StandaloneWorkload:
+				workload = v
+				if err := workload.SetSpecFields(workloadConfig); err != nil {
+					return nil, fmt.Errorf("%w", err)
 				}
+
+				if err := workload.SetResources(workloadConfig); err != nil {
+					return nil, fmt.Errorf("%w", err)
+				}
+				workload.SetNames()
+			case *WorkloadCollection:
+				workload = v
+				workload.SetNames()
+			case *ComponentWorkload:
+				if err := v.SetSpecFields(v.Spec.ConfigPath); err != nil {
+					return nil, err
+				}
+
+				if err := v.SetResources(v.Spec.ConfigPath); err != nil {
+					return nil, err
+				}
+
+				v.SetNames()
+				components = append(components, *v)
 			}
 		}
 	}
 
-	if standaloneFound && collectionFound {
-		msg := fmt.Sprintf(
-			"%s and %s both provided - must provide one *or* the other",
-			WorkloadKindStandalone,
-			WorkloadKindComponent,
-		)
+	if err := handleDependencies(&components); err != nil {
+		return nil, err
+	}
 
-		return nil, errors.New(msg)
-	} else if collectionFound {
+	if len(workloads[WorkloadKindCollection]) == 1 {
 		if err := workload.SetComponents(&components); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w", err)
 		}
+
 		if err := workload.SetSpecFields(workloadConfig); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 
 	return workload, nil
 }
 
-func missingDependencies(expected []string, actual []string) []string {
+func missingDependencies(expected, actual []string) []string {
 	var missing []string
 
 	for _, expectedDependency := range expected {
@@ -212,119 +127,188 @@ func missingDependencies(expected []string, actual []string) []string {
 	return missing
 }
 
-func parseConfig(workloadConfig string) (*[]WorkloadIdentifier, error) {
+func parseConfig(workloadConfig string) (map[WorkloadKind][]WorkloadIdentifier, error) {
 	if workloadConfig == "" {
-		return nil, errors.New("No workload config provided - workload config required")
+		return nil, ErrConfigMustExist
 	}
 
-	configContent, err := ioutil.ReadFile(workloadConfig)
+	file, err := ReadStream(workloadConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	var configs []string
+	defer CloseFile(file)
 
-	lines := strings.Split(string(configContent), "\n")
+	var kindReader bytes.Buffer
+	reader := io.TeeReader(file, &kindReader)
 
-	var config string
+	sharedDecoder := yaml.NewDecoder(reader)
 
-	for _, line := range lines {
-		if strings.TrimSpace(line) == "---" {
-			if len(config) > 0 {
-				configs = append(configs, config)
-				config = ""
+	kindDecoder := yaml.NewDecoder(&kindReader)
+	kindDecoder.KnownFields(true)
+
+	workloads := make(map[WorkloadKind][]WorkloadIdentifier)
+
+	workloadMap := make(map[string]bool)
+
+	for {
+		var workloadID WorkloadShared
+
+		if err := sharedDecoder.Decode(&workloadID); errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return nil, fmt.Errorf("failed to read file %s: %w", workloadConfig, err)
+		}
+
+		if _, found := workloadMap[workloadID.Name]; found {
+			return nil, fmt.Errorf(
+				"%s name used on multiple workloads - %w",
+				workloadID.Name,
+				ErrNamesMustBeUnique,
+			)
+		}
+
+		workloadMap[workloadID.Name] = true
+
+		workload, err := decodeKind(workloadID.Kind, kindDecoder)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read file %s: %w", workloadConfig, err)
+		}
+
+		workloads[workload.GetWorkloadKind()] = append(workloads[workload.GetWorkloadKind()], workload)
+
+		if collection, ok := workload.(*WorkloadCollection); ok {
+			cws, err := parseCollectionComponents(collection, workloadConfig)
+			if err != nil && !errors.Is(err, ErrCollectionRequired) {
+				return nil, err
 			}
-		} else {
-			config = config + "\n" + line
+
+			workloads[WorkloadKindComponent] = append(workloads[WorkloadKindComponent], cws...)
 		}
 	}
 
-	if len(config) > 0 {
-		configs = append(configs, config)
+	if err := validateConfigs(workloads); err != nil {
+		return nil, err
 	}
 
+	return workloads, nil
+}
+
+func parseCollectionComponents(workload *WorkloadCollection, workloadConfig string) ([]WorkloadIdentifier, error) {
 	var workloads []WorkloadIdentifier
 
-	var workloadNames []string
+	for _, componentFile := range workload.Spec.ComponentFiles {
+		componentPath := filepath.Join(filepath.Dir(workloadConfig), componentFile)
 
-	for _, c := range configs {
-		var workloadID WorkloadShared
-
-		err := yaml.Unmarshal([]byte(c), &workloadID)
+		w, err := parseConfig(componentPath)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, n := range workloadNames {
-			if workloadID.Name == n {
-				msg := fmt.Sprintf(
-					"%s name used on multiple workloads - each workload name must be unique",
-					workloadID.Name,
-				)
-
-				return nil, errors.New(msg)
+		for _, component := range w[WorkloadKindComponent] {
+			if cw, ok := component.(ComponentWorkload); ok {
+				cw.Spec.ConfigPath = componentPath
+				workloads = append(workloads, cw)
 			}
-		}
-
-		workloadNames = append(workloadNames, workloadID.Name)
-
-		switch workloadID.Kind {
-		case WorkloadKindStandalone:
-			workload := &StandaloneWorkload{}
-
-			err = yaml.Unmarshal([]byte(c), workload)
-			if err != nil {
-				return nil, err
-			}
-
-			workloads = append(workloads, workload)
-
-		case WorkloadKindComponent:
-			workload := &ComponentWorkload{}
-
-			err = yaml.Unmarshal([]byte(c), workload)
-			if err != nil {
-				return nil, err
-			}
-
-			workloads = append(workloads, workload)
-
-		case WorkloadKindCollection:
-			workload := &WorkloadCollection{}
-
-			err = yaml.Unmarshal([]byte(c), workload)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, componentFile := range workload.Spec.ComponentFiles {
-				componentPath := filepath.Join(filepath.Dir(workloadConfig), componentFile)
-
-				componentWorkloads, err := parseConfig(componentPath)
-				if err != nil {
-					return nil, err
-				}
-
-				for _, component := range *componentWorkloads {
-					cw := component.(*ComponentWorkload)
-					cw.Spec.ConfigPath = componentPath
-					workloads = append(workloads, cw)
-				}
-			}
-
-			workloads = append(workloads, workload)
-
-		default:
-			msg := fmt.Sprintf(
-				"Unrecognized workload kind in workload config - valid kinds: %s, %s, %s,",
-				WorkloadKindStandalone,
-				WorkloadKindCollection,
-				WorkloadKindComponent,
-			)
-
-			return nil, errors.New(msg)
 		}
 	}
 
-	return &workloads, nil
+	return workloads, nil
+}
+
+func decodeKind(kind WorkloadKind, dc *yaml.Decoder) (WorkloadIdentifier, error) {
+	switch kind {
+	case WorkloadKindStandalone:
+		v := &StandaloneWorkload{}
+		if err := dc.Decode(v); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+
+		return v, nil
+	case WorkloadKindComponent:
+		v := &ComponentWorkload{}
+		if err := dc.Decode(v); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+
+		return v, nil
+	case WorkloadKindCollection:
+		v := &WorkloadCollection{}
+		if err := dc.Decode(v); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+
+		return v, nil
+	default:
+		return nil, fmt.Errorf(
+			"%w - valid kinds: %s, %s, %s,",
+			ErrInvalidKind,
+			WorkloadKindStandalone,
+			WorkloadKindCollection,
+			WorkloadKindComponent,
+		)
+	}
+}
+
+func handleDependencies(components *[]ComponentWorkload) error {
+	c := *components
+	// get a list of existing component names in the config
+	componentNames := make([]string, len(c))
+	for i := range c {
+		componentNames[i] = c[i].Name
+	}
+
+	// check the dependencies against the actual components
+	for i := range c {
+		missingDependencies := missingDependencies(c[i].Spec.Dependencies, componentNames)
+
+		// return an error if any dependencies are not satisfied
+		if len(missingDependencies) > 0 {
+			return fmt.Errorf(
+				"%w for components(s) %s listed as dependencies for %s",
+				ErrMissingDependencies,
+				missingDependencies,
+				c[i].Name,
+			)
+		}
+
+		// add the component dependencies to the object
+		for _, dependency := range c[i].Spec.Dependencies {
+			for j := range c {
+				if c[j].Name == dependency {
+					// add the component object to ComponentDependencies
+					c[i].Spec.ComponentDependencies = append(
+						c[i].Spec.ComponentDependencies,
+						c[j],
+					)
+				}
+			}
+		}
+	}
+
+	*components = c
+
+	return nil
+}
+
+func validateConfigs(workloads map[WorkloadKind][]WorkloadIdentifier) error {
+	validate := validator.New()
+
+	for kind := range workloads {
+		for _, w := range workloads[kind] {
+			if err := validate.Struct(w); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+		}
+	}
+
+	if len(workloads[WorkloadKindComponent]) != 0 && len(workloads[WorkloadKindCollection]) != 1 {
+		return fmt.Errorf("no %s found - %w", WorkloadKindCollection, ErrCollectionRequired)
+	}
+
+	if len(workloads[WorkloadKindCollection])+len(workloads[WorkloadKindStandalone]) > 1 {
+		return ErrMultipleConfigs
+	}
+
+	return nil
 }

@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/vmware-tanzu-labs/object-code-generator-for-k8s/pkg/generate"
 	"gopkg.in/yaml.v2"
 
-	"github.com/vmware-tanzu-labs/object-code-generator-for-k8s/pkg/generate"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
