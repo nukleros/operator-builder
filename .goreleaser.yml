@@ -10,7 +10,7 @@ builds:
     main: ./cmd/operator-builder
     binary: operator-builder
     ldflags:
-      - -s -w -X main.version={{.Version}} -extldflags '-static'
+      - -s -w -X github.com/vmware-tanzu-labs/operator-builder/pkg/cli.version={{.Version}} -extldflags '-static'
 
 archives:
   - replacements:
