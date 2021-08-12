@@ -27,6 +27,10 @@ func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 		return nil, err
 	}
 
+	if len(workloads[WorkloadKindComponent]) != 0 && len(workloads[WorkloadKindCollection]) != 1 {
+		return nil, fmt.Errorf("no %s found - %w", WorkloadKindCollection, ErrCollectionRequired)
+	}
+
 	var workload WorkloadInitializer
 
 	for k := range workloads {
@@ -51,6 +55,10 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 	workloads, err := parseConfig(workloadConfig)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(workloads[WorkloadKindComponent]) != 0 && len(workloads[WorkloadKindCollection]) != 1 {
+		return nil, fmt.Errorf("no %s found - %w", WorkloadKindCollection, ErrCollectionRequired)
 	}
 
 	var workload WorkloadAPIBuilder
@@ -179,7 +187,7 @@ func parseConfig(workloadConfig string) (map[WorkloadKind][]WorkloadIdentifier, 
 
 		if collection, ok := workload.(*WorkloadCollection); ok {
 			cws, err := parseCollectionComponents(collection, workloadConfig)
-			if err != nil && !errors.Is(err, ErrCollectionRequired) {
+			if err != nil {
 				return nil, err
 			}
 
@@ -206,7 +214,7 @@ func parseCollectionComponents(workload *WorkloadCollection, workloadConfig stri
 		}
 
 		for _, component := range w[WorkloadKindComponent] {
-			if cw, ok := component.(ComponentWorkload); ok {
+			if cw, ok := component.(*ComponentWorkload); ok {
 				cw.Spec.ConfigPath = componentPath
 				workloads = append(workloads, cw)
 			}
@@ -300,10 +308,6 @@ func validateConfigs(workloads map[WorkloadKind][]WorkloadIdentifier) error {
 				return fmt.Errorf("%w", err)
 			}
 		}
-	}
-
-	if len(workloads[WorkloadKindComponent]) != 0 && len(workloads[WorkloadKindCollection]) != 1 {
-		return fmt.Errorf("no %s found - %w", WorkloadKindCollection, ErrCollectionRequired)
 	}
 
 	if len(workloads[WorkloadKindCollection])+len(workloads[WorkloadKindStandalone]) > 1 {
