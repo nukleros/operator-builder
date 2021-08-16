@@ -75,14 +75,7 @@ func (s *apiScaffolder) Scaffold() error {
 		machinery.WithResource(&s.resource),
 	)
 
-	var createFuncNames []string
-
-	for _, sourceFile := range *s.workload.GetSourceFiles() {
-		for _, childResource := range sourceFile.Children {
-			funcName := fmt.Sprintf("Create%s", childResource.UniqueName)
-			createFuncNames = append(createFuncNames, funcName)
-		}
-	}
+	createFuncNames, initFuncNames := s.workload.GetFuncNames()
 
 	var crdSampleFilenames []string
 
@@ -172,6 +165,10 @@ func (s *apiScaffolder) Scaffold() error {
 	// API types
 	if s.workload.IsStandalone() {
 		err = scaffold.Execute(
+			&templates.MainUpdater{
+				WireResource:   true,
+				WireController: true,
+			},
 			&api.Types{
 				SpecFields:    s.workload.GetAPISpecFields(),
 				ClusterScoped: s.workload.IsClusterScoped(),
@@ -186,6 +183,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&resources.Resources{
 				PackageName:     s.workload.GetPackageName(),
 				CreateFuncNames: createFuncNames,
+				InitFuncNames:   initFuncNames,
 				SpecFields:      s.workload.GetAPISpecFields(),
 				IsComponent:     s.workload.IsComponent(),
 			},
@@ -228,6 +226,10 @@ func (s *apiScaffolder) Scaffold() error {
 		)
 
 		err = scaffold.Execute(
+			&templates.MainUpdater{
+				WireResource:   true,
+				WireController: true,
+			},
 			&api.Types{
 				SpecFields:    s.workload.GetAPISpecFields(),
 				ClusterScoped: s.workload.IsClusterScoped(),
@@ -292,14 +294,7 @@ func (s *apiScaffolder) Scaffold() error {
 				)),
 			)
 
-			var createFuncNames []string
-
-			for _, sourceFile := range *component.GetSourceFiles() {
-				for _, childResource := range sourceFile.Children {
-					funcName := fmt.Sprintf("Create%s", childResource.UniqueName)
-					createFuncNames = append(createFuncNames, funcName)
-				}
-			}
+			createFuncNames, initFuncNames := component.GetFuncNames()
 
 			crdSampleFilenames = append(
 				crdSampleFilenames,
@@ -326,6 +321,7 @@ func (s *apiScaffolder) Scaffold() error {
 				&resources.Resources{
 					PackageName:     component.GetPackageName(),
 					CreateFuncNames: createFuncNames,
+					InitFuncNames:   initFuncNames,
 					SpecFields:      component.GetAPISpecFields(),
 					IsComponent:     component.IsComponent(),
 					Collection:      s.workload.(*workloadv1.WorkloadCollection),

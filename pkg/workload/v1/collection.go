@@ -193,6 +193,10 @@ func (c WorkloadCollection) GetSourceFiles() *[]SourceFile {
 	return &[]SourceFile{}
 }
 
+func (c WorkloadCollection) GetFuncNames() (createFuncNames, initFuncNames []string) {
+	return getFuncNames(*c.GetSourceFiles())
+}
+
 func (c WorkloadCollection) GetAPISpecFields() *[]APISpecField {
 	return &c.Spec.APISpecFields
 }

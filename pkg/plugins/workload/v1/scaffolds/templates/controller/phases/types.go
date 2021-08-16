@@ -28,8 +28,6 @@ const typesTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	"context"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -45,7 +43,7 @@ type Phase interface {
 type PhaseHandler interface {
 	GetSuccessCondition() common.Condition
 	GetPendingCondition() common.Condition
-	GetFailCondition() common.Condition
+	GetFailCondition()    common.Condition
 }
 
 // ResourcePhase defines the specific phase of reconcilication associated with creating resources.
@@ -55,12 +53,10 @@ type ResourcePhase interface {
 
 // ComponentResource defines a resource which is created by the parent Component custom resource.
 type ComponentResource struct {
-	Component           *common.Component
 	ComponentReconciler common.ComponentReconciler
-	Context             context.Context
-	OriginalResource    *metav1.Object
-	ReplacedResources   []metav1.Object
-	Skip                bool
+	OriginalResource  metav1.Object
+	ReplacedResources []metav1.Object
+	Skip              bool
 }
 
 // DependencyPhase defines an object specific to the depenency phase of reconciliation.
@@ -71,7 +67,7 @@ type PreFlightPhase struct{}
 
 // CreateResourcesPhase defines an object specific to the create resources phase of reconciliation.
 type CreateResourcesPhase struct {
-	Resources []metav1.Object
+	Resources         []metav1.Object
 	ReplacedResources []metav1.Object
 }
 

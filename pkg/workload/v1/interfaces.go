@@ -53,6 +53,7 @@ type WorkloadAPIBuilder interface {
 	GetRBACRules() *[]RBACRule
 	GetOwnershipRules() *[]OwnershipRule
 	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
+	GetFuncNames() (createFuncNames, initFuncNames []string)
 
 	SetNames()
 	SetSpecFields(workloadPath string) error

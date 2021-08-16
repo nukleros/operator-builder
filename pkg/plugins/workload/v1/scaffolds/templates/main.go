@@ -10,7 +10,7 @@ const (
 	defaultMainPath = "main.go"
 	importMarker    = "imports"
 	addSchemeMarker = "scheme"
-	setupMarker     = "builder"
+	setupMarker     = "reconcilers"
 )
 
 var _ machinery.Template = &Main{}
@@ -74,25 +74,19 @@ const (
 `
 	addschemeCodeFragment = `utilruntime.Must(%s.AddToScheme(scheme))
 `
-	reconcilerSetupCodeFragment = `
-if err = (&controllers.%sReconciler{
+	reconcilerSetupCodeFragment = `&controllers.%sReconciler{
+		Name:   "%s",
 		Client: mgr.GetClient(),
-		Log: ctrl.Log.WithName("controllers").WithName("%s"),
+		Log:    ctrl.Log.WithName("controllers").WithName("%s"),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "%s")
-		os.Exit(1)
-	}
+	},
 `
-	multiGroupReconcilerSetupCodeFragment = `
-if err = (&%scontrollers.%sReconciler{
+	multiGroupReconcilerSetupCodeFragment = `&%scontrollers.%sReconciler{
+		Name:   "%s",
 		Client: mgr.GetClient(),
-		Log: ctrl.Log.WithName("controllers").WithName("%s").WithName("%s"),
+		Log:    ctrl.Log.WithName("controllers").WithName("%s").WithName("%s"),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "%s")
-		os.Exit(1)
-	}
+	},
 `
 	webhookSetupCodeFragment = `
 if err = (&%s.%s{}).SetupWebhookWithManager(mgr); err != nil {
@@ -140,7 +134,7 @@ func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 				f.Resource.Kind, f.Resource.Kind, f.Resource.Kind))
 		} else {
 			setup = append(setup, fmt.Sprintf(multiGroupReconcilerSetupCodeFragment,
-				f.Resource.PackageName(), f.Resource.Kind, f.Resource.Group, f.Resource.Kind, f.Resource.Kind))
+				f.Resource.PackageName(), f.Resource.Kind, f.Resource.Kind, f.Resource.Group, f.Resource.Kind))
 		}
 	}
 
@@ -182,10 +176,16 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	%s
 )
+
+type ReconcilerInitializer interface {
+	GetName() string
+	SetupWithManager(ctrl.Manager) error
+}
 
 var (
 	scheme = runtime.NewScheme()
@@ -261,7 +261,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	%s
+	reconcilers := []ReconcilerInitializer{
+		%s
+	}
+
+	for _, reconciler := range reconcilers {
+		if err = reconciler.SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", reconciler.GetName())
+			os.Exit(1)
+		}
+	}
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")

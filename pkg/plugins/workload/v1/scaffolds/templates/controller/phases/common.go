@@ -74,9 +74,7 @@ func updateStatusConditions(
 	if !conditionExists(component.GetStatusConditions(), condition) {
 		component.SetStatusConditions(*condition)
 
-		if err := r.UpdateStatus(r.GetContext(), component); err != nil {
-			return err
-		}
+		return r.UpdateStatus()
 	}
 
 	return nil
@@ -122,7 +120,10 @@ func isOptimisticLockError(err error) bool {
 }
 
 // setResources will set the resources against a CreateResourcePhase.
-func setResources(parent *CreateResourcesPhase, resources []metav1.Object) {
+func setResources(
+	parent *CreateResourcesPhase,
+	resources []metav1.Object,
+) {
 	parent.Resources = resources
 }
 

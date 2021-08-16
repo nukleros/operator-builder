@@ -54,19 +54,13 @@ func (phase *PersistResourcePhase) Execute(resource *ComponentResource) (ctrl.Re
 	// if we are replacing resources, use the replaced resources, else use the original resources
 	if len(resource.ReplacedResources) > 0 {
 		for _, replacedResource := range resource.ReplacedResources {
-			err := persistResource(resource.ComponentReconciler, replacedResource)
-			if err != nil {
-				if !isOptimisticLockError(err) {
-					return ctrl.Result{}, false, err
-				}
+			if err := persistResource(resource.ComponentReconciler, replacedResource); err != nil {
+				return ctrl.Result{}, false, err
 			}
 		}
 	} else {
-		err := persistResource(resource.ComponentReconciler, *resource.OriginalResource)
-		if err != nil {
-			if !isOptimisticLockError(err) {
-				return ctrl.Result{}, false, err
-			}
+		if err := persistResource(resource.ComponentReconciler, resource.OriginalResource); err != nil {
+			return ctrl.Result{}, false, err
 		}
 	}
 
@@ -82,11 +76,14 @@ func persistResource(
 	objectKind := resource.(runtime.Object).GetObjectKind().GroupVersionKind().Kind
 
 	// persist resource
-	err := r.SetRefAndCreateIfNotPresent(resource)
-	if err != nil {
-		r.GetLogger().V(0).Info("failed creating object of kind: " + objectKind + " with name: " + objectName)
+	if err := r.CreateOrUpdate(resource); err != nil {
+		if isOptimisticLockError(err) {
+			return nil
+		} else {
+			r.GetLogger().V(0).Info("failed persisting object of kind: " + objectKind + " with name: " + objectName)
 
-		return err
+			return err
+		}
 	}
 
 	// update the condition to notify that we have created a child resource

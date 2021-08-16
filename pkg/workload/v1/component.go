@@ -144,6 +144,10 @@ func (c ComponentWorkload) GetSourceFiles() *[]SourceFile {
 	return &c.Spec.SourceFiles
 }
 
+func (c ComponentWorkload) GetFuncNames() (createFuncNames, initFuncNames []string) {
+	return getFuncNames(*c.GetSourceFiles())
+}
+
 func (c ComponentWorkload) GetAPISpecFields() *[]APISpecField {
 	return &c.Spec.APISpecFields
 }

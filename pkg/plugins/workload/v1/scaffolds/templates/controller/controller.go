@@ -58,14 +58,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	{{ if .HasChildResources -}}
-	{{- $Added := false }}
-	{{- range .OwnershipRules }}
-	{{- if .CoreAPI }}{{- if not $Added }}{{- $Added = true }}
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	{{ end }}{{ end }}
-	{{ end }}
-	{{ end }}
 
 	"{{ .Repo }}/apis/common"
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
@@ -87,9 +80,12 @@ import (
 // {{ .Resource.Kind }}Reconciler reconciles a {{ .Resource.Kind }} object.
 type {{ .Resource.Kind }}Reconciler struct {
 	client.Client
+	Name       string
 	Log        logr.Logger
 	Scheme     *runtime.Scheme
 	Context    context.Context
+	Controller controller.Controller
+	Watches    []client.Object
 	Component  *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}
 	{{- if .IsComponent }}
 	Collection *{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }}
@@ -124,7 +120,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 
 	{{ if .IsComponent }}
 	var collectionList {{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }}List
-	
+
 	if err := r.List(r.Context, &collectionList); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -182,39 +178,40 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) (
 {{ end -}}
 }
 
-// SetRefAndCreateIfNotPresent creates a resource if does not already exist.
-func (r *{{ .Resource.Kind }}Reconciler) SetRefAndCreateIfNotPresent(
+// CreateOrUpdate creates a resource if it does not already exist or updates a resource
+// if it does already exist.
+func (r *{{ .Resource.Kind }}Reconciler) CreateOrUpdate(
 	resource metav1.Object,
 ) error {
+	// set ownership on the underlying resource being created or updated
 	if err := ctrl.SetControllerReference(r.Component, resource, r.Scheme); err != nil {
 		r.GetLogger().V(0).Info("unable to set owner reference on resource")
 
 		return err
 	}
 
-	objectKey := client.ObjectKeyFromObject(resource.(client.Object))
-	if err := r.Get(r.Context, objectKey, resource.(client.Object)); err != nil {
+	// create a stub object to store the current resource in the cluster so that we do not affect
+	// the desired state of the resource object in memory
+	newResource := resource.(client.Object)
+	oldResource := &unstructured.Unstructured{}
+	oldResource.SetGroupVersionKind(newResource.GetObjectKind().GroupVersionKind())
+
+	objectKey := client.ObjectKeyFromObject(newResource)
+	if err := r.Get(r.Context, objectKey, oldResource); err != nil {
 		if errors.IsNotFound(err) {
-			r.GetLogger().V(0).Info("creating resource with name: [" + resource.GetName() + "] of kind: [" + resource.(runtime.Object).GetObjectKind().GroupVersionKind().Kind + "]")
-
-			if err := r.Create(r.Context, resource.(client.Object)); err != nil {
-				r.GetLogger().V(0).Info("unable to create resource")
-
+			if err := controllers.Create(r, newResource); err != nil {
 				return err
 			}
-		// TODO: this is bad logic that needs to be fixed for resources that are being updated
 		} else {
-			r.GetLogger().V(0).Info("updating resource with name: [" + resource.GetName() + "] of kind: [" + resource.(runtime.Object).GetObjectKind().GroupVersionKind().Kind + "]")
-
-			if err := r.Update(r.Context, resource.(client.Object)); err != nil {
-				r.GetLogger().V(0).Info("unable to update resource")
-
-				return err
-			}
+			return err
+		}
+	} else {
+		if err := controllers.Update(r, newResource, oldResource); err != nil {
+			return err
 		}
 	}
 
-	return nil
+	return controllers.Watch(r, newResource)
 }
 
 // GetLogger returns the logger from the reconciler.
@@ -237,21 +234,34 @@ func (r *{{ .Resource.Kind }}Reconciler) GetContext() context.Context {
 	return r.Context
 }
 
+// GetName returns the name of the reconciler.
+func (r *{{ .Resource.Kind }}Reconciler) GetName() string {
+	return r.Name
+}
+
 // GetComponent returns the component the reconciler is operating against.
 func (r *{{ .Resource.Kind }}Reconciler) GetComponent() common.Component {
 	return r.Component
 }
 
-// UpdateStatus updates the status for a component.
-func (r *{{ .Resource.Kind }}Reconciler) UpdateStatus(
-	ctx context.Context,
-	parent common.Component,
-) error {
-	if err := r.Status().Update(ctx, r.Component); err != nil {
-		return err
-	}
+// GetController returns the controller object associated with the reconciler.
+func (r *{{ .Resource.Kind }}Reconciler) GetController() controller.Controller {
+	return r.Controller
+}
 
-	return nil
+// GetWatches returns the objects which are current being watched by the reconciler.
+func (r *{{ .Resource.Kind }}Reconciler) GetWatches() []client.Object {
+	return r.Watches
+}
+
+// SetWatch appends a watch to the list of currently watched objects.
+func (r *{{ .Resource.Kind }}Reconciler) SetWatch(watch client.Object) {
+	r.Watches = append(r.Watches, watch)
+}
+
+// UpdateStatus updates the status for a component.
+func (r *{{ .Resource.Kind }}Reconciler) UpdateStatus() error {
+	return r.Status().Update(r.Context, r.Component)
 }
 
 {{- if not .IsStandalone }}
@@ -276,24 +286,21 @@ func (r *{{ .Resource.Kind }}Reconciler) Wait(
 {{ end }}
 
 func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	// TODO: only resources which belong to the kubernetes core api are able to be owned, as custom resource definitions and their
-	// associated custom resources cannot be owned because they do not exist yet; comment out non-core resources for now and find
-	// a way to own them at a later time.  This means that we cannot reconcile updates or child resource deletion against objects
-	// that are not part of the core api group.
 	options := controller.Options{
 		RateLimiter: controllers.NewDefaultRateLimiter(5*time.Microsecond, 5*time.Minute),
 	}
 
-	return ctrl.NewControllerManagedBy(mgr).
+	baseController, err := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
+		WithEventFilter(controllers.ComponentPredicates()).
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
-		{{- range .OwnershipRules }}
-		{{- if .CoreAPI }}
-		Owns(&unstructured.Unstructured{Object: map[string]interface{}{"kind": "{{ .Kind }}", "apiVersion": "{{ .Version }}"}}).
-		{{- else }}
-		// Owns(&unstructured.Unstructured{Object: map[string]interface{}{"kind": "{{ .Kind }}", "apiVersion": "{{ .Version }}"}}).
-		{{- end -}}
-		{{ end }}
-		Complete(r)
+		Build(r)
+	if err != nil {
+		return err
+	}
+
+	r.Controller = baseController
+
+	return nil
 }
 `

@@ -32,7 +32,7 @@ import (
 
 // MutateResourcePhase.Execute executes the mutation of a resource.
 func (phase *MutateResourcePhase) Execute(resource *ComponentResource) (ctrl.Result, bool, error) {
-	replacedResources, skip, err := resource.ComponentReconciler.Mutate(resource.OriginalResource)
+	replacedResources, skip, err := resource.ComponentReconciler.Mutate(&resource.OriginalResource)
 	if err != nil {
 		return ctrl.Result{}, false, err
 	}

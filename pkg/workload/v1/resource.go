@@ -207,3 +207,19 @@ func versionGroupFromAPIVersion(apiVersion string) (version, group string) {
 
 	return version, group
 }
+
+func getFuncNames(sourceFiles []SourceFile) (createFuncNames, initFuncNames []string) {
+	for _, sourceFile := range sourceFiles {
+		for _, childResource := range sourceFile.Children {
+			funcName := fmt.Sprintf("Create%s", childResource.UniqueName)
+
+			if strings.EqualFold(childResource.Kind, "customresourcedefinition") {
+				initFuncNames = append(initFuncNames, funcName)
+			}
+
+			createFuncNames = append(createFuncNames, funcName)
+		}
+	}
+
+	return createFuncNames, initFuncNames
+}

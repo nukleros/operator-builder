@@ -172,6 +172,10 @@ func (s StandaloneWorkload) GetSourceFiles() *[]SourceFile {
 	return &s.Spec.SourceFiles
 }
 
+func (s StandaloneWorkload) GetFuncNames() (createFuncNames, initFuncNames []string) {
+	return getFuncNames(*s.GetSourceFiles())
+}
+
 func (s StandaloneWorkload) GetAPISpecFields() *[]APISpecField {
 	return &s.Spec.APISpecFields
 }

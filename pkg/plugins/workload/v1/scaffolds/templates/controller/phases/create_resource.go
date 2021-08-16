@@ -91,9 +91,6 @@ func createResourcePhases() []ResourcePhase {
 func (phase *CreateResourcesPhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {
-	component := r.GetComponent()
-
-	// get the resources which we will act upon
 	r.GetLogger().V(2).Info("constructing resources in memory")
 
 	proceed, err := new(ConstructPhase).Execute(r, phase)
@@ -104,10 +101,8 @@ func (phase *CreateResourcesPhase) Execute(
 	// execute the resource phases against each resource
 	for _, resource := range phase.Resources {
 		componentResource := &ComponentResource{
-			Component:           &component,
 			ComponentReconciler: r,
-			Context:             r.GetContext(),
-			OriginalResource:    &resource,
+			OriginalResource:    resource,
 		}
 
 		for _, resourcePhase := range createResourcePhases() {
