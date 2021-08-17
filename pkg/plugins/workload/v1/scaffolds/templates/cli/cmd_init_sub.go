@@ -10,20 +10,21 @@ import (
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
 
-var _ machinery.Template = &CliCmdInitSub{}
+var _ machinery.Template = &CmdInitSub{}
 
-// CliCmdInitSub scaffolds the companion CLI's init subcommand for the
+// CmdInitSub scaffolds the companion CLI's init subcommand for the
 // workload.  This where the actual init logic lives.
-type CliCmdInitSub struct {
+type CmdInitSub struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 	machinery.ResourceMixin
 
-	CliRootCmd        string
-	CliSubCmdName     string
-	CliSubCmdDescr    string
-	CliSubCmdVarName  string
-	CliSubCmdFileName string
+	RootCmd           string
+	RootCmdVarName    string
+	SubCmdName        string
+	SubCmdDescr       string
+	SubCmdVarName     string
+	SubCmdFileName    string
 	SpecFields        *[]workloadv1.APISpecField
 	IsComponent       bool
 	ComponentResource *resource.Resource
@@ -32,15 +33,15 @@ type CliCmdInitSub struct {
 	InitCommandDescr string
 }
 
-func (f *CliCmdInitSub) SetTemplateDefaults() error {
+func (f *CmdInitSub) SetTemplateDefaults() error {
 	if f.IsComponent {
 		f.Path = filepath.Join(
-			"cmd", f.CliRootCmd, "commands",
-			fmt.Sprintf("%s_init.go", f.CliSubCmdFileName),
+			"cmd", f.RootCmd, "commands",
+			fmt.Sprintf("%s_init.go", f.SubCmdFileName),
 		)
 		f.Resource = f.ComponentResource
 	} else {
-		f.Path = filepath.Join("cmd", f.CliRootCmd, "commands", "init.go")
+		f.Path = filepath.Join("cmd", f.RootCmd, "commands", "init.go")
 	}
 
 	f.InitCommandName = initCommandName
@@ -57,11 +58,12 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
 
-const defaultManifest{{ .CliSubCmdVarName }} = ` + "`" + `apiVersion: {{ .Resource.QualifiedGroup }}/{{ .Resource.Version }}
+const defaultManifest{{ .SubCmdVarName }} = ` + "`" + `apiVersion: {{ .Resource.QualifiedGroup }}/{{ .Resource.Version }}
 kind: {{ .Resource.Kind }}
 metadata:
   name: {{ lower .Resource.Kind }}-sample
@@ -71,27 +73,38 @@ spec:
 {{ end }}
 ` + "`" + `
 
-// {{ .CliSubCmdName }}InitCmd represents the {{ .CliSubCmdName }} init subcommand.
-var {{ .CliSubCmdVarName }}InitCmd = &cobra.Command{
-	{{ if .IsComponent -}}
-	Use:   "{{ .CliSubCmdName }}",
-	Short: "{{ .CliSubCmdDescr }}",
-	Long: "{{ .CliSubCmdDescr }}",
-	{{- else -}}
-	Use:   "{{ .InitCommandName }}",
-	Short: "{{ .InitCommandDescr }}",
-	Long: "{{ .InitCommandDescr }}",
-	{{- end }}
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(defaultManifest{{ .CliSubCmdVarName }})
-	},
-}
+{{ if not .IsComponent -}}
+// newInitCommand creates a new instance of the init subcommand.
+func (c *{{ .RootCmdVarName }}Command) newInitCommand() {
+{{- else }}
+// newInit{{ .SubCmdVarName }}Command creates a new instance of the  init{{ .SubCmdVarName }} subcommand.
+func (i *initCommand) newInit{{ .SubCmdVarName }}Command() {
+{{- end }}
+	init{{ .SubCmdVarName }}Cmd := &cobra.Command{
+		{{ if .IsComponent -}}
+		Use:   "{{ .SubCmdName }}",
+		Short: "{{ .SubCmdDescr }}",
+		Long: "{{ .SubCmdDescr }}",
+		{{- else -}}
+		Use:   "{{ .InitCommandName }}",
+		Short: "{{ .InitCommandDescr }}",
+		Long: "{{ .InitCommandDescr }}",
+		{{- end }}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			outputStream := os.Stdout
 
-func init() {
+			if _, err := outputStream.WriteString(defaultManifest{{ .SubCmdVarName }}); err != nil {
+				return fmt.Errorf("failed to write outout, %w", err)
+			}
+
+			return nil
+		},
+	}
+
 	{{ if .IsComponent -}}
-	initCmd.AddCommand({{ .CliSubCmdVarName }}InitCmd)
+	i.AddCommand(init{{ .SubCmdVarName }}Cmd)
 	{{- else -}}
-	rootCmd.AddCommand({{ .CliSubCmdVarName }}InitCmd)
+	c.AddCommand(init{{ .SubCmdVarName }}Cmd)
 	{{- end -}}
 }
 `

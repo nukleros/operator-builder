@@ -6,20 +6,21 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 )
 
-var _ machinery.Template = &CliMain{}
+var _ machinery.Template = &Main{}
 
-// CliMain scaffolds the main package for the companion CLI.
-type CliMain struct {
+// Main scaffolds the main package for the companion CLI.
+type Main struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 	machinery.RepositoryMixin
 
-	// CliRootCmd is the root command for the companion CLI
-	CliRootCmd string
+	// RootCmd is the root command for the companion CLI
+	RootCmd        string
+	RootCmdVarName string
 }
 
-func (f *CliMain) SetTemplateDefaults() error {
-	f.Path = filepath.Join("cmd", f.CliRootCmd, "main.go")
+func (f *Main) SetTemplateDefaults() error {
+	f.Path = filepath.Join("cmd", f.RootCmd, "main.go")
 
 	f.TemplateBody = cliMainTemplate
 
@@ -31,10 +32,11 @@ const cliMainTemplate = `{{ .Boilerplate }}
 package main
 
 import (
-	"{{ .Repo }}/cmd/{{ .CliRootCmd }}/commands"
+	"{{ .Repo }}/cmd/{{ .RootCmd }}/commands"
 )
 
 func main() {
-	commands.Execute()
+	{{ .RootCmd }} := commands.New{{ .RootCmdVarName }}Command()
+	{{ .RootCmd }}.Run()
 }
 `

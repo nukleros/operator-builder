@@ -6,12 +6,12 @@ import (
 	pluralize "github.com/gertd/go-pluralize"
 )
 
-// ToVarName will convert a kebab-case string to a camelCase name appropriate to
-// use as a go varaiable name.
-func ToVarName(name string) string {
+// ToPascalCase will convert a kebab-case string to a PascalCase name appropriate to
+// use as a go variable name.
+func ToPascalCase(name string) string {
 	var output string
 
-	makeUpper := false
+	makeUpper := true
 
 	for _, letter := range name {
 		if makeUpper {

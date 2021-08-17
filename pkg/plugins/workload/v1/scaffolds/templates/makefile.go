@@ -12,7 +12,7 @@ const crdOptions = "crd:preserveUnknownFields=false,crdVersions=v1,trivialVersio
 type Makefile struct {
 	machinery.TemplateMixin
 
-	CliRootCmd string
+	RootCmd    string
 	CrdOptions string
 }
 
@@ -140,7 +140,7 @@ rm -rf $$TMP_DIR ;\
 endef
 
 # Build the companion CLI
-build-{{ .CliRootCmd }}:
-	go build -o bin/{{ .CliRootCmd }} cmd/{{ .CliRootCmd }}/main.go
+build-{{ .RootCmd }}:
+	go build -o bin/{{ .RootCmd }} cmd/{{ .RootCmd }}/main.go
 
 `

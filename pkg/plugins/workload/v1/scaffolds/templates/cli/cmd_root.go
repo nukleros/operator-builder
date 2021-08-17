@@ -1,86 +1,139 @@
 package cli
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 )
 
-var _ machinery.Template = &CliCmdRoot{}
+var (
+	_ machinery.Template = &CmdRoot{}
+	_ machinery.Inserter = &CmdRootUpdater{}
+)
 
-// CliCmdRoot scaffolds the root command file for the companion CLI.
-type CliCmdRoot struct {
+// CmdRoot scaffolds the root command file for the companion CLI.
+type CmdRoot struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 
-	// CliRootCmd is the root command for the companion CLI
-	CliRootCmd string
-	// CliRootDescription is the command description given by the CLI help info
-	CliRootDescription string
+	// RootCmd is the root command for the companion CLI
+	RootCmd        string
+	RootCmdVarName string
+	// RootCmdDescription is the command description given by the CLI help info
+	RootCmdDescription string
 }
 
-func (f *CliCmdRoot) SetTemplateDefaults() error {
-	f.Path = filepath.Join("cmd", f.CliRootCmd, "commands", "root.go")
+func (f *CmdRoot) SetTemplateDefaults() error {
+	f.Path = filepath.Join("cmd", f.RootCmd, "commands", "root.go")
 
-	f.TemplateBody = cliCmdRootTemplate
+	f.TemplateBody = fmt.Sprintf(CmdRootTemplate, machinery.NewMarkerFor(f.Path, subcommandsMarker))
 
 	return nil
 }
 
-const cliCmdRootTemplate = `{{ .Boilerplate }}
+// CmdRootUpdater updates root.go to run sub commands.
+type CmdRootUpdater struct { //nolint:maligned
+	machinery.RepositoryMixin
+	machinery.MultiGroupMixin
+	machinery.ResourceMixin
+
+	RootCmd string
+
+	// Flags to indicate which parts need to be included when updating the file
+	InitCommand, GenerateCommand bool
+}
+
+// GetPath implements file.Builder interface.
+func (f *CmdRootUpdater) GetPath() string {
+	return filepath.Join("cmd", f.RootCmd, "commands", "root.go")
+}
+
+// GetIfExistsAction implements file.Builder interface.
+func (*CmdRootUpdater) GetIfExistsAction() machinery.IfExistsAction {
+	return machinery.OverwriteFile
+}
+
+const subcommandsMarker = "operator-builder:subcommands"
+
+// GetMarkers implements file.Inserter interface.
+func (f *CmdRootUpdater) GetMarkers() []machinery.Marker {
+	return []machinery.Marker{
+		machinery.NewMarkerFor(f.GetPath(), subcommandsMarker),
+	}
+}
+
+// Code Fragments.
+const (
+	initCommandCodeFragment = `c.newInitCommand()
+`
+	generateCommandCodeFragement = `c.newGenerateCommand()
+`
+)
+
+// GetCodeFragments implements file.Inserter interface.
+func (f *CmdRootUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
+	fragments := make(machinery.CodeFragmentsMap, 1)
+
+	// If resource is not being provided we are creating the file, not updating it
+	if f.Resource == nil {
+		return fragments
+	}
+
+	// Generate subCommands code fragments
+	subCommands := make([]string, 0)
+	if f.InitCommand {
+		subCommands = append(subCommands, initCommandCodeFragment)
+	}
+
+	if f.GenerateCommand {
+		subCommands = append(subCommands, generateCommandCodeFragement)
+	}
+
+	// Only store code fragments in the map if the slices are non-empty
+	if len(subCommands) != 0 {
+		fragments[machinery.NewMarkerFor(f.GetPath(), subcommandsMarker)] = subCommands
+	}
+
+	return fragments
+}
+
+const CmdRootTemplate = `{{ .Boilerplate }}
 
 package commands
 
 import (
-	"fmt"
-	"os"
-
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var cfgFile string
-
-// rootCmd represents the base command when called without any subcommands.
-var rootCmd = &cobra.Command{
-	Use:   "{{ .CliRootCmd }}",
-	Short: "{{ .CliRootDescription }}",
-	Long:  "{{ .CliRootDescription }}",
+// {{ .RootCmdVarName }}Command represents the base command when called without any subcommands.
+type {{ .RootCmdVarName }}Command struct {
+	*cobra.Command
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	cobra.CheckErr(rootCmd.Execute())
-}
-
-func init() {
-	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.{{ .CliRootCmd }}.yaml)")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		cobra.CheckErr(err)
-
-		// Search config in home directory with name ".{{ .CliRootCmd }}" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".{{ .CliRootCmd }}")
+// New{{ .RootCmdVarName }}Command returns an instance of the {{ .RootCmdVarName }}Command.
+func New{{ .RootCmdVarName }}Command() *{{ .RootCmdVarName }}Command {
+	c := &{{ .RootCmdVarName }}Command{
+		Command: &cobra.Command{
+			Use:   "{{ .RootCmd }}",
+			Short: "{{ .RootCmdDescription }}",
+			Long:  "{{ .RootCmdDescription }}",
+		},
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	c.addSubCommands()
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
+	return c
+}
+
+// Run represents the main entry point into the command
+// This is called by main.main() to execute the root command.
+func (c *{{ .RootCmdVarName }}Command) Run() {
+	cobra.CheckErr(c.Execute())
+}
+
+// addSubCommands adds any additional subCommands to the root command.
+func (c *{{ .RootCmdVarName }}Command) addSubCommands() {
+	%s
 }
 `

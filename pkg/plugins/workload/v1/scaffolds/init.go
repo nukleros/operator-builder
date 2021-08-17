@@ -11,6 +11,7 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/cli"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
 
@@ -57,18 +58,20 @@ func (s *initScaffolder) Scaffold() error {
 
 	if s.workload.HasRootCmdName() {
 		err = scaffold.Execute(
-			&cli.CliMain{
-				CliRootCmd: s.workload.GetRootCmdName(),
+			&cli.Main{
+				RootCmd:        s.workload.GetRootCmdName(),
+				RootCmdVarName: utils.ToPascalCase(s.workload.GetRootCmdName()),
 			},
-			&cli.CliCmdRoot{
-				CliRootCmd:         s.workload.GetRootCmdName(),
-				CliRootDescription: s.workload.GetRootCmdDescr(),
+			&cli.CmdRoot{
+				RootCmd:            s.workload.GetRootCmdName(),
+				RootCmdVarName:     utils.ToPascalCase(s.workload.GetRootCmdName()),
+				RootCmdDescription: s.workload.GetRootCmdDescr(),
 			},
 			&templates.Makefile{
-				CliRootCmd: s.workload.GetRootCmdName(),
+				RootCmd: s.workload.GetRootCmdName(),
 			},
 			&templates.Project{
-				CliRootCmd: s.workload.GetRootCmdName(),
+				RootCmd: s.workload.GetRootCmdName(),
 			},
 		)
 		if err != nil {

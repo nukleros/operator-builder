@@ -195,7 +195,7 @@ func (s StandaloneWorkload) GetComponentResource(domain, repo string, clusterSco
 func (s *StandaloneWorkload) SetNames() {
 	s.PackageName = utils.ToPackageName(s.Name)
 	if s.HasRootCmdName() {
-		s.Spec.CompanionCliRootcmd.VarName = utils.ToVarName(s.Spec.CompanionCliRootcmd.Name)
+		s.Spec.CompanionCliRootcmd.VarName = utils.ToPascalCase(s.Spec.CompanionCliRootcmd.Name)
 		s.Spec.CompanionCliRootcmd.FileName = utils.ToFileName(s.Spec.CompanionCliRootcmd.Name)
 	}
 }

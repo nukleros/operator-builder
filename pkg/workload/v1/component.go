@@ -199,7 +199,7 @@ func (c ComponentWorkload) HasSubCmdName() bool {
 func (c *ComponentWorkload) SetNames() {
 	c.PackageName = utils.ToPackageName(c.Name)
 	if c.HasSubCmdName() {
-		c.Spec.CompanionCliSubcmd.VarName = utils.ToVarName(c.Spec.CompanionCliSubcmd.Name)
+		c.Spec.CompanionCliSubcmd.VarName = utils.ToPascalCase(c.Spec.CompanionCliSubcmd.Name)
 		c.Spec.CompanionCliSubcmd.FileName = utils.ToFileName(c.Spec.CompanionCliSubcmd.Name)
 	}
 }

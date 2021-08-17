@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+
+	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
 )
 
 const (
@@ -11,23 +13,25 @@ const (
 	generateCommandDescr = "Generate child resource manifests from a workload's custom resource"
 )
 
-var _ machinery.Template = &CliCmdGenerate{}
+var _ machinery.Template = &CmdGenerate{}
 
-// CliCmdGenerate scaffolds the companion CLI's generate subcommand for
+// CmdGenerate scaffolds the companion CLI's generate subcommand for
 // component workloads.  The generate logic will live in the workload's
 // subcommand to this command; see cmd_generate_sub.go.
-type CliCmdGenerate struct {
+type CmdGenerate struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 
-	CliRootCmd string
+	RootCmd        string
+	RootCmdVarName string
 
 	GenerateCommandName  string
 	GenerateCommandDescr string
+	Collection           *workloadv1.WorkloadCollection
 }
 
-func (f *CliCmdGenerate) SetTemplateDefaults() error {
-	f.Path = filepath.Join("cmd", f.CliRootCmd, "commands", "generate.go")
+func (f *CmdGenerate) SetTemplateDefaults() error {
+	f.Path = filepath.Join("cmd", f.RootCmd, "commands", "generate.go")
 
 	f.GenerateCommandName = generateCommandName
 	f.GenerateCommandDescr = generateCommandDescr
@@ -45,34 +49,45 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
+type generateCommand struct{
+	*cobra.Command
 	workloadManifest string
 	collectionManifest string
-)
-
-// generateCmd represents the generate command.
-var generateCmd = &cobra.Command{
-	Use:   "{{ .GenerateCommandName }}",
-	Short: "{{ .GenerateCommandDescr }}",
-	Long: "{{ .GenerateCommandDescr }}",
 }
 
-func init() {
-	rootCmd.AddCommand(generateCmd)
+// newGenerateCommand creates a new instance of the generate subcommand.
+func (c *{{ .RootCmdVarName }}Command) newGenerateCommand() {
+	generateCmd := &generateCommand{}
 
-	generateCmd.PersistentFlags().StringVarP(
-		&workloadManifest,
+	generateCmd.Command = &cobra.Command{
+		Use:   "{{ .GenerateCommandName }}",
+		Short: "{{ .GenerateCommandDescr }}",
+		Long: "{{ .GenerateCommandDescr }}",
+	}
+
+	generateCmd.Command.PersistentFlags().StringVarP(
+		&generateCmd.workloadManifest,
 		"workload-manifest",
 		"w",
 		"",
 		"Filepath to the workload manifest to generate child resources for.",
 	)
-	generateCmd.PersistentFlags().StringVarP(
-		&collectionManifest,
+
+	generateCmd.Command.PersistentFlags().StringVarP(
+		&generateCmd.collectionManifest,
 		"collection-manifest",
 		"c",
 		"",
 		"Filepath to the workload collection manifest.",
 	)
+
+	generateCmd.addCommands()
+	c.AddCommand(generateCmd.Command)
+}
+
+func (g *generateCommand) addCommands() {
+	{{- range $component := .Collection.Spec.Components }}
+	g.newGenerate{{ $component.Spec.CompanionCliSubcmd.VarName }}Command()
+	{{- end }}
 }
 `

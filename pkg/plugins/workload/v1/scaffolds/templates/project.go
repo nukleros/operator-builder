@@ -10,7 +10,7 @@ var _ machinery.Template = &Project{}
 type Project struct {
 	machinery.TemplateMixin
 
-	CliRootCmd string
+	RootCmd string
 }
 
 func (f *Project) SetTemplateDefaults() error {
@@ -24,5 +24,5 @@ func (f *Project) SetTemplateDefaults() error {
 }
 
 const projectTemplate = `
-cliRootCommandName: {{ .CliRootCmd }}
+cliRootCommandName: {{ .RootCmd }}
 `
