@@ -50,6 +50,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -70,11 +71,10 @@ import (
 	{{ end -}}
 	"{{ .Repo }}/controllers"
 	"{{ .Repo }}/controllers/phases"
-	{{- if not .IsStandalone }}
 	"{{ .Repo }}/pkg/dependencies"
 	"{{ .Repo }}/pkg/mutate"
+	"{{ .Repo }}/pkg/resources"
 	"{{ .Repo }}/pkg/wait"
-	{{ end }}
 )
 
 // {{ .Resource.Kind }}Reconciler reconciles a {{ .Resource.Kind }} object.
@@ -86,6 +86,7 @@ type {{ .Resource.Kind }}Reconciler struct {
 	Context    context.Context
 	Controller controller.Controller
 	Watches    []client.Object
+	Resources  []common.ComponentResource
 	Component  *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}
 	{{- if .IsComponent }}
 	Collection *{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }}
@@ -111,6 +112,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	r.Context = ctx
 	log := r.Log.WithValues("{{ .Resource.Kind | lower }}", req.NamespacedName)
 
+	// get and store the component
 	r.Component = &{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}
 	if err := r.Get(r.Context, req.NamespacedName, r.Component); err != nil {
 		log.V(0).Info("unable to fetch {{ .Resource.Kind }}")
@@ -119,6 +121,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	{{ if .IsComponent }}
+	// get and store the collection
 	var collectionList {{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }}.{{ .Collection.Spec.APIKind }}List
 
 	if err := r.List(r.Context, &collectionList); err != nil {
@@ -126,11 +129,11 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	if len(collectionList.Items) == 0 {
-		log.V(0).Info("no collections available - will try again in 10 seconds")
+		log.V(0).Info("no collections available; initiating controller requeue")
 
 		return ctrl.Result{Requeue: true}, nil
 	} else if len(collectionList.Items) > 1 {
-		log.V(0).Info("multiple collections found - cannot proceed")
+		log.V(0).Info("multiple collections found; expected 1; cannot proceed")
 
 		return ctrl.Result{}, nil
 	}
@@ -138,15 +141,20 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	r.Collection = &collectionList.Items[0]
 	{{ end }}
 
+	// get and store the resources
+	if err := r.SetResources(); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// execute the phases
 	for _, phase := range controllers.Phases(r.Component) {
 		r.GetLogger().V(7).Info(fmt.Sprintf("enter phase: %T", phase))
 		proceed, err := phase.Execute(r)
-		result, err := phases.HandlePhaseExit(r, phase.(phases.PhaseHandler), proceed, err)
+		result, err := phases.HandlePhaseExit(r, phase, proceed, err)
 
 		// return only if we have an error or are told not to proceed
 		if err != nil || !proceed {
-			log.V(4).Info(fmt.Sprintf("not ready; requeuing phase: %T", phase))
+			log.V(2).Info(fmt.Sprintf("not ready; requeuing phase: %T", phase))
 
 			return result, err
 		}
@@ -157,9 +165,9 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	return phases.DefaultReconcileResult(), nil
 }
 
-// GetResources will create and return the resources in memory.
-func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) ([]metav1.Object, error) {
-{{ if .HasChildResources }}
+// Construct resources runs the methods to properly construct the resources.
+func (r *{{ .Resource.Kind }}Reconciler) ConstructResources() ([]metav1.Object, error) {
+	{{ if .HasChildResources }}
 	var resourceObjects []metav1.Object
 
 	// create resources in memory
@@ -178,6 +186,36 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(parent common.Component) (
 {{ end -}}
 }
 
+// GetResources will return the resources associated with the reconciler.
+func (r *{{ .Resource.Kind }}Reconciler) GetResources() []common.ComponentResource {
+	return r.Resources
+}
+
+// SetResource will set a resource on the objects if the relevant object does not already exist.
+func (r *{{ .Resource.Kind }}Reconciler) SetResource(new common.ComponentResource) {
+
+	// set and return immediately if nothing exists
+	if len(r.Resources) == 0 {
+		r.Resources = append(r.Resources, new)
+
+		return
+	}
+
+	// loop through the resources and set or update when found
+	for i, existing := range r.Resources {
+		if new.EqualGVK(existing) && new.EqualNamespaceName(existing) {
+			if !reflect.DeepEqual(new.GetObject(), existing.GetObject()) {
+				r.Resources[i] = new
+
+				return
+			}
+		}
+	}
+
+	// if we haven't returned yet, we have not found the resource and must add it
+	r.Resources = append(r.Resources, new)
+}
+
 // CreateOrUpdate creates a resource if it does not already exist or updates a resource
 // if it does already exist.
 func (r *{{ .Resource.Kind }}Reconciler) CreateOrUpdate(
@@ -192,26 +230,64 @@ func (r *{{ .Resource.Kind }}Reconciler) CreateOrUpdate(
 
 	// create a stub object to store the current resource in the cluster so that we do not affect
 	// the desired state of the resource object in memory
-	newResource := resource.(client.Object)
-	oldResource := &unstructured.Unstructured{}
-	oldResource.SetGroupVersionKind(newResource.GetObjectKind().GroupVersionKind())
+	newResource := resources.NewResourceFromClient(resource.(client.Object), r)
+	resourceStub := &unstructured.Unstructured{}
+	resourceStub.SetGroupVersionKind(newResource.Object.GetObjectKind().GroupVersionKind())
+	oldResource := resources.NewResourceFromClient(resourceStub, r)
 
-	objectKey := client.ObjectKeyFromObject(newResource)
-	if err := r.Get(r.Context, objectKey, oldResource); err != nil {
+	if err := r.Get(
+		r.Context,
+		client.ObjectKeyFromObject(newResource.Object),
+		oldResource.Object,
+	); err != nil {
+		// create the resource if we cannot find one
 		if errors.IsNotFound(err) {
-			if err := controllers.Create(r, newResource); err != nil {
+			if err := newResource.Create(); err != nil {
 				return err
 			}
 		} else {
 			return err
 		}
 	} else {
-		if err := controllers.Update(r, newResource, oldResource); err != nil {
-			return err
+		// update the resource if it needs updating
+		if resources.NeedsUpdate(*oldResource, *newResource) {
+			if err := newResource.Update(oldResource.Object); err != nil {
+				return err
+			}
 		}
 	}
 
-	return controllers.Watch(r, newResource)
+	return controllers.Watch(r, newResource.Object)
+}
+
+// SetResources will create and return the resources in memory.
+func (r *{{ .Resource.Kind }}Reconciler) SetResources() error {
+	// create resources in memory
+	baseResources, err := r.ConstructResources()
+	if err != nil {
+		return err
+	}
+
+	// loop through the in memory resources and store them on the reconciler
+	for _, base := range baseResources {
+		// run through the mutation functions to mutate the resources
+		mutatedResources, skip, err := r.Mutate(&base)
+		if err != nil {
+			return err
+		}
+		if skip {
+			continue
+		}
+
+		for _, mutated := range mutatedResources {
+			resourceObject := resources.NewResourceFromClient(mutated.(client.Object))
+			resourceObject.Reconciler = r
+
+			r.SetResource(resourceObject)
+		}
+	}
+
+	return nil
 }
 
 // GetLogger returns the logger from the reconciler.
@@ -264,7 +340,6 @@ func (r *{{ .Resource.Kind }}Reconciler) UpdateStatus() error {
 	return r.Status().Update(r.Context, r.Component)
 }
 
-{{- if not .IsStandalone }}
 // CheckReady will return whether a component is ready.
 func (r *{{ .Resource.Kind }}Reconciler) CheckReady() (bool, error) {
 	return dependencies.{{ .Resource.Kind }}CheckReady(r)
@@ -283,7 +358,6 @@ func (r *{{ .Resource.Kind }}Reconciler) Wait(
 ) (bool, error) {
 	return wait.{{ .Resource.Kind }}Wait(r, object)
 }
-{{ end }}
 
 func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	options := controller.Options{

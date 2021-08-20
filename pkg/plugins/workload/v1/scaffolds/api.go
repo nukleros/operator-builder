@@ -22,6 +22,7 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/dependencies"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/helpers"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/mutate"
+	resourcespkg "github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/resources"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/plugins/workload/v1/scaffolds/templates/pkg/wait"
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/pkg/workload/v1"
@@ -197,8 +198,8 @@ func (s *apiScaffolder) Scaffold() error {
 			&common.Components{
 				IsStandalone: s.workload.IsStandalone(),
 			},
-			&common.Resources{},
 			&common.Conditions{},
+			&common.Resources{},
 			&resources.Resources{
 				PackageName:     s.workload.GetPackageName(),
 				CreateFuncNames: createFuncNames,
@@ -206,6 +207,15 @@ func (s *apiScaffolder) Scaffold() error {
 				SpecFields:      s.workload.GetAPISpecFields(),
 				IsComponent:     s.workload.IsComponent(),
 			},
+			&resourcespkg.ResourceType{},
+			&resourcespkg.Resources{},
+			&resourcespkg.NamespaceType{},
+			&resourcespkg.ConfigMapType{},
+			&resourcespkg.CustomResourceDefinitionType{},
+			&resourcespkg.DaemonSetType{},
+			&resourcespkg.DeploymentType{},
+			&resourcespkg.JobType{},
+			&resourcespkg.SecretType{},
 			&controller.Controller{
 				PackageName:       s.workload.GetPackageName(),
 				RBACRules:         s.workload.GetRBACRules(),
@@ -224,7 +234,16 @@ func (s *apiScaffolder) Scaffold() error {
 				IsStandalone: s.workload.IsStandalone(),
 			},
 			&phases.ResourcePersist{},
-			&phases.ResourceConstruct{},
+			&phases.Dependencies{},
+			&phases.PreFlight{},
+			&phases.ResourceWait{},
+			&phases.CheckReady{},
+			&phases.Complete{},
+			&helpers.Common{},
+			&helpers.Component{},
+			&dependencies.Component{},
+			&mutate.Component{},
+			&wait.Component{},
 			&samples.CRDSample{
 				SpecFields: s.workload.GetAPISpecFields(),
 			},
@@ -258,8 +277,17 @@ func (s *apiScaffolder) Scaffold() error {
 			&common.Components{
 				IsStandalone: s.workload.IsStandalone(),
 			},
-			&common.Resources{},
 			&common.Conditions{},
+			&common.Resources{},
+			&resourcespkg.ResourceType{},
+			&resourcespkg.Resources{},
+			&resourcespkg.NamespaceType{},
+			&resourcespkg.ConfigMapType{},
+			&resourcespkg.CustomResourceDefinitionType{},
+			&resourcespkg.DaemonSetType{},
+			&resourcespkg.DeploymentType{},
+			&resourcespkg.JobType{},
+			&resourcespkg.SecretType{},
 			&controller.Controller{
 				PackageName:       s.workload.GetPackageName(),
 				RBACRules:         &[]workloadv1.RBACRule{},
@@ -278,10 +306,8 @@ func (s *apiScaffolder) Scaffold() error {
 				IsStandalone: s.workload.IsStandalone(),
 			},
 			&phases.ResourcePersist{},
-			&phases.ResourceConstruct{},
 			&phases.Dependencies{},
 			&phases.PreFlight{},
-			&phases.ResourceMutate{},
 			&phases.ResourceWait{},
 			&phases.CheckReady{},
 			&phases.Complete{},

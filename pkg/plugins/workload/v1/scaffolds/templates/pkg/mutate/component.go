@@ -38,13 +38,13 @@ package mutate
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	common "{{ .Repo }}/apis/common"
+	"{{ .Repo }}/apis/common"
 )
 
 // {{ .Resource.Kind }}Mutate performs the logic to mutate resources that belong to the parent.
 func {{ .Resource.Kind }}Mutate(reconciler common.ComponentReconciler,
 	object *metav1.Object,
 ) (replacedObjects []metav1.Object, skip bool, err error) {
-	return nil, false, nil
+	return []metav1.Object{*object}, false, nil
 }
 `

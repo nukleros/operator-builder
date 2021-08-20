@@ -35,29 +35,25 @@ import (
 
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	{{ if not .IsStandalone -}}
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	{{ end -}}
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
 type Component interface {
-	{{ if not .IsStandalone -}}
 	GetComponentGVK() schema.GroupVersionKind
 	GetDependencies() []Component
 	GetDependencyStatus() bool
-	{{ end -}}
 	GetReadyStatus() bool
-	GetStatusConditions() []Condition
+	GetPhaseConditions() []PhaseCondition
+	GetResources() []Resource
 
-	{{ if not .IsStandalone -}}
 	SetReadyStatus(bool)
 	SetDependencyStatus(bool)
-	{{ end -}}
-	SetStatusConditions(Condition)
+	SetPhaseCondition(PhaseCondition)
+	SetResource(Resource)
 }
 
 type ComponentReconciler interface {
@@ -68,7 +64,7 @@ type ComponentReconciler interface {
 	GetController() controller.Controller
 	GetLogger() logr.Logger
 	GetScheme() *runtime.Scheme
-	GetResources(Component) ([]metav1.Object, error)
+	GetResources() []ComponentResource
 	GetWatches() []client.Object
 	SetWatch(client.Object)
 
@@ -77,17 +73,34 @@ type ComponentReconciler interface {
 	UpdateStatus() error
 
 	// methods from the underlying client package
-	Create(ctx context.Context, obj client.Object, opts ...client.CreateOption) error
-	Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error
-	{{ if not .IsStandalone -}}
 	Get(context.Context, types.NamespacedName, client.Object) error
 	List(context.Context, client.ObjectList, ...client.ListOption) error
+	Create(ctx context.Context, obj client.Object, opts ...client.CreateOption) error
 	Update(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error
+	Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error
 
 	// custom methods which are managed by consumers
 	CheckReady() (bool, error)
 	Mutate(*metav1.Object) ([]metav1.Object, bool, error)
 	Wait(*metav1.Object) (bool, error)
-	{{ end -}}
+}
+
+type ComponentResource interface {
+	// attribute exporters and setters
+	GetGroup() string
+	GetVersion() string
+	GetKind() string
+	GetName() string
+	GetNamespace() string
+	GetObject() client.Object
+	GetReconciler() ComponentReconciler
+
+	// equality checkers
+	EqualGVK(ComponentResource) bool
+	EqualNamespaceName(ComponentResource) bool
+
+	// other methods
+	IsReady() (bool, error)
+	ToCommonResource() *Resource
 }
 `

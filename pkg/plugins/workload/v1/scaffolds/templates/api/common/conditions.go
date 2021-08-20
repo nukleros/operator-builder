@@ -26,46 +26,57 @@ const conditionsTemplate = `{{ .Boilerplate }}
 
 package common
 
-// ConditionPhase defines the phase in which the condition was set.
-// +kubebuilder:validation:Enum=Dependency;PreFlight;CreateResources;Mutate;Persist;Wait;CheckReady;Complete
-type ConditionPhase string
+// PhaseState defines the current state of the phase.
+// +kubebuilder:validation:Enum=Complete;Reconciling;Failed;Pending
+type PhaseState string
 
 const (
-	ConditionPhaseDependency      ConditionPhase = "Dependency"
-	ConditionPhasePreFlight       ConditionPhase = "PreFlight"
-	ConditionPhaseCreateResources ConditionPhase = "CreateResources"
-	ConditionPhaseMutate          ConditionPhase = "Mutate"
-	ConditionPhasePersist         ConditionPhase = "Persist"
-	ConditionPhaseWait            ConditionPhase = "Wait"
-	ConditionPhaseCheckReady      ConditionPhase = "CheckReady"
-	ConditionPhaseComplete        ConditionPhase = "Complete"
+	PhaseStatePending     PhaseState = "Pending"
+	PhaseStateReconciling PhaseState = "Reconciling"
+	PhaseStateFailed      PhaseState = "Failed"
+	PhaseStateComplete    PhaseState = "Complete"
 )
 
-// ConditionType defines the type of condition.
-// +kubebuilder:validation:Enum=Ready;Reconciling;Failed;Pending
-type ConditionType string
+// PhaseCondition describes an event that has occurred during a phase
+// of the controller reconciliation loop.
+type PhaseCondition struct {
+	State PhaseState ` + "`" + `json:"state"` + "`" + `
 
-const (
-	ConditionTypeReady       ConditionType = "Ready"
-	ConditionTypeReconciling ConditionType = "Reconciling"
-	ConditionTypeFailed      ConditionType = "Failed"
-	ConditionTypePending     ConditionType = "Pending"
-)
+	// Phase defines the phase in which the condition was set.
+	Phase string ` + "`" + `json:"phase"` + "`" + `
 
-// ConditionStatus defines the status of the condition.
-// +kubebuilder:validation:Enum=True;False
-type ConditionStatus string
+	// Message defines a helpful message from the phase.
+	Message string ` + "`" + `json:"message"` + "`" + `
 
-const (
-	ConditionStatusTrue  ConditionStatus = "True"
-	ConditionStatusFalse ConditionStatus = "False"
-)
+	// LastModified defines the time in which this component was updated.
+	LastModified string ` + "`" + `json:"lastModified"` + "`" + `
+}
 
-// Condition describes an event that has occurred against the object.
-type Condition struct {
-	Type    ConditionType   ` + "`" + `json:"type"` + "`" + `
-	Status  ConditionStatus ` + "`" + `json:"status"` + "`" + `
-	Phase   ConditionPhase  ` + "`" + `json:"phase"` + "`" + `
-	Message string          ` + "`" + `json:"message"` + "`" + `
+// ResourceCondition describes the condition of a Kubernetes resource managed by the parent object.
+type ResourceCondition struct {
+	// Created defines whether this object has been successfully created or not.
+	Created bool ` + "`" + `json:"created"` + "`" + `
+
+	// LastResourcePhase defines the last successfully completed resource phase.
+	LastResourcePhase string ` + "`" + `json:"lastResourcePhase,omitempty"` + "`" + `
+
+	// LastModified defines the time in which this resource was updated.
+	LastModified string ` + "`" + `json:"lastModified,omitempty"` + "`" + `
+
+	// Message defines a helpful message from the resource phase.
+	Message string ` + "`" + `json:"message,omitempty"` + "`" + `
+}
+
+// GetPhaseConditionIndex returns the index of a matching phase condition.  Any integer which is 0
+// or greater indicates that the phase condition was found.  Anything lower indicates that an
+// associated condition is not found.
+func (condition *PhaseCondition) GetPhaseConditionIndex(component Component) int {
+	for i, currentCondition := range component.GetPhaseConditions() {
+		if currentCondition.Phase == condition.Phase {
+			return i
+		}
+	}
+
+	return -1
 }
 `

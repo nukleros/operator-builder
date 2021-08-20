@@ -37,7 +37,7 @@ const componentTemplate = `{{ .Boilerplate }}
 package dependencies
 
 import (
-	common "{{ .Repo }}/apis/common"
+	"{{ .Repo }}/apis/common"
 )
 
 // {{ .Resource.Kind }}CheckReady performs the logic to determine if a {{ .Resource.Kind }} object is ready.

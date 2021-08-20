@@ -28,47 +28,40 @@ const resourceWaitTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	common "{{ .Repo }}/apis/common"
+	"{{ .Repo }}/apis/common"
+	"{{ .Repo }}/pkg/resources"
 )
-
-// defaultWaitRequeue defines the default requeue result for this phase.
-func defaultWaitRequeue() ctrl.Result {
-	return ctrl.Result{Requeue: true}
-}
 
 // WaitForResourcePhase.Execute executes waiting for a resource to be ready before continuing.
 func (phase *WaitForResourcePhase) Execute(
-	resource *ComponentResource,
+	resource common.ComponentResource,
+	resourceCondition common.ResourceCondition,
 ) (ctrl.Result, bool, error) {
 	// TODO: loop through functions instead of repeating logic
 	// common wait logic for a resource
-	ready, err := commonWait(resource.ComponentReconciler, resource.OriginalResource)
-
-	// return the error if we have any
+	ready, err := commonWait(resource.GetReconciler(), resource)
 	if err != nil {
 		return ctrl.Result{}, false, err
 	}
 
 	// return the result if the object is not ready
 	if !ready {
-		return defaultWaitRequeue(), false, nil
+		return Requeue(), false, nil
 	}
 
 	// specific wait logic for a resource
-	ready, err = resource.ComponentReconciler.Wait(&resource.OriginalResource)
-
-	// return the error if we have any
+	meta := resource.GetObject().(metav1.Object)
+	ready, err = resource.GetReconciler().Wait(&meta)
 	if err != nil {
 		return ctrl.Result{}, false, err
 	}
 
 	// return the result if the object is not ready
 	if !ready {
-		return defaultWaitRequeue(), false, nil
+		return Requeue(), false, nil
 	}
 
 	return ctrl.Result{}, true, nil
@@ -77,35 +70,13 @@ func (phase *WaitForResourcePhase) Execute(
 // commonWait applies all common waiting functions for known resources.
 func commonWait(
 	r common.ComponentReconciler,
-	resource metav1.Object,
+	resource common.ComponentResource,
 ) (bool, error) {
 	// Namespace
-	if resource.GetNamespace() != "" {
-		return namespaceIsReady(r, resource)
+	if resource.GetObject().GetNamespace() != "" {
+		return resources.NamespaceForResourceIsReady(resource)
 	}
 
 	return true, nil
-}
-
-// namespaceIsReady waits for a namespace object to exist.
-func namespaceIsReady(
-	r common.ComponentReconciler,
-	resource metav1.Object,
-) (bool, error) {
-	var namespaces v1.NamespaceList
-	if err := r.List(r.GetContext(), &namespaces); err != nil {
-		return false, err
-	}
-
-	// ensure the namespace exists and is not terminating
-	for _, namespace := range namespaces.Items {
-		if namespace.Name == resource.GetNamespace() {
-			if namespace.Status.Phase != v1.NamespaceTerminating {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
 }
 `

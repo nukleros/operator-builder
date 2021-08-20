@@ -11,6 +11,8 @@ An operator built with Operator Builder has the following features:
 
 - A defined API for a custom resource based on [workload
   markers](docs/workload-markers.md) in static Kubernetes manifests.
+- Documented CRDs which provide documentation directly via the
+  `kubectl explain` command.  See [workload doc markers](docs/workload-doc-markers.md).
 - A functioning controller that will create, update and delete child resources
   to reconcile the state for the custom resource/s.
 - A [companion CLI](docs/companion-cli.md) that helps end users with common

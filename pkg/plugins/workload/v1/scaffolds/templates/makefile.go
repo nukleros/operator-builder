@@ -143,4 +143,13 @@ endef
 build-{{ .RootCmd }}:
 	go build -o bin/{{ .RootCmd }} cmd/{{ .RootCmd }}/main.go
 
+# Build the API Documentation
+# NOTE: requires go version 1.16 or later
+docs: manifests
+	@if ! command -v go &> /dev/null; then echo "error: go not installed"; exit 1; fi; \
+	GOCMD=$$(which go); \
+	if [[ -z $$($$GOCMD version | grep '1.16') ]]; then echo "error: requires go version >= 1.16"; exit 1; fi; \
+	go get fybrik.io/crdoc@v0.5.0; \
+	go install fybrik.io/crdoc@v0.5.0; \
+	crdoc --resources config/crd/bases/ --output docs/apis.md
 `

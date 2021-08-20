@@ -38,7 +38,7 @@ package wait
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	common "{{ .Repo }}/apis/common"
+	"{{ .Repo }}/apis/common"
 )
 
 // {{ .Resource.Kind }}Wait performs the logic to wait for resources that belong to the parent.

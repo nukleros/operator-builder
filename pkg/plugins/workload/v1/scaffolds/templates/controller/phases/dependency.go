@@ -31,40 +31,17 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	common "{{ .Repo }}/apis/common"
-	helpers "{{ .Repo }}/pkg/helpers"
+	"{{ .Repo }}/apis/common"
+	"{{ .Repo }}/pkg/helpers"
 )
 
-// GetSuccessCondition defines the success condition for the phase.
-func (phase *DependencyPhase) GetSuccessCondition() common.Condition {
-	return common.Condition{
-		Phase:   common.ConditionPhaseDependency,
-		Type:    common.ConditionTypeReconciling,
-		Status:  common.ConditionStatusTrue,
-		Message: "Completed Phase " + string(common.ConditionPhaseDependency),
-	}
-}
-
-// GetPendingCondition defines the pending condition for the phase.
-func (phase *DependencyPhase) GetPendingCondition() common.Condition {
-	return common.Condition{
-		Phase:   common.ConditionPhaseDependency,
-		Type:    common.ConditionTypePending,
-		Status:  common.ConditionStatusTrue,
-		Message: "Unsatisfied Dependendcies",
-	}
-}
-
-// GetFailCondition defines the fail condition for the phase.
-func (phase *DependencyPhase) GetFailCondition() common.Condition {
-	return common.Condition{
-		Phase:   common.ConditionPhaseDependency,
-		Type:    common.ConditionTypeFailed,
-		Status:  common.ConditionStatusTrue,
-		Message: "Failed Phase " + string(common.ConditionPhaseDependency),
-	}
+// DependencyPhase.DefaultRequeue executes checking for a parent components readiness status.
+func (phase *DependencyPhase) DefaultRequeue() ctrl.Result {
+	return Requeue()
 }
 
 // DependencyPhase.Execute executes a dependency check prior to attempting to create resources.

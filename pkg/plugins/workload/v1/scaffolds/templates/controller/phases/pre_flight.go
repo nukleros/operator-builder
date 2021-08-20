@@ -28,37 +28,14 @@ const preFlightTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	common "{{ .Repo }}/apis/common"
+	ctrl "sigs.k8s.io/controller-runtime"
+
+	"{{ .Repo }}/apis/common"
 )
 
-// GetSuccessCondition defines the success condition for the phase.
-func (phase *PreFlightPhase) GetSuccessCondition() common.Condition {
-	return common.Condition{
-		Phase:   common.ConditionPhasePreFlight,
-		Type:    common.ConditionTypeReconciling,
-		Status:  common.ConditionStatusTrue,
-		Message: "Completed Phase " + string(common.ConditionPhasePreFlight),
-	}
-}
-
-// GetPendingCondition defines the pending condition for the phase.
-func (phase *PreFlightPhase) GetPendingCondition() common.Condition {
-	return common.Condition{
-		Phase:   common.ConditionPhasePreFlight,
-		Type:    common.ConditionTypePending,
-		Status:  common.ConditionStatusTrue,
-		Message: "Unable to Continue Phase " + string(common.ConditionPhasePreFlight),
-	}
-}
-
-// GetFailCondition defines the fail condition for the phase.
-func (phase *PreFlightPhase) GetFailCondition() common.Condition {
-	return common.Condition{
-		Phase:   common.ConditionPhasePreFlight,
-		Type:    common.ConditionTypeFailed,
-		Status:  common.ConditionStatusTrue,
-		Message: "Failed Phase " + string(common.ConditionPhasePreFlight),
-	}
+// PreFlightPhase.DefaultRequeue executes checking for a parent components readiness status.
+func (phase *PreFlightPhase) DefaultRequeue() ctrl.Result {
+	return Requeue()
 }
 
 // PreFlightPhase.Execute executes pre-flight and fail-fast conditions prior to attempting resource creation.
