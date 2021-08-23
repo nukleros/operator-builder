@@ -136,6 +136,7 @@ func Watch(
 ) error {
 	// check if the resource is already being watched
 	var watched bool
+	
 	if len(r.GetWatches()) > 0 {
 		for _, watcher := range r.GetWatches() {
 			if reflect.DeepEqual(

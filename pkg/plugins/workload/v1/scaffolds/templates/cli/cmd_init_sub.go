@@ -25,7 +25,7 @@ type CmdInitSub struct {
 	SubCmdDescr       string
 	SubCmdVarName     string
 	SubCmdFileName    string
-	SpecFields        *[]workloadv1.APISpecField
+	SpecFields        []*workloadv1.APISpecField
 	IsComponent       bool
 	ComponentResource *resource.Resource
 

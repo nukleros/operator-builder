@@ -52,13 +52,13 @@ func isCoreAPI(group string) bool {
 func processResources(workloadPath string, resources []string) (*[]SourceFile, *[]RBACRule, *[]OwnershipRule, error) {
 	// each sourceFile is a source code file that contains one or more child
 	// resource definition
-	var sourceFiles []SourceFile
+	sourceFiles := make([]SourceFile, len(resources))
 
 	var rbacRules []RBACRule
 
 	var ownershipRules []OwnershipRule
 
-	for _, manifestFile := range resources {
+	for i, manifestFile := range resources {
 		// determine sourceFile filename
 		var sourceFile SourceFile
 		sourceFile.Filename = filepath.Base(manifestFile)                // get filename from path
@@ -128,10 +128,7 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 			}
 
 			// add variables based on commented markers
-			resourceDefinition, err = addVariables(resourceDefinition)
-			if err != nil {
-				return nil, nil, nil, err
-			}
+			resourceDefinition = addVariables(resourceDefinition)
 
 			// add the source code to the resource
 			resource.SourceCode = resourceDefinition
@@ -141,7 +138,7 @@ func processResources(workloadPath string, resources []string) (*[]SourceFile, *
 		}
 
 		sourceFile.Children = childResources
-		sourceFiles = append(sourceFiles, sourceFile)
+		sourceFiles[i] = sourceFile
 	}
 
 	return &sourceFiles, &rbacRules, &ownershipRules, nil
@@ -172,7 +169,7 @@ func extractManifests(manifestContent []byte) []string {
 	return manifests
 }
 
-func addVariables(resourceContent string) (string, error) {
+func addVariables(resourceContent string) string {
 	lines := strings.Split(resourceContent, "\n")
 	for i, line := range lines {
 		if containsMarker(line) {
@@ -181,7 +178,7 @@ func addVariables(resourceContent string) (string, error) {
 		}
 	}
 
-	return strings.Join(lines, "\n"), nil
+	return strings.Join(lines, "\n")
 }
 
 func versionKindRecorded(ownershipRules *[]OwnershipRule, newOwnershipRule *OwnershipRule) bool {

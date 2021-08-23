@@ -9,7 +9,7 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
-func (c WorkloadCollection) Validate() error {
+func (c *WorkloadCollection) Validate() error {
 	missingFields := []string{}
 
 	// required fields
@@ -41,95 +41,95 @@ func (c WorkloadCollection) Validate() error {
 	return nil
 }
 
-func (c WorkloadCollection) GetWorkloadKind() WorkloadKind {
+func (c *WorkloadCollection) GetWorkloadKind() WorkloadKind {
 	return c.Kind
 }
 
 // methods that implement WorkloadInitializer.
-func (c WorkloadCollection) GetDomain() string {
+func (c *WorkloadCollection) GetDomain() string {
 	return c.Spec.Domain
 }
 
-func (c WorkloadCollection) HasRootCmdName() bool {
+func (c *WorkloadCollection) HasRootCmdName() bool {
 	return c.Spec.CompanionCliRootcmd.Name != ""
 }
 
-func (c WorkloadCollection) HasSubCmdName() bool {
+func (*WorkloadCollection) HasSubCmdName() bool {
 	// workload collections never have subcommands
 	return false
 }
 
-func (c WorkloadCollection) GetRootCmdName() string {
+func (c *WorkloadCollection) GetRootCmdName() string {
 	return c.Spec.CompanionCliRootcmd.Name
 }
 
-func (c WorkloadCollection) GetRootCmdDescr() string {
+func (c *WorkloadCollection) GetRootCmdDescr() string {
 	return c.Spec.CompanionCliRootcmd.Description
 }
 
 // methods that implement WorkloadAPIBuilder.
-func (c WorkloadCollection) GetName() string {
+func (c *WorkloadCollection) GetName() string {
 	return c.Name
 }
 
-func (c WorkloadCollection) GetPackageName() string {
+func (c *WorkloadCollection) GetPackageName() string {
 	return c.PackageName
 }
 
-func (c WorkloadCollection) GetAPIGroup() string {
+func (c *WorkloadCollection) GetAPIGroup() string {
 	return c.Spec.APIGroup
 }
 
-func (c WorkloadCollection) GetAPIVersion() string {
+func (c *WorkloadCollection) GetAPIVersion() string {
 	return c.Spec.APIVersion
 }
 
-func (c WorkloadCollection) GetAPIKind() string {
+func (c *WorkloadCollection) GetAPIKind() string {
 	return c.Spec.APIKind
 }
 
-func (c WorkloadCollection) GetSubcommandName() string {
+func (*WorkloadCollection) GetSubcommandName() string {
 	// no subcommands for workload collections
 	return ""
 }
 
-func (c WorkloadCollection) GetSubcommandDescr() string {
+func (*WorkloadCollection) GetSubcommandDescr() string {
 	// no subcommands for workload collections
 	return ""
 }
 
-func (c WorkloadCollection) GetSubcommandVarName() string {
+func (*WorkloadCollection) GetSubcommandVarName() string {
 	// no subcommands for workload collections
 	return ""
 }
 
-func (c WorkloadCollection) GetSubcommandFileName() string {
+func (*WorkloadCollection) GetSubcommandFileName() string {
 	// no subcommands for workload collections
 	return ""
 }
 
-func (c WorkloadCollection) GetRootcommandName() string {
+func (c *WorkloadCollection) GetRootcommandName() string {
 	return c.Spec.CompanionCliRootcmd.Name
 }
 
-func (c WorkloadCollection) IsClusterScoped() bool {
+func (c *WorkloadCollection) IsClusterScoped() bool {
 	return c.Spec.ClusterScoped
 }
 
-func (c WorkloadCollection) IsStandalone() bool {
+func (c *WorkloadCollection) IsStandalone() bool {
 	return false
 }
 
-func (c WorkloadCollection) IsComponent() bool {
+func (c *WorkloadCollection) IsComponent() bool {
 	return false
 }
 
-func (c WorkloadCollection) IsCollection() bool {
+func (c *WorkloadCollection) IsCollection() bool {
 	return true
 }
 
 func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
-	var specFields []APISpecField
+	var specFields []*APISpecField
 
 	for _, component := range c.Spec.Components {
 		componentSpecFields, err := processMarkers(
@@ -142,7 +142,7 @@ func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
 		}
 
 		// add to spec fields if not present
-		for _, csf := range *componentSpecFields {
+		for _, csf := range componentSpecFields {
 			fieldPresent := false
 
 			for i, sf := range specFields {
@@ -167,49 +167,49 @@ func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
 }
 
 func (c *WorkloadCollection) SetResources(workloadPath string) error {
-	return errors.New("Workload collections do not have child resources to be set")
+	return errors.New("workload collections do not have child resources to be set")
 }
 
-func (c WorkloadCollection) GetDependencies() *[]ComponentWorkload {
-	return &[]ComponentWorkload{}
+func (c *WorkloadCollection) GetDependencies() []*ComponentWorkload {
+	return []*ComponentWorkload{}
 }
 
-func (c *WorkloadCollection) SetComponents(components *[]ComponentWorkload) error {
-	c.Spec.Components = *components
+func (c *WorkloadCollection) SetComponents(components []*ComponentWorkload) error {
+	c.Spec.Components = components
 
 	return nil
 }
 
-func (c WorkloadCollection) HasChildResources() bool {
+func (*WorkloadCollection) HasChildResources() bool {
 	// collection never has child resources, only components
 	return false
 }
 
-func (c WorkloadCollection) GetComponents() *[]ComponentWorkload {
-	return &c.Spec.Components
+func (c *WorkloadCollection) GetComponents() []*ComponentWorkload {
+	return c.Spec.Components
 }
 
-func (c WorkloadCollection) GetSourceFiles() *[]SourceFile {
+func (c *WorkloadCollection) GetSourceFiles() *[]SourceFile {
 	return &[]SourceFile{}
 }
 
-func (c WorkloadCollection) GetFuncNames() (createFuncNames, initFuncNames []string) {
+func (c *WorkloadCollection) GetFuncNames() (createFuncNames, initFuncNames []string) {
 	return getFuncNames(*c.GetSourceFiles())
 }
 
-func (c WorkloadCollection) GetAPISpecFields() *[]APISpecField {
-	return &c.Spec.APISpecFields
+func (c *WorkloadCollection) GetAPISpecFields() []*APISpecField {
+	return c.Spec.APISpecFields
 }
 
-func (c WorkloadCollection) GetRBACRules() *[]RBACRule {
+func (*WorkloadCollection) GetRBACRules() *[]RBACRule {
 	return &[]RBACRule{}
 }
 
-func (c WorkloadCollection) GetOwnershipRules() *[]OwnershipRule {
+func (*WorkloadCollection) GetOwnershipRules() *[]OwnershipRule {
 	return &[]OwnershipRule{}
 }
 
-func (c WorkloadCollection) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
+func (*WorkloadCollection) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
 	return &resource.Resource{}
 }
 

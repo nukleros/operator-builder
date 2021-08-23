@@ -87,7 +87,7 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 	scaffolder := scaffolds.NewAPIScaffolder(
 		p.config,
-		*p.resource,
+		p.resource,
 		p.workload,
 		&p.project,
 	)

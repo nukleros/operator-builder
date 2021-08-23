@@ -46,10 +46,10 @@ type WorkloadAPIBuilder interface {
 	GetSubcommandVarName() string
 	GetSubcommandFileName() string
 	GetRootcommandName() string
-	GetDependencies() *[]ComponentWorkload
-	GetComponents() *[]ComponentWorkload
+	GetDependencies() []*ComponentWorkload
+	GetComponents() []*ComponentWorkload
 	GetSourceFiles() *[]SourceFile
-	GetAPISpecFields() *[]APISpecField
+	GetAPISpecFields() []*APISpecField
 	GetRBACRules() *[]RBACRule
 	GetOwnershipRules() *[]OwnershipRule
 	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
@@ -58,5 +58,5 @@ type WorkloadAPIBuilder interface {
 	SetNames()
 	SetSpecFields(workloadPath string) error
 	SetResources(workloadPath string) error
-	SetComponents(components *[]ComponentWorkload) error
+	SetComponents(components []*ComponentWorkload) error
 }

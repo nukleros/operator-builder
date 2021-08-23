@@ -17,7 +17,7 @@ type CRDSample struct {
 	machinery.TemplateMixin
 	machinery.ResourceMixin
 
-	SpecFields *[]workloadv1.APISpecField
+	SpecFields []*workloadv1.APISpecField
 }
 
 func (f *CRDSample) SetTemplateDefaults() error {

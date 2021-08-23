@@ -9,6 +9,7 @@ import (
 
 func (rule *RBACRule) AddVerb(verb string) {
 	var found bool
+
 	for _, existingVerb := range rule.Verbs {
 		if existingVerb == verb {
 			found = true
@@ -27,6 +28,7 @@ func rbacGroupFromGroup(group string) string {
 	if group == "" {
 		return coreRBACGroup
 	}
+
 	return group
 }
 
@@ -44,6 +46,7 @@ func groupResourceEqual(rbacRule, newRBACRule *RBACRule) bool {
 
 func groupResourceRecorded(rbacRules *[]RBACRule, newRBACRule *RBACRule) bool {
 	for _, r := range *rbacRules {
+		r := r
 		if groupResourceEqual(&r, newRBACRule) {
 			return true
 		}
@@ -111,10 +114,12 @@ func rbacRulesForManifest(kind, group string, rawContent interface{}, rbacRules 
 			if rbacGroups == nil {
 				continue
 			}
+
 			for _, rbacGroup := range rbacGroups.([]interface{}) {
 				if rbacKinds == nil {
 					continue
 				}
+
 				for _, rbacKind := range rbacKinds.([]interface{}) {
 					if rbacVerbs == nil {
 						continue

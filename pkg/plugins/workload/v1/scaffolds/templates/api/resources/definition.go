@@ -20,7 +20,7 @@ type Definition struct {
 	ClusterScoped bool
 	SourceFile    workloadv1.SourceFile
 	PackageName   string
-	SpecFields    *[]workloadv1.APISpecField
+	SpecFields    []*workloadv1.APISpecField
 	IsComponent   bool
 	Collection    *workloadv1.WorkloadCollection
 }

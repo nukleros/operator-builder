@@ -39,7 +39,7 @@ type StandaloneWorkloadSpec struct {
 	Domain              string     `json:"domain" yaml:"domain" validate:"required"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
 	Resources           []string   `json:"resources" yaml:"resources"`
-	APISpecFields       []APISpecField
+	APISpecFields       []*APISpecField
 	SourceFiles         []SourceFile
 	RBACRules           []RBACRule
 	OwnershipRules      []OwnershipRule
@@ -59,8 +59,8 @@ type ComponentWorkloadSpec struct {
 	Resources             []string   `json:"resources" yaml:"resources"`
 	Dependencies          []string   `json:"dependencies" yaml:"dependencies"`
 	ConfigPath            string
-	ComponentDependencies []ComponentWorkload
-	APISpecFields         []APISpecField
+	ComponentDependencies []*ComponentWorkload
+	APISpecFields         []*APISpecField
 	SourceFiles           []SourceFile
 	RBACRules             []RBACRule
 	OwnershipRules        []OwnershipRule
@@ -78,8 +78,8 @@ type WorkloadCollectionSpec struct {
 	Domain              string     `json:"domain" yaml:"domain" validate:"required"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
 	ComponentFiles      []string   `json:"componentFiles" yaml:"componentFiles"`
-	Components          []ComponentWorkload
-	APISpecFields       []APISpecField
+	Components          []*ComponentWorkload
+	APISpecFields       []*APISpecField
 }
 
 // WorkloadCollection defines a workload collection.

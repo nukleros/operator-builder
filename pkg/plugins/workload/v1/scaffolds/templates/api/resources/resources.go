@@ -21,7 +21,6 @@ type Resources struct {
 	PackageName     string
 	CreateFuncNames []string
 	InitFuncNames   []string
-	SpecFields      *[]workloadv1.APISpecField
 	IsComponent     bool
 	Collection      *workloadv1.WorkloadCollection
 }
@@ -64,10 +63,6 @@ const resourcesTemplate = `{{ .Boilerplate }}
 package {{ .PackageName }}
 
 import (
-	"fmt"
-	"bytes"
-	"text/template"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
@@ -108,38 +103,4 @@ var InitFuncs = []func(
 		{{- . -}},
 	{{ end }}
 }
-
-// runTemplate renders a template for a child object to the custom resource.
-func runTemplate(templateName, templateValue string, data *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
-	funcMap template.FuncMap) (string, error) {
-	t, err := template.New(templateName).Funcs(funcMap).Parse(templateValue)
-	if err != nil {
-		return "", fmt.Errorf("error parsing template %s: %v", templateName, err)
-	}
-
-	var b bytes.Buffer
-	if err := t.Execute(&b, &data); err != nil {
-		return "", fmt.Errorf("error rendering template %s: %v", templateName, err)
-	}
-
-	return b.String(), nil
-}
-
-{{ range .SpecFields }}
-{{ if .DefaultVal }}
-{{ if eq .DataType "string" }}
-const {{ .ManifestFieldName }}Default = {{ .DefaultVal | quotestr }}
-{{ else }}
-const {{ .ManifestFieldName }}Default = {{ .DefaultVal }}
-{{ end }}
-
-func default{{ .FieldName }}(value {{ .DataType }}) {{ .DataType }} {
-	if value == {{ .ZeroVal }} {
-		return {{ .ManifestFieldName }}Default
-	}
-
-	return value
-}
-{{ end }}
-{{ end }}
 `

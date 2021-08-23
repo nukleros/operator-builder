@@ -9,7 +9,7 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
 )
 
-func (s StandaloneWorkload) Validate() error {
+func (s *StandaloneWorkload) Validate() error {
 	missingFields := []string{}
 
 	// required fields
@@ -41,90 +41,90 @@ func (s StandaloneWorkload) Validate() error {
 	return nil
 }
 
-func (s StandaloneWorkload) GetWorkloadKind() WorkloadKind {
+func (s *StandaloneWorkload) GetWorkloadKind() WorkloadKind {
 	return s.Kind
 }
 
 // methods that implement WorkloadInitializer.
-func (s StandaloneWorkload) GetDomain() string {
+func (s *StandaloneWorkload) GetDomain() string {
 	return s.Spec.Domain
 }
 
-func (s StandaloneWorkload) HasRootCmdName() bool {
+func (s *StandaloneWorkload) HasRootCmdName() bool {
 	return s.Spec.CompanionCliRootcmd.Name != ""
 }
 
-func (s StandaloneWorkload) HasSubCmdName() bool {
+func (*StandaloneWorkload) HasSubCmdName() bool {
 	// standalone workloads never have subcommands
 	return false
 }
 
-func (s StandaloneWorkload) GetRootCmdName() string {
+func (s *StandaloneWorkload) GetRootCmdName() string {
 	return s.Spec.CompanionCliRootcmd.Name
 }
 
-func (s StandaloneWorkload) GetRootCmdDescr() string {
+func (s *StandaloneWorkload) GetRootCmdDescr() string {
 	return s.Spec.CompanionCliRootcmd.Description
 }
 
 // methods that implement WorkloadAPIBuilder.
-func (s StandaloneWorkload) GetName() string {
+func (s *StandaloneWorkload) GetName() string {
 	return s.Name
 }
 
-func (s StandaloneWorkload) GetPackageName() string {
+func (s *StandaloneWorkload) GetPackageName() string {
 	return s.PackageName
 }
 
-func (s StandaloneWorkload) GetAPIGroup() string {
+func (s *StandaloneWorkload) GetAPIGroup() string {
 	return s.Spec.APIGroup
 }
 
-func (s StandaloneWorkload) GetAPIVersion() string {
+func (s *StandaloneWorkload) GetAPIVersion() string {
 	return s.Spec.APIVersion
 }
 
-func (s StandaloneWorkload) GetAPIKind() string {
+func (s *StandaloneWorkload) GetAPIKind() string {
 	return s.Spec.APIKind
 }
 
-func (s StandaloneWorkload) GetSubcommandName() string {
+func (*StandaloneWorkload) GetSubcommandName() string {
 	// no subcommands for standalone workloads
 	return ""
 }
 
-func (s StandaloneWorkload) GetSubcommandDescr() string {
+func (*StandaloneWorkload) GetSubcommandDescr() string {
 	// no subcommands for standalone workloads
 	return ""
 }
 
-func (s StandaloneWorkload) GetSubcommandVarName() string {
+func (*StandaloneWorkload) GetSubcommandVarName() string {
 	// no subcommands for standalone workloads
 	return ""
 }
 
-func (s StandaloneWorkload) GetSubcommandFileName() string {
+func (*StandaloneWorkload) GetSubcommandFileName() string {
 	// no subcommands for standalone workloads
 	return ""
 }
 
-func (s StandaloneWorkload) GetRootcommandName() string {
+func (s *StandaloneWorkload) GetRootcommandName() string {
 	return s.Spec.CompanionCliRootcmd.Name
 }
 
-func (s StandaloneWorkload) IsClusterScoped() bool {
+func (s *StandaloneWorkload) IsClusterScoped() bool {
 	return s.Spec.ClusterScoped
 }
 
-func (s StandaloneWorkload) IsStandalone() bool {
+func (*StandaloneWorkload) IsStandalone() bool {
 	return true
 }
 
-func (s StandaloneWorkload) IsComponent() bool {
+func (*StandaloneWorkload) IsComponent() bool {
 	return false
 }
 
-func (s StandaloneWorkload) IsCollection() bool {
+func (*StandaloneWorkload) IsCollection() bool {
 	return false
 }
 
@@ -134,7 +134,7 @@ func (s *StandaloneWorkload) SetSpecFields(workloadPath string) error {
 		return err
 	}
 
-	s.Spec.APISpecFields = *apiSpecFields
+	s.Spec.APISpecFields = apiSpecFields
 
 	return nil
 }
@@ -152,43 +152,43 @@ func (s *StandaloneWorkload) SetResources(workloadPath string) error {
 	return nil
 }
 
-func (s StandaloneWorkload) GetDependencies() *[]ComponentWorkload {
-	return &[]ComponentWorkload{}
+func (*StandaloneWorkload) GetDependencies() []*ComponentWorkload {
+	return []*ComponentWorkload{}
 }
 
-func (s *StandaloneWorkload) SetComponents(components *[]ComponentWorkload) error {
-	return errors.New("Cannot set component workloads on a standalone workload - only on collections")
+func (*StandaloneWorkload) SetComponents(components []*ComponentWorkload) error {
+	return errors.New("cannot set component workloads on a standalone workload - only on collections")
 }
 
-func (s StandaloneWorkload) HasChildResources() bool {
+func (s *StandaloneWorkload) HasChildResources() bool {
 	return len(s.Spec.Resources) > 0
 }
 
-func (s StandaloneWorkload) GetComponents() *[]ComponentWorkload {
-	return &[]ComponentWorkload{}
+func (s *StandaloneWorkload) GetComponents() []*ComponentWorkload {
+	return []*ComponentWorkload{}
 }
 
-func (s StandaloneWorkload) GetSourceFiles() *[]SourceFile {
+func (s *StandaloneWorkload) GetSourceFiles() *[]SourceFile {
 	return &s.Spec.SourceFiles
 }
 
-func (s StandaloneWorkload) GetFuncNames() (createFuncNames, initFuncNames []string) {
+func (s *StandaloneWorkload) GetFuncNames() (createFuncNames, initFuncNames []string) {
 	return getFuncNames(*s.GetSourceFiles())
 }
 
-func (s StandaloneWorkload) GetAPISpecFields() *[]APISpecField {
-	return &s.Spec.APISpecFields
+func (s *StandaloneWorkload) GetAPISpecFields() []*APISpecField {
+	return s.Spec.APISpecFields
 }
 
-func (s StandaloneWorkload) GetRBACRules() *[]RBACRule {
+func (s *StandaloneWorkload) GetRBACRules() *[]RBACRule {
 	return &s.Spec.RBACRules
 }
 
-func (s StandaloneWorkload) GetOwnershipRules() *[]OwnershipRule {
+func (s *StandaloneWorkload) GetOwnershipRules() *[]OwnershipRule {
 	return &s.Spec.OwnershipRules
 }
 
-func (s StandaloneWorkload) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
+func (*StandaloneWorkload) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
 	return &resource.Resource{}
 }
 

@@ -32,7 +32,7 @@ var _ plugins.Scaffolder = &apiScaffolder{}
 
 type apiScaffolder struct {
 	config          config.Config
-	resource        resource.Resource
+	resource        *resource.Resource
 	boilerplatePath string
 	workload        workloadv1.WorkloadAPIBuilder
 	project         *workloadv1.Project
@@ -43,7 +43,7 @@ type apiScaffolder struct {
 // NewAPIScaffolder returns a new Scaffolder for project initialization operations.
 func NewAPIScaffolder(
 	cfg config.Config,
-	res resource.Resource,
+	res *resource.Resource,
 	workload workloadv1.WorkloadAPIBuilder,
 	project *workloadv1.Project,
 ) plugins.Scaffolder {
@@ -73,7 +73,7 @@ func (s *apiScaffolder) Scaffold() error {
 	scaffold := machinery.NewScaffold(s.fs,
 		machinery.WithConfig(s.config),
 		machinery.WithBoilerplate(string(boilerplate)),
-		machinery.WithResource(&s.resource),
+		machinery.WithResource(s.resource),
 	)
 
 	createFuncNames, initFuncNames := s.workload.GetFuncNames()
@@ -128,7 +128,7 @@ func (s *apiScaffolder) Scaffold() error {
 			return err
 		}
 
-		for _, component := range *s.workload.GetComponents() {
+		for _, component := range s.workload.GetComponents() {
 			if component.GetSubcommandName() != "" {
 				// build a subcommand for the component, e.g. `cnpctl init ingress`
 				err = scaffold.Execute(
@@ -204,7 +204,6 @@ func (s *apiScaffolder) Scaffold() error {
 				PackageName:     s.workload.GetPackageName(),
 				CreateFuncNames: createFuncNames,
 				InitFuncNames:   initFuncNames,
-				SpecFields:      s.workload.GetAPISpecFields(),
 				IsComponent:     s.workload.IsComponent(),
 			},
 			&resourcespkg.ResourceType{},
@@ -327,8 +326,7 @@ func (s *apiScaffolder) Scaffold() error {
 			return err
 		}
 
-		for _, component := range *s.workload.GetComponents() {
-
+		for _, component := range s.workload.GetComponents() {
 			componentScaffold := machinery.NewScaffold(s.fs,
 				machinery.WithConfig(s.config),
 				machinery.WithBoilerplate(string(boilerplate)),
@@ -357,7 +355,7 @@ func (s *apiScaffolder) Scaffold() error {
 					WireController: true,
 				},
 				&api.Types{
-					SpecFields:    &component.Spec.APISpecFields,
+					SpecFields:    component.Spec.APISpecFields,
 					ClusterScoped: component.IsClusterScoped(),
 					Dependencies:  component.GetDependencies(),
 					IsStandalone:  component.IsStandalone(),
@@ -367,7 +365,6 @@ func (s *apiScaffolder) Scaffold() error {
 					PackageName:     component.GetPackageName(),
 					CreateFuncNames: createFuncNames,
 					InitFuncNames:   initFuncNames,
-					SpecFields:      component.GetAPISpecFields(),
 					IsComponent:     component.IsComponent(),
 					Collection:      s.workload.(*workloadv1.WorkloadCollection),
 				},
@@ -385,7 +382,7 @@ func (s *apiScaffolder) Scaffold() error {
 				&helpers.Component{},
 				&wait.Component{},
 				&samples.CRDSample{
-					SpecFields: &component.Spec.APISpecFields,
+					SpecFields: component.Spec.APISpecFields,
 				},
 				&crd.Kustomization{
 					CRDSampleFilenames: crdSampleFilenames,
@@ -431,7 +428,7 @@ func (s *apiScaffolder) Scaffold() error {
 		scaffold := machinery.NewScaffold(s.fs,
 			machinery.WithConfig(s.config),
 			machinery.WithBoilerplate(string(boilerplate)),
-			machinery.WithResource(&s.resource),
+			machinery.WithResource(s.resource),
 		)
 
 		err = scaffold.Execute(

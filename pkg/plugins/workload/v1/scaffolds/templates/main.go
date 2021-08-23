@@ -97,7 +97,9 @@ if err = (&%s.%s{}).SetupWebhookWithManager(mgr); err != nil {
 )
 
 func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
-	fragments := make(machinery.CodeFragmentsMap, 3)
+	const options = 3
+
+	fragments := make(machinery.CodeFragmentsMap, options)
 
 	// If resource is not being provided we are creating the file, not updating it
 	if f.Resource == nil {
@@ -283,6 +285,7 @@ func main() {
 	}
 
 	setupLog.Info("starting manager")
+
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)

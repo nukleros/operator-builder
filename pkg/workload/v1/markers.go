@@ -19,11 +19,10 @@ func SupportedMarkerDataTypes() []string {
 	return []string{"bool", "string", "int", "int32", "int64", "float32", "float64"}
 }
 
-func processMarkers(workloadPath string, resources []string, collection bool) (*[]APISpecField, error) {
-	var specFields []APISpecField
+func processMarkers(workloadPath string, resources []string, collection bool) ([]*APISpecField, error) {
+	var specFields []*APISpecField
 
 	for _, manifestFile := range resources {
-
 		// capture entire resource manifest file content
 		manifestContent, err := ioutil.ReadFile(filepath.Join(filepath.Dir(workloadPath), manifestFile))
 		if err != nil {
@@ -56,7 +55,7 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 				}
 			}
 
-			specField := APISpecField{
+			specField := &APISpecField{
 				FieldName:          strings.Title(m.FieldName),
 				ManifestFieldName:  m.FieldName,
 				DataType:           m.DataType,
@@ -86,12 +85,14 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 		}
 	}
 
-	return &specFields, nil
+	return specFields, nil
 }
 
 func processManifest(manifest string) ([]Marker, error) {
 	var markers []Marker
+
 	var startIndex int
+
 	var hasDocs bool
 
 	lines := strings.Split(manifest, "\n")
@@ -123,7 +124,6 @@ func processManifest(manifest string) ([]Marker, error) {
 
 func processMarkedComments(line string) (processed string) {
 	codeCommentSplit := strings.Split(line, "//")
-	code := codeCommentSplit[0]
 	comment := codeCommentSplit[1]
 	commentSplit := strings.Split(comment, ":")
 	fieldName := commentSplit[1]
@@ -135,7 +135,7 @@ func processMarkedComments(line string) (processed string) {
 		fieldPath = fmt.Sprintf("parent.Spec.%s", strings.Title(fieldName))
 	}
 
-	if strings.Contains(code, ":") {
+	if code := codeCommentSplit[0]; strings.Contains(code, ":") {
 		keyValSplit := strings.Split(code, ":")
 		key := keyValSplit[0]
 		processed = fmt.Sprintf("%s: %s,", key, fieldPath)
@@ -154,7 +154,7 @@ func processDocLines(lines []string, start, end int) []string {
 		if strings.HasPrefix(line, "#") {
 			docLine := strings.TrimLeft(line, "#")
 			docLine = strings.TrimLeft(docLine, " ")
-			docLine = strings.TrimLeft(docLine, docMarkerStr)
+			docLine = strings.TrimPrefix(docLine, docMarkerStr)
 			docLine = strings.TrimLeft(docLine, " ")
 
 			docLines = append(docLines, docLine)

@@ -34,13 +34,15 @@ func UpdateProjectLicense(source string) error {
 // licensing header in source code files.  It uses a local file or HTTP URL as
 // the source for the header content.
 func UpdateSourceHeader(source string) error {
+	const directoryPermissions = 0755
+
 	sourceLicense, err := getSourceLicense(source)
 	if err != nil {
 		return err
 	}
 
 	if _, err = os.Stat("hack"); os.IsNotExist(err) {
-		err = os.Mkdir("hack", 0755)
+		err = os.Mkdir("hack", directoryPermissions)
 		if err != nil {
 			return err
 		}
@@ -119,6 +121,8 @@ func getSourceLicense(source string) ([]byte, error) {
 }
 
 func replaceLicenseHeader(file string, header []byte) error {
+	const filePermissions = 0600
+
 	input, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -141,7 +145,7 @@ func replaceLicenseHeader(file string, header []byte) error {
 		}
 	}
 
-	err = ioutil.WriteFile(file, []byte(output), 0600)
+	err = ioutil.WriteFile(file, []byte(output), filePermissions)
 	if err != nil {
 		return err
 	}

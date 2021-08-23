@@ -35,7 +35,7 @@ import (
 	"time"
 )
 
-type defaultRateLimiter struct {
+type DefaultRateLimiter struct {
 	requeuesLock sync.Mutex
 	requeues     map[interface{}]int
 	modifier     map[interface{}]int
@@ -44,8 +44,8 @@ type defaultRateLimiter struct {
 	maxDelay  time.Duration
 }
 
-func NewDefaultRateLimiter(baseDelay, maxDelay time.Duration) *defaultRateLimiter {
-	return &defaultRateLimiter{
+func NewDefaultRateLimiter(baseDelay, maxDelay time.Duration) *DefaultRateLimiter {
+	return &DefaultRateLimiter{
 		baseDelay: baseDelay,
 		maxDelay:  maxDelay,
 		requeues: map[interface{}]int{},
@@ -53,7 +53,7 @@ func NewDefaultRateLimiter(baseDelay, maxDelay time.Duration) *defaultRateLimite
 	}
 }
 
-func (r *defaultRateLimiter) When(item interface{}) time.Duration {
+func (r *DefaultRateLimiter) When(item interface{}) time.Duration {
 	r.requeuesLock.Lock()
 	defer r.requeuesLock.Unlock()
 
@@ -78,14 +78,14 @@ func (r *defaultRateLimiter) When(item interface{}) time.Duration {
 	return calculated
 }
 
-func (r *defaultRateLimiter) NumRequeues(item interface{}) int {
+func (r *DefaultRateLimiter) NumRequeues(item interface{}) int {
 	r.requeuesLock.Lock()
 	defer r.requeuesLock.Unlock()
 
 	return r.requeues[item]
 }
 
-func (r *defaultRateLimiter) Forget(item interface{}) {
+func (r *DefaultRateLimiter) Forget(item interface{}) {
 	r.requeuesLock.Lock()
 	defer r.requeuesLock.Unlock()
 

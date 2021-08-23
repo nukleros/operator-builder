@@ -10,12 +10,12 @@ const (
 
 var _ machinery.Template = &Dockerfile{}
 
-// Dockerfile scaffolds a file that defines the containerized build process
+// Dockerfile scaffolds a file that defines the containerized build process.
 type Dockerfile struct {
 	machinery.TemplateMixin
 }
 
-// SetTemplateDefaults implements file.Template
+// SetTemplateDefaults implements file.Template.
 func (f *Dockerfile) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = defaultDockerfilePath
