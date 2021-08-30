@@ -16,7 +16,7 @@ type Complete struct {
 }
 
 func (f *Complete) SetTemplateDefaults() error {
-	f.Path = filepath.Join("controllers", "phases", "complete.go")
+	f.Path = filepath.Join("internal", "controllers", "phases", "complete.go")
 
 	f.TemplateBody = completeTemplate
 

@@ -22,7 +22,7 @@ type Component struct {
 
 func (f *Component) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"helpers",
 		fmt.Sprintf("%s.go", utils.ToFileName(f.Resource.Kind)),
 	)

@@ -28,7 +28,7 @@ type JobType struct{ ResourceType }
 
 func (f *ResourceType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"types.go",
 	)
@@ -40,7 +40,7 @@ func (f *ResourceType) SetTemplateDefaults() error {
 
 func (f *Resources) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"resources.go",
 	)
@@ -52,7 +52,7 @@ func (f *Resources) SetTemplateDefaults() error {
 
 func (f *NamespaceType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"namespace.go",
 	)
@@ -64,7 +64,7 @@ func (f *NamespaceType) SetTemplateDefaults() error {
 
 func (f *ConfigMapType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"configmap.go",
 	)
@@ -76,7 +76,7 @@ func (f *ConfigMapType) SetTemplateDefaults() error {
 
 func (f *CustomResourceDefinitionType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"crd.go",
 	)
@@ -88,7 +88,7 @@ func (f *CustomResourceDefinitionType) SetTemplateDefaults() error {
 
 func (f *DaemonSetType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"daemonset.go",
 	)
@@ -100,7 +100,7 @@ func (f *DaemonSetType) SetTemplateDefaults() error {
 
 func (f *DeploymentType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"deployment.go",
 	)
@@ -112,7 +112,7 @@ func (f *DeploymentType) SetTemplateDefaults() error {
 
 func (f *JobType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"job.go",
 	)
@@ -124,7 +124,7 @@ func (f *JobType) SetTemplateDefaults() error {
 
 func (f *SecretType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
+		"internal",
 		"resources",
 		"secret.go",
 	)

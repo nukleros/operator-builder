@@ -1,4 +1,4 @@
-package controller
+package utils
 
 import (
 	"path/filepath"
@@ -19,7 +19,7 @@ type Common struct {
 }
 
 func (f *Common) SetTemplateDefaults() error {
-	f.Path = filepath.Join("controllers", "common.go")
+	f.Path = filepath.Join("internal", "controllers", "utils", "utils.go")
 
 	f.TemplateBody = controllerCommonTemplate
 	f.IfExistsAction = machinery.OverwriteFile
@@ -29,7 +29,7 @@ func (f *Common) SetTemplateDefaults() error {
 
 const controllerCommonTemplate = `{{ .Boilerplate }}
 
-package controllers
+package utils
 
 import (
 	"reflect"

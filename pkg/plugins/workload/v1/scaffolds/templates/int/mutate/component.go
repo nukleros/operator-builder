@@ -1,4 +1,4 @@
-package wait
+package mutate
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 var _ machinery.Template = &Component{}
 
-// Component scaffolds the workload's wait function.
+// Component scaffolds the workload's mutate function.
 type Component struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
@@ -21,8 +21,8 @@ type Component struct {
 
 func (f *Component) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
-		"pkg",
-		"wait",
+		"internal",
+		"mutate",
 		fmt.Sprintf("%s.go", utils.ToFileName(f.Resource.Kind)),
 	)
 
@@ -33,7 +33,7 @@ func (f *Component) SetTemplateDefaults() error {
 
 const componentTemplate = `{{ .Boilerplate }}
 
-package wait
+package mutate
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,10 +41,10 @@ import (
 	"{{ .Repo }}/apis/common"
 )
 
-// {{ .Resource.Kind }}Wait performs the logic to wait for resources that belong to the parent.
-func {{ .Resource.Kind }}Wait(reconciler common.ComponentReconciler,
+// {{ .Resource.Kind }}Mutate performs the logic to mutate resources that belong to the parent.
+func {{ .Resource.Kind }}Mutate(reconciler common.ComponentReconciler,
 	object *metav1.Object,
-) (ready bool, err error) {
-	return true, nil
+) (replacedObjects []metav1.Object, skip bool, err error) {
+	return []metav1.Object{*object}, false, nil
 }
 `

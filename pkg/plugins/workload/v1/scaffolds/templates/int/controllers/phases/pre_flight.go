@@ -16,7 +16,7 @@ type PreFlight struct {
 }
 
 func (f *PreFlight) SetTemplateDefaults() error {
-	f.Path = filepath.Join("controllers", "phases", "pre_flight.go")
+	f.Path = filepath.Join("internal", "controllers", "phases", "pre_flight.go")
 
 	f.TemplateBody = preFlightTemplate
 

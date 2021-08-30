@@ -16,7 +16,7 @@ type Dependencies struct {
 }
 
 func (f *Dependencies) SetTemplateDefaults() error {
-	f.Path = filepath.Join("controllers", "phases", "dependency.go")
+	f.Path = filepath.Join("internal", "controllers", "phases", "dependency.go")
 
 	f.TemplateBody = dependenciesTemplate
 

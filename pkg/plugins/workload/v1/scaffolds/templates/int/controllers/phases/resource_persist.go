@@ -16,7 +16,7 @@ type ResourcePersist struct {
 }
 
 func (f *ResourcePersist) SetTemplateDefaults() error {
-	f.Path = filepath.Join("controllers", "phases", "resource_persist.go")
+	f.Path = filepath.Join("internal", "controllers", "phases", "resource_persist.go")
 
 	f.TemplateBody = resourcePersistTemplate
 

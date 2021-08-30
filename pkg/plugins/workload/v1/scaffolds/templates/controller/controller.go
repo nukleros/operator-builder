@@ -68,12 +68,12 @@ import (
 	{{- if .HasChildResources -}}
 	"{{ .Resource.Path }}/{{ .PackageName }}"
 	{{ end -}}
-	"{{ .Repo }}/controllers"
-	"{{ .Repo }}/controllers/phases"
-	"{{ .Repo }}/pkg/dependencies"
-	"{{ .Repo }}/pkg/mutate"
-	"{{ .Repo }}/pkg/resources"
-	"{{ .Repo }}/pkg/wait"
+	"{{ .Repo }}/internal/controllers/phases"
+	"{{ .Repo }}/internal/controllers/utils"
+	"{{ .Repo }}/internal/dependencies"
+	"{{ .Repo }}/internal/mutate"
+	"{{ .Repo }}/internal/resources"
+	"{{ .Repo }}/internal/wait"
 )
 
 // {{ .Resource.Kind }}Reconciler reconciles a {{ .Resource.Kind }} object.
@@ -116,7 +116,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	if err := r.Get(r.Context, req.NamespacedName, r.Component); err != nil {
 		log.V(0).Info("unable to fetch {{ .Resource.Kind }}")
 
-		return ctrl.Result{}, controllers.IgnoreNotFound(err)
+		return ctrl.Result{}, utils.IgnoreNotFound(err)
 	}
 
 	{{ if .IsComponent }}
@@ -146,7 +146,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	// execute the phases
-	for _, phase := range controllers.Phases(r.Component) {
+	for _, phase := range utils.Phases(r.Component) {
 		r.GetLogger().V(7).Info(fmt.Sprintf("enter phase: %T", phase))
 		proceed, err := phase.Execute(r)
 		result, err := phases.HandlePhaseExit(r, phase, proceed, err)
@@ -356,12 +356,12 @@ func (r *{{ .Resource.Kind }}Reconciler) Wait(
 
 func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	options := controller.Options{
-		RateLimiter: controllers.NewDefaultRateLimiter(5*time.Microsecond, 5*time.Minute),
+		RateLimiter: utils.NewDefaultRateLimiter(5*time.Microsecond, 5*time.Minute),
 	}
 
 	baseController, err := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
-		WithEventFilter(controllers.ComponentPredicates()).
+		WithEventFilter(utils.ComponentPredicates()).
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
 		Build(r)
 	if err != nil {
