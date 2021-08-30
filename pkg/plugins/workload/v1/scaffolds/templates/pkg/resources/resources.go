@@ -159,11 +159,12 @@ package resources
 
 import (
 	"fmt"
-	"reflect"
-	"time"
+
+	"github.com/imdario/mergo"
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
+	"github.com/banzaicloud/operator-tools/pkg/reconciler"
 
 	"k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -194,17 +195,24 @@ func (resource *Resource) Create() error {
 }
 
 // Update updates a resource.
-func (resource *Resource) Update(oldResource client.Object) error {
-	resource.Reconciler.GetLogger().V(0).Info(fmt.Sprintf("updating resource; kind: [%s], name: [%s], namespace: [%s]",
-		resource.Kind, resource.Name, resource.Namespace))
+func (resource *Resource) Update(oldResource *Resource) error {
+	equal, err := AreEqual(*resource, *oldResource)
+	if err != nil {
+		return err
+	}
 
-	if err := resource.Reconciler.Patch(
-		resource.Reconciler.GetContext(),
-		resource.Object,
-		&client.Merge,
-		&client.PatchOptions{FieldManager: FieldManager},
-	); err != nil {
-		return fmt.Errorf("unable to update resource; %v", err)
+	if !equal {
+		resource.Reconciler.GetLogger().V(0).Info(fmt.Sprintf("updating resource; kind: [%s], name: [%s], namespace: [%s]",
+			resource.Kind, resource.Name, resource.Namespace))
+
+		if err := resource.Reconciler.Patch(
+			resource.Reconciler.GetContext(),
+			resource.Object,
+			client.Merge,
+			&client.PatchOptions{FieldManager: FieldManager},
+		); err != nil {
+			return fmt.Errorf("unable to update resource; %v", err)
+		}
 	}
 
 	return nil
@@ -231,6 +239,16 @@ func NewResourceFromClient(resource client.Object, reconciler ...common.Componen
 	return newResource
 }
 
+// ToUnstructured returns an unstructured representation of a Resource.
+func (resource *Resource) ToUnstructured() (*unstructured.Unstructured, error) {
+	innerObject, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&resource.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	return &unstructured.Unstructured{Object: innerObject}, nil
+}
+
 // ToCommonResource converts a resources.Resource into a common API resource.
 func (resource *Resource) ToCommonResource() *common.Resource {
 	commonResource := &common.Resource{}
@@ -244,116 +262,6 @@ func (resource *Resource) ToCommonResource() *common.Resource {
 
 	return commonResource
 }
-
-// reconcileUpdaters is a list of managers which produce a reconciliation on update.
-// TODO: this solves for the 95 percent of cases, but there will inevitably by corner cases in which
-// are not addressed.
-func reconcileUpdaters() []string {
-	return []string{
-		"kubectl",
-		"kapp",
-		"helm",
-		"ansible",
-		"ansible-playbook",
-	}
-}
-
-// NeedsUpdate returns whether or not a resource needs to be updated.
-func NeedsUpdate(old, new Resource) bool {
-	// return immediately if the resource versions are equal
-	if old.Object.GetResourceVersion() == new.Object.GetResourceVersion() {
-		return false
-	}
-
-	// return immediately if the managed fields identical
-	if reflect.DeepEqual(new.Object.GetManagedFields(), old.Object.GetManagedFields()) {
-		return false
-	}
-
-	// return immediately if both objects are identical
-	if reflect.DeepEqual(new.Object, old.Object) {
-		return false
-	}
-
-	// if we have a non-reconciler update return
-	var numWhitelisted int
-	var justUpdated bool
-	for _, newField := range new.Object.GetManagedFields() {
-		if newField.Operation == v1.ManagedFieldsOperationUpdate {
-			// count the number of whitelisted managers which we know we need to update for
-			for _, updater := range reconcileUpdaters() {
-				if newField.Manager == updater {
-					numWhitelisted++
-				}
-			}
-
-			// if our manager is the reconciler, see if it was just updated
-			// TODO: time boxing the update is not ideal, however it is much simpler than
-			// doing a deep compare at this moment.  we can improve this logic at a later time.
-			if newField.Manager == FieldManager {
-				if time.Now().UTC().Sub(newField.Time.Time.UTC()) < 2*time.Second {
-					justUpdated = true
-				}
-			}
-		}
-	}
-
-	return !justUpdated && numWhitelisted > 0
-}
-
-// TODO: flush this logic out
-// // commonUpdateIgnores returns the common fields to ignore when comparing objects for predicates.
-// func commonUpdateIgnores() []cmp.Option {
-// 	// set any fields in which we explicitly ignore
-// 	options := []cmp.Option{
-// 		cmpopts.IgnoreFields(v1.ObjectMeta{}, "ResourceVersion"),
-// 	}
-
-// 	// set any types in which we explicitly ignore
-// 	ignoreOptions := cmpopts.IgnoreTypes(
-// 		[]common.PhaseCondition{},
-// 		[]common.ResourceCondition{},
-// 		v1.ManagedFieldsEntry{},
-// 		v1.TypeMeta{},
-// 		v1.Status{},
-// 	)
-
-// 	return append(options, ignoreOptions)
-// }
-
-// // SkipUpdateReconcile returns the common conditions which will result in a skipped reconciliation
-// // loop on update.
-// func SkipUpdateReconcile(left, right client.Object) bool {
-// 	managedFieldsEqual := reflect.DeepEqual(left.GetManagedFields(), right.GetManagedFields())
-// 	resourceVersionsEqual := left.GetResourceVersion() == right.GetResourceVersion()
-
-// 	return (managedFieldsEqual || resourceVersionsEqual)
-// }
-
-// // NeedsUpdate returns whether or not a resource needs to be updated.
-// func NeedsUpdate(old, new Resource) bool {
-// 	// skip on known conditions
-// 	if SkipUpdateReconcile(new.Object, old.Object) {
-// 		return false
-// 	}
-
-// 	// ensure fields we do not care about are the same
-// 	new.Object.SetManagedFields(old.Object.GetManagedFields())
-// 	new.Object.SetResourceVersion(old.Object.GetResourceVersion())
-
-// 	// convert to unstructured and remove fields from the map
-// 	newObject := new.Object.(runtime.Unstructured).UnstructuredContent()
-// 	oldObject := old.Object.(runtime.Unstructured).UnstructuredContent()
-// 	delete(newObject, "status")
-// 	delete(oldObject, "status")
-
-// 	// if the relevant fields are different, we need to update
-// 	if diff := cmp.Diff(new, old, commonUpdateIgnores()...); diff != "" {
-// 		return true
-// 	}
-
-// 	return false
-// }
 
 // IsReady returns whether a specific known resource is ready.  Always returns true for unknown resources
 // so that dependency checks will not fail and reconciliation of resources can happen with errors rather
@@ -392,14 +300,54 @@ func AreReady(resources ...common.ComponentResource) (bool, error) {
 	return true, nil
 }
 
-// ToUnstructured returns an unstructured representation of a Resource.
-func (resource *Resource) ToUnstructured() (*unstructured.Unstructured, error) {
-	innerObject, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&resource.Object)
+// AreEqual determines if two resources are equal.
+func AreEqual(desired, actual Resource) (bool, error) {
+	mergedResource, err := actual.ToUnstructured()
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	return &unstructured.Unstructured{Object: innerObject}, nil
+	actualResource, err := actual.ToUnstructured()
+	if err != nil {
+		return false, err
+	}
+
+	desiredResource, err := desired.ToUnstructured()
+	if err != nil {
+		return false, err
+	}
+
+	// ensure that resource versions and observed generation do not interfere
+	// with calculating equality
+	desiredResource.SetResourceVersion(actualResource.GetResourceVersion())
+	desiredResource.SetGeneration(actualResource.GetGeneration())
+
+	// merge the overrides from the desired resource into the actual resource
+	mergo.Merge(
+		&mergedResource.Object,
+		desiredResource.Object,
+		mergo.WithOverride,
+		mergo.WithSliceDeepCopy,
+	)
+
+	// calculate the actual differences
+	diffOptions := []patch.CalculateOption{
+		reconciler.IgnoreManagedFields(),
+		patch.IgnoreStatusFields(),
+		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
+		patch.IgnorePDBSelector(),
+	}
+
+	diffResults, err := patch.DefaultPatchMaker.Calculate(
+		actualResource,
+		mergedResource,
+		diffOptions...,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	return diffResults.IsEmpty(), nil
 }
 
 // EqualNamespaceName will compare the namespace and name of two resource objects for equality.
@@ -652,6 +600,11 @@ func DeploymentIsReady(resource common.ComponentResource) (bool, error) {
 
 	// if we have a name that is empty, we know we did not find the object
 	if deployment.Name == "" {
+		return false, nil
+	}
+
+	// rely on observed generation to give us a proper status
+	if deployment.Generation != deployment.Status.ObservedGeneration {
 		return false, nil
 	}
 

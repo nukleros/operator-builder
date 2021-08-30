@@ -89,14 +89,60 @@ func Phases(component common.Component) []controllerphases.Phase {
 	return phases
 }
 
+// getDesiredObject returns the desired object from a list stored on the
+// reconciler.
+func getDesiredObject(compared *resources.Resource) (desired *resources.Resource) {
+	for _, resource := range compared.Reconciler.GetResources() {
+		if resource.EqualGVK(compared) && resource.EqualNamespaceName(compared) {
+			return resource.(*resources.Resource)
+		}
+	}
+
+	return desired
+}
+
+// needsReconciliation performs some simple checks and returns whether or not a
+// resource needs to be updated.
+func needsReconciliation(existing, requested resources.Resource) bool {
+	// skip if the resources versions are the same
+	if existing.Object.GetResourceVersion() == requested.Object.GetResourceVersion() {
+		return false
+	}
+
+	// skip if the objects support observed generation and they are equal
+	if existing.Object.GetGeneration() > 0 && requested.Object.GetGeneration() > 0 {
+		if existing.Object.GetGeneration() == requested.Object.GetGeneration() {
+			return false
+		}
+	}
+
+	// get the desired object from the reconciler and ensure that we both
+	// found that desired object and that the desired object fields are equal
+	// to the existing object fields
+	desired := getDesiredObject(&requested)
+	if desired == nil {
+		return true
+	}
+
+	equal, err := resources.AreEqual(*desired, requested)
+	if err != nil {
+		requested.Reconciler.GetLogger().V(0).Error(err,
+			"unable to determine equality for reconciliation")
+
+		return true
+	}
+
+	return !equal
+}
+
 // ResourcePredicates returns the filters which are used to filter out the common reconcile events
 // prior to reconciling the child resource of a component.
 func ResourcePredicates(r common.ComponentReconciler) predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			return resources.NeedsUpdate(
-				*resources.NewResourceFromClient(e.ObjectOld),
-				*resources.NewResourceFromClient(e.ObjectNew),
+			return needsReconciliation(
+				*resources.NewResourceFromClient(e.ObjectOld, r),
+				*resources.NewResourceFromClient(e.ObjectNew, r),
 			)
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
@@ -136,7 +182,7 @@ func Watch(
 ) error {
 	// check if the resource is already being watched
 	var watched bool
-	
+
 	if len(r.GetWatches()) > 0 {
 		for _, watcher := range r.GetWatches() {
 			if reflect.DeepEqual(
