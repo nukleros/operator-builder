@@ -32,7 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"{{ .Repo }}/apis/common"
-	"{{ .Repo }}/pkg/resources"
+	"{{ .Repo }}/internal/resources"
 )
 
 // WaitForResourcePhase.Execute executes waiting for a resource to be ready before continuing.

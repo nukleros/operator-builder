@@ -6,10 +6,10 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 )
 
-var _ machinery.Template = &Common{}
+var _ machinery.Template = &Utils{}
 
-// Common scaffolds controller utilities common to all controllers.
-type Common struct {
+// Utils scaffolds controller utilities common to all controllers.
+type Utils struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 	machinery.RepositoryMixin
@@ -18,16 +18,16 @@ type Common struct {
 	IsStandalone bool
 }
 
-func (f *Common) SetTemplateDefaults() error {
+func (f *Utils) SetTemplateDefaults() error {
 	f.Path = filepath.Join("internal", "controllers", "utils", "utils.go")
 
-	f.TemplateBody = controllerCommonTemplate
+	f.TemplateBody = controllerUtilsTemplate
 	f.IfExistsAction = machinery.OverwriteFile
 
 	return nil
 }
 
-const controllerCommonTemplate = `{{ .Boilerplate }}
+const controllerUtilsTemplate = `{{ .Boilerplate }}
 
 package utils
 
@@ -44,8 +44,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"{{ .Repo }}/apis/common"
-	"{{ .Repo }}/pkg/resources"
-	controllerphases "{{ .Repo }}/controllers/phases"
+	"{{ .Repo }}/internal/resources"
+	controllerphases "{{ .Repo }}/internal/controllers/phases"
 )
 
 const (

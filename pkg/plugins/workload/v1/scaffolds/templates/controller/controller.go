@@ -282,7 +282,7 @@ func (r *{{ .Resource.Kind }}Reconciler) CreateOrUpdate(
 		}
 	}
 
-	return controllers.Watch(r, newResource.Object)
+	return utils.Watch(r, newResource.Object)
 }
 
 // GetLogger returns the logger from the reconciler.

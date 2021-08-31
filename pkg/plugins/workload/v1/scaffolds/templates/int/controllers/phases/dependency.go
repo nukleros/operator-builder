@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{ .Repo }}/apis/common"
-	"{{ .Repo }}/pkg/helpers"
+	"{{ .Repo }}/internal/helpers"
 )
 
 // DependencyPhase.DefaultRequeue executes checking for a parent components readiness status.

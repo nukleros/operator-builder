@@ -8,7 +8,7 @@ import (
 
 var _ machinery.Template = &RateLimiter{}
 
-// Common scaffolds controller utilities common to all controllers.
+// RateLimiter scaffolds the default rate limiter.
 type RateLimiter struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin

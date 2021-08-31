@@ -33,7 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"{{ .Repo }}/apis/common"
-	"{{ .Repo }}/pkg/resources"
+	"{{ .Repo }}/internal/resources"
 )
 
 // CheckReadyPhase.DefaultRequeue executes checking for a parent components readiness status.
