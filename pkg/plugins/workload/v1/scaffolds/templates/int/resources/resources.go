@@ -25,6 +25,7 @@ type ConfigMapType struct{ ResourceType }
 type DeploymentType struct{ ResourceType }
 type DaemonSetType struct{ ResourceType }
 type JobType struct{ ResourceType }
+type ServiceType struct{ ResourceType }
 
 func (f *ResourceType) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
@@ -130,6 +131,18 @@ func (f *SecretType) SetTemplateDefaults() error {
 	)
 
 	f.TemplateBody = secretTemplate
+
+	return nil
+}
+
+func (f *ServiceType) SetTemplateDefaults() error {
+	f.Path = filepath.Join(
+		"internal",
+		"resources",
+		"service.go",
+	)
+
+	f.TemplateBody = serviceTemplate
 
 	return nil
 }
@@ -282,6 +295,8 @@ func (resource *Resource) IsReady() (bool, error) {
 		return DaemonSetIsReady(resource)
 	case JobKind:
 		return JobIsReady(resource)
+	case ServiceKind:
+		return ServiceIsReady(resource)
 	}
 
 	return true, nil
@@ -688,6 +703,53 @@ func SecretIsReady(resource common.ComponentResource, expectedKeys ...string) (b
 	// check the status for a ready secret if we expect certain fields to exist
 	for _, key := range expectedKeys {
 		if string(secret.Data[key]) == "" {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+`
+
+const serviceTemplate = `{{ .Boilerplate }}
+
+package resources
+
+import (
+	corev1 "k8s.io/api/core/v1"
+
+	"{{ .Repo }}/apis/common"
+)
+
+const (
+	ServiceKind = "Service"
+)
+
+// ServiceIsReady checks to see if a job is ready.
+func ServiceIsReady(resource common.ComponentResource) (bool, error) {
+	var service corev1.Service
+	if err := getObject(resource, &service, true); err != nil {
+		return false, err
+	}
+
+	// if we have a name that is empty, we know we did not find the object
+	if service.Name == "" {
+		return false, nil
+	}
+
+	// return if we have an external service type
+	if service.Spec.Type == corev1.ServiceTypeExternalName {
+		return true, nil
+	}
+
+	// ensure a cluster ip address exists for cluster ip types
+	if service.Spec.ClusterIP != corev1.ClusterIPNone && len(service.Spec.ClusterIP) == 0 {
+		return false, nil
+	}
+
+	// ensure a load balancer ip or hostname is present
+	if service.Spec.Type == corev1.ServiceTypeLoadBalancer {
+		if len(service.Status.LoadBalancer.Ingress) == 0 {
 			return false, nil
 		}
 	}
