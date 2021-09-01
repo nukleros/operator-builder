@@ -5,9 +5,9 @@ metadata:
     app.kubernetes.io/name: namespace-operator
     workload-collection: default-collection
   name: namespace-operator
-  namespace: tenancy-system  # +workload:namespace:default=tenancy-system:type=string
+  namespace: tenancy-system  # +operator-builder:field:name=namespace,default=tenancy-system,type=string
 spec:
-  replicas: 2  # +workload:nsOperatorReplicas:default=2:type=int
+  replicas: 2  # +operator-builder:field:name=nsOperatorReplicas,default=2,type=int
   selector:
     matchLabels:
       app.kubernetes.io/name: namespace-operator
@@ -20,4 +20,4 @@ spec:
     spec:
       containers:
         - name: namespace-operator
-          image: nginx:1.17  # +workload:nsOperatorImage:type=string
+          image: nginx:1.17  # +operator-builder:field:name=nsOperatorImage,type=string

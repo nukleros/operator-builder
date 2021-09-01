@@ -26,7 +26,7 @@ called "WebApp."  This is the API kind.  The resources that comprise this webapp
 are a deployment, service and ingress.  Those resources are defined in the
 source manifest files referenced under `resources`.  Operator Builder uses those
 source manifests to generate source code for those resources.  Those source
-manifests can contain [workload markers](workload-markers.md) to help define the
+manifests can contain [markers](markers.md) to help define the
 API.
 
 With the source code generated, the [companion CLI](companion-cli.md) can be

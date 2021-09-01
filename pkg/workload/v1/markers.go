@@ -1,16 +1,16 @@
 package v1
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-)
 
-const (
-	markerStr    = "+workload"
-	docMarkerStr = "+workload-docs:"
+	"github.com/vmware-tanzu-labs/object-code-generator-for-k8s/pkg/generate"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+	"github.com/vmware-tanzu-labs/operator-builder/pkg/utils"
+	"gopkg.in/yaml.v3"
 )
 
 // SupportedMarkerDataTypes returns the supported data types that can be used in
@@ -19,8 +19,14 @@ func SupportedMarkerDataTypes() []string {
 	return []string{"bool", "string", "int", "int32", "int64", "float32", "float64"}
 }
 
-func processMarkers(workloadPath string, resources []string, collection bool) ([]*APISpecField, error) {
-	var specFields []*APISpecField
+func processMarkers(workloadPath string, resources []string, collection bool) (*SourceCodeTemplateData, error) {
+	results := &SourceCodeTemplateData{
+		SourceFile:    new([]SourceFile),
+		RBACRule:      new([]RBACRule),
+		OwnershipRule: new([]OwnershipRule),
+	}
+
+	specFields := make(map[string]*APISpecField)
 
 	for _, manifestFile := range resources {
 		// capture entire resource manifest file content
@@ -29,221 +35,185 @@ func processMarkers(workloadPath string, resources []string, collection bool) ([
 			return nil, err
 		}
 
-		// extract all workload markers from yaml content
-		markers, err := processManifest(string(manifestContent))
+		insp, err := InitializeMarkerInspector()
 		if err != nil {
 			return nil, err
 		}
 
-	MARKERS:
-		for _, m := range markers {
-			// define all the cases in which we skip processing this marker
-			switch {
-			case collection && !m.Collection:
-				continue
-			case !collection && m.Collection:
+		node, markerResults, err := insp.InspectYAML(manifestContent, TransformYAML)
+		if err != nil {
+			return nil, err
+		}
+
+		manifestContent, err = yaml.Marshal(node)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, markerResult := range markerResults {
+			switch r := markerResult.Object.(type) {
+			case FieldMarker:
+				if collection {
+					continue
+				}
+
+				specField := &APISpecField{
+					FieldName:          strings.ToTitle(r.Name),
+					ManifestFieldName:  r.Name,
+					DocumentationLines: strings.Split(*r.Description, "\n"),
+					DataType:           r.Type.String(),
+					APISpecContent: fmt.Sprintf(
+						"%s %s `json:\"%s\"`",
+						strings.Title(r.Name),
+						r.Type,
+						r.Name,
+					),
+				}
+
+				zv, err := zeroValue(r.Type.String())
+				if err != nil {
+					return nil, err
+				}
+
+				specField.ZeroVal = zv
+
+				if r.Default != nil {
+					specField.DefaultVal = fmt.Sprintf("%v", r.Default)
+					specField.SampleField = fmt.Sprintf("%s: %v", r.Name, r.Default)
+				} else {
+					specField.SampleField = fmt.Sprintf("%s: %v", r.Name, r.originalValue)
+				}
+
+				specFields[r.Name] = specField
+			case CollectionFieldMarker:
+				if !collection {
+					continue
+				}
+
+				specField := &APISpecField{
+					FieldName:          strings.ToTitle(r.Name),
+					ManifestFieldName:  r.Name,
+					DocumentationLines: strings.Split(*r.Description, "\n"),
+					DataType:           r.Type.String(),
+					APISpecContent: fmt.Sprintf(
+						"%s %s `json:\"%s\"`",
+						strings.Title(r.Name),
+						r.Type,
+						r.Name,
+					),
+				}
+
+				zv, err := zeroValue(r.Type.String())
+				if err != nil {
+					return nil, err
+				}
+
+				specField.ZeroVal = zv
+
+				if r.Default != nil {
+					specField.DefaultVal = fmt.Sprintf("%v", r.Default)
+					specField.SampleField = fmt.Sprintf("%s: %v", r.Name, r.Default)
+				} else {
+					specField.SampleField = fmt.Sprintf("%s: %v", r.Name, r.originalValue)
+				}
+
+				specFields[r.Name] = specField
+			default:
 				continue
 			}
+		}
 
-			for i, r := range specFields {
-				if r.ManifestFieldName == m.FieldName {
-					if len(m.DocumentationLines) > 0 {
-						specFields[i].DocumentationLines = m.DocumentationLines
-					}
+		if collection {
+			continue
+		}
 
-					continue MARKERS
+		// determine sourceFile filename
+		var sourceFile SourceFile
+		sourceFile.Filename = filepath.Base(manifestFile)                // get filename from path
+		sourceFile.Filename = strings.Split(sourceFile.Filename, ".")[0] // strip ".yaml"
+		sourceFile.Filename += ".go"                                     // add correct file ext
+		sourceFile.Filename = utils.ToFileName(sourceFile.Filename)      // kebab-case to snake_case
+
+		var childResources []ChildResource
+
+		manifests := extractManifests(manifestContent)
+
+		for _, manifest := range manifests {
+			// unmarshal yaml to get attributes
+			var manifestMetadata struct {
+				Kind       string
+				APIVersion string
+				Metadata   struct {
+					Name string
 				}
 			}
 
-			specField := &APISpecField{
-				FieldName:          strings.Title(m.FieldName),
-				ManifestFieldName:  m.FieldName,
-				DataType:           m.DataType,
-				DocumentationLines: m.DocumentationLines,
-				APISpecContent: fmt.Sprintf(
-					"%s %s `json:\"%s\"`",
-					strings.Title(m.FieldName),
-					m.DataType,
-					m.FieldName,
-				),
-			}
+			var rawContent interface{}
 
-			zv, err := zeroValue(m.DataType)
-			if err != nil {
-				return nil, err
-			}
-			specField.ZeroVal = zv
-
-			if m.Default != "" {
-				specField.DefaultVal = m.Default
-				specField.SampleField = fmt.Sprintf("%s: %s", m.FieldName, m.Default)
-			} else {
-				specField.SampleField = fmt.Sprintf("%s: %s", m.FieldName, m.Value)
-			}
-
-			specFields = append(specFields, specField)
-		}
-	}
-
-	return specFields, nil
-}
-
-func processManifest(manifest string) ([]Marker, error) {
-	var markers []Marker
-
-	var startIndex int
-
-	var hasDocs bool
-
-	lines := strings.Split(manifest, "\n")
-	for i, line := range lines {
-		if containsDocumentMarker(line) {
-			hasDocs = true
-			startIndex = i
-		}
-
-		if containsMarker(line) {
-			marker, err := processMarkerLine(line)
+			err = yaml.Unmarshal([]byte(manifest), &manifestMetadata)
 			if err != nil {
 				return nil, err
 			}
 
-			if hasDocs {
-				marker.DocumentationLines = processDocLines(lines, startIndex, i-1)
-
-				// reset the hasDocs variable
-				hasDocs = false
+			err = yaml.Unmarshal([]byte(manifest), &rawContent)
+			if err != nil {
+				return nil, err
 			}
 
-			markers = append(markers, marker)
-		}
-	}
+			// generate a unique name for the resource using the kind and name
+			resourceUniqueName := strings.Replace(strings.Title(manifestMetadata.Metadata.Name), "-", "", -1)
+			resourceUniqueName = strings.Replace(resourceUniqueName, ".", "", -1)
+			resourceUniqueName = strings.Replace(resourceUniqueName, ":", "", -1)
+			resourceUniqueName = fmt.Sprintf("%s%s", manifestMetadata.Kind, resourceUniqueName)
 
-	return markers, nil
-}
+			// determine resource group and version
+			resourceVersion, resourceGroup := versionGroupFromAPIVersion(manifestMetadata.APIVersion)
 
-func processMarkedComments(line string) (processed string) {
-	codeCommentSplit := strings.Split(line, "//")
-	comment := codeCommentSplit[1]
-	commentSplit := strings.Split(comment, ":")
-	fieldName := commentSplit[1]
+			// determine group and resource for RBAC rule generation
+			rbacRulesForManifest(manifestMetadata.Kind, resourceGroup, rawContent, results.RBACRule)
 
-	var fieldPath string
-	if strings.Contains(line, "collection=true") {
-		fieldPath = fmt.Sprintf("collection.Spec.%s", strings.Title(fieldName))
-	} else {
-		fieldPath = fmt.Sprintf("parent.Spec.%s", strings.Title(fieldName))
-	}
-
-	if code := codeCommentSplit[0]; strings.Contains(code, ":") {
-		keyValSplit := strings.Split(code, ":")
-		key := keyValSplit[0]
-		processed = fmt.Sprintf("%s: %s,", key, fieldPath)
-	} else {
-		processed = fmt.Sprintf("%s,", fieldPath)
-	}
-
-	return processed
-}
-
-func processDocLines(lines []string, start, end int) []string {
-	docLines := []string{}
-
-	for i := start; i <= end; i++ {
-		line := strings.TrimLeft(lines[i], " ")
-		if strings.HasPrefix(line, "#") {
-			docLine := strings.TrimLeft(line, "#")
-			docLine = strings.TrimLeft(docLine, " ")
-			docLine = strings.TrimPrefix(docLine, docMarkerStr)
-			docLine = strings.TrimLeft(docLine, " ")
-
-			docLines = append(docLines, docLine)
-		}
-	}
-
-	return docLines
-}
-
-func processMarkerLine(line string) (Marker, error) {
-	var marker Marker
-
-	// count leading spaces
-	var spaces int
-
-	for _, char := range line {
-		if char == ' ' {
-			spaces++
-		} else {
-			break
-		}
-	}
-
-	marker.LeadingSpaces = spaces
-
-	commentedLine := strings.Split(line, "#")
-	if len(commentedLine) != 2 {
-		return marker, errors.New("+workload markers in static manifests must be commented out with a single '#' comment symbol")
-	}
-
-	// extract key and value from manifest
-	keyVal := commentedLine[0]
-	keyValSlice := strings.Split(keyVal, ":")
-	manifestKey := strings.Replace(keyValSlice[0], "- ", "", 1)
-
-	var manifestVal string
-
-	var valElements int
-
-	for _, v := range keyValSlice[1:] {
-		valElements++
-		if valElements > 1 {
-			manifestVal = manifestVal + ":" + v
-		} else {
-			manifestVal += v
-		}
-	}
-
-	marker.Key = strings.TrimSpace(manifestKey)
-	marker.Value = strings.TrimSpace(manifestVal)
-
-	// parse marker elements
-	// marker elements are colon-separated
-	markerLine := commentedLine[1]
-
-	markerElements := strings.Split(markerLine, ":")
-	for i, element := range markerElements {
-		if strings.HasSuffix(element, `\`) {
-			// backslash used to escape colons that are *not* delimeters
-			// combine this element, without the backslash, with the next element
-			element = strings.Split(element, `\`)[0] + ":" + markerElements[i+1]
-		}
-
-		if strings.Contains(element, markerStr) {
-			continue
-		} else if strings.HasSuffix(markerElements[i-1], `\`) {
-			// this element has already been combined with the last one
-			continue
-		} else if strings.Contains(element, "type=") {
-			marker.DataType = strings.Split(element, "=")[1]
-		} else if strings.Contains(element, "default=") {
-			marker.Default = strings.Split(element, "=")[1]
-		} else if strings.Contains(element, "collection=") {
-			collectionVal := strings.Split(element, "=")[1]
-			switch collectionVal {
-			case "true":
-				marker.Collection = true
-			case "false":
-				marker.Collection = false
-			default:
-				msg := fmt.Sprintf("collection value %s found - must be either 'true' or 'false'", collectionVal)
-				return marker, errors.New(msg)
+			// determine group and kind for ownership rule generation
+			newOwnershipRule := OwnershipRule{
+				Version: manifestMetadata.APIVersion,
+				Kind:    manifestMetadata.Kind,
+				CoreAPI: isCoreAPI(resourceGroup),
 			}
-		} else {
-			marker.FieldName = element
+
+			ownershipExists := versionKindRecorded(results.OwnershipRule, &newOwnershipRule)
+			if !ownershipExists {
+				*results.OwnershipRule = append(*results.OwnershipRule, newOwnershipRule)
+			}
+
+			resource := ChildResource{
+				Name:       manifestMetadata.Metadata.Name,
+				UniqueName: resourceUniqueName,
+				Group:      resourceGroup,
+				Version:    resourceVersion,
+				Kind:       manifestMetadata.Kind,
+			}
+
+			// generate the object source code
+			resourceDefinition, err := generate.Generate([]byte(manifest), "resourceObj")
+			if err != nil {
+				return nil, err
+			}
+
+			// add the source code to the resource
+			resource.SourceCode = resourceDefinition
+			resource.StaticContent = manifest
+
+			childResources = append(childResources, resource)
 		}
+
+		sourceFile.Children = childResources
+		*results.SourceFile = append(*results.SourceFile, sourceFile)
 	}
 
-	return marker, nil
+	for _, v := range specFields {
+		results.SpecField = append(results.SpecField, v)
+	}
+
+	return results, nil
 }
 
 // zeroValue returns the zero value for the data type as a string.
@@ -261,10 +231,129 @@ func zeroValue(val interface{}) (string, error) {
 	}
 }
 
-func containsMarker(line string) bool {
-	return strings.Contains(line, markerStr+":")
+func InitializeMarkerInspector() (*inspect.Inspector, error) {
+	registry := marker.NewRegistry()
+
+	fieldMarker, err := marker.Define("+operator-builder:field", FieldMarker{})
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	collectionMarker, err := marker.Define("+operator-builder:collection:field", CollectionFieldMarker{})
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	registry.Add(fieldMarker)
+	registry.Add(collectionMarker)
+
+	return inspect.NewInspector(registry), nil
 }
 
-func containsDocumentMarker(line string) bool {
-	return strings.Contains(line, docMarkerStr)
+func TransformYAML(results ...*inspect.YAMLResult) error {
+	var key *yaml.Node
+
+	var value *yaml.Node
+
+	for _, r := range results {
+		if len(r.Nodes) > 1 {
+			key = r.Nodes[0]
+			value = r.Nodes[1]
+		} else {
+			key = r.Nodes[0]
+			value = r.Nodes[0]
+		}
+
+		key.HeadComment = ""
+		key.FootComment = ""
+		value.LineComment = ""
+
+		switch t := r.Object.(type) {
+		case FieldMarker:
+			if *t.Description != "" {
+				key.HeadComment = "# " + *t.Description + ", controlled by " + t.Name
+			}
+
+			t.originalValue = value.Value
+
+			value.Tag = "!!var"
+			value.Value = fmt.Sprintf("parent.Spec." + strings.Title(t.Name))
+
+			r.Object = t
+
+		case CollectionFieldMarker:
+			if *t.Description != "" {
+				key.HeadComment = "# " + *t.Description + ", controlled by " + t.Name
+			}
+
+			t.originalValue = value.Value
+
+			value.Tag = "!!var"
+			value.Value = fmt.Sprintf("collection.Spec." + strings.Title(t.Name))
+
+			r.Object = t
+		}
+	}
+
+	return nil
+}
+
+type FieldType int
+
+const (
+	FieldUnknownType FieldType = iota
+	FieldString
+	FieldInt
+	FieldBool
+)
+
+func (f *FieldType) UnmarshalMarkerArg(in string) error {
+	types := map[string]FieldType{
+		"":       FieldUnknownType,
+		"string": FieldString,
+		"int":    FieldInt,
+		"bool":   FieldBool,
+	}
+
+	if t, ok := types[in]; ok {
+		if t == FieldUnknownType {
+			return fmt.Errorf("unable to parse %s into FieldType", in)
+		}
+
+		*f = t
+
+		return nil
+	}
+
+	return fmt.Errorf("unable to parse %s into FieldType", in)
+}
+
+func (f FieldType) String() string {
+	types := map[FieldType]string{
+		FieldUnknownType: "",
+		FieldString:      "string",
+		FieldInt:         "int",
+		FieldBool:        "bool",
+	}
+
+	return types[f]
+}
+
+type FieldMarker struct {
+	Name          string
+	Type          FieldType
+	Description   *string
+	Default       interface{} `marker:",optional"`
+	originalValue interface{}
+}
+
+type CollectionFieldMarker FieldMarker
+
+func (fm FieldMarker) String() string {
+	return fmt.Sprintf("FieldMarker{Name: %s Type: %v Description: %q Default: %v}",
+		fm.Name,
+		fm.Type,
+		*fm.Description,
+		fm.Default,
+	)
 }

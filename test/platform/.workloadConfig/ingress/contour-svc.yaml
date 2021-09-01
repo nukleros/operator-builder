@@ -2,9 +2,9 @@ kind: Service
 apiVersion: v1
 metadata:
   name: contour-svc
-  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  namespace: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
   labels:
-    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
+    workload-collection: default-collection  #+operator-builder:collection:field:name=collectionLabel,type=string
 spec:
   selector:
     app: contour

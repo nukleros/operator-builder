@@ -19,13 +19,12 @@ TEST_PATH ?= /tmp
 TEST_SCRIPT ?= default.sh
 
 test: test-install
-	mkdir $(TEST_PATH)/.test
-	cp test/$(TEST_SCRIPT) $(TEST_PATH)/.test/
-	(cd $(TEST_PATH); ./.test/$(TEST_SCRIPT))
+	find . -name ${TEST_SCRIPT} | xargs dirname | xargs -I {} cp -r {} $(TEST_PATH)/.workloadConfig
+	cd $(TEST_PATH); basename ${TEST_SCRIPT} | xargs find ${TEST_PATH} -name | xargs sh
 
 test-clean:
 	rm -rf $(TEST_PATH)/*
-	rm -rf $(TEST_PATH)/.test
+	rm -rf $(TEST_PATH)/.workloadConfig
 
 DEBUG_PATH ?= test/application
 

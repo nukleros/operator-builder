@@ -100,26 +100,16 @@ func (*ComponentWorkload) IsCollection() bool {
 	return false
 }
 
-func (c *ComponentWorkload) SetSpecFields(workloadPath string) error {
-	apiSpecFields, err := processMarkers(workloadPath, c.Spec.Resources, false)
-	if err != nil {
-		return err
-	}
-
-	c.Spec.APISpecFields = apiSpecFields
-
-	return nil
-}
-
 func (c *ComponentWorkload) SetResources(workloadPath string) error {
-	sourceFiles, rbacRules, ownershipRules, err := processResources(workloadPath, c.Spec.Resources)
+	resources, err := processMarkers(workloadPath, c.Spec.Resources, false)
 	if err != nil {
 		return err
 	}
 
-	c.Spec.SourceFiles = *sourceFiles
-	c.Spec.RBACRules = *rbacRules
-	c.Spec.OwnershipRules = *ownershipRules
+	c.Spec.APISpecFields = resources.SpecField
+	c.Spec.SourceFiles = *resources.SourceFile
+	c.Spec.RBACRules = *resources.RBACRule
+	c.Spec.OwnershipRules = *resources.OwnershipRule
 
 	return nil
 }

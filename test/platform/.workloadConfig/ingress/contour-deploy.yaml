@@ -2,13 +2,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: contour-deploy
-  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  namespace: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
   labels:
     #+docs: Defines the collection label
     # component belong
-    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
+    workload-collection: default-collection  #+operator-builder:collection:field:name=collectionLabel,type=string
 spec:
-  replicas: 2  # +workload:ContourReplicas:default=2:type=int
+  replicas: 2  # +operator-builder:field:name=contourReplicas,default=2,type=int
   selector:
     matchLabels:
       app: contour
@@ -19,8 +19,7 @@ spec:
     spec:
       containers:
       - name: contour
-        #+docs: Defines the image for contour
         # component belong
-        image: nginx:1.17  # +workload:ContourImage:type=string
+        image: nginx:1.17  # +operator-builder:field:name=contourImage,type=string,description="Defines the image for contour"
         ports:
         - containerPort: 8080

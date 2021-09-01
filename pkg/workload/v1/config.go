@@ -70,10 +70,6 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 			switch v := w.(type) {
 			case *StandaloneWorkload:
 				workload = v
-				if err := workload.SetSpecFields(workloadConfig); err != nil {
-					return nil, fmt.Errorf("%w", err)
-				}
-
 				if err := workload.SetResources(workloadConfig); err != nil {
 					return nil, fmt.Errorf("%w", err)
 				}
@@ -83,10 +79,6 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 				workload = v
 				workload.SetNames()
 			case *ComponentWorkload:
-				if err := v.SetSpecFields(v.Spec.ConfigPath); err != nil {
-					return nil, err
-				}
-
 				if err := v.SetResources(v.Spec.ConfigPath); err != nil {
 					return nil, err
 				}
@@ -106,7 +98,7 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 			return nil, fmt.Errorf("%w", err)
 		}
 
-		if err := workload.SetSpecFields(workloadConfig); err != nil {
+		if err := workload.SetResources(workloadConfig); err != nil {
 			return nil, fmt.Errorf("%w", err)
 		}
 	}

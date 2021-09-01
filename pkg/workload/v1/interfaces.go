@@ -56,7 +56,6 @@ type WorkloadAPIBuilder interface {
 	GetFuncNames() (createFuncNames, initFuncNames []string)
 
 	SetNames()
-	SetSpecFields(workloadPath string) error
 	SetResources(workloadPath string) error
 	SetComponents(components []*ComponentWorkload) error
 }

@@ -128,11 +128,11 @@ func (c *WorkloadCollection) IsCollection() bool {
 	return true
 }
 
-func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
+func (c *WorkloadCollection) SetResources(workloadPath string) error {
 	var specFields []*APISpecField
 
 	for _, component := range c.Spec.Components {
-		componentSpecFields, err := processMarkers(
+		componentResources, err := processMarkers(
 			component.Spec.ConfigPath,
 			component.Spec.Resources,
 			true,
@@ -142,7 +142,7 @@ func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
 		}
 
 		// add to spec fields if not present
-		for _, csf := range componentSpecFields {
+		for _, csf := range componentResources.SpecField {
 			fieldPresent := false
 
 			for i, sf := range specFields {
@@ -164,10 +164,6 @@ func (c *WorkloadCollection) SetSpecFields(workloadPath string) error {
 	c.Spec.APISpecFields = specFields
 
 	return nil
-}
-
-func (c *WorkloadCollection) SetResources(workloadPath string) error {
-	return errors.New("workload collections do not have child resources to be set")
 }
 
 func (c *WorkloadCollection) GetDependencies() []*ComponentWorkload {

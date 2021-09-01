@@ -537,8 +537,8 @@ github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijb
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
-github.com/vmware-tanzu-labs/object-code-generator-for-k8s v0.3.1 h1:iXakTJ4RDhSXmxXC1njnDft7gH9G/M+iGMI5j2J/cXU=
-github.com/vmware-tanzu-labs/object-code-generator-for-k8s v0.3.1/go.mod h1:Cf1te3B0f1QfeXuquaasWxH+Xv6TCDvPMx6AOYkiH2I=
+github.com/vmware-tanzu-labs/object-code-generator-for-k8s v0.4.0 h1:ywkh2OFqhsCh/sXnJZYJN1L6EL1NlAXqqyVtw27w+Sc=
+github.com/vmware-tanzu-labs/object-code-generator-for-k8s v0.4.0/go.mod h1:Cf1te3B0f1QfeXuquaasWxH+Xv6TCDvPMx6AOYkiH2I=
 github.com/weppos/publicsuffix-go v0.4.0/go.mod h1:z3LCPQ38eedDQSwmsSRW4Y7t2L8Ln16JPQ02lHAdn5k=
 github.com/weppos/publicsuffix-go v0.13.0 h1:0Tu1uzLBd1jPn4k6OnMmOPZH/l/9bj9kUOMMkoRs6Gg=
 github.com/weppos/publicsuffix-go v0.13.0/go.mod h1:z3LCPQ38eedDQSwmsSRW4Y7t2L8Ln16JPQ02lHAdn5k=

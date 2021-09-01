@@ -128,26 +128,16 @@ func (*StandaloneWorkload) IsCollection() bool {
 	return false
 }
 
-func (s *StandaloneWorkload) SetSpecFields(workloadPath string) error {
-	apiSpecFields, err := processMarkers(workloadPath, s.Spec.Resources, false)
-	if err != nil {
-		return err
-	}
-
-	s.Spec.APISpecFields = apiSpecFields
-
-	return nil
-}
-
 func (s *StandaloneWorkload) SetResources(workloadPath string) error {
-	sourceFiles, rbacRules, ownershipRules, err := processResources(workloadPath, s.Spec.Resources)
+	resources, err := processMarkers(workloadPath, s.Spec.Resources, false)
 	if err != nil {
 		return err
 	}
 
-	s.Spec.SourceFiles = *sourceFiles
-	s.Spec.RBACRules = *rbacRules
-	s.Spec.OwnershipRules = *ownershipRules
+	s.Spec.APISpecFields = resources.SpecField
+	s.Spec.SourceFiles = *resources.SourceFile
+	s.Spec.RBACRules = *resources.RBACRule
+	s.Spec.OwnershipRules = *resources.OwnershipRule
 
 	return nil
 }

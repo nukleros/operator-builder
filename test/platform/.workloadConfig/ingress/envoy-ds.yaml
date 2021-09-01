@@ -3,9 +3,9 @@ kind: DaemonSet
 metadata:
   labels:
     app.kubernetes.io/name: envoy
-    workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
+    workload-collection: default-collection  #+operator-builder:collection:field:name=collectionLabel,type=string
   name: envoy-ds
-  namespace: ingress-system  # +workload:namespace:default=ingress-system:type=string
+  namespace: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
 spec:
   selector:
     matchLabels:
@@ -14,8 +14,8 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: envoy
-        workload-collection: default-collection  #+workload:collectionLabel:type=string:collection=true
+        workload-collection: default-collection  #+operator-builder:collection:field:name=collectionLabel,type=string
     spec:
       containers:
       - name: envoy
-        image: nginx:1.17  # +workload:EnvoyImage:type=string
+        image: nginx:1.17  # +operator-builder:field:name=EnvoyImage,type=string
