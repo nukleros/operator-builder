@@ -1,3 +1,5 @@
+<img src="docs/images/OperatorBuilderIcon.png" alt="Operator Builder Logo" width="200" style="float:left">
+
 # Operator Builder
 
 **Accelerate the development of Kubernetes Operators.**
