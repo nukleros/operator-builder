@@ -1,10 +1,11 @@
 name: ns-operator-component
 kind: ComponentWorkload
 spec:
-  apiGroup: tenancy
-  apiVersion: v1alpha1
-  apiKind: NsOperator
-  clusterScoped: true
+  api:
+    group: tenancy
+    version: v1alpha1
+    kind: NsOperator
+    clusterScoped: true
   companionCliSubcmd:
     name: ns-operator
     description: Manage namespace operator component

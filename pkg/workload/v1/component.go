@@ -17,16 +17,16 @@ func (c *ComponentWorkload) Validate() error {
 		missingFields = append(missingFields, "name")
 	}
 
-	if c.Spec.APIGroup == "" {
-		missingFields = append(missingFields, "spec.apiGroup")
+	if c.Spec.API.Group == "" {
+		missingFields = append(missingFields, "spec.api.group")
 	}
 
-	if c.Spec.APIVersion == "" {
-		missingFields = append(missingFields, "spec.apiVersion")
+	if c.Spec.API.Version == "" {
+		missingFields = append(missingFields, "spec.api.version")
 	}
 
-	if c.Spec.APIKind == "" {
-		missingFields = append(missingFields, "spec.apiKind")
+	if c.Spec.API.Kind == "" {
+		missingFields = append(missingFields, "spec.api.kind")
 	}
 
 	if len(missingFields) > 0 {
@@ -52,15 +52,15 @@ func (c *ComponentWorkload) GetPackageName() string {
 }
 
 func (c *ComponentWorkload) GetAPIGroup() string {
-	return c.Spec.APIGroup
+	return c.Spec.API.Group
 }
 
 func (c *ComponentWorkload) GetAPIVersion() string {
-	return c.Spec.APIVersion
+	return c.Spec.API.Version
 }
 
 func (c *ComponentWorkload) GetAPIKind() string {
-	return c.Spec.APIKind
+	return c.Spec.API.Kind
 }
 
 func (c *ComponentWorkload) GetSubcommandName() string {
@@ -85,7 +85,7 @@ func (*ComponentWorkload) GetRootcommandName() string {
 }
 
 func (c *ComponentWorkload) IsClusterScoped() bool {
-	return c.Spec.ClusterScoped
+	return c.Spec.API.ClusterScoped
 }
 
 func (*ComponentWorkload) IsStandalone() bool {
@@ -166,16 +166,16 @@ func (c *ComponentWorkload) GetComponentResource(domain, repo string, clusterSco
 	return &resource.Resource{
 		GVK: resource.GVK{
 			Domain:  domain,
-			Group:   c.Spec.APIGroup,
-			Version: c.Spec.APIVersion,
-			Kind:    c.Spec.APIKind,
+			Group:   c.Spec.API.Group,
+			Version: c.Spec.API.Version,
+			Kind:    c.Spec.API.Kind,
 		},
-		Plural: utils.PluralizeKind(c.Spec.APIKind),
+		Plural: utils.PluralizeKind(c.Spec.API.Kind),
 		Path: fmt.Sprintf(
 			"%s/apis/%s/%s",
 			repo,
-			c.Spec.APIGroup,
-			c.Spec.APIVersion,
+			c.Spec.API.Group,
+			c.Spec.API.Version,
 		),
 		API:        &api,
 		Controller: true,

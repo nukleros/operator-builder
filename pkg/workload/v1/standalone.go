@@ -17,20 +17,20 @@ func (s *StandaloneWorkload) Validate() error {
 		missingFields = append(missingFields, "name")
 	}
 
-	if s.Spec.Domain == "" {
+	if s.Spec.API.Domain == "" {
 		missingFields = append(missingFields, "spec.domain")
 	}
 
-	if s.Spec.APIGroup == "" {
-		missingFields = append(missingFields, "spec.apiGroup")
+	if s.Spec.API.Group == "" {
+		missingFields = append(missingFields, "spec.api.group")
 	}
 
-	if s.Spec.APIVersion == "" {
-		missingFields = append(missingFields, "spec.apiVersion")
+	if s.Spec.API.Version == "" {
+		missingFields = append(missingFields, "spec.api.version")
 	}
 
-	if s.Spec.APIKind == "" {
-		missingFields = append(missingFields, "spec.apiKind")
+	if s.Spec.API.Kind == "" {
+		missingFields = append(missingFields, "spec.api.kind")
 	}
 
 	if len(missingFields) > 0 {
@@ -47,7 +47,7 @@ func (s *StandaloneWorkload) GetWorkloadKind() WorkloadKind {
 
 // methods that implement WorkloadInitializer.
 func (s *StandaloneWorkload) GetDomain() string {
-	return s.Spec.Domain
+	return s.Spec.API.Domain
 }
 
 func (s *StandaloneWorkload) HasRootCmdName() bool {
@@ -77,15 +77,15 @@ func (s *StandaloneWorkload) GetPackageName() string {
 }
 
 func (s *StandaloneWorkload) GetAPIGroup() string {
-	return s.Spec.APIGroup
+	return s.Spec.API.Group
 }
 
 func (s *StandaloneWorkload) GetAPIVersion() string {
-	return s.Spec.APIVersion
+	return s.Spec.API.Version
 }
 
 func (s *StandaloneWorkload) GetAPIKind() string {
-	return s.Spec.APIKind
+	return s.Spec.API.Kind
 }
 
 func (*StandaloneWorkload) GetSubcommandName() string {
@@ -113,7 +113,7 @@ func (s *StandaloneWorkload) GetRootcommandName() string {
 }
 
 func (s *StandaloneWorkload) IsClusterScoped() bool {
-	return s.Spec.ClusterScoped
+	return s.Spec.API.ClusterScoped
 }
 
 func (*StandaloneWorkload) IsStandalone() bool {

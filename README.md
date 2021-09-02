@@ -214,11 +214,12 @@ workload](docs/standalone-workloads.md). Save this file to your
     name: webstore
     kind: StandaloneWorkload
     spec:
-      domain: acme.com
-      apiGroup: apps
-      apiVersion: v1alpha1
-      apiKind: WebStore
-      clusterScoped: false
+      api:
+        domain: acme.com
+        group: apps
+        version: v1alpha1
+        kind: WebStore
+        clusterScoped: false
       companionCliRootcmd:
         name: webstorectl
         description: Manage webstore application
@@ -230,12 +231,12 @@ is arbitrary and can be whatever you like.
 
 In the `spec`, the following fields are required:
 
-- `domain`: This must be a globally unique name that will not be used by other
+- `api.domain`: This must be a globally unique name that will not be used by other
   organizations or groups.  It will contain groups of API types.
-- `apiGroup`: This is a logical group of API types used as a namespacing
+- `api.group`: This is a logical group of API types used as a namespacing
   mechanism for your APIs.
-- `apiVersion`: Provide the intiial version for your API.
-- `apiKind`: The name of the API type that will represent the workload you are
+- `api.version`: Provide the intiial version for your API.
+- `api.kind`: The name of the API type that will represent the workload you are
   managing with this operator.
 - `resources`: An array of filenames where your static manifests live.  List the
   relative path from the workload manifest to all the files that contain the
@@ -246,7 +247,7 @@ docs](https://kubebuilder.io/cronjob-tutorial/gvks.html).
 
 The following fields in the `spec` are optional:
 
-- `clusterScoped`: If your workload includes cluster-scoped resources like
+- `api.clusterScoped`: If your workload includes cluster-scoped resources like
   namespaces, this will need to be `true`.  The default is `false`.
 - `companionCLIRootcmd`: If you wish to generate source code for a companion CLI
   for your operator, include this field.  We recommend you do.  Your end users

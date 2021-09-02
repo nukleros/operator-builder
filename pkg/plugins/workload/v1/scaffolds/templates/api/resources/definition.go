@@ -57,7 +57,7 @@ import (
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
 	{{- if .IsComponent }}
-	{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }} "{{ .Repo }}/apis/{{ .Collection.Spec.APIGroup }}/{{ .Collection.Spec.APIVersion }}"
+	{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Collection.Spec.API.Group }}/{{ .Collection.Spec.API.Version }}"
 	{{ end -}}
 )
 
@@ -66,7 +66,7 @@ import (
 func Create{{ .UniqueName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
 	{{- if $.IsComponent }}
-	collection *{{ $.Collection.Spec.APIGroup }}{{ $.Collection.Spec.APIVersion }}.{{ $.Collection.Spec.APIKind }},
+	collection *{{ $.Collection.Spec.API.Group }}{{ $.Collection.Spec.API.Version }}.{{ $.Collection.Spec.API.Kind }},
 	{{ end -}}
 ) (metav1.Object, error) {
 	{{- .SourceCode }}

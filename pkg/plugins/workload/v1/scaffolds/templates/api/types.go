@@ -62,10 +62,10 @@ import (
 
 	"{{ .Repo }}/apis/common"
 	{{- $Repo := .Repo }}{{- $Added := "" }}{{- range .Dependencies }}
-	{{- if ne .Spec.APIGroup $.Resource.Group }}
-	{{- if not (containsString (printf "%s%s" .Spec.APIGroup .Spec.APIVersion) $Added) }}
-	{{- $Added = (printf "%s%s" $Added (printf "%s%s" .Spec.APIGroup .Spec.APIVersion)) }}
-	{{ .Spec.APIGroup }}{{ .Spec.APIVersion }} "{{ $Repo }}/apis/{{ .Spec.APIGroup }}/{{ .Spec.APIVersion }}"
+	{{- if ne .Spec.API.Group $.Resource.Group }}
+	{{- if not (containsString (printf "%s%s" .Spec.API.Group .Spec.API.Version) $Added) }}
+	{{- $Added = (printf "%s%s" $Added (printf "%s%s" .Spec.API.Group .Spec.API.Version)) }}
+	{{ .Spec.API.Group }}{{ .Spec.API.Version }} "{{ $Repo }}/apis/{{ .Spec.API.Group }}/{{ .Spec.API.Version }}"
 	{{ end }}
 	{{ end }}
 	{{ end }}
@@ -186,10 +186,10 @@ func (component *{{ .Resource.Kind }}) SetResource(resource common.Resource) {
 func (*{{ .Resource.Kind }}) GetDependencies() []common.Component {
 	return []common.Component{
 		{{- range .Dependencies }}
-		{{- if eq .Spec.APIGroup $.Resource.Group }}
-			&{{ .Spec.APIKind }}{},
+		{{- if eq .Spec.API.Group $.Resource.Group }}
+			&{{ .Spec.API.Kind }}{},
 		{{- else }}
-			&{{ .Spec.APIGroup }}{{ .Spec.APIVersion }}.{{ .Spec.APIKind }}{},
+			&{{ .Spec.API.Group }}{{ .Spec.API.Version }}.{{ .Spec.API.Kind }}{},
 		{{- end }}
 		{{- end }}
 	}

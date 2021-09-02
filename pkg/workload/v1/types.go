@@ -9,11 +9,12 @@ const (
 	WorkloadKindComponent  WorkloadKind = "ComponentWorkload"
 )
 
-// WorkloadSharedSpec contains fields shared by all workload specs.
-type WorkloadSharedSpec struct {
-	APIGroup      string `json:"apiGroup" yaml:"apiGroup"`
-	APIVersion    string `json:"apiVersion" yaml:"apiVersion"`
-	APIKind       string `json:"apiKind" yaml:"apiKind"`
+// APISpec contains fields shared by all workload specs.
+type APISpec struct {
+	Domain        string `json:"domain" yaml:"domain"`
+	Group         string `json:"group" yaml:"group"`
+	Version       string `json:"version" yaml:"version"`
+	Kind          string `json:"kind" yaml:"kind"`
 	ClusterScoped bool   `json:"clusterScoped" yaml:"clusterScoped"`
 }
 
@@ -35,8 +36,7 @@ type CliCommand struct {
 
 // StandaloneWorkloadSpec defines the attributes for a standalone workload.
 type StandaloneWorkloadSpec struct {
-	WorkloadSharedSpec  `yaml:",inline"`
-	Domain              string     `json:"domain" yaml:"domain" validate:"required"`
+	API                 APISpec    `json:"api" yaml:"api"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
 	Resources           []string   `json:"resources" yaml:"resources"`
 	APISpecFields       []*APISpecField
@@ -54,7 +54,7 @@ type StandaloneWorkload struct {
 // ComponentWorkloadSpec defines the attributes for a workload that is a
 // component of a collection.
 type ComponentWorkloadSpec struct {
-	WorkloadSharedSpec    `yaml:",inline"`
+	API                   APISpec    `json:"api" yaml:"api"`
 	CompanionCliSubcmd    CliCommand `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
 	Resources             []string   `json:"resources" yaml:"resources"`
 	Dependencies          []string   `json:"dependencies" yaml:"dependencies"`
@@ -74,8 +74,7 @@ type ComponentWorkload struct {
 
 // WorkloadCollectionSpec defines the attributes for a workload collection.
 type WorkloadCollectionSpec struct {
-	WorkloadSharedSpec  `yaml:",inline"`
-	Domain              string     `json:"domain" yaml:"domain" validate:"required"`
+	API                 APISpec    `json:"api" yaml:"api"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
 	ComponentFiles      []string   `json:"componentFiles" yaml:"componentFiles"`
 	Components          []*ComponentWorkload

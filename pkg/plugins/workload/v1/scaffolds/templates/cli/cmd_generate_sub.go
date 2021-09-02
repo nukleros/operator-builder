@@ -74,7 +74,7 @@ import (
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
 	"{{ .Resource.Path }}/{{ .PackageName }}"
 	{{- if .IsComponent }}
-	{{ .Collection.Spec.APIGroup }}{{ .Collection.Spec.APIVersion }} "{{ .Repo }}/apis/{{ .Collection.Spec.APIGroup }}/{{ .Collection.Spec.APIVersion }}"
+	{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Collection.Spec.API.Group }}/{{ .Collection.Spec.API.Version }}"
 	{{ end -}}
 )
 
@@ -111,7 +111,7 @@ func (g *generateCommand) generate{{ .SubCmdVarName }}(cmd *cobra.Command, args 
 		return fmt.Errorf("failed to open file %s, %w", colFilename, err)
 	}
 
-	var collection {{ $.Collection.Spec.APIGroup }}{{ $.Collection.Spec.APIVersion }}.{{ $.Collection.Spec.APIKind }}
+	var collection {{ $.Collection.Spec.API.Group }}{{ $.Collection.Spec.API.Version }}.{{ $.Collection.Spec.API.Kind }}
 
 	err = yaml.Unmarshal(colYamlFile, &collection)
 	if err != nil {

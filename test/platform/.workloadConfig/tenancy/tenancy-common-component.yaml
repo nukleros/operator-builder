@@ -1,10 +1,11 @@
 name: tenancy-common-component
 kind: ComponentWorkload
 spec:
-  apiGroup: tenancy
-  apiVersion: v1alpha1
-  apiKind: TenancyCommon
-  clusterScoped: true
+  api:
+    group: tenancy
+    version: v1alpha1
+    kind: TenancyCommon
+    clusterScoped: true
   companionCliSubcmd:
     name: tenancy-common
     description: Manage common tenancy component

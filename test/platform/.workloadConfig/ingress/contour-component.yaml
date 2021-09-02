@@ -1,10 +1,11 @@
 name: contour-component
 kind: ComponentWorkload
 spec:
-  apiGroup: ingress
-  apiVersion: v1alpha1
-  apiKind: Contour
-  clusterScoped: true
+  api:
+    group: ingress
+    version: v1alpha1
+    kind: Contour
+    clusterScoped: true
   companionCliSubcmd:
     name: contour
     description: Manage contour component
