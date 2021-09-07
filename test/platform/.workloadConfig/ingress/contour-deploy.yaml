@@ -19,7 +19,11 @@ spec:
     spec:
       containers:
       - name: contour
-        # component belong
-        image: nginx:1.17  # +operator-builder:field:name=contourImage,type=string,description="Defines the image for contour"
+        # +operator-builder:field:name=contourImage,type=string,description=`
+        # this
+        # is
+        # a
+        # test`
+        image: nginx:1.17
         ports:
         - containerPort: 8080

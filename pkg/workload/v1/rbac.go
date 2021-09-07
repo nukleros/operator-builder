@@ -87,6 +87,17 @@ func getResourceForRBAC(kind string) string {
 	return kind
 }
 
+func valueFromInterface(in interface{}, key string) (out interface{}) {
+	switch asType := in.(type) {
+	case map[interface{}]interface{}:
+		out = asType[key]
+	case map[string]interface{}:
+		out = asType[key]
+	}
+
+	return out
+}
+
 func rbacRulesForManifest(kind, group string, rawContent interface{}, rbacRules *[]RBACRule) {
 	rbacRulesAddOrUpdate(
 		rbacRules,
@@ -100,15 +111,15 @@ func rbacRulesForManifest(kind, group string, rawContent interface{}, rbacRules 
 	// if we are working with roles and cluster roles, we must also grant rbac to the resources
 	// which are managed by them
 	if strings.EqualFold(kind, "clusterrole") || strings.EqualFold(kind, "role") {
-		resourceRules := rawContent.(map[interface{}]interface{})["rules"]
+		resourceRules := valueFromInterface(rawContent, "rules")
 		if resourceRules == nil {
 			return
 		}
 
 		for _, resourceRule := range resourceRules.([]interface{}) {
-			rbacGroups := resourceRule.(map[interface{}]interface{})["apiGroups"]
-			rbacKinds := resourceRule.(map[interface{}]interface{})["resources"]
-			rbacVerbs := resourceRule.(map[interface{}]interface{})["verbs"]
+			rbacGroups := valueFromInterface(resourceRule, "apiGroups")
+			rbacKinds := valueFromInterface(resourceRule, "resources")
+			rbacVerbs := valueFromInterface(resourceRule, "verbs")
 
 			// assign a new rule for each group and kind match
 			if rbacGroups == nil {

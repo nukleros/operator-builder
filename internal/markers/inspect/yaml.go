@@ -1,7 +1,10 @@
 package inspect
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
 	"gopkg.in/yaml.v3"
@@ -12,26 +15,44 @@ type YAMLResult struct {
 	Nodes []*yaml.Node
 }
 
-func (s *Inspector) InspectYAML(data []byte, transforms ...YAMLTransformer) (*yaml.Node, []*YAMLResult, error) {
-	var node yaml.Node
-	if err := yaml.Unmarshal(data, &node); err != nil {
-		return &node, nil, fmt.Errorf("error unmarshaling yaml, %w", err)
+func (s *Inspector) InspectYAML(data []byte, transforms ...YAMLTransformer) ([]*yaml.Node, []*YAMLResult, error) {
+	var nodes []*yaml.Node
+
+	yamlDecoder := yaml.NewDecoder(bytes.NewReader(data))
+
+	for {
+		var node yaml.Node
+
+		if err := yamlDecoder.Decode(&node); errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return nil, nil, fmt.Errorf("error unmarshaling yaml, %w", err)
+		}
+
+		nodes = append(nodes, &node)
 	}
 
-	results := s.inspectYAML(&node)
+	var results []*YAMLResult
+
+	for _, node := range nodes {
+		docResults := s.inspectYAML(node)
+
+		results = append(results, docResults...)
+	}
+
 	for _, result := range results {
 		if v, ok := result.Result.Object.(error); ok {
-			return &node, results, v
+			return nodes, results, v
 		}
 	}
 
 	for _, transform := range transforms {
 		if err := transform(results...); err != nil {
-			return &node, nil, err
+			return nodes, nil, err
 		}
 	}
 
-	return &node, results, nil
+	return nodes, results, nil
 }
 
 func (s *Inspector) inspectYAML(nodes ...*yaml.Node) (results []*YAMLResult) {

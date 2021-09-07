@@ -74,7 +74,9 @@ func (m *Definition) InflateObject() (interface{}, error) {
 				continue
 			}
 
-			arg.InitializeValue()
+			if !arg.Pointer {
+				arg.InitializeValue()
+			}
 		}
 
 		if arg.Value.IsValid() {
