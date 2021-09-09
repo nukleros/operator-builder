@@ -20,18 +20,19 @@ func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
-	taxi := workloadv1.ConfigTaxi{
-		WorkloadConfigPath: p.workloadConfigPath,
-	}
-
-	if err := c.EncodePluginConfig(workloadv1.ConfigTaxiKey, taxi); err != nil {
-		return err
-	}
-
 	workload, err := workloadv1.ProcessInitConfig(
 		p.workloadConfigPath,
 	)
 	if err != nil {
+		return err
+	}
+
+	pluginConfig := workloadv1.PluginConfig{
+		WorkloadConfigPath: p.workloadConfigPath,
+		CliRootCommandName: workload.GetRootCmdName(),
+	}
+
+	if err := c.EncodePluginConfig(workloadv1.PluginConfigKey, pluginConfig); err != nil {
 		return err
 	}
 

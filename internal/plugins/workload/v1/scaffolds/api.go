@@ -32,11 +32,11 @@ import (
 var _ plugins.Scaffolder = &apiScaffolder{}
 
 type apiScaffolder struct {
-	config          config.Config
-	resource        *resource.Resource
-	boilerplatePath string
-	workload        workloadv1.WorkloadAPIBuilder
-	project         *workloadv1.Project
+	config             config.Config
+	resource           *resource.Resource
+	boilerplatePath    string
+	workload           workloadv1.WorkloadAPIBuilder
+	cliRootCommandName string
 
 	fs machinery.Filesystem
 }
@@ -46,14 +46,14 @@ func NewAPIScaffolder(
 	cfg config.Config,
 	res *resource.Resource,
 	workload workloadv1.WorkloadAPIBuilder,
-	project *workloadv1.Project,
+	cliRootCommandName string,
 ) plugins.Scaffolder {
 	return &apiScaffolder{
-		config:          cfg,
-		resource:        res,
-		boilerplatePath: "hack/boilerplate.go.txt",
-		workload:        workload,
-		project:         project,
+		config:             cfg,
+		resource:           res,
+		boilerplatePath:    "hack/boilerplate.go.txt",
+		workload:           workload,
+		cliRootCommandName: cliRootCommandName,
 	}
 }
 
@@ -86,8 +86,8 @@ func (s *apiScaffolder) Scaffold() error {
 		// build a subcommand for standalone, e.g. `webstorectl init`
 		err = scaffold.Execute(
 			&cli.CmdInitSub{
-				RootCmd:        s.project.CliRootCommandName,
-				RootCmdVarName: utils.ToPascalCase(s.project.CliRootCommandName),
+				RootCmd:        s.cliRootCommandName,
+				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
 				SubCmdName:     s.workload.GetSubcommandName(),
 				SubCmdDescr:    s.workload.GetSubcommandDescr(),
 				SubCmdVarName:  s.workload.GetSubcommandVarName(),
@@ -102,8 +102,8 @@ func (s *apiScaffolder) Scaffold() error {
 			},
 			&cli.CmdGenerateSub{
 				PackageName:    s.workload.GetPackageName(),
-				RootCmd:        s.project.CliRootCommandName,
-				RootCmdVarName: utils.ToPascalCase(s.project.CliRootCommandName),
+				RootCmd:        s.cliRootCommandName,
+				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
 				SubCmdName:     s.workload.GetSubcommandName(),
 				SubCmdDescr:    s.workload.GetSubcommandDescr(),
 				IsComponent:    s.workload.IsComponent(),
@@ -115,13 +115,13 @@ func (s *apiScaffolder) Scaffold() error {
 	} else if s.workload.IsCollection() && s.workload.GetRootcommandName() != "" {
 		err = scaffold.Execute(
 			&cli.CmdInit{
-				RootCmd:        s.project.CliRootCommandName,
-				RootCmdVarName: utils.ToPascalCase(s.project.CliRootCommandName),
+				RootCmd:        s.cliRootCommandName,
+				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
 				Collection:     s.workload.(*workloadv1.WorkloadCollection),
 			},
 			&cli.CmdGenerate{
-				RootCmd:        s.project.CliRootCommandName,
-				RootCmdVarName: utils.ToPascalCase(s.project.CliRootCommandName),
+				RootCmd:        s.cliRootCommandName,
+				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
 				Collection:     s.workload.(*workloadv1.WorkloadCollection),
 			},
 		)
@@ -134,8 +134,8 @@ func (s *apiScaffolder) Scaffold() error {
 				// build a subcommand for the component, e.g. `cnpctl init ingress`
 				err = scaffold.Execute(
 					&cli.CmdInitSub{
-						RootCmd:        s.project.CliRootCommandName,
-						RootCmdVarName: utils.ToPascalCase(s.project.CliRootCommandName),
+						RootCmd:        s.cliRootCommandName,
+						RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
 						SubCmdName:     component.GetSubcommandName(),
 						SubCmdDescr:    component.GetSubcommandDescr(),
 						SubCmdVarName:  component.GetSubcommandVarName(),
@@ -150,8 +150,8 @@ func (s *apiScaffolder) Scaffold() error {
 					},
 					&cli.CmdGenerateSub{
 						PackageName:    component.GetPackageName(),
-						RootCmd:        s.project.CliRootCommandName,
-						RootCmdVarName: utils.ToPascalCase(s.project.CliRootCommandName),
+						RootCmd:        s.cliRootCommandName,
+						RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
 						SubCmdName:     component.GetSubcommandName(),
 						SubCmdDescr:    component.GetSubcommandDescr(),
 						SubCmdVarName:  component.GetSubcommandVarName(),
@@ -174,7 +174,7 @@ func (s *apiScaffolder) Scaffold() error {
 
 	err = scaffold.Execute(
 		&cli.CmdRootUpdater{
-			RootCmd:         s.project.CliRootCommandName,
+			RootCmd:         s.cliRootCommandName,
 			InitCommand:     true,
 			GenerateCommand: true,
 		},

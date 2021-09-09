@@ -15,6 +15,7 @@ type initSubcommand struct {
 	config config.Config
 
 	workloadConfigPath string
+	cliRootCommandName string
 
 	workload workloadv1.WorkloadInitializer
 }
@@ -37,12 +38,13 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 		return err
 	}
 
-	var taxi workloadv1.ConfigTaxi
-	if err := c.DecodePluginConfig(workloadv1.ConfigTaxiKey, &taxi); err != nil {
+	var pluginConfig workloadv1.PluginConfig
+	if err := c.DecodePluginConfig(workloadv1.PluginConfigKey, &pluginConfig); err != nil {
 		return err
 	}
 
-	p.workloadConfigPath = taxi.WorkloadConfigPath
+	p.workloadConfigPath = pluginConfig.WorkloadConfigPath
+	p.cliRootCommandName = pluginConfig.CliRootCommandName
 
 	return nil
 }
@@ -67,7 +69,11 @@ func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 }
 
 func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
-	scaffolder := scaffolds.NewInitScaffolder(p.config, p.workload)
+	scaffolder := scaffolds.NewInitScaffolder(
+		p.config,
+		p.workload,
+		p.cliRootCommandName,
+	)
 	scaffolder.InjectFS(fs)
 
 	if err := scaffolder.Scaffold(); err != nil {

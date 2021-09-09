@@ -145,15 +145,11 @@ type OwnershipRule struct {
 	CoreAPI bool
 }
 
-// Project contains the project config saved to the WORKLOAD file to allow
-// access to config values shared across different operator-builder commands.
-type Project struct {
-	CliRootCommandName string `json:"cliRootCommandName"`
-}
+const PluginConfigKey = "operatorBuilder"
 
-const ConfigTaxiKey = "configTaxi"
-
-// ConfigTaxi transports config values from config plugin to workload plugin.
-type ConfigTaxi struct {
-	WorkloadConfigPath string
+// PluginConfig contains the project config values which are stored in the
+// PROJECT file under plugins.operatorBuilder
+type PluginConfig struct {
+	WorkloadConfigPath string `json:"workloadConfigPath" yaml:"workloadConfigPath"`
+	CliRootCommandName string `json:"cliRootCommandName" yaml:"cliRootCommandName"`
 }

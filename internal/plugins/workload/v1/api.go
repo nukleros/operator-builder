@@ -2,13 +2,11 @@ package v1
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
-	"sigs.k8s.io/yaml"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
@@ -20,8 +18,8 @@ type createAPISubcommand struct {
 	resource *resource.Resource
 
 	workloadConfigPath string
+	cliRootCommandName string
 	workload           workloadv1.WorkloadAPIBuilder
-	project            workloadv1.Project
 }
 
 var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
@@ -37,12 +35,13 @@ func (p *createAPISubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdM
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 	p.config = c
 
-	var taxi workloadv1.ConfigTaxi
-	if err := c.DecodePluginConfig(workloadv1.ConfigTaxiKey, &taxi); err != nil {
+	var pluginConfig workloadv1.PluginConfig
+	if err := c.DecodePluginConfig(workloadv1.PluginConfigKey, &pluginConfig); err != nil {
 		return err
 	}
 
-	p.workloadConfigPath = taxi.WorkloadConfigPath
+	p.workloadConfigPath = pluginConfig.WorkloadConfigPath
+	p.cliRootCommandName = pluginConfig.CliRootCommandName
 
 	return nil
 }
@@ -70,17 +69,6 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 
 	p.workload = workload
 
-	// get WORKLOAD project config file
-	projectFile, err := ioutil.ReadFile("WORKLOAD")
-	if err != nil {
-		return err
-	}
-
-	err = yaml.Unmarshal(projectFile, &p.project)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -89,7 +77,7 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 		p.config,
 		p.resource,
 		p.workload,
-		&p.project,
+		p.cliRootCommandName,
 	)
 	scaffolder.InjectFS(fs)
 

@@ -20,19 +20,25 @@ const CobraVersion = "v1.1.3"
 var _ plugins.Scaffolder = &initScaffolder{}
 
 type initScaffolder struct {
-	config          config.Config
-	boilerplatePath string
-	workload        workloadv1.WorkloadInitializer
+	config             config.Config
+	boilerplatePath    string
+	workload           workloadv1.WorkloadInitializer
+	cliRootCommandName string
 
 	fs machinery.Filesystem
 }
 
 // NewInitScaffolder returns a new Scaffolder for project initialization operations.
-func NewInitScaffolder(cfg config.Config, workload workloadv1.WorkloadInitializer) plugins.Scaffolder {
+func NewInitScaffolder(
+	cfg config.Config,
+	workload workloadv1.WorkloadInitializer,
+	cliRootCommandName string,
+) plugins.Scaffolder {
 	return &initScaffolder{
-		config:          cfg,
-		boilerplatePath: "hack/boilerplate.go.txt",
-		workload:        workload,
+		config:             cfg,
+		boilerplatePath:    "hack/boilerplate.go.txt",
+		workload:           workload,
+		cliRootCommandName: cliRootCommandName,
 	}
 }
 
@@ -68,9 +74,6 @@ func (s *initScaffolder) Scaffold() error {
 				RootCmdDescription: s.workload.GetRootCmdDescr(),
 			},
 			&templates.Makefile{
-				RootCmd: s.workload.GetRootCmdName(),
-			},
-			&templates.Project{
 				RootCmd: s.workload.GetRootCmdName(),
 			},
 		)
