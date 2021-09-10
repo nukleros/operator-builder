@@ -32,15 +32,6 @@ Get the source code.
     git clone git@github.com:vmware-tanzu-labs/operator-builder.git
     cd operator-builder
 
-> **NOTE:** Since the object-code-generator-for-k8s repository is still an
-internal Github repository you will have to do the following to build the project:
-`export  GOPRIVATE=github.com/vmware-tanzu-labs/object-code-generator-for-k8s`
-Add the following configuration to your ~/.gitconfig file:
-```
-[url "git@github.com:"]
-	insteadOf = https://github.com/
-```
-
 Build the binary.
 
     make build
