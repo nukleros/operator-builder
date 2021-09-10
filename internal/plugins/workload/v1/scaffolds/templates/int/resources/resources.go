@@ -24,6 +24,7 @@ type SecretType struct{ ResourceType }
 type ConfigMapType struct{ ResourceType }
 type DeploymentType struct{ ResourceType }
 type DaemonSetType struct{ ResourceType }
+type StatefulSetType struct{ ResourceType }
 type JobType struct{ ResourceType }
 type ServiceType struct{ ResourceType }
 
@@ -143,6 +144,18 @@ func (f *ServiceType) SetTemplateDefaults() error {
 	)
 
 	f.TemplateBody = serviceTemplate
+
+	return nil
+}
+
+func (f *StatefulSetType) SetTemplateDefaults() error {
+	f.Path = filepath.Join(
+		"internal",
+		"resources",
+		"statefulset.go",
+	)
+
+	f.TemplateBody = statefulSetTemplate
 
 	return nil
 }
@@ -293,6 +306,8 @@ func (resource *Resource) IsReady() (bool, error) {
 		return DeploymentIsReady(resource)
 	case DaemonSetKind:
 		return DaemonSetIsReady(resource)
+	case StatefulSetKind:
+		return StatefulSetIsReady(resource)
 	case JobKind:
 		return JobIsReady(resource)
 	case ServiceKind:
@@ -336,6 +351,12 @@ func AreEqual(desired, actual Resource) (bool, error) {
 	// with calculating equality
 	desiredResource.SetResourceVersion(actualResource.GetResourceVersion())
 	desiredResource.SetGeneration(actualResource.GetGeneration())
+
+	// ensure that a current cluster-scoped resource is not evaluated against
+	// a manifest which may include a namespace
+	if actualResource.GetNamespace() == "" {
+		desiredResource.SetNamespace(actualResource.GetNamespace())
+	}
 
 	// merge the overrides from the desired resource into the actual resource
 	mergo.Merge(
@@ -752,6 +773,72 @@ func ServiceIsReady(resource common.ComponentResource) (bool, error) {
 		if len(service.Status.LoadBalancer.Ingress) == 0 {
 			return false, nil
 		}
+	}
+
+	return true, nil
+}
+`
+
+const statefulSetTemplate = `{{ .Boilerplate }}
+
+package resources
+
+import (
+	appsv1 "k8s.io/api/apps/v1"
+
+	"{{ .Repo }}/apis/common"
+)
+
+const (
+	StatefulSetKind = "StatefulSet"
+)
+
+// StatefulSetIsReady performs the logic to determine if a secret is ready.
+func StatefulSetIsReady(resource common.ComponentResource, expectedKeys ...string) (bool, error) {
+	var statefulSet appsv1.StatefulSet
+	if err := getObject(resource, &statefulSet, true); err != nil {
+		return false, err
+	}
+
+	// if we have a name that is empty, we know we did not find the object
+	if statefulSet.Name == "" {
+		return false, nil
+	}
+
+	// rely on observed generation to give us a proper status
+	if statefulSet.Generation != statefulSet.Status.ObservedGeneration {
+		return false, nil
+	}
+
+	// check for valid replicas
+	replicas := statefulSet.Spec.Replicas
+	if replicas == nil {
+		return false, nil
+	}
+
+	// check to see if replicas have been updated
+	var needsUpdate int32
+	if statefulSet.Spec.UpdateStrategy.RollingUpdate != nil &&
+		statefulSet.Spec.UpdateStrategy.RollingUpdate.Partition != nil &&
+		*statefulSet.Spec.UpdateStrategy.RollingUpdate.Partition > 0 {
+
+		needsUpdate -= *statefulSet.Spec.UpdateStrategy.RollingUpdate.Partition
+	}
+	notUpdated := needsUpdate - statefulSet.Status.UpdatedReplicas
+	if notUpdated > 0 {
+		return false, nil
+	}
+
+	// check to see if replicas are available
+	notReady := *replicas - statefulSet.Status.ReadyReplicas
+	if notReady > 0 {
+		return false, nil
+	}
+
+	// check to see if a scale down operation is complete
+	notDeleted := statefulSet.Status.Replicas - *replicas
+	if notDeleted > 0 {
+		return false, nil
 	}
 
 	return true, nil
