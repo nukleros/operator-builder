@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package cli
 
 import (
@@ -44,3 +47,4 @@ func NewUpdateLicenseCmd() *cobra.Command {
 
 	return cmd
 }
+

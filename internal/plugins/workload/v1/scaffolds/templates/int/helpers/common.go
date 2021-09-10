@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package helpers
 
 import (
@@ -117,3 +120,4 @@ func GetCollectionName(r common.ComponentReconciler) (string, error) {
 	return getValueFromCollection(r, "metadata", "name")
 }
 `
+

@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 import (
@@ -65,3 +68,4 @@ func (l *Lexer) resetPosition() {
 func (l *Lexer) isEmpty() bool {
 	return l.peek() == eof
 }
+

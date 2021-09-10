@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 import (
@@ -31,3 +34,4 @@ func (Plugin) Version() plugin.Version                              { return plu
 func (Plugin) SupportedProjectVersions() []config.Version           { return supportedProjectVersions }
 func (p Plugin) GetInitSubcommand() plugin.InitSubcommand           { return &p.initSubcommand }
 func (p Plugin) GetCreateAPISubcommand() plugin.CreateAPISubcommand { return &p.createAPISubcommand }
+

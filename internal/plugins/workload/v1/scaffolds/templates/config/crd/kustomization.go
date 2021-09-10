@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package crd
 
 import (
@@ -47,3 +50,4 @@ patchesStrategicMerge:
 configurations:
 - kustomizeconfig.yaml
 `
+

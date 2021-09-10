@@ -43,5 +43,16 @@ Now initialize a new Kubebuilder project and reference your license files.
         --project-license /tmp/project.txt \
         --source-header-license /tmp/source-header.txt
 
-You will now have a `LICENSE` file in your project which has the contents of `/tmp/project.txt`.  The `hack/boilerplate.go.txt` file will have the contents of `/tmp/source-header.txt` which you will also find at the top of `main.go`.
+You will now have a `LICENSE` file in your project which has the contents of
+`/tmp/project.txt`.  The `hack/boilerplate.go.txt` file will have the contents
+of `/tmp/source-header.txt` which you will also find at the top of `main.go`.
+
+## Update Existing Project
+
+If you have an existing project that you would like to update licensing for:
+
+    operator-builder update license \
+        --project-license /tmp/project.txt \
+        --source-header-license /tmp/source-header.txt
+
 

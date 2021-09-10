@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 import (
@@ -66,3 +69,4 @@ func (l *Lexer) flush() {
 	l.buffer = ""
 	l.start = l.pos
 }
+

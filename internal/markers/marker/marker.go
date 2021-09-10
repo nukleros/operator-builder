@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package marker
 
 import (
@@ -118,3 +121,4 @@ func (m *Definition) loadFields() error {
 
 	return nil
 }
+

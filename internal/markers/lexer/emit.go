@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 // emit passes a Lexeme back to the client.
@@ -33,3 +36,4 @@ func (l *Lexer) emitSynthetic(typ LexemeType, val string) {
 func (l *Lexer) value() string {
 	return l.buffer
 }
+

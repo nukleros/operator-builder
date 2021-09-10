@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 import (
@@ -189,3 +192,4 @@ func (s *StandaloneWorkload) SetNames() {
 		s.Spec.CompanionCliRootcmd.FileName = utils.ToFileName(s.Spec.CompanionCliRootcmd.Name)
 	}
 }
+

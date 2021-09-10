@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 import (
@@ -193,3 +196,4 @@ func (c *ComponentWorkload) SetNames() {
 		c.Spec.CompanionCliSubcmd.FileName = utils.ToFileName(c.Spec.CompanionCliSubcmd.Name)
 	}
 }
+

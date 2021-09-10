@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package controller
 
 import (
@@ -373,3 +376,4 @@ func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) erro
 	return nil
 }
 `
+

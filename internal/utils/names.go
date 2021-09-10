@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package utils
 
 import (
@@ -47,3 +50,4 @@ func PluralizeKind(kind string) string {
 
 	return strings.ToLower(p.Plural(kind))
 }
+

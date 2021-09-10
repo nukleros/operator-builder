@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package common
 
 import (
@@ -80,3 +83,4 @@ func (condition *PhaseCondition) GetPhaseConditionIndex(component Component) int
 	return -1
 }
 `
+

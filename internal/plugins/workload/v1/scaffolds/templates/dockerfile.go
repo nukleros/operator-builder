@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package templates
 
 import (
@@ -56,3 +59,4 @@ USER 65532:65532
 
 ENTRYPOINT ["/manager"]
 `
+

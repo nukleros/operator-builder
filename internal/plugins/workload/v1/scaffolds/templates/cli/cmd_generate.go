@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package cli
 
 import (
@@ -91,3 +94,4 @@ func (g *generateCommand) addCommands() {
 	{{- end }}
 }
 `
+

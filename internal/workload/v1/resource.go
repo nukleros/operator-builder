@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 import (
@@ -106,3 +109,4 @@ func getFuncNames(sourceFiles []SourceFile) (createFuncNames, initFuncNames []st
 
 	return createFuncNames, initFuncNames
 }
+

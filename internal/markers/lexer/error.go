@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 import "fmt"
@@ -51,3 +54,4 @@ func (l *Lexer) rawWarningf(format string, args ...interface{}) stateFn {
 
 	return lexComment
 }
+

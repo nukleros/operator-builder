@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package mutate
 
 import (
@@ -48,3 +51,4 @@ func {{ .Resource.Kind }}Mutate(reconciler common.ComponentReconciler,
 	return []metav1.Object{*object}, false, nil
 }
 `
+

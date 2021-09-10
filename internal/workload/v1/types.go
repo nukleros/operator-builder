@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 // WorkloadKind indicates which of the supported workload kinds are being used.
@@ -153,3 +156,4 @@ type PluginConfig struct {
 	WorkloadConfigPath string `json:"workloadConfigPath" yaml:"workloadConfigPath"`
 	CliRootCommandName string `json:"cliRootCommandName" yaml:"cliRootCommandName"`
 }
+

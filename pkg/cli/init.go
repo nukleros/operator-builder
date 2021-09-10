@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package cli
 
 import (
@@ -50,3 +53,4 @@ func NewKubebuilderCLI() (*kbcli.CLI, error) {
 
 	return c, nil
 }
+

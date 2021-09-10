@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package parser
 
 import "fmt"
@@ -17,3 +20,4 @@ func (p *Parser) error(err error) stateFn {
 
 	return nil
 }
+

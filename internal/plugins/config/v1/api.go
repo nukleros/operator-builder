@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 import (
@@ -68,3 +71,4 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 	return nil
 }
+

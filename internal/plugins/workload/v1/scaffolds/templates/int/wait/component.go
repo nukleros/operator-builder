@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package wait
 
 import (
@@ -48,3 +51,4 @@ func {{ .Resource.Kind }}Wait(reconciler common.ComponentReconciler,
 	return true, nil
 }
 `
+

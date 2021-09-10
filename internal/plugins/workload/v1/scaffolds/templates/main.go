@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package templates
 
 import (
@@ -292,3 +295,4 @@ func main() {
 	}
 }
 `
+

@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package marker
 
 import (
@@ -131,3 +134,4 @@ func (a *Argument) InitializeValue() {
 
 	a.Value = reflect.Indirect(reflect.New(a.Type))
 }
+

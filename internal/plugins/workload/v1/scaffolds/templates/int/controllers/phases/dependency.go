@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package phases
 
 import (
@@ -126,3 +129,4 @@ func collectionConfigIsReady(r common.ComponentReconciler) bool {
 	return true
 }
 `
+

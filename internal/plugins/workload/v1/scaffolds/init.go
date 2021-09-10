@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package scaffolds
 
 import (
@@ -96,3 +99,4 @@ func (s *initScaffolder) Scaffold() error {
 
 	return nil
 }
+

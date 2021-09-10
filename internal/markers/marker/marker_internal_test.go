@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package marker
 
 /*func Test_argumentInfo(t *testing.T) {
@@ -100,3 +103,4 @@ func TestMarker_loadFields(t *testing.T) {
 	}
 }
 */
+

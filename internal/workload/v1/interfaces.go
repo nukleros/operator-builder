@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 import "sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
@@ -59,3 +62,4 @@ type WorkloadAPIBuilder interface {
 	SetResources(workloadPath string) error
 	SetComponents(components []*ComponentWorkload) error
 }
+

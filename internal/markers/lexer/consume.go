@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 import "unicode"
@@ -75,3 +78,4 @@ func (l *Lexer) consumeUntil(except ...rune) (consumed bool) {
 		consumed = true
 	}
 }
+

@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package inspect
 
 import (
@@ -101,3 +104,4 @@ func (s *Inspector) inspectYAMLComments(nodes ...*yaml.Node) (results []*YAMLRes
 
 	return results
 }
+

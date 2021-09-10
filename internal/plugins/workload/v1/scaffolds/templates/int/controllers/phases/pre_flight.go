@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package phases
 
 import (
@@ -45,3 +48,4 @@ func (phase *PreFlightPhase) Execute(
 	return true, nil
 }
 `
+

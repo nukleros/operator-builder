@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package dependencies
 
 import (
@@ -45,3 +48,4 @@ func {{ .Resource.Kind }}CheckReady(reconciler common.ComponentReconciler) (bool
 	return true, nil
 }
 `
+

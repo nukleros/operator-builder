@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 import (
@@ -22,3 +25,4 @@ func CloseFile(file io.ReadCloser) {
 		log.Fatalf("error closing file!: %s", err)
 	}
 }
+

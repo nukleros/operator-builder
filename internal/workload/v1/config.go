@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package v1
 
 import (
@@ -309,3 +312,4 @@ func validateConfigs(workloads map[WorkloadKind][]WorkloadIdentifier) error {
 
 	return nil
 }
+

@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package license
 
 import (
@@ -152,3 +155,4 @@ func replaceLicenseHeader(file string, header []byte) error {
 
 	return nil
 }
+

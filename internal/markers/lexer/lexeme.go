@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 type LexemeType int
@@ -49,3 +52,4 @@ const (
 func (l Lexeme) String() string {
 	return l.Value
 }
+

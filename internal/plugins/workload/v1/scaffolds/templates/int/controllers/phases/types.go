@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package phases
 
 import (
@@ -98,3 +101,4 @@ func getResourcePhaseName(resourcePhase ResourcePhase) string {
 	return objectElements[len(objectElements)-1]
 }
 `
+

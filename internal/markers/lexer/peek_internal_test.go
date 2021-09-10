@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 import (
@@ -235,3 +238,4 @@ func Test_lexer_peekedWhitespaced(t *testing.T) {
 		})
 	}
 }
+

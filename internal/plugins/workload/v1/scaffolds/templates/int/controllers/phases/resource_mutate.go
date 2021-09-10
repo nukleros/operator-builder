@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package phases
 
 import (
@@ -43,3 +46,4 @@ func (phase *MutateResourcePhase) Execute(resource *ComponentResource) (ctrl.Res
 	return ctrl.Result{}, true, nil
 }
 `
+

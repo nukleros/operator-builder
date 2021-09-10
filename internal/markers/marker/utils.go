@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package marker
 
 import (
@@ -23,3 +26,4 @@ func lowerCamelCase(in string) string {
 		in,
 	)
 }
+

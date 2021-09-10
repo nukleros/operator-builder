@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package cli
 
 import (
@@ -108,3 +111,4 @@ func (i *initCommand) newInit{{ .SubCmdVarName }}Command() {
 	{{- end -}}
 }
 `
+

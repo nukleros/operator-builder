@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (
@@ -16,3 +19,4 @@ func main() {
 		log.Fatal(err)
 	}
 }
+

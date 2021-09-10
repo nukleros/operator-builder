@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package parser
 
 // next returns the next token.
@@ -42,3 +45,4 @@ func (p *Parser) flush() {
 	p.scopeBuffer = ""
 	p.currentDefinition = nil
 }
+

@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 import (
@@ -103,3 +106,4 @@ func (l *Lexer) peekedOneOf(tokens ...rune) bool {
 
 	return false
 }
+

@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 import (
@@ -309,3 +312,4 @@ func lexMoreArgs(l *Lexer) stateFn {
 		return l.errorf("malformed argument: %s", l.buffer)
 	}
 }
+

@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package marker
 
 import "github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
@@ -37,3 +40,4 @@ func (r *Registry) GetDefinition(name string) parser.Definition {
 
 	return &marker
 }
+

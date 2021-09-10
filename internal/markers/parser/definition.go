@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package parser
 
 type Definition interface {
@@ -16,3 +19,4 @@ func (p *Parser) loadDefinition() (found bool) {
 
 	return found
 }
+

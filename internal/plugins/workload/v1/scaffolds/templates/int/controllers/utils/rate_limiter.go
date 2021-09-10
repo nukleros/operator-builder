@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package utils
 
 import (
@@ -92,3 +95,4 @@ func (r *DefaultRateLimiter) Forget(item interface{}) {
 	delete(r.requeues, item)
 }
 `
+

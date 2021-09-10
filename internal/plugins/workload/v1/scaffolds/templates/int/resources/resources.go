@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package resources
 
 import (
@@ -844,3 +847,4 @@ func StatefulSetIsReady(resource common.ComponentResource, expectedKeys ...strin
 	return true, nil
 }
 `
+

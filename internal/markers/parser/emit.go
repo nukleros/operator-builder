@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package parser
 
 import "fmt"
@@ -24,3 +27,4 @@ type Result struct {
 	Object     interface{}
 	MarkerText string
 }
+

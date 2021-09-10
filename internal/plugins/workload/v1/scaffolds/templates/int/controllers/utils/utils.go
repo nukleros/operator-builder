@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package utils
 
 import (
@@ -213,3 +216,4 @@ func Watch(
 	return nil
 }
 `
+

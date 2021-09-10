@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package parser
 
 import (
@@ -68,3 +71,4 @@ func (p *Parser) Parse() []*Result {
 
 	return results
 }
+

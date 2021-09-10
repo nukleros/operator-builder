@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package phases
 
 import (
@@ -80,3 +83,4 @@ func commonWait(
 	return true, nil
 }
 `
+

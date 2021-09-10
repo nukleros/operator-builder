@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package lexer
 
 // push pushes a state function on the stack which will be resumed when parsing terminates.
@@ -22,3 +25,4 @@ func (l *Lexer) pop() stateFn {
 func (l *Lexer) emptyStack() bool {
 	return len(l.stack) == 0
 }
+

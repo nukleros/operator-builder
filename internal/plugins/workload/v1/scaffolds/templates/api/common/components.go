@@ -1,3 +1,6 @@
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 package common
 
 import (
@@ -104,3 +107,4 @@ type ComponentResource interface {
 	ToCommonResource() *Resource
 }
 `
+
