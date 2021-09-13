@@ -109,4 +109,3 @@ func getFuncNames(sourceFiles []SourceFile) (createFuncNames, initFuncNames []st
 
 	return createFuncNames, initFuncNames
 }
-

@@ -11,4 +11,4 @@ spec:
     name: webstorectl
     description: Manage webstore stuff like a boss
   resources:
-  - app.yaml
+  - resources.yaml

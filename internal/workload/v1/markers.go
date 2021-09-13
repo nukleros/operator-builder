@@ -250,7 +250,44 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 		results.SpecField = append(results.SpecField, v)
 	}
 
+	// ensure no duplicate file names exist within the source files
+	deduplicateFileNames(results)
+
 	return results, nil
+}
+
+// deduplicateFileNames dedeplicates the names of the files.  This is because
+// we cannot guarantee that files exist in different directories and may have
+// naming collisions.
+func deduplicateFileNames(templateData *SourceCodeTemplateData) {
+	// create a slice to track existing fileNames and preallocate an existing
+	// known conflict
+	fileNames := make([]string, len(*templateData.SourceFile)+1)
+	fileNames[len(fileNames)-1] = "resources.go"
+
+	// dereference the sourcefiles
+	sourceFiles := *templateData.SourceFile
+
+	for i, sourceFile := range sourceFiles {
+		var count int
+
+		for _, fileName := range fileNames {
+			if fileName == "" {
+				continue
+			}
+
+			if sourceFile.Filename == fileName {
+				// increase the count which serves as an index to append
+				count++
+
+				// adjust the filename
+				fields := strings.Split(sourceFile.Filename, ".go")
+				sourceFiles[i].Filename = fmt.Sprintf("%s_%v.go", fields[0], count)
+			}
+		}
+
+		fileNames[i] = sourceFile.Filename
+	}
 }
 
 // zeroValue returns the zero value for the data type as a string.
@@ -396,4 +433,3 @@ func (fm FieldMarker) String() string {
 		fm.Default,
 	)
 }
-
