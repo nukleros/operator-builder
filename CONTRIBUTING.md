@@ -11,3 +11,18 @@
 1. Once code review has been completed, the PR will either be approved, or further changes will be made on the feature branch until it is determined to function as expected, and either fixes or adds the feature that the issue initially raised.
 1. Occasionally, exceptions will be allowed to this process, but only in rare circumstances when the maintainer deems it necessary.
 
+## Commit Messages
+
+We use the [Conventional Commits 1.0.0
+spec](https://www.conventionalcommits.org/en/v1.0.0/).  This helps keep things
+standardized and allows us to automate generating CHANGELOGs.
+
+## Testing
+
+In order to test the effect of changes made to Operator Builder, use the `make test`.
+At a minimum, ensure your changes work for:
+- application.sh: This tests a basic standalone workload use case.
+- platform.sh: This tests a basic workload colleciton use case.
+
+See the [testing docs](docs/testing.md) for insturctions on how to run tests.
+
