@@ -19,10 +19,13 @@ standardized and allows us to automate generating CHANGELOGs.
 
 ## Testing
 
-In order to test the effect of changes made to Operator Builder, use the `make test`.
-At a minimum, ensure your changes work for:
-- application.sh: This tests a basic standalone workload use case.
-- platform.sh: This tests a basic workload colleciton use case.
+In order to test the effect of changes made to Operator Builder, use `make
+func-test` or `make debug`.
 
-See the [testing docs](docs/testing.md) for insturctions on how to run tests.
+At a minimum, ensure your changes work for:
+- application: This tests a basic standalone workload use case.
+- platform: This tests a basic workload colleciton use case.
+
+See the [testing docs](docs/testing.md) for insturctions on how to run these
+tests.
 
