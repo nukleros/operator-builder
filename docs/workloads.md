@@ -69,4 +69,5 @@ when running either `operator-builder init` or `operater-builder create api` (se
 ## Collections
 
 The `spec.componentFiles` field can only be defined in a `WorkloadCollection`.
-See [collections](collections.md) for more information.
+See [workload collections](workload-collections.md) for more information.
+
