@@ -120,7 +120,7 @@ similar to the following to configure the deployment created:
 
 ## Collection Markers
 
-a second marker type `+operator-builder:collection:field` can be used with the
+A second marker type `+operator-builder:collection:field` can be used with the
 same arguments as a Field Marker. These markers are used to define global Fields
 for your Collection and can be used in any of its associated components.
 

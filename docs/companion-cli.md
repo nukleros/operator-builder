@@ -26,7 +26,7 @@ These are the CLI configurations:
 ## Root Command
 
 The root command for the CLI can be defined in a standalone workload or in a
-[collection workload](collections.md).
+[workload collection](workload-collections.md).
 
 ## Subcommands
 

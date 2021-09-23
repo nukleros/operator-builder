@@ -180,7 +180,7 @@ Following is the Deployment manifest with these markers in place.
         metadata:
           labels:
             app: webstore
-            team: dev-team  # +operator-builder:field:nmae=teamName,type=string
+            team: dev-team  # +operator-builder:field:name=teamName,type=string
         spec:
           containers:
           - name: webstore-container
@@ -415,10 +415,10 @@ resources as follows.
 For more information, checkout the [Operator Builder docs](docs/) as
 well as the [Kubebuilder docs](https://kubebuilder.io/).
 
-## Collections
+## Workload Collections
 
 Operator Builder can generate source code for operators that manage multiple
-workloads.  See [collections](docs/workload-collections.md) for more info.
+workloads.  See [workload collections](docs/workload-collections.md) for more info.
 
 ## Licensing
 
