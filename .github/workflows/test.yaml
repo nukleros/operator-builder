@@ -5,6 +5,9 @@ on:
   - push
 
 jobs:
+  #
+  # unit testing
+  #
   unit-test:
     name: Unit Test
     runs-on: ubuntu-latest
@@ -19,3 +22,121 @@ jobs:
 
       - name: Run Test
         run: go test ./...
+
+  #
+  # build and store artifact
+  #
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: unit-test
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Build Binary Artifact (operator-builder)
+        run: make build
+
+      - name: Store Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: operator-builder
+          path: bin/operator-builder
+
+  #
+  # functional test
+  #
+  functional-test:
+    name: Functional Test
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Standalone Operator
+            artifact: standalone-codebase
+            test_workload_path: test/application
+          - name: Workload Collection Operator
+            artifact: collection-codebase
+            test_workload_path: test/platform
+    env:
+      TEST_WORKLOAD_PATH: "${{ matrix.test_workload_path }}"
+      TEST_PATH: "/tmp/operator-builder-func-test"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download operator-builder Binary
+        uses: actions/download-artifact@v2
+        with:
+          name: operator-builder
+          path: bin
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Initialize ${{ matrix.name }} Codebase
+        run: |
+          chmod +x bin/operator-builder
+          make func-test-clean
+          make func-test-init
+
+      - name: Create ${{ matrix.name }} Codebase
+        run: make func-test-create
+
+      - name: Store ${{ matrix.name }} Codebase
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ env.TEST_PATH }}
+
+  #
+  # integration test
+  #
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: functional-test
+    if: github.event_name == 'pull_request'
+    strategy:
+      matrix:
+        include:
+          - name: Standalone Operator
+            artifact: standalone-codebase
+          - name: Workload Collection Operator
+            artifact: collection-codebase
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    defaults:
+      run:
+        working-directory: /tmp/operator-builder-test
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Download ${{ matrix.name }} Codebase
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.artifact }}
+          path: /tmp/operator-builder-test
+
+      - uses: ./.github/common-actions/integration-test
+        with:
+          codebase-artifact: ${{ matrix.artifact }}

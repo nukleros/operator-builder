@@ -1,0 +1,87 @@
+---
+name: Run Integration Test
+description: Run Integration Test
+
+inputs:
+  codebase-artifact:
+    description: Codebase Artifact to Download
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download Necessary Artifacts
+      shell: bash
+      run: |
+        # setup kind
+        if [ -z $(which kind) ]; then
+          echo "kind executable not found...installing"
+          curl https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64 -o /usr/local/bin/kind -L
+          chmod +x /usr/local/bin/kind
+        else
+          echo "found kind executable at $(which kind)...not installing"
+        fi
+
+        # setup kubectl
+        if [ -z $(which kubectl) ]; then
+          curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+          chmod +x /usr/local/bin/kubectl
+        else
+          echo "found kubectl executable at $(which kubectl)...not installing"
+        fi
+      env:
+        KIND_VERSION: v0.10.0
+        KUBECTL_VERSION: v1.20.0
+
+    - name: Setup KIND Cluster
+      shell: bash
+      run: kind create cluster --name operator-builder-test
+
+    - name: Install Custom Resources
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: |
+        make controller-gen && make kustomize
+        chmod +x bin/controller-gen && chmod +x bin/kustomize
+        make install
+
+    - name: Build Container
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: IMG=localhost:5000/${IMAGE_NAME}:latest make docker-build
+      env:
+        IMAGE_NAME: ${{ inputs.codebase-artifact }}
+
+    - name: Push Container
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: IMG=localhost:5000/${IMAGE_NAME}:latest make docker-push
+      env:
+        IMAGE_NAME: ${{ inputs.codebase-artifact }}
+
+    - name: Deploy Operator
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: IMG=localhost:5000/${IMAGE_NAME}:latest make deploy
+      env:
+        IMAGE_NAME: ${{ inputs.codebase-artifact }}
+
+    - name: Ensure Operator Runs
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: |
+        # this is a placeholder for proper e2e testing that the operator is
+        # running
+        sleep 30
+
+    - name: Install Samples
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: kubectl apply -f config/samples
+
+    - name: Undeploy Operator
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: IMG=localhost:5000/${IMAGE_NAME}:latest make undeploy
+      env:
+        IMAGE_NAME: ${{ inputs.codebase-artifact }}
