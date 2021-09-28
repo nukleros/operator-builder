@@ -1,0 +1,13 @@
+name: tenancy-common-component
+kind: ComponentWorkload
+spec:
+  api:
+    group: tenancy
+    version: v1alpha1
+    kind: TenancyCommon
+    clusterScoped: true
+  companionCliSubcmd:
+    name: tenancy-common
+    description: Manage common tenancy component
+  resources:
+  - ns-operator-ns.yaml

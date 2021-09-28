@@ -1,0 +1,37 @@
+---
+name: Run CLI Integration Test
+description: Run CLI Integration Test
+
+inputs:
+  generate-flag:
+    description: Companion CLI flag to use for generate command
+    required: true
+  generate-manifest:
+    description: Companion CLI manifest to use for generate command
+    required: true
+
+runs:
+  using: composite
+  steps: []
+    # TODO: this is a stub until this action is fixed.  currently, the make
+    # targets are inconsistently missing.
+    #
+    # - name: Build Companion CLI
+    #   shell: bash
+    #   working-directory: /tmp/operator-builder-test
+    #   run: go mod tidy && make build-cli
+
+    # - name: Determine CLI Name
+    #   id: get-command
+    #   shell: bash
+    #   working-directory: /tmp/operator-builder-test
+    #   run: |
+    #     BIN=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
+    #     echo "::set-output name=command::${BIN}"
+
+    # - name: Generate and Apply Child Manifests
+    #   shell: bash
+    #   run: |
+    #     ${{ steps.get-command.outputs.command }} generate \
+    #       ${{ inputs.generate-flag }} ${{ inputs.generate-manifest }} \
+    #       | kubectl apply -f -

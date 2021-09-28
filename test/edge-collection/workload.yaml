@@ -1,0 +1,19 @@
+name: edge-collection
+kind: WorkloadCollection
+spec:
+  api:
+    domain: acme.com
+    group: edge
+    version: v1alpha1
+    kind: EdgeCollection
+    clusterScoped: true
+  companionCliRootcmd:
+    # test:
+    #   names with dashes
+    #   see https://github.com/vmware-tanzu-labs/operator-builder/issues/139
+    name: edge-collection-ctl
+    description: Edge test cases for collection workloads
+  componentFiles:
+    - tenancy/tenancy-common-component.yaml
+    - tenancy/ns-operator-component.yaml
+    - ingress/contour-component.yaml

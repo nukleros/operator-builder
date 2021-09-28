@@ -1,0 +1,16 @@
+---
+name: Run Unit Test
+description: Run Unit Test
+
+inputs:
+  working-directory:
+    description: Working directory where unit test needs run from
+    required: false
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - name: Run Test
+      shell: bash
+      run: go test ${{ inputs.working-directory }}/...

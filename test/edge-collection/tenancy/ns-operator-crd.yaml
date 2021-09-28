@@ -1,0 +1,208 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  name: tanzunamespaces.tenancy.platform.cnr.vmware.com
+  labels:
+    workload-collection: default-collection
+spec:
+  group: tenancy.platform.cnr.vmware.com
+  names:
+    kind: TanzuNamespace
+    listKind: TanzuNamespaceList
+    plural: tanzunamespaces
+    singular: tanzunamespace
+    shortNames:
+      - tns
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: TanzuNamespace is the Schema for the tanzunamespaces API
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: TanzuNamespaceSpec defines the desired state of TanzuNamespace
+              properties:
+                #
+                # common
+                #
+                # NOTE: pick one or the other, but not both.  name is primary. defaults to the name of the CRD object.
+                name:
+                  type: string
+                tanzuNamespaceName:
+                  type: string
+                #
+                # network policies
+                #
+                networkPolicies:
+                  default: []
+                  items:
+                    description: NetworkPolicy defines an individual network policy which belongs to an array of NetworkPolicies
+                    properties:
+                      egressNamespaceLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                      egressPodLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                      egressTCPPorts:
+                        items:
+                          type: integer
+                        type: array
+                        default: []
+                      egressUDPPorts:
+                        items:
+                          type: integer
+                        type: array
+                        default: []
+                      ingressNamespaceLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                      ingressPodLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                      ingressTCPPorts:
+                        items:
+                          type: integer
+                        type: array
+                        default: []
+                      ingressUDPPorts:
+                        items:
+                          type: integer
+                        type: array
+                        default: []
+                      targetPodLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        default: {}
+                    type: object
+                  type: array
+                #
+                # limit range
+                #
+                # NOTE: backwards compatibility
+                tanzuLimitRangeDefaultCpuLimit:
+                  default: 125m
+                  type: string
+                tanzuLimitRangeDefaultCpuRequest:
+                  default: 125m
+                  type: string
+                tanzuLimitRangeDefaultMemoryLimit:
+                  default: 64Mi
+                  type: string
+                tanzuLimitRangeDefaultMemoryRequest:
+                  default: 64Mi
+                  type: string
+                tanzuLimitRangeMaxCpuLimit:
+                  default: 1000m
+                  type: string
+                tanzuLimitRangeMaxMemoryLimit:
+                  default: 2Gi
+                  type: string
+                # NOTE: new object for limitRange*
+                limitRange:
+                  default: {}
+                  type: object
+                  properties:
+                    defaultCPULimit:
+                      type: string
+                    defaultCPURequest:
+                      type: string
+                    defaultMemoryLimit:
+                      type: string
+                    defaultMemoryRequest:
+                      type: string
+                    maxCPULimit:
+                      type: string
+                    maxMemoryLimit:
+                      type: string
+                #
+                # resource quota
+                #
+                # NOTE: backwards compatibility
+                tanzuResourceQuotaCpuLimits:
+                  default: 2000m
+                  type: string
+                tanzuResourceQuotaCpuRequests:
+                  default: 2000m
+                  type: string
+                tanzuResourceQuotaMemoryLimits:
+                  default: 4Gi
+                  type: string
+                tanzuResourceQuotaMemoryRequests:
+                  default: 4Gi
+                  type: string
+                # NOTE: new object for resourceQuota*
+                resourceQuota:
+                  default: {}
+                  type: object
+                  properties:
+                    limitsCPU:
+                      type: string
+                    limitsMemory:
+                      type: string
+                    requestsCPU:
+                      type: string
+                    requestsMemory:
+                      type: string
+                #
+                # rbac
+                #
+                rbac:
+                  default: []
+                  items:
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - namespace-admin
+                          - developer
+                          - read-only
+                          # - "custom"  # TODO: support this later
+                      create:
+                        type: boolean
+                        default: false
+                      user:
+                        type: string
+                        default: ""
+                      role:
+                        type: string
+                        default: ""
+                      roleBinding:
+                        type: string
+                        default: ""
+                    type: object
+                  type: array
+              required: []
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
