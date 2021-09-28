@@ -11,6 +11,7 @@ import (
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
@@ -45,12 +46,7 @@ func (f *Types) SetTemplateDefaults() error {
 }
 
 func (*Types) GetFuncMap() template.FuncMap {
-	funcMap := machinery.DefaultFuncMap()
-	funcMap["containsString"] = func(value string, in string) bool {
-		return strings.Contains(in, value)
-	}
-
-	return funcMap
+	return utils.ContainsStringHelper()
 }
 
 var typesTemplate = `{{ .Boilerplate }}
@@ -211,4 +207,3 @@ func init() {
 	SchemeBuilder.Register(&{{ .Resource.Kind }}{}, &{{ .Resource.Kind }}List{})
 }
 `
-

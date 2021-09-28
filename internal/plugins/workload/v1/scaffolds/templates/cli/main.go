@@ -5,8 +5,11 @@ package cli
 
 import (
 	"path/filepath"
+	"text/template"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
 var _ machinery.Template = &Main{}
@@ -30,6 +33,10 @@ func (f *Main) SetTemplateDefaults() error {
 	return nil
 }
 
+func (*Main) GetFuncMap() template.FuncMap {
+	return utils.RemoveStringHelper()
+}
+
 const cliMainTemplate = `{{ .Boilerplate }}
 
 package main
@@ -39,8 +46,7 @@ import (
 )
 
 func main() {
-	{{ .RootCmd }} := commands.New{{ .RootCmdVarName }}Command()
-	{{ .RootCmd }}.Run()
+	{{ .RootCmd | removeString "-" }} := commands.New{{ .RootCmdVarName }}Command()
+	{{ .RootCmd | removeString "-" }}.Run()
 }
 `
-

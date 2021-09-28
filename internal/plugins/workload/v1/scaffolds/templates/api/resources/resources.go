@@ -5,7 +5,6 @@ package resources
 
 import (
 	"path/filepath"
-	"text/template"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
@@ -41,23 +40,6 @@ func (f *Resources) SetTemplateDefaults() error {
 	f.IfExistsAction = machinery.OverwriteFile
 
 	return nil
-}
-
-func (f *Resources) GetFuncMap() template.FuncMap {
-	funcMap := machinery.DefaultFuncMap()
-	funcMap["quotestr"] = func(value string) string {
-		if string(value[0]) != `"` {
-			value = `"` + value
-		}
-
-		if string(value[len(value)-1]) != `"` {
-			value += `"`
-		}
-
-		return value
-	}
-
-	return funcMap
 }
 
 //nolint:lll
@@ -107,4 +89,3 @@ var InitFuncs = []func(
 	{{ end }}
 }
 `
-
