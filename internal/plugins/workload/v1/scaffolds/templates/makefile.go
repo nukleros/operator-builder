@@ -146,7 +146,7 @@ endef
 # Build the companion CLI
 build-cli:
 	go build -o bin/{{ .RootCmd }} cmd/{{ .RootCmd }}/main.go
-{{- end -}}
+{{- end }}
 
 # Build the API Documentation
 # NOTE: requires go version 1.16 or later

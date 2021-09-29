@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: webstore-container
-        #+operator-builder:field:name=webstoreImage,type=string,description="Defines the web store image"
+        #+operator-builder:field:name=webstoreImage,default="nginx:1.17",type=string,description="Defines the web store image"
         image: nginx:1.17
         ports:
         - containerPort: 8080

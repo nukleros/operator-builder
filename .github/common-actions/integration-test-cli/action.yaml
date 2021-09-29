@@ -2,36 +2,46 @@
 name: Run CLI Integration Test
 description: Run CLI Integration Test
 
-inputs:
-  generate-flag:
-    description: Companion CLI flag to use for generate command
-    required: true
-  generate-manifest:
-    description: Companion CLI manifest to use for generate command
-    required: true
+inputs: []
 
 runs:
   using: composite
-  steps: []
-    # TODO: this is a stub until this action is fixed.  currently, the make
-    # targets are inconsistently missing.
-    #
-    # - name: Build Companion CLI
-    #   shell: bash
-    #   working-directory: /tmp/operator-builder-test
-    #   run: go mod tidy && make build-cli
+  steps:
+    - name: Build Companion CLI
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: go mod tidy && make build-cli
 
-    # - name: Determine CLI Name
-    #   id: get-command
-    #   shell: bash
-    #   working-directory: /tmp/operator-builder-test
-    #   run: |
-    #     BIN=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
-    #     echo "::set-output name=command::${BIN}"
+    - name: Determine CLI Name and Workload Manifest
+      id: get-cli-inputs
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: |
+        COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
+        MANIFEST=`ls config/samples | head -1`
+        echo "::set-output name=command::${COMMAND}"
+        echo "::set-output name=manifest::${MANIFEST}"
 
-    # - name: Generate and Apply Child Manifests
-    #   shell: bash
-    #   run: |
-    #     ${{ steps.get-command.outputs.command }} generate \
-    #       ${{ inputs.generate-flag }} ${{ inputs.generate-manifest }} \
-    #       | kubectl apply -f -
+    - name: Generate and Apply Child Resources
+      shell: bash
+      run: |
+        ${{ steps.get-cli-inputs.outputs.command }} generate \
+          -w ${{ steps.get-cli-inputs.outputs.manifest }} \
+          | kubectl apply -f -
+
+    - name: Uninstall Child Resources
+      shell: bash
+      run: |
+        ${{ steps.get-cli-inputs.outputs.command }} generate \
+          -w ${{ steps.get-cli-inputs.outputs.manifest }} \
+          | kubectl delete -f -
+
+    - name: Initialize Parent Custom Resources
+      shell: bash
+      run: |
+        make install
+        ${{ steps.get-cli-inputs.outputs.command }} init | kubectl apply -f -
+
+    - name: Uninstall Parent Custom Resources
+      shell: bash
+      run: make uninstall
