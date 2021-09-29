@@ -142,9 +142,11 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
+{{ if ne .RootCmd "" -}}
 # Build the companion CLI
 build-cli:
 	go build -o bin/{{ .RootCmd }} cmd/{{ .RootCmd }}/main.go
+{{- end -}}
 
 # Build the API Documentation
 # NOTE: requires go version 1.16 or later
