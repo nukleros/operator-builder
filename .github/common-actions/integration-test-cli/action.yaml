@@ -2,8 +2,6 @@
 name: Run CLI Integration Test
 description: Run CLI Integration Test
 
-inputs: []
-
 runs:
   using: composite
   steps:
