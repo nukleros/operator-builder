@@ -79,9 +79,13 @@ type ComponentWorkload struct {
 type WorkloadCollectionSpec struct {
 	API                 APISpec    `json:"api" yaml:"api"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
+	Resources           []string   `json:"resources" yaml:"resources"`
 	ComponentFiles      []string   `json:"componentFiles" yaml:"componentFiles"`
 	Components          []*ComponentWorkload
 	APISpecFields       []*APISpecField
+	SourceFiles         []SourceFile
+	RBACRules           []RBACRule
+	OwnershipRules      []OwnershipRule
 }
 
 // WorkloadCollection defines a workload collection.
@@ -124,10 +128,10 @@ type ChildResource struct {
 
 // SourceCodeTemplateData is a collection of variables used to generate source code.
 type SourceCodeTemplateData struct {
-	SpecField     []*APISpecField
-	SourceFile    *[]SourceFile
-	RBACRule      *[]RBACRule
-	OwnershipRule *[]OwnershipRule
+	SpecFields     []*APISpecField
+	SourceFiles    *[]SourceFile
+	RBACRules      *[]RBACRule
+	OwnershipRules *[]OwnershipRule
 }
 
 // RBACRule contains the info needed to create the kubebuilder:rbac markers in
@@ -156,4 +160,3 @@ type PluginConfig struct {
 	WorkloadConfigPath string `json:"workloadConfigPath" yaml:"workloadConfigPath"`
 	CliRootCommandName string `json:"cliRootCommandName" yaml:"cliRootCommandName"`
 }
-

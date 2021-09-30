@@ -287,6 +287,12 @@ func (s *apiScaffolder) Scaffold() error {
 			},
 			&common.Conditions{},
 			&common.Resources{},
+			&resources.Resources{
+				PackageName:     s.workload.GetPackageName(),
+				CreateFuncNames: createFuncNames,
+				InitFuncNames:   initFuncNames,
+				IsComponent:     s.workload.IsComponent(),
+			},
 			&resourcespkg.ResourceType{},
 			&resourcespkg.Resources{},
 			&resourcespkg.NamespaceType{},

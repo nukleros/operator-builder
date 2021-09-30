@@ -27,11 +27,16 @@ func formatProcessError(manifestFile string, err error) error {
 	return fmt.Errorf("error processing file %s; %w", manifestFile, err)
 }
 
-func processMarkers(workloadPath string, resources []string, collection bool) (*SourceCodeTemplateData, error) {
+func processMarkers(
+	workloadPath string,
+	resources []string,
+	collection bool,
+	collectionResources bool,
+) (*SourceCodeTemplateData, error) {
 	results := &SourceCodeTemplateData{
-		SourceFile:    new([]SourceFile),
-		RBACRule:      new([]RBACRule),
-		OwnershipRule: new([]OwnershipRule),
+		SourceFiles:    new([]SourceFile),
+		RBACRules:      new([]RBACRule),
+		OwnershipRules: new([]OwnershipRule),
 	}
 
 	specFields := make(map[string]*APISpecField)
@@ -70,7 +75,7 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 		for _, markerResult := range markerResults {
 			switch r := markerResult.Object.(type) {
 			case FieldMarker:
-				if collection {
+				if collection && !collectionResources {
 					continue
 				}
 
@@ -164,7 +169,7 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 			}
 		}
 
-		if collection {
+		if collection && !collectionResources {
 			continue
 		}
 
@@ -180,6 +185,20 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 		manifests := extractManifests(manifestContent)
 
 		for _, manifest := range manifests {
+			// If processing manifests for collection resources there is no case
+			// where there should be collection markers - they will result in
+			// code that won't compile.  We will convert collection markers to
+			// field markers for the sake of UX.
+			if collection && collectionResources {
+				// find & replace collection markers with field markers
+				manifest = strings.Replace(
+					manifest,
+					"!!var collection",
+					"!!var parent",
+					-1,
+				)
+			}
+
 			// unmarshal yaml to get attributes
 			var manifestMetadata struct {
 				Kind       string
@@ -211,7 +230,7 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 			resourceVersion, resourceGroup := versionGroupFromAPIVersion(manifestMetadata.APIVersion)
 
 			// determine group and resource for RBAC rule generation
-			rbacRulesForManifest(manifestMetadata.Kind, resourceGroup, rawContent, results.RBACRule)
+			rbacRulesForManifest(manifestMetadata.Kind, resourceGroup, rawContent, results.RBACRules)
 
 			// determine group and kind for ownership rule generation
 			newOwnershipRule := OwnershipRule{
@@ -220,9 +239,9 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 				CoreAPI: isCoreAPI(resourceGroup),
 			}
 
-			ownershipExists := versionKindRecorded(results.OwnershipRule, &newOwnershipRule)
+			ownershipExists := versionKindRecorded(results.OwnershipRules, &newOwnershipRule)
 			if !ownershipExists {
-				*results.OwnershipRule = append(*results.OwnershipRule, newOwnershipRule)
+				*results.OwnershipRules = append(*results.OwnershipRules, newOwnershipRule)
 			}
 
 			resource := ChildResource{
@@ -247,11 +266,11 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 		}
 
 		sourceFile.Children = childResources
-		*results.SourceFile = append(*results.SourceFile, sourceFile)
+		*results.SourceFiles = append(*results.SourceFiles, sourceFile)
 	}
 
 	for _, v := range specFields {
-		results.SpecField = append(results.SpecField, v)
+		results.SpecFields = append(results.SpecFields, v)
 	}
 
 	// ensure no duplicate file names exist within the source files
@@ -266,11 +285,11 @@ func processMarkers(workloadPath string, resources []string, collection bool) (*
 func deduplicateFileNames(templateData *SourceCodeTemplateData) {
 	// create a slice to track existing fileNames and preallocate an existing
 	// known conflict
-	fileNames := make([]string, len(*templateData.SourceFile)+1)
+	fileNames := make([]string, len(*templateData.SourceFiles)+1)
 	fileNames[len(fileNames)-1] = "resources.go"
 
 	// dereference the sourcefiles
-	sourceFiles := *templateData.SourceFile
+	sourceFiles := *templateData.SourceFiles
 
 	for i, sourceFile := range sourceFiles {
 		var count int
