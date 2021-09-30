@@ -80,6 +80,10 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 				workload.SetNames()
 			case *WorkloadCollection:
 				workload = v
+				if err := workload.SetResources(workloadConfig); err != nil {
+					return nil, fmt.Errorf("%w", err)
+				}
+
 				workload.SetNames()
 			case *ComponentWorkload:
 				if err := v.SetResources(v.Spec.ConfigPath); err != nil {
@@ -312,4 +316,3 @@ func validateConfigs(workloads map[WorkloadKind][]WorkloadIdentifier) error {
 
 	return nil
 }
-

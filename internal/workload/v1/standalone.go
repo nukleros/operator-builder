@@ -132,15 +132,15 @@ func (*StandaloneWorkload) IsCollection() bool {
 }
 
 func (s *StandaloneWorkload) SetResources(workloadPath string) error {
-	resources, err := processMarkers(workloadPath, s.Spec.Resources, false)
+	resources, err := processMarkers(workloadPath, s.Spec.Resources, false, false)
 	if err != nil {
 		return err
 	}
 
-	s.Spec.APISpecFields = resources.SpecField
-	s.Spec.SourceFiles = *resources.SourceFile
-	s.Spec.RBACRules = *resources.RBACRule
-	s.Spec.OwnershipRules = *resources.OwnershipRule
+	s.Spec.APISpecFields = resources.SpecFields
+	s.Spec.SourceFiles = *resources.SourceFiles
+	s.Spec.RBACRules = *resources.RBACRules
+	s.Spec.OwnershipRules = *resources.OwnershipRules
 
 	return nil
 }
@@ -192,4 +192,3 @@ func (s *StandaloneWorkload) SetNames() {
 		s.Spec.CompanionCliRootcmd.FileName = utils.ToFileName(s.Spec.CompanionCliRootcmd.Name)
 	}
 }
-
