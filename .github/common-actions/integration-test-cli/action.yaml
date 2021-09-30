@@ -16,7 +16,7 @@ runs:
       working-directory: /tmp/operator-builder-test
       run: |
         COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
-        MANIFEST=`ls config/samples | head -1`
+        MANIFEST=`find ${PWD}/config/samples -name "*.yaml" | head -1`
         echo "::set-output name=command::${COMMAND}"
         echo "::set-output name=manifest::${MANIFEST}"
 
@@ -36,10 +36,12 @@ runs:
 
     - name: Initialize Parent Custom Resources
       shell: bash
+      working-directory: /tmp/operator-builder-test
       run: |
         make install
         ${{ steps.get-cli-inputs.outputs.command }} init | kubectl apply -f -
 
     - name: Uninstall Parent Custom Resources
       shell: bash
+      working-directory: /tmp/operator-builder-test
       run: make uninstall
