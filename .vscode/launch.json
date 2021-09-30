@@ -33,7 +33,7 @@
 		"cwd": "${workspaceFolder}/test/platform",
 	},
 	{
-		"name": "Test Application Init",
+		"name": "Test Edge Standalone Init",
 		"type": "go",
 		"request": "launch",
 		"mode": "debug",
@@ -41,15 +41,15 @@
 		"args": [
 			"init",
 			"--workload-config",
-			"${workspaceFolder}/test/application/.workloadConfig/workload.yaml",
+			"${workspaceFolder}/test/edge-standalone/.workloadConfig/workload.yaml",
 			"--repo",
 			"github.com/acme/acme-cnp-mgr",
 			"--skip-go-version-check"
 		],
-		"cwd": "${workspaceFolder}/test/application",
+		"cwd": "${workspaceFolder}/test/edge-standalone",
 	},
 	{
-		"name": "Test Application Create",
+		"name": "Test Edge Standalone Create",
 		"type": "go",
 		"request": "launch",
 		"mode": "debug",
@@ -58,11 +58,43 @@
 			"create",
 			"api",
 			"--workload-config",
-			"${workspaceFolder}/test/application/.workloadConfig/workload.yaml",
+			"${workspaceFolder}/test/edge-standalone/.workloadConfig/workload.yaml",
 			"--controller",
 			"--resource"
 		],
-		"cwd": "${workspaceFolder}/test/application",
+		"cwd": "${workspaceFolder}/test/edge-standalone",
+	},
+	{
+		"name": "Test Edge Collection Init",
+		"type": "go",
+		"request": "launch",
+		"mode": "debug",
+		"program": "${workspaceFolder}/cmd/operator-builder",
+		"args": [
+			"init",
+			"--workload-config",
+			"${workspaceFolder}/test/edge-collection/.workloadConfig/workload.yaml",
+			"--repo",
+			"github.com/acme/acme-cnp-mgr",
+			"--skip-go-version-check"
+		],
+		"cwd": "${workspaceFolder}/test/edge-collection",
+	},
+	{
+		"name": "Test Edge Collection Create",
+		"type": "go",
+		"request": "launch",
+		"mode": "debug",
+		"program": "${workspaceFolder}/cmd/operator-builder",
+		"args": [
+			"create",
+			"api",
+			"--workload-config",
+			"${workspaceFolder}/test/edge-collection/.workloadConfig/workload.yaml",
+			"--controller",
+			"--resource"
+		],
+		"cwd": "${workspaceFolder}/test/edge-collection",
 	},
 ]
 }

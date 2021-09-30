@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: contour-svc
+  namespace: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
+  labels:
+    workload-collection: default-collection  #+operator-builder:collection:field:name=collectionLabel,type=string
+spec:
+  selector:
+    app: contour
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

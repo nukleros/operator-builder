@@ -142,9 +142,11 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
+{{ if ne .RootCmd "" -}}
 # Build the companion CLI
-build-{{ .RootCmd }}:
+build-cli:
 	go build -o bin/{{ .RootCmd }} cmd/{{ .RootCmd }}/main.go
+{{- end }}
 
 # Build the API Documentation
 # NOTE: requires go version 1.16 or later
@@ -156,4 +158,3 @@ docs: manifests
 	go install fybrik.io/crdoc@v0.5.0; \
 	crdoc --resources config/crd/bases/ --output docs/apis.md
 `
-

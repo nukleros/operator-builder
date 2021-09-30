@@ -23,6 +23,10 @@ func SupportedMarkerDataTypes() []string {
 	return []string{"bool", "string", "int", "int32", "int64", "float32", "float64"}
 }
 
+func formatProcessError(manifestFile string, err error) error {
+	return fmt.Errorf("error processing file %s; %w", manifestFile, err)
+}
+
 func processMarkers(
 	workloadPath string,
 	resources []string,
@@ -41,17 +45,17 @@ func processMarkers(
 		// capture entire resource manifest file content
 		manifestContent, err := ioutil.ReadFile(filepath.Join(filepath.Dir(workloadPath), manifestFile))
 		if err != nil {
-			return nil, err
+			return nil, formatProcessError(manifestFile, err)
 		}
 
 		insp, err := InitializeMarkerInspector()
 		if err != nil {
-			return nil, err
+			return nil, formatProcessError(manifestFile, err)
 		}
 
 		nodes, markerResults, err := insp.InspectYAML(manifestContent, TransformYAML)
 		if err != nil {
-			return nil, err
+			return nil, formatProcessError(manifestFile, err)
 		}
 
 		buf := bytes.Buffer{}
@@ -59,7 +63,7 @@ func processMarkers(
 		for _, node := range nodes {
 			m, err := yaml.Marshal(node)
 			if err != nil {
-				return nil, err
+				return nil, formatProcessError(manifestFile, err)
 			}
 
 			buf.WriteString("---\n")
@@ -93,7 +97,7 @@ func processMarkers(
 
 				zv, err := zeroValue(r.Type.String())
 				if err != nil {
-					return nil, err
+					return nil, formatProcessError(manifestFile, err)
 				}
 
 				specField.ZeroVal = zv
@@ -138,7 +142,7 @@ func processMarkers(
 
 				zv, err := zeroValue(r.Type.String())
 				if err != nil {
-					return nil, err
+					return nil, formatProcessError(manifestFile, err)
 				}
 
 				specField.ZeroVal = zv
@@ -208,12 +212,12 @@ func processMarkers(
 
 			err = yaml.Unmarshal([]byte(manifest), &manifestMetadata)
 			if err != nil {
-				return nil, err
+				return nil, formatProcessError(manifestFile, err)
 			}
 
 			err = yaml.Unmarshal([]byte(manifest), &rawContent)
 			if err != nil {
-				return nil, err
+				return nil, formatProcessError(manifestFile, err)
 			}
 
 			// generate a unique name for the resource using the kind and name
@@ -251,7 +255,7 @@ func processMarkers(
 			// generate the object source code
 			resourceDefinition, err := generate.Generate([]byte(manifest), "resourceObj")
 			if err != nil {
-				return nil, err
+				return nil, formatProcessError(manifestFile, err)
 			}
 
 			// add the source code to the resource

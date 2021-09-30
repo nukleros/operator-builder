@@ -73,11 +73,19 @@ runs:
         # this is a placeholder for proper e2e testing that the operator is
         # running
         sleep 30
+        cat Makefile
 
     - name: Install Samples
       shell: bash
       working-directory: /tmp/operator-builder-test
       run: kubectl apply -f config/samples
+
+    # TODO: this is a stub until this action is fixed.  currently, the make
+    # targets are inconsistently missing.
+    # - name: Install Documentation
+    #   shell: bash
+    #   working-directory: /tmp/operator-builder-test
+    #   run: make docs
 
     - name: Undeploy Operator
       shell: bash

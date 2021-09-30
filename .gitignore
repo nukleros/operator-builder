@@ -3,7 +3,9 @@ bin/*
 dist/*
 test/application/*
 test/platform/*
-test/persistent/*
+test/edge-standalone/*
+test/edge-collection/*
 !test/application/.workloadConfig/
 !test/platform/.workloadConfig/
-!test/persistent/.workloadConfig/
+!test/edge-standalone/.workloadConfig/
+!test/edge-collection/.workloadConfig/

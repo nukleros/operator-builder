@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
+  labels:
+    workload-collection: default-collection  #+operator-builder:collection:field:name=collectionLabel,type=string

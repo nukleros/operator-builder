@@ -1,0 +1,16 @@
+name: ns-operator-component
+kind: ComponentWorkload
+spec:
+  api:
+    group: tenancy
+    version: v1alpha1
+    kind: NsOperator
+    clusterScoped: true
+  companionCliSubcmd:
+    name: ns-operator
+    description: Manage namespace operator component
+  resources:
+  - ns-operator-crd.yaml
+  - ns-operator-deploy.yaml
+  dependencies:
+  - tenancy-common-component

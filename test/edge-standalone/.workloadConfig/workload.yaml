@@ -1,0 +1,17 @@
+name: edge-standalone
+kind: StandaloneWorkload
+spec:
+  api:
+    domain: acme.com
+    group: edge
+    version: v1alpha1
+    kind: EdgeStandalone
+    clusterScoped: false
+  # test:
+  #   missing companionCliRootcmd generates an error.
+  #   see https://github.com/vmware-tanzu-labs/operator-builder/issues/140
+  # companionCliRootcmd:
+  #   name: edge-standalone-ctl
+  #   description: Edge test cases for standalone workloads
+  resources:
+    - resources.yaml

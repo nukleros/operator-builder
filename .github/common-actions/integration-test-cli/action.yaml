@@ -1,0 +1,47 @@
+---
+name: Run CLI Integration Test
+description: Run CLI Integration Test
+
+runs:
+  using: composite
+  steps:
+    - name: Build Companion CLI
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: go mod tidy && make build-cli
+
+    - name: Determine CLI Name and Workload Manifest
+      id: get-cli-inputs
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: |
+        COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
+        MANIFEST=`find ${PWD}/config/samples -name "*.yaml" | head -1`
+        echo "::set-output name=command::${COMMAND}"
+        echo "::set-output name=manifest::${MANIFEST}"
+
+    - name: Generate and Apply Child Resources
+      shell: bash
+      run: |
+        ${{ steps.get-cli-inputs.outputs.command }} generate \
+          -w ${{ steps.get-cli-inputs.outputs.manifest }} \
+          | kubectl apply -f -
+
+    - name: Uninstall Child Resources
+      shell: bash
+      run: |
+        ${{ steps.get-cli-inputs.outputs.command }} generate \
+          -w ${{ steps.get-cli-inputs.outputs.manifest }} \
+          | kubectl delete -f -
+
+    - name: Initialize Parent Custom Resources
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: |
+        make install
+        ${{ steps.get-cli-inputs.outputs.command }} init | kubectl apply -f -
+
+    - name: Uninstall Parent Custom Resources
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: make uninstall

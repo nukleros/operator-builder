@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: namespace-operator
+    workload-collection: default-collection
+  name: namespace-operator
+  namespace: tenancy-system  # +operator-builder:field:name=namespace,default=tenancy-system,type=string
+spec:
+  replicas: 2  # +operator-builder:field:name=nsOperatorReplicas,default=2,type=int
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: namespace-operator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: namespace-operator
+        workload-collection: default-collection
+      name: namespace-operator
+    spec:
+      containers:
+        - name: namespace-operator
+          image: nginx:1.17  # +operator-builder:field:name=nsOperatorImage,type=string
