@@ -37,10 +37,13 @@ test:
 test-coverage-view: test
 	go tool cover -html=./bin/coverage.out	
 
+test-commit:
+	test/scripts/commit-check-latest.sh
+
 #
 # debug testing with delve
 #
-TEST_WORKLOAD_PATH ?= test/application
+TEST_WORKLOAD_PATH ?= test/cases/application
 
 debug-clean:
 	rm -rf $(TEST_WORKLOAD_PATH)/*

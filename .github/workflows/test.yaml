@@ -61,16 +61,16 @@ jobs:
         include:
           - name: Standalone Operator
             artifact: standalone-codebase
-            test-workload-path: test/application
+            test-workload-path: test/cases/application
           - name: Standalone Edge Cases Operator
             artifact: standalone-edge-codebase
-            test-workload-path: test/edge-standalone
+            test-workload-path: test/cases/edge-standalone
           - name: Workload Collection Operator
             artifact: collection-codebase
-            test-workload-path: test/platform
+            test-workload-path: test/cases/platform
           - name: Workload Collection Edge Cases Operator
             artifact: collection-edge-codebase
-            test-workload-path: test/edge-collection
+            test-workload-path: test/cases/edge-collection
     env:
       TEST_WORKLOAD_PATH: "${{ matrix.test-workload-path }}"
       TEST_PATH: "/tmp/operator-builder-func-test"

@@ -1,8 +1,13 @@
 ---
 name: Check
 on:
-  - push
-  - pull_request
+  push:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
 
 jobs:
   check-latest-commit:
@@ -14,19 +19,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Check Latest Commit Message
-        run: |
-          COMMIT_MSG=`git log -n 1 --pretty=format:"%s"`
-
-          if [[ ! "$COMMIT_MSG" =~ ^((build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|¯\\_\(ツ\)_\/¯)(\(\w+\))?(!)?(: (.*\s*)*))|(Merge (.*\s*)*)|(Initial commit$) ]]; then
-              echo "commit message check failed:"
-              echo
-              echo "${COMMIT_MSG}"
-              echo
-              echo "message is not conventional commits format"
-              echo "please see https://www.conventionalcommits.org/en/v1.0.0/#specification"
-
-              exit 1
-          fi
+        run: make test-commit
 
   check-commits:
     name: Check Commit Messages
@@ -52,6 +45,19 @@ jobs:
 
               message is not conventional commits format
               please see https://www.conventionalcommits.org/en/v1.0.0/#specification
+
+  check-pull-request-title:
+    name: Check Pull Request Title
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Check Pull Request Title
+        uses: deepakputhraya/action-pr-title@master
+        with:
+          regex: '^((build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|¯\\_\(ツ\)_\/¯)(\(\w+\))?(!)?(: (.*\s*)*))|(Merge (.*\s*)*)|(Initial commit$)(\n.*)*$'
 
   dco-check:
     name: DCO Check
