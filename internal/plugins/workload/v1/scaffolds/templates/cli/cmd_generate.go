@@ -30,7 +30,8 @@ type CmdGenerate struct {
 
 	GenerateCommandName  string
 	GenerateCommandDescr string
-	Collection           *workloadv1.WorkloadCollection
+
+	SubCommands *[]workloadv1.CliCommand
 }
 
 func (f *CmdGenerate) SetTemplateDefaults() error {
@@ -54,8 +55,6 @@ import (
 
 type generateCommand struct{
 	*cobra.Command
-	workloadManifest string
-	collectionManifest string
 }
 
 // newGenerateCommand creates a new instance of the generate subcommand.
@@ -65,33 +64,16 @@ func (c *{{ .RootCmdVarName }}Command) newGenerateCommand() {
 	generateCmd.Command = &cobra.Command{
 		Use:   "{{ .GenerateCommandName }}",
 		Short: "{{ .GenerateCommandDescr }}",
-		Long: "{{ .GenerateCommandDescr }}",
+		Long:  "{{ .GenerateCommandDescr }}",
 	}
-
-	generateCmd.Command.PersistentFlags().StringVarP(
-		&generateCmd.workloadManifest,
-		"workload-manifest",
-		"w",
-		"",
-		"Filepath to the workload manifest to generate child resources for.",
-	)
-
-	generateCmd.Command.PersistentFlags().StringVarP(
-		&generateCmd.collectionManifest,
-		"collection-manifest",
-		"c",
-		"",
-		"Filepath to the workload collection manifest.",
-	)
 
 	generateCmd.addCommands()
 	c.AddCommand(generateCmd.Command)
 }
 
 func (g *generateCommand) addCommands() {
-	{{- range $component := .Collection.Spec.Components }}
-	g.newGenerate{{ $component.Spec.CompanionCliSubcmd.VarName }}Command()
+	{{- range $cmd := .SubCommands }}
+	g.newGenerate{{ $cmd.VarName }}Command()
 	{{- end }}
 }
 `
-

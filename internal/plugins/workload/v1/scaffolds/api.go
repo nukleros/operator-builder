@@ -110,6 +110,7 @@ func (s *apiScaffolder) Scaffold() error {
 				SubCmdName:     s.workload.GetSubcommandName(),
 				SubCmdDescr:    s.workload.GetSubcommandDescr(),
 				IsComponent:    s.workload.IsComponent(),
+				IsCollection:   s.workload.IsCollection(),
 			},
 		)
 		if err != nil {
@@ -120,16 +121,65 @@ func (s *apiScaffolder) Scaffold() error {
 			&cli.CmdInit{
 				RootCmd:        s.cliRootCommandName,
 				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-				Collection:     s.workload.(*workloadv1.WorkloadCollection),
+				SubCommands:    s.workload.GetSubcommands(),
 			},
 			&cli.CmdGenerate{
 				RootCmd:        s.cliRootCommandName,
 				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-				Collection:     s.workload.(*workloadv1.WorkloadCollection),
+				SubCommands:    s.workload.GetSubcommands(),
 			},
 		)
 		if err != nil {
 			return err
+		}
+
+		if s.workload.GetSubcommandName() != "" {
+			// build a subcommand for collection, e.g. `cnpctl init cnp`
+			err = scaffold.Execute(
+				&cli.CmdInitSub{
+					RootCmd:        s.cliRootCommandName,
+					RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
+					SubCmdName:     s.workload.GetSubcommandName(),
+					SubCmdDescr:    s.workload.GetSubcommandDescr(),
+					SubCmdVarName:  s.workload.GetSubcommandVarName(),
+					SubCmdFileName: s.workload.GetSubcommandFileName(),
+					SpecFields:     s.workload.GetAPISpecFields(),
+					IsComponent:    true, // fake being a component to create subcommand for collection
+					ComponentResource: s.workload.GetComponentResource(
+						s.config.GetDomain(),
+						s.config.GetRepository(),
+						s.workload.IsClusterScoped(),
+					),
+				},
+			)
+			if err != nil {
+				return err
+			}
+			// we only need a generate command if there are collection resources
+			if s.workload.HasChildResources() {
+				err = scaffold.Execute(
+					&cli.CmdGenerateSub{
+						PackageName:    s.workload.GetPackageName(),
+						RootCmd:        s.cliRootCommandName,
+						RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
+						SubCmdName:     s.workload.GetSubcommandName(),
+						SubCmdDescr:    s.workload.GetSubcommandDescr(),
+						SubCmdVarName:  s.workload.GetSubcommandVarName(),
+						SubCmdFileName: s.workload.GetSubcommandFileName(),
+						IsComponent:    true, // fake being a component to create subcommand for collection
+						IsCollection:   s.workload.IsCollection(),
+						ComponentResource: s.workload.GetComponentResource(
+							s.config.GetDomain(),
+							s.config.GetRepository(),
+							s.workload.IsClusterScoped(),
+						),
+						Collection: s.workload.(*workloadv1.WorkloadCollection),
+					},
+				)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		for _, component := range s.workload.GetComponents() {
@@ -160,6 +210,7 @@ func (s *apiScaffolder) Scaffold() error {
 						SubCmdVarName:  component.GetSubcommandVarName(),
 						SubCmdFileName: component.GetSubcommandFileName(),
 						IsComponent:    component.IsComponent(),
+						IsCollection:   component.IsCollection(),
 						ComponentResource: component.GetComponentResource(
 							s.config.GetDomain(),
 							s.config.GetRepository(),

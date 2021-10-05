@@ -79,6 +79,7 @@ type ComponentWorkload struct {
 type WorkloadCollectionSpec struct {
 	API                 APISpec    `json:"api" yaml:"api"`
 	CompanionCliRootcmd CliCommand `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
+	CompanionCliSubcmd  CliCommand `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
 	Resources           []string   `json:"resources" yaml:"resources"`
 	ComponentFiles      []string   `json:"componentFiles" yaml:"componentFiles"`
 	Components          []*ComponentWorkload

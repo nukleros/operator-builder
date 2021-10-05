@@ -97,7 +97,7 @@ func (i *initCommand) newInit{{ .SubCmdVarName }}Command() {
 			outputStream := os.Stdout
 
 			if _, err := outputStream.WriteString(defaultManifest{{ .SubCmdVarName }}); err != nil {
-				return fmt.Errorf("failed to write outout, %w", err)
+				return fmt.Errorf("failed to write to stdout, %w", err)
 			}
 
 			return nil
@@ -111,4 +111,3 @@ func (i *initCommand) newInit{{ .SubCmdVarName }}Command() {
 	{{- end -}}
 }
 `
-

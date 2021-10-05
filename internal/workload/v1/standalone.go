@@ -192,3 +192,8 @@ func (s *StandaloneWorkload) SetNames() {
 		s.Spec.CompanionCliRootcmd.FileName = utils.ToFileName(s.Spec.CompanionCliRootcmd.Name)
 	}
 }
+
+func (s *StandaloneWorkload) GetSubcommands() *[]CliCommand {
+	// no subcommands for a standalone workload
+	return &[]CliCommand{}
+}

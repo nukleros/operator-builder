@@ -57,9 +57,9 @@ type WorkloadAPIBuilder interface {
 	GetOwnershipRules() *[]OwnershipRule
 	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
 	GetFuncNames() (createFuncNames, initFuncNames []string)
+	GetSubcommands() *[]CliCommand
 
 	SetNames()
 	SetResources(workloadPath string) error
 	SetComponents(components []*ComponentWorkload) error
 }
-

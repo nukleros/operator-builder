@@ -31,6 +31,7 @@ type CmdGenerateSub struct {
 	SubCmdVarName     string
 	SubCmdFileName    string
 	IsComponent       bool
+	IsCollection      bool
 	ComponentResource *resource.Resource
 	Collection        *workloadv1.WorkloadCollection
 
@@ -81,16 +82,107 @@ import (
 	{{ end -}}
 )
 
-{{ if not .IsComponent -}}
+{{ if .IsCollection -}}
+type generate{{ .SubCmdVarName }}Command struct {
+	*cobra.Command
+	collectionManifest string
+}
+{{- else if .IsComponent -}}
+type generate{{ .SubCmdVarName }}Command struct {
+	*cobra.Command
+	workloadManifest string
+	collectionManifest string
+}
+{{- else }}
 type generateCommand struct {
 	*cobra.Command
 	workloadManifest string
 }
 {{- end }}
 
+{{ if not .IsComponent -}}
+// newGenerateCommand creates a new instance of the generate subcommand.
+func (c *{{ .RootCmdVarName }}Command) newGenerateCommand() {
+	g := &generateCommand{}
+{{- else }}
+// newGenerate{{ .SubCmdVarName }}Command creates a new instance of the generate{{ .SubCmdVarName }} subcommand.
+func (g *generateCommand) newGenerate{{ .SubCmdVarName }}Command() {
+{{- end }}
+	{{ if not .IsComponent -}}
+	generateCmd := &cobra.Command{
+		Use:   "{{ .GenerateCommandName }}",
+		Short: "{{ .GenerateCommandDescr }}",
+		Long:  "{{ .GenerateCommandDescr }}",
+		RunE: g.generate,
+	}
+	{{- else -}}
+	generate{{ .SubCmdVarName }}Cmd := &generate{{ .SubCmdVarName }}Command{}
+
+	generate{{ .SubCmdVarName }}Cmd.Command = &cobra.Command{
+		Use:   "{{ .SubCmdName }}",
+		Short: "{{ .SubCmdDescr }}",
+		Long:  "{{ .SubCmdDescr }}",
+		RunE: generate{{ .SubCmdVarName }}Cmd.generate{{ .SubCmdVarName }},
+	}
+	{{- end }}
+
+	{{ if .IsCollection -}}
+
+	generate{{ .SubCmdVarName }}Cmd.Command.Flags().StringVarP(
+		&generate{{ .SubCmdVarName }}Cmd.collectionManifest,
+		"collection-manifest",
+		"c",
+		"",
+		"Filepath to the workload collection manifest.",
+	)
+	generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("collection-manifest")
+
+	g.AddCommand(generate{{ .SubCmdVarName }}Cmd.Command)
+
+	{{- else if .IsComponent -}}
+
+	generate{{ .SubCmdVarName }}Cmd.Command.Flags().StringVarP(
+		&generate{{ .SubCmdVarName }}Cmd.workloadManifest,
+		"workload-manifest",
+		"w",
+		"",
+		"Filepath to the workload manifest.",
+	)
+	generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("workload-manifest")
+
+	generate{{ .SubCmdVarName }}Cmd.Command.Flags().StringVarP(
+		&generate{{ .SubCmdVarName }}Cmd.collectionManifest,
+		"collection-manifest",
+		"c",
+		"",
+		"Filepath to the workload collection manifest.",
+	)
+	generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("collection-manifest")
+
+	g.AddCommand(generate{{ .SubCmdVarName }}Cmd.Command)
+
+	{{- else -}}
+
+	generate{{ .SubCmdVarName }}Cmd.Flags().StringVarP(
+		&g.workloadManifest,
+		"workload-manifest",
+		"w",
+		"",
+		"Filepath to the workload manifest to generate child resources for.",
+	)
+	generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("workload-manifest")
+
+	c.AddCommand(generate{{ .SubCmdVarName }}Cmd)
+	{{- end -}}
+}
+
 // generate creates child resource manifests from a workload's custom resource.
-func (g *generateCommand) generate{{ .SubCmdVarName }}(cmd *cobra.Command, args []string) error {
-	{{- if .IsComponent }}
+{{- if .IsComponent }}
+func (g *generate{{ .SubCmdVarName }}Command) generate{{ .SubCmdVarName }}(cmd *cobra.Command, args []string) error {
+{{- else }}
+func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
+{{- end }}
+	{{- if and (.IsComponent) (not .IsCollection) }}
 	// component workload
 	wkFilename, _ := filepath.Abs(g.workloadManifest)
 
@@ -105,7 +197,9 @@ func (g *generateCommand) generate{{ .SubCmdVarName }}(cmd *cobra.Command, args 
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal yaml %s into workload, %w", wkFilename, err)
 	}
+	{{- end }}
 
+	{{ if .IsComponent }}
 	// workload collection
 	colFilename, _ := filepath.Abs(g.collectionManifest)
 
@@ -122,13 +216,17 @@ func (g *generateCommand) generate{{ .SubCmdVarName }}(cmd *cobra.Command, args 
 	}
 
 	resourceObjects := make([]metav1.Object, len({{ .PackageName }}.CreateFuncs))
-	
+
 	for i, f := range {{ .PackageName }}.CreateFuncs {
+		{{ if .IsCollection }}
+		resource, err := f(&collection)
+		{{- else }}
 		resource, err := f(&workload, &collection)
+		{{- end }}
 		if err != nil {
 			return err
 		}
-		
+
 		resourceObjects[i] = resource
 	}
 	{{ else }}
@@ -174,43 +272,4 @@ func (g *generateCommand) generate{{ .SubCmdVarName }}(cmd *cobra.Command, args 
 
 	return nil
 }
-
-
-{{ if not .IsComponent -}}
-// newGenerateCommand creates a new instance of the generate subcommand.
-func (c *{{ .RootCmdVarName }}Command) newGenerateCommand() {
-	g := &generateCommand{}
-{{- else }}
-// newGenerate{{ .SubCmdVarName }}Command creates a new instance of the generaete{{ .SubCmdVarName }} subcommand.
-func (g *generateCommand) newGenerate{{ .SubCmdVarName }}Command() {
-{{- end }}
-	generate{{ .SubCmdVarName }}Cmd := &cobra.Command{
-		{{ if .IsComponent -}}
-		Use:   "{{ .SubCmdName }}",
-		Short: "{{ .SubCmdDescr }}",
-		Long: "{{ .SubCmdDescr }}",
-		{{- else -}}
-		Use:   "{{ .GenerateCommandName }}",
-		Short: "{{ .GenerateCommandDescr }}",
-		Long: "{{ .GenerateCommandDescr }}",
-		{{- end }}
-		RunE: g.generate{{ .SubCmdVarName }},
-	}
-
-	{{ if .IsComponent -}}
-	g.AddCommand(generate{{ .SubCmdVarName }}Cmd)
-	{{- else -}}
-
-	generate{{ .SubCmdVarName }}Cmd.Flags().StringVarP(
-		&g.workloadManifest,
-		"workload-manifest",
-		"w",
-		"",
-		"Filepath to the workload manifest to generate child resources for.",
-	)
-
-	c.AddCommand(generate{{ .SubCmdVarName }}Cmd)
-	{{- end -}}
-}
 `
-

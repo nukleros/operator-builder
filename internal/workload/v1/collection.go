@@ -91,24 +91,20 @@ func (c *WorkloadCollection) GetAPIKind() string {
 	return c.Spec.API.Kind
 }
 
-func (*WorkloadCollection) GetSubcommandName() string {
-	// no subcommands for workload collections
-	return ""
+func (c *WorkloadCollection) GetSubcommandName() string {
+	return c.Spec.CompanionCliSubcmd.Name
 }
 
-func (*WorkloadCollection) GetSubcommandDescr() string {
-	// no subcommands for workload collections
-	return ""
+func (c *WorkloadCollection) GetSubcommandDescr() string {
+	return c.Spec.CompanionCliSubcmd.Description
 }
 
-func (*WorkloadCollection) GetSubcommandVarName() string {
-	// no subcommands for workload collections
-	return ""
+func (c *WorkloadCollection) GetSubcommandVarName() string {
+	return c.Spec.CompanionCliSubcmd.VarName
 }
 
-func (*WorkloadCollection) GetSubcommandFileName() string {
-	// no subcommands for workload collections
-	return ""
+func (c *WorkloadCollection) GetSubcommandFileName() string {
+	return c.Spec.CompanionCliSubcmd.FileName
 }
 
 func (c *WorkloadCollection) GetRootcommandName() string {
@@ -217,8 +213,36 @@ func (*WorkloadCollection) GetOwnershipRules() *[]OwnershipRule {
 	return &[]OwnershipRule{}
 }
 
-func (*WorkloadCollection) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
-	return &resource.Resource{}
+func (c *WorkloadCollection) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
+	var namespaced bool
+	if clusterScoped {
+		namespaced = false
+	} else {
+		namespaced = true
+	}
+
+	api := resource.API{
+		CRDVersion: "v1",
+		Namespaced: namespaced,
+	}
+
+	return &resource.Resource{
+		GVK: resource.GVK{
+			Domain:  domain,
+			Group:   c.Spec.API.Group,
+			Version: c.Spec.API.Version,
+			Kind:    c.Spec.API.Kind,
+		},
+		Plural: utils.PluralizeKind(c.Spec.API.Kind),
+		Path: fmt.Sprintf(
+			"%s/apis/%s/%s",
+			repo,
+			c.Spec.API.Group,
+			c.Spec.API.Version,
+		),
+		API:        &api,
+		Controller: true,
+	}
 }
 
 func (c *WorkloadCollection) SetNames() {
@@ -226,5 +250,23 @@ func (c *WorkloadCollection) SetNames() {
 	if c.HasRootCmdName() {
 		c.Spec.CompanionCliRootcmd.VarName = utils.ToPascalCase(c.Spec.CompanionCliRootcmd.Name)
 		c.Spec.CompanionCliRootcmd.FileName = utils.ToFileName(c.Spec.CompanionCliRootcmd.Name)
+		c.Spec.CompanionCliSubcmd.VarName = utils.ToPascalCase(c.Spec.CompanionCliSubcmd.Name)
+		c.Spec.CompanionCliSubcmd.FileName = utils.ToFileName(c.Spec.CompanionCliSubcmd.Name)
 	}
+}
+
+func (c *WorkloadCollection) GetSubcommands() *[]CliCommand {
+	commands := []CliCommand{}
+
+	if c.Spec.CompanionCliSubcmd.Name != "" {
+		commands = append(commands, c.Spec.CompanionCliSubcmd)
+	}
+
+	for _, comp := range c.Spec.Components {
+		if comp.Spec.CompanionCliSubcmd.Name != "" {
+			commands = append(commands, comp.Spec.CompanionCliSubcmd)
+		}
+	}
+
+	return &commands
 }

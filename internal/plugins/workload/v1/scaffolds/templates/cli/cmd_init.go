@@ -31,7 +31,7 @@ type CmdInit struct {
 	InitCommandName  string
 	InitCommandDescr string
 
-	Collection *workloadv1.WorkloadCollection
+	SubCommands *[]workloadv1.CliCommand
 }
 
 func (f *CmdInit) SetTemplateDefaults() error {
@@ -72,9 +72,8 @@ func (c *{{ .RootCmdVarName }}Command) newInitCommand() {
 }
 
 func (i *initCommand) addCommands() {
-	{{- range $component := .Collection.Spec.Components }}
-	i.newInit{{ $component.Spec.CompanionCliSubcmd.VarName }}Command()
+	{{- range $cmd := .SubCommands }}
+	i.newInit{{ $cmd.VarName }}Command()
 	{{- end }}
 }
 `
-

@@ -196,3 +196,12 @@ func (c *ComponentWorkload) SetNames() {
 		c.Spec.CompanionCliSubcmd.FileName = utils.ToFileName(c.Spec.CompanionCliSubcmd.Name)
 	}
 }
+
+func (c *ComponentWorkload) GetSubcommands() *[]CliCommand {
+	commands := []CliCommand{}
+
+	if c.Spec.CompanionCliSubcmd.Name != "" {
+		commands = append(commands, c.Spec.CompanionCliSubcmd)
+	}
+	return &commands
+}
