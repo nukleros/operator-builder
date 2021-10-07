@@ -15,7 +15,8 @@ require (
 	github.com/vmware-tanzu-labs/object-code-generator-for-k8s v0.4.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	k8s.io/apimachinery v0.22.0-alpha.0 // indirect
+	k8s.io/apimachinery v0.22.0-alpha.0
+	k8s.io/client-go v0.20.2
 	sigs.k8s.io/kubebuilder/v3 v3.0.0
 	sigs.k8s.io/yaml v1.2.0
 )
