@@ -112,6 +112,9 @@ func (s *apiScaffolder) Scaffold() error {
 				IsComponent:    s.workload.IsComponent(),
 				IsCollection:   s.workload.IsCollection(),
 			},
+			&cli.CmdCommon{
+				RootCmd: s.cliRootCommandName,
+			},
 		)
 		if err != nil {
 			return err
@@ -127,6 +130,9 @@ func (s *apiScaffolder) Scaffold() error {
 				RootCmd:        s.cliRootCommandName,
 				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
 				SubCommands:    s.workload.GetSubcommands(),
+			},
+			&cli.CmdCommon{
+				RootCmd: s.cliRootCommandName,
 			},
 		)
 		if err != nil {

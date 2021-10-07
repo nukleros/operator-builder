@@ -197,6 +197,11 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal yaml %s into workload, %w", wkFilename, err)
 	}
+
+	err = validateWorkload(&workload)
+	if err != nil {
+		return fmt.Errorf("error validating yaml %s, %w", wkFilename, err)
+	}
 	{{- end }}
 
 	{{ if .IsComponent }}
@@ -213,6 +218,11 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 	err = yaml.Unmarshal(colYamlFile, &collection)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal yaml %s into workload, %w", colFilename, err)
+	}
+
+	err = validateWorkload(&collection)
+	if err != nil {
+		return fmt.Errorf("error validating yaml %s, %w", colFilename, err)
 	}
 
 	resourceObjects := make([]metav1.Object, len({{ .PackageName }}.CreateFuncs))
@@ -242,6 +252,11 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 	err = yaml.Unmarshal(yamlFile, &workload)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal yaml %s into workload, %w", filename, err)
+	}
+
+	err = validateWorkload(&workload)
+	if err != nil {
+		return fmt.Errorf("error validating yaml %s, %w", filename, err)
 	}
 
 	resourceObjects := make([]metav1.Object, len({{ .PackageName }}.CreateFuncs))
