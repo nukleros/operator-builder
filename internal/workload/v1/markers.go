@@ -15,6 +15,11 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	"gopkg.in/yaml.v3"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // SupportedMarkerDataTypes returns the supported data types that can be used in
@@ -199,43 +204,32 @@ func processMarkers(
 				)
 			}
 
-			// unmarshal yaml to get attributes
-			var manifestMetadata struct {
-				Kind       string
-				APIVersion string
-				Metadata   struct {
-					Name string
-				}
-			}
+			// decode manifest into unstructured data type
+			var manifestObject unstructured.Unstructured
 
-			var rawContent interface{}
+			decoder := serializer.NewCodecFactory(scheme.Scheme).UniversalDecoder()
 
-			err = yaml.Unmarshal([]byte(manifest), &manifestMetadata)
-			if err != nil {
-				return nil, formatProcessError(manifestFile, err)
-			}
-
-			err = yaml.Unmarshal([]byte(manifest), &rawContent)
+			err := runtime.DecodeInto(decoder, []byte(manifest), &manifestObject)
 			if err != nil {
 				return nil, formatProcessError(manifestFile, err)
 			}
 
 			// generate a unique name for the resource using the kind and name
-			resourceUniqueName := strings.Replace(strings.Title(manifestMetadata.Metadata.Name), "-", "", -1)
+			resourceUniqueName := strings.Replace(strings.Title(manifestObject.GetName()), "-", "", -1)
 			resourceUniqueName = strings.Replace(resourceUniqueName, ".", "", -1)
 			resourceUniqueName = strings.Replace(resourceUniqueName, ":", "", -1)
-			resourceUniqueName = fmt.Sprintf("%s%s", manifestMetadata.Kind, resourceUniqueName)
+			resourceUniqueName = fmt.Sprintf("%s%s", manifestObject.GetKind(), resourceUniqueName)
 
 			// determine resource group and version
-			resourceVersion, resourceGroup := versionGroupFromAPIVersion(manifestMetadata.APIVersion)
+			resourceVersion, resourceGroup := versionGroupFromAPIVersion(manifestObject.GetAPIVersion())
 
 			// determine group and resource for RBAC rule generation
-			rbacRulesForManifest(manifestMetadata.Kind, resourceGroup, rawContent, results.RBACRules)
+			rbacRulesForManifest(manifestObject.GetKind(), resourceGroup, manifestObject.Object, results.RBACRules)
 
 			// determine group and kind for ownership rule generation
 			newOwnershipRule := OwnershipRule{
-				Version: manifestMetadata.APIVersion,
-				Kind:    manifestMetadata.Kind,
+				Version: manifestObject.GetAPIVersion(),
+				Kind:    manifestObject.GetKind(),
 				CoreAPI: isCoreAPI(resourceGroup),
 			}
 
@@ -245,11 +239,11 @@ func processMarkers(
 			}
 
 			resource := ChildResource{
-				Name:       manifestMetadata.Metadata.Name,
+				Name:       manifestObject.GetName(),
 				UniqueName: resourceUniqueName,
 				Group:      resourceGroup,
 				Version:    resourceVersion,
-				Kind:       manifestMetadata.Kind,
+				Kind:       manifestObject.GetKind(),
 			}
 
 			// generate the object source code

@@ -9,12 +9,12 @@
 		"args": [
 			"init",
 			"--workload-config",
-			"${workspaceFolder}/test/platform/.workloadConfig/workload.yaml",
+			"${workspaceFolder}/test/cases/platform/.workloadConfig/workload.yaml",
 			"--repo",
 			"github.com/acme/acme-cnp-mgr",
 			"--skip-go-version-check"
 		],
-		"cwd": "${workspaceFolder}/test/platform",
+		"cwd": "${workspaceFolder}/test/cases/platform",
 	},
 	{
 		"name": "Test Platform Create",
@@ -26,11 +26,11 @@
 			"create",
 			"api",
 			"--workload-config",
-			"${workspaceFolder}/test/platform/.workloadConfig/workload.yaml",
+			"${workspaceFolder}/test/cases/platform/.workloadConfig/workload.yaml",
 			"--controller",
 			"--resource"
 		],
-		"cwd": "${workspaceFolder}/test/platform",
+		"cwd": "${workspaceFolder}/test/cases/platform",
 	},
 	{
 		"name": "Test Edge Standalone Init",
@@ -41,12 +41,12 @@
 		"args": [
 			"init",
 			"--workload-config",
-			"${workspaceFolder}/test/edge-standalone/.workloadConfig/workload.yaml",
+			"${workspaceFolder}/test/cases/edge-standalone/.workloadConfig/workload.yaml",
 			"--repo",
 			"github.com/acme/acme-cnp-mgr",
 			"--skip-go-version-check"
 		],
-		"cwd": "${workspaceFolder}/test/edge-standalone",
+		"cwd": "${workspaceFolder}/test/cases/edge-standalone",
 	},
 	{
 		"name": "Test Edge Standalone Create",
@@ -58,11 +58,11 @@
 			"create",
 			"api",
 			"--workload-config",
-			"${workspaceFolder}/test/edge-standalone/.workloadConfig/workload.yaml",
+			"${workspaceFolder}/test/cases/edge-standalone/.workloadConfig/workload.yaml",
 			"--controller",
 			"--resource"
 		],
-		"cwd": "${workspaceFolder}/test/edge-standalone",
+		"cwd": "${workspaceFolder}/test/cases/edge-standalone",
 	},
 	{
 		"name": "Test Edge Collection Init",
@@ -73,12 +73,12 @@
 		"args": [
 			"init",
 			"--workload-config",
-			"${workspaceFolder}/test/edge-collection/.workloadConfig/workload.yaml",
+			"${workspaceFolder}/test/cases/edge-collection/.workloadConfig/workload.yaml",
 			"--repo",
 			"github.com/acme/acme-cnp-mgr",
 			"--skip-go-version-check"
 		],
-		"cwd": "${workspaceFolder}/test/edge-collection",
+		"cwd": "${workspaceFolder}/test/cases/edge-collection",
 	},
 	{
 		"name": "Test Edge Collection Create",
@@ -90,11 +90,11 @@
 			"create",
 			"api",
 			"--workload-config",
-			"${workspaceFolder}/test/edge-collection/.workloadConfig/workload.yaml",
+			"${workspaceFolder}/test/cases/edge-collection/.workloadConfig/workload.yaml",
 			"--controller",
 			"--resource"
 		],
-		"cwd": "${workspaceFolder}/test/edge-collection",
+		"cwd": "${workspaceFolder}/test/cases/edge-collection",
 	},
 ]
 }
