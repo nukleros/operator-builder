@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/vmware-tanzu-labs/object-code-generator-for-k8s/pkg/generate"
@@ -355,6 +356,8 @@ func InitializeMarkerInspector() (*inspect.Inspector, error) {
 func TransformYAML(results ...*inspect.YAMLResult) error {
 	const varTag = "!!var"
 
+	const strTag = "!!str"
+
 	var key *yaml.Node
 
 	var value *yaml.Node
@@ -381,8 +384,19 @@ func TransformYAML(results ...*inspect.YAMLResult) error {
 
 			t.originalValue = value.Value
 
-			value.Tag = varTag
-			value.Value = fmt.Sprintf("parent.Spec." + strings.Title(t.Name))
+			if t.Replace != nil {
+				value.Tag = strTag
+
+				re, err := regexp.Compile(*t.Replace)
+				if err != nil {
+					return fmt.Errorf("unable to convert %s to regex, %w", *t.Replace, err)
+				}
+
+				value.Value = re.ReplaceAllString(value.Value, fmt.Sprintf("!!start parent.Spec.%s !!end", strings.Title((t.Name))))
+			} else {
+				value.Tag = varTag
+				value.Value = fmt.Sprintf("parent.Spec." + strings.Title(t.Name))
+			}
 
 			r.Object = t
 
@@ -394,8 +408,19 @@ func TransformYAML(results ...*inspect.YAMLResult) error {
 
 			t.originalValue = value.Value
 
-			value.Tag = varTag
-			value.Value = fmt.Sprintf("collection.Spec." + strings.Title(t.Name))
+			if t.Replace != nil {
+				value.Tag = strTag
+
+				re, err := regexp.Compile(*t.Replace)
+				if err != nil {
+					return fmt.Errorf("unable to convert %s to regex, %w", *t.Replace, err)
+				}
+
+				value.Value = re.ReplaceAllString(value.Value, fmt.Sprintf("!!start collection.Spec.%s !!end", strings.Title((t.Name))))
+			} else {
+				value.Tag = varTag
+				value.Value = fmt.Sprintf("collection.Spec." + strings.Title(t.Name))
+			}
 
 			r.Object = t
 		}
@@ -450,6 +475,7 @@ type FieldMarker struct {
 	Type          FieldType
 	Description   *string
 	Default       interface{} `marker:",optional"`
+	Replace       *string
 	originalValue interface{}
 }
 

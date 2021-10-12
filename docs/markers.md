@@ -25,7 +25,7 @@ format of `argument=value` and separated by the `,`. additionally if the
 argument name is given by itself with no value, it is assumed to have an
 implict `=true` on the end and is treated as a flag.
 
-Below you will field the arguments for a field marker
+Below you will find the arguments for a field marker
 
 #### Name (required)
 The name you want to use for the field in the custom resource that
@@ -55,6 +55,33 @@ a required field in the custom resource.  For example:
 
     `operator-builder:field:name=myName,type=string,default=test`
 
+#### Replace (optional)
+There may be some instances where you may only want a specific potion of the value to be configurable (such as config maps). In these scenarios you can use the replace argument to specify a search string (or regex) to target for configuration. 
+
+Consider the following example:
+```
+  ---
+  apiVersion: v1
+kind: ConfigMap
+metadata:
+  label: 
+    # +operator-builder:field:name=environment,default=dev,type=string,replace="dev"
+    app: myapp-dev
+  name: contour-configmap
+  namespace: ingress-system
+data:
+  # +operator-builder:field:name=configOption,default=myoption,type=string,replace="configuration2"
+  # +operator-builder:field:name=yamlType,default=myoption,type=string,replace="multi.*yaml"
+  config.yaml: |
+    ---
+    someoption: configuration2
+    anotheroption: configuration1
+    justtesting: multistringyaml
+```
+
+in this scenario three api fields will be made. The first one, `environment` will replace the `dev` portion of `myapp-dev` so if `prod` was provided as a value, the resulting deployment would have the label `app` with a value of `myapp-prod`
+the second and third fields will both replace specific sections of the config map data, the first will replace the value of the `someoption` key and the second is using regex to target the value of the `justtesting` key.
+
 #### Description (optional)
 An optional description can be provided which will be used in the source code as
 a Doc String, backticks `` ` `` may be used to capture multiline strings (head
@@ -66,11 +93,10 @@ able to run `kubectl explain` against their resource and having documentation
 right at their fingertips without having to navigate to API documentation in
 order to see the usage of the API.  For example:
 
-    `operator-builder:field:name=myName,type=string,default=test,description="Hello World"`
+    operator-builder:field:name=myName,type=string,default=test,description="Hello World"
 
-Note that you can use a single custom resource field name to configure multiple
-fields in the resource.  In the example above, the value for the `teamName`
-field will.
+*Note: that you can use a single custom resource field name to configure multiple
+fields in the resource.*
 
 Consider the following Deployment:
 
