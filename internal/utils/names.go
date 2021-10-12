@@ -5,8 +5,6 @@ package utils
 
 import (
 	"strings"
-
-	pluralize "github.com/gertd/go-pluralize"
 )
 
 // ToPascalCase will convert a kebab-case string to a PascalCase name appropriate to
@@ -43,11 +41,3 @@ func ToFileName(name string) string {
 func ToPackageName(name string) string {
 	return strings.ToLower(strings.Replace(name, "-", "", -1))
 }
-
-// PluralizeKind returns the plural version of a kind in lowercase.
-func PluralizeKind(kind string) string {
-	p := pluralize.NewClient()
-
-	return strings.ToLower(p.Plural(kind))
-}
-

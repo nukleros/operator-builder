@@ -233,7 +233,7 @@ func (c *WorkloadCollection) GetComponentResource(domain, repo string, clusterSc
 			Version: c.Spec.API.Version,
 			Kind:    c.Spec.API.Kind,
 		},
-		Plural: utils.PluralizeKind(c.Spec.API.Kind),
+		Plural: resource.RegularPlural(c.Spec.API.Kind),
 		Path: fmt.Sprintf(
 			"%s/apis/%s/%s",
 			repo,

@@ -1,10 +1,13 @@
-name: contour-component
+# test:
+#   ending name with "two" fails
+#   see https://github.com/vmware-tanzu-labs/operator-builder/issues/95
+name: contour-component-two
 kind: ComponentWorkload
 spec:
   api:
     group: ingress
     version: v1alpha1
-    kind: Contour
+    kind: ContourTwo
     clusterScoped: true
   companionCliSubcmd:
     name: contour

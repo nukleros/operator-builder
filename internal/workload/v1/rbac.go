@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 )
 
 func (rule *RBACRule) AddVerb(verb string) {
@@ -80,7 +80,7 @@ func getResourceForRBAC(kind string) string {
 	if rbacResource[0] == "*" {
 		kind = "*"
 	} else {
-		kind = utils.PluralizeKind(rbacResource[0])
+		kind = resource.RegularPlural(rbacResource[0])
 	}
 
 	if len(rbacResource) > 1 {
@@ -157,4 +157,3 @@ func rbacRulesForManifest(kind, group string, rawContent interface{}, rbacRules 
 		}
 	}
 }
-

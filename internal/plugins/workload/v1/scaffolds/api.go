@@ -5,7 +5,6 @@ package scaffolds
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/afero"
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
@@ -81,8 +80,6 @@ func (s *apiScaffolder) Scaffold() error {
 	)
 
 	createFuncNames, initFuncNames := s.workload.GetFuncNames()
-
-	var crdSampleFilenames []string
 
 	// companion CLI
 	if s.workload.IsStandalone() && s.workload.GetRootcommandName() != "" {
@@ -318,16 +315,6 @@ func (s *apiScaffolder) Scaffold() error {
 		}
 	} else {
 		// collection API
-		crdSampleFilenames = append(
-			crdSampleFilenames,
-			strings.ToLower(fmt.Sprintf(
-				"%s.%s_%s.yaml",
-				s.workload.GetAPIGroup(),
-				s.workload.GetDomain(),
-				utils.PluralizeKind(s.workload.GetAPIKind()),
-			)),
-		)
-
 		err = scaffold.Execute(
 			&templates.MainUpdater{
 				WireResource:   true,
@@ -392,9 +379,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&samples.CRDSample{
 				SpecFields: s.workload.GetAPISpecFields(),
 			},
-			&crd.Kustomization{
-				CRDSampleFilenames: crdSampleFilenames,
-			},
+			&crd.Kustomization{},
 		)
 		if err != nil {
 			return err
@@ -412,16 +397,6 @@ func (s *apiScaffolder) Scaffold() error {
 			)
 
 			createFuncNames, initFuncNames := component.GetFuncNames()
-
-			crdSampleFilenames = append(
-				crdSampleFilenames,
-				strings.ToLower(fmt.Sprintf(
-					"%s.%s_%s.yaml",
-					component.GetAPIGroup(),
-					s.workload.GetDomain(),
-					utils.PluralizeKind(component.GetAPIKind()),
-				)),
-			)
 
 			err = componentScaffold.Execute(
 				&templates.MainUpdater{
@@ -458,9 +433,7 @@ func (s *apiScaffolder) Scaffold() error {
 				&samples.CRDSample{
 					SpecFields: component.Spec.APISpecFields,
 				},
-				&crd.Kustomization{
-					CRDSampleFilenames: crdSampleFilenames,
-				},
+				&crd.Kustomization{},
 			)
 			if err != nil {
 				return err
