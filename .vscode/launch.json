@@ -33,6 +33,38 @@
 		"cwd": "${workspaceFolder}/test/cases/platform",
 	},
 	{
+		"name": "Test Application Init",
+		"type": "go",
+		"request": "launch",
+		"mode": "debug",
+		"program": "${workspaceFolder}/cmd/operator-builder",
+		"args": [
+			"init",
+			"--workload-config",
+			"${workspaceFolder}/test/cases/application/.workloadConfig/workload.yaml",
+			"--repo",
+			"github.com/acme/acme-webstore-mgr",
+			"--skip-go-version-check"
+		],
+		"cwd": "${workspaceFolder}/test/cases/application",
+	},
+	{
+		"name": "Test Application Create",
+		"type": "go",
+		"request": "launch",
+		"mode": "debug",
+		"program": "${workspaceFolder}/cmd/operator-builder",
+		"args": [
+			"create",
+			"api",
+			"--workload-config",
+			"${workspaceFolder}/test/cases/application/.workloadConfig/workload.yaml",
+			"--controller",
+			"--resource"
+		],
+		"cwd": "${workspaceFolder}/test/cases/application",
+	},
+	{
 		"name": "Test Edge Standalone Init",
 		"type": "go",
 		"request": "launch",
