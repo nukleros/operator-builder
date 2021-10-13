@@ -92,6 +92,9 @@ func (s *initScaffolder) Scaffold() error {
 		&templates.Makefile{
 			RootCmd: s.workload.GetRootCmdName(),
 		},
+		&templates.Readme{
+			RootCmd: s.workload.GetRootCmdName(),
+		},
 	)
 	if err != nil {
 		return err
