@@ -305,4 +305,3 @@ func TestLexer_consumeUntil(t *testing.T) {
 		})
 	}
 }
-

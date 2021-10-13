@@ -14,4 +14,3 @@ func (p *Parser) consumed(lxt lexer.LexemeType) bool {
 
 	return false
 }
-

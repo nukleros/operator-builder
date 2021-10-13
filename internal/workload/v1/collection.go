@@ -12,6 +12,8 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
+var ErrMissingRequiredFields = errors.New("missing required fields")
+
 func (c *WorkloadCollection) Validate() error {
 	missingFields := []string{}
 
@@ -37,8 +39,7 @@ func (c *WorkloadCollection) Validate() error {
 	}
 
 	if len(missingFields) > 0 {
-		msg := fmt.Sprintf("Missing required fields: %s", missingFields)
-		return errors.New(msg)
+		return fmt.Errorf("%w: %s", ErrMissingRequiredFields, missingFields)
 	}
 
 	return nil

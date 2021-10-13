@@ -43,15 +43,3 @@ func (l *Lexer) warningf(format string, args ...interface{}) stateFn {
 
 	return lexComment
 }
-
-// rawWarningf returns an warning Lexeme with no context and continues the scan.
-func (l *Lexer) rawWarningf(format string, args ...interface{}) stateFn {
-	l.items <- Lexeme{
-		Type:  LexemeWarning,
-		Value: fmt.Sprintf(format, args...),
-		Pos:   l.pos,
-	}
-
-	return lexComment
-}
-

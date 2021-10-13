@@ -15,17 +15,18 @@ var (
 	_ machinery.Inserter = &Kustomization{}
 )
 
-// Kustomization scaffolds a file that defines the kustomization scheme for the crd folder
+// Kustomization scaffolds a file that defines the kustomization scheme for the crd folder.
 type Kustomization struct {
 	machinery.TemplateMixin
 	machinery.ResourceMixin
 }
 
-// SetTemplateDefaults implements file.Template
+// SetTemplateDefaults implements file.Template.
 func (f *Kustomization) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = filepath.Join("config", "crd", "kustomization.yaml")
 	}
+
 	f.Path = f.Resource.Replacer().Replace(f.Path)
 
 	f.TemplateBody = fmt.Sprintf(kustomizationTemplate,
@@ -43,7 +44,7 @@ const (
 	caInjectionPatchMarker = "crdkustomizecainjectionpatch"
 )
 
-// GetMarkers implements file.Inserter
+// GetMarkers implements file.Inserter.
 func (f *Kustomization) GetMarkers() []machinery.Marker {
 	return []machinery.Marker{
 		machinery.NewMarkerFor(f.Path, resourceMarker),
@@ -61,9 +62,10 @@ const (
 `
 )
 
-// GetCodeFragments implements file.Inserter
+// GetCodeFragments implements file.Inserter.
 func (f *Kustomization) GetCodeFragments() machinery.CodeFragmentsMap {
-	fragments := make(machinery.CodeFragmentsMap, 3)
+	const codeFragmentsLen = 3
+	fragments := make(machinery.CodeFragmentsMap, codeFragmentsLen)
 
 	// Generate resource code fragments
 	res := make([]string, 0)
@@ -81,9 +83,11 @@ func (f *Kustomization) GetCodeFragments() machinery.CodeFragmentsMap {
 	if len(res) != 0 {
 		fragments[machinery.NewMarkerFor(f.Path, resourceMarker)] = res
 	}
+
 	if len(webhookPatch) != 0 {
 		fragments[machinery.NewMarkerFor(f.Path, webhookPatchMarker)] = webhookPatch
 	}
+
 	if len(caInjectionPatch) != 0 {
 		fragments[machinery.NewMarkerFor(f.Path, caInjectionPatchMarker)] = caInjectionPatch
 	}
@@ -91,7 +95,7 @@ func (f *Kustomization) GetCodeFragments() machinery.CodeFragmentsMap {
 	return fragments
 }
 
-var kustomizationTemplate = `# This kustomization.yaml is not intended to be run by itself,
+const kustomizationTemplate = `# This kustomization.yaml is not intended to be run by itself,
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:

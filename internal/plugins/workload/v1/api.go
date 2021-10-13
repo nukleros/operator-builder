@@ -40,7 +40,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 
 	var pluginConfig workloadv1.PluginConfig
 	if err := c.DecodePluginConfig(workloadv1.PluginConfigKey, &pluginConfig); err != nil {
-		return err
+		return fmt.Errorf("unable to decode operatorbuilder config key at %s, %w", p.workloadConfigPath, err)
 	}
 
 	p.workloadConfigPath = pluginConfig.WorkloadConfigPath
@@ -61,13 +61,13 @@ func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 		p.workloadConfigPath,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to process api config for %s, %w", p.workloadConfigPath, err)
 	}
 
 	// validate the workload config
 	err = workload.Validate()
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to validate config %s, %w", p.workloadConfigPath, err)
 	}
 
 	p.workload = workload
@@ -85,9 +85,8 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 	scaffolder.InjectFS(fs)
 
 	if err := scaffolder.Scaffold(); err != nil {
-		return err
+		return fmt.Errorf("unable to scaffold api, %w", err)
 	}
 
 	return nil
 }
-

@@ -19,4 +19,3 @@ func (p *Parser) loadDefinition() (found bool) {
 
 	return found
 }
-

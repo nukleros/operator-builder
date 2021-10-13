@@ -51,4 +51,3 @@ func {{ .Resource.Kind }}Mutate(reconciler common.ComponentReconciler,
 	return []metav1.Object{*object}, false, nil
 }
 `
-

@@ -83,4 +83,3 @@ func persistResource(
 	return updateResourceConditions(r, *resource.ToCommonResource(), &condition)
 }
 `
-

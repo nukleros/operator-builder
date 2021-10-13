@@ -40,4 +40,3 @@ require (
 	github.com/spf13/cobra {{ .CobraVersion }}
 )
 `
-

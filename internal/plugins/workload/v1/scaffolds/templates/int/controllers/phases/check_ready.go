@@ -66,4 +66,3 @@ func (phase *CheckReadyPhase) Execute(
 	return (knownReady && customReady), nil
 }
 `
-

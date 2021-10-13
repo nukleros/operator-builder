@@ -19,17 +19,6 @@ func (p *Parser) next() {
 	p.currentLexeme = p.peekStack[p.peekCount]
 }
 
-// backup backs the input stream up one token.
-func (p *Parser) backup() {
-	bl := len(p.scopeBuffer)
-	tl := len(p.peekStack[p.peekCount].String())
-	p.scopeBuffer = p.scopeBuffer[:bl-tl]
-
-	p.peekCount++
-
-	p.currentLexeme = p.peekStack[p.peekCount]
-}
-
 // discard discards the next token without consuming it.
 func (p *Parser) discard() {
 	if p.peekCount > 1 {
@@ -45,4 +34,3 @@ func (p *Parser) flush() {
 	p.scopeBuffer = ""
 	p.currentDefinition = nil
 }
-

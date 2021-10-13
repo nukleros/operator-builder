@@ -30,7 +30,6 @@ func (f *CmdCommon) SetTemplateDefaults() error {
 	return nil
 }
 
-//nolint: lll
 const cliCmdCommonTemplate = `{{ .Boilerplate }}
 
 package commands

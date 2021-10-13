@@ -20,4 +20,3 @@ func NewUpdateCmd() *cobra.Command {
 
 	return cmd
 }
-

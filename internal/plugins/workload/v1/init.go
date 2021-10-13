@@ -38,12 +38,12 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 
 	// operator builder always uses multi-group APIs
 	if err := c.SetMultiGroup(); err != nil {
-		return err
+		return fmt.Errorf("unable to enable multigroup apis, %w", err)
 	}
 
 	var pluginConfig workloadv1.PluginConfig
 	if err := c.DecodePluginConfig(workloadv1.PluginConfigKey, &pluginConfig); err != nil {
-		return err
+		return fmt.Errorf("unable to decode operatorbuilder config key for %s, %w", p.workloadConfigPath, err)
 	}
 
 	p.workloadConfigPath = pluginConfig.WorkloadConfigPath
@@ -58,12 +58,12 @@ func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 		p.workloadConfigPath,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to scaffold initial config for %s, %w", p.workloadConfigPath, err)
 	}
 
 	// validate the workload config
 	if err := workload.Validate(); err != nil {
-		return err
+		return fmt.Errorf("unable to validate configuration for %s, %w", p.workloadConfigPath, err)
 	}
 
 	p.workload = workload
@@ -80,9 +80,8 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 	scaffolder.InjectFS(fs)
 
 	if err := scaffolder.Scaffold(); err != nil {
-		return err
+		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
 	}
 
 	return nil
 }
-

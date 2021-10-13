@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
 	"gopkg.in/yaml.v3"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
 )
 
 type YAMLResult struct {
@@ -104,4 +105,3 @@ func (s *Inspector) inspectYAMLComments(nodes ...*yaml.Node) (results []*YAMLRes
 
 	return results
 }
-

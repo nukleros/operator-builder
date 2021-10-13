@@ -4,6 +4,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/license"
@@ -22,7 +24,7 @@ func NewUpdateLicenseCmd() *cobra.Command {
 			// project license
 			if projectLicensePath != "" {
 				if err := license.UpdateProjectLicense(projectLicensePath); err != nil {
-					return err
+					return fmt.Errorf("unable to update project license at %s, %w", projectLicensePath, err)
 				}
 			}
 
@@ -30,11 +32,11 @@ func NewUpdateLicenseCmd() *cobra.Command {
 			if sourceHeaderPath != "" {
 				// boilerplate
 				if err := license.UpdateSourceHeader(sourceHeaderPath); err != nil {
-					return err
+					return fmt.Errorf("unable to update source header file at %s, %w", sourceHeaderPath, err)
 				}
 				// existing source code files
 				if err := license.UpdateExistingSourceHeader(sourceHeaderPath); err != nil {
-					return err
+					return fmt.Errorf("unable to update source header file at %s, %w", sourceHeaderPath, err)
 				}
 			}
 
@@ -47,4 +49,3 @@ func NewUpdateLicenseCmd() *cobra.Command {
 
 	return cmd
 }
-

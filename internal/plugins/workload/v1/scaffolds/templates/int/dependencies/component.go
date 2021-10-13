@@ -48,4 +48,3 @@ func {{ .Resource.Kind }}CheckReady(reconciler common.ComponentReconciler) (bool
 	return true, nil
 }
 `
-

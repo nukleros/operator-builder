@@ -312,4 +312,3 @@ func lexMoreArgs(l *Lexer) stateFn {
 		return l.errorf("malformed argument: %s", l.buffer)
 	}
 }
-

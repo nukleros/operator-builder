@@ -25,4 +25,3 @@ func CloseFile(file io.ReadCloser) {
 		log.Fatalf("error closing file!: %s", err)
 	}
 }
-

@@ -13,6 +13,7 @@ import (
 
 const pluginName = "config." + plugins.DefaultNameQualifier
 
+//nolint:gochecknoglobals //needed for plugin architecture
 var (
 	pluginVersion            = plugin.Version{Number: 1}
 	supportedProjectVersions = []config.Version{cfgv3.Version}
@@ -34,4 +35,3 @@ func (Plugin) Version() plugin.Version                              { return plu
 func (Plugin) SupportedProjectVersions() []config.Version           { return supportedProjectVersions }
 func (p Plugin) GetInitSubcommand() plugin.InitSubcommand           { return &p.initSubcommand }
 func (p Plugin) GetCreateAPISubcommand() plugin.CreateAPISubcommand { return &p.createAPISubcommand }
-

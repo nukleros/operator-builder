@@ -51,4 +51,3 @@ func {{ .Resource.Kind }}Wait(reconciler common.ComponentReconciler,
 	return true, nil
 }
 `
-

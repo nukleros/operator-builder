@@ -101,4 +101,3 @@ func getResourcePhaseName(resourcePhase ResourcePhase) string {
 	return objectElements[len(objectElements)-1]
 }
 `
-

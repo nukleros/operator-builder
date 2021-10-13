@@ -107,4 +107,3 @@ type ComponentResource interface {
 	ToCommonResource() *Resource
 }
 `
-

@@ -82,4 +82,3 @@ func Create{{ .UniqueName }} (
 }
 {{ end }}
 `
-

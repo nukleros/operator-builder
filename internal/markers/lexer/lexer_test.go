@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/lexer"
 )
 
@@ -387,4 +388,3 @@ func TestLexer(t *testing.T) {
 		t.Fatalf("testcase(s) still focussed")
 	}
 }
-

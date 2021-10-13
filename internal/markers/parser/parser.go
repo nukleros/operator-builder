@@ -71,4 +71,3 @@ func (p *Parser) Parse() []*Result {
 
 	return results
 }
-

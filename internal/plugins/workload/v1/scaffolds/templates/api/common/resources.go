@@ -70,4 +70,3 @@ func (resource *Resource) GetResourceIndex(component Component) int {
 	return -1
 }
 `
-

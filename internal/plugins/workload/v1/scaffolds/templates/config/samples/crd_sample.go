@@ -49,4 +49,3 @@ spec:
   {{ .SampleField -}}
 {{ end }}
 `
-

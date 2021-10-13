@@ -156,7 +156,7 @@ type OwnershipRule struct {
 const PluginConfigKey = "operatorBuilder"
 
 // PluginConfig contains the project config values which are stored in the
-// PROJECT file under plugins.operatorBuilder
+// PROJECT file under plugins.operatorBuilder.
 type PluginConfig struct {
 	WorkloadConfigPath string `json:"workloadConfigPath" yaml:"workloadConfigPath"`
 	CliRootCommandName string `json:"cliRootCommandName" yaml:"cliRootCommandName"`

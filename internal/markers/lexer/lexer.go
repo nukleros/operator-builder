@@ -51,4 +51,3 @@ func (l *Lexer) Run() {
 func (l *Lexer) NextLexeme() Lexeme {
 	return <-l.items
 }
-

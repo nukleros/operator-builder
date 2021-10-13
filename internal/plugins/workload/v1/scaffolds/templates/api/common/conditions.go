@@ -83,4 +83,3 @@ func (condition *PhaseCondition) GetPhaseConditionIndex(component Component) int
 	return -1
 }
 `
-

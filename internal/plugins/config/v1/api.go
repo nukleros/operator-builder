@@ -4,6 +4,8 @@
 package v1
 
 import (
+	"fmt"
+
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
@@ -28,7 +30,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 		p.workloadConfigPath,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to inject config into %s, %w", p.workloadConfigPath, err)
 	}
 
 	pluginConfig := workloadv1.PluginConfig{
@@ -37,7 +39,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 	}
 
 	if err := c.EncodePluginConfig(workloadv1.PluginConfigKey, pluginConfig); err != nil {
-		return err
+		return fmt.Errorf("unable to encode plugin config at key %s, %w", workloadv1.PluginConfigKey, err)
 	}
 
 	return nil
@@ -48,7 +50,7 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 		p.workloadConfigPath,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to inject resource into %s, %w", p.workloadConfigPath, err)
 	}
 
 	// set from config file if not provided with command line flag

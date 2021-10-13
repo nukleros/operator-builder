@@ -49,17 +49,16 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 	// project license
 	if p.projectLicensePath != "" {
 		if err := license.UpdateProjectLicense(p.projectLicensePath); err != nil {
-			return err
+			return fmt.Errorf("unable to update project license at %s, %w", p.projectLicensePath, err)
 		}
 	}
 
 	// source header license
 	if p.sourceHeaderPath != "" {
 		if err := license.UpdateSourceHeader(p.sourceHeaderPath); err != nil {
-			return err
+			return fmt.Errorf("unable to update source header file at %s, %w", p.sourceHeaderPath, err)
 		}
 	}
 
 	return nil
 }
-

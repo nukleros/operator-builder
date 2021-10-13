@@ -140,4 +140,3 @@ func (c *{{ .RootCmdVarName }}Command) addSubCommands() {
 	%s
 }
 `
-

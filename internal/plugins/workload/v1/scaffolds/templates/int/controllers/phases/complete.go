@@ -51,4 +51,3 @@ func (phase *CompletePhase) Execute(
 	return true, nil
 }
 `
-

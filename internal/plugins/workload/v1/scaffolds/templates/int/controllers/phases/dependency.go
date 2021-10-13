@@ -129,4 +129,3 @@ func collectionConfigIsReady(r common.ComponentReconciler) bool {
 	return true
 }
 `
-

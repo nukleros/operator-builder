@@ -49,7 +49,7 @@ func (*Types) GetFuncMap() template.FuncMap {
 	return utils.ContainsStringHelper()
 }
 
-var typesTemplate = `{{ .Boilerplate }}
+const typesTemplate = `{{ .Boilerplate }}
 
 package {{ .Resource.Version }}
 

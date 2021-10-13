@@ -48,4 +48,3 @@ func (phase *PreFlightPhase) Execute(
 	return true, nil
 }
 `
-

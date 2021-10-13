@@ -95,4 +95,3 @@ func (r *DefaultRateLimiter) Forget(item interface{}) {
 	delete(r.requeues, item)
 }
 `
-

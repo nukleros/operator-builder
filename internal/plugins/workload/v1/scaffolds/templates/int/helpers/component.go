@@ -83,4 +83,3 @@ func {{ .Resource.Kind }}List(
 	return components, nil
 }
 `
-

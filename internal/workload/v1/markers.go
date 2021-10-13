@@ -5,21 +5,27 @@ package v1
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
 
 	"github.com/vmware-tanzu-labs/object-code-generator-for-k8s/pkg/generate"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	"gopkg.in/yaml.v3"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+)
+
+var (
+	ErrUnsupportedDataType    = errors.New("unsupported data type in workload marker")
+	ErrUnableToParseFieldType = errors.New("unable to parse field")
 )
 
 // SupportedMarkerDataTypes returns the supported data types that can be used in
@@ -32,12 +38,15 @@ func formatProcessError(manifestFile string, err error) error {
 	return fmt.Errorf("error processing file %s; %w", manifestFile, err)
 }
 
+//nolint:funlen,gocognit,gocyclo //this will be refactored later
 func processMarkers(
 	workloadPath string,
 	resources []string,
 	collection bool,
 	collectionResources bool,
 ) (*SourceCodeTemplateData, error) {
+	const dataTypeString = "string"
+
 	results := &SourceCodeTemplateData{
 		SourceFiles:    new([]SourceFile),
 		RBACRules:      new([]RBACRule),
@@ -107,8 +116,9 @@ func processMarkers(
 
 				specField.ZeroVal = zv
 
+				//nolint:nestif //this will be refactored later
 				if r.Default != nil {
-					if specField.DataType == "string" {
+					if specField.DataType == dataTypeString {
 						specField.DefaultVal = fmt.Sprintf("%q", r.Default)
 						specField.SampleField = fmt.Sprintf("%s: %q", r.Name, r.Default)
 					} else {
@@ -116,7 +126,7 @@ func processMarkers(
 						specField.SampleField = fmt.Sprintf("%s: %v", r.Name, r.Default)
 					}
 				} else {
-					if specField.DataType == "string" {
+					if specField.DataType == dataTypeString {
 						specField.SampleField = fmt.Sprintf("%s: %q", r.Name, r.originalValue)
 					} else {
 						specField.SampleField = fmt.Sprintf("%s: %v", r.Name, r.originalValue)
@@ -152,8 +162,9 @@ func processMarkers(
 
 				specField.ZeroVal = zv
 
+				//nolint:nestif //this will be refactored later
 				if r.Default != nil {
-					if specField.DataType == "string" {
+					if specField.DataType == dataTypeString {
 						specField.DefaultVal = fmt.Sprintf("%q", r.Default)
 						specField.SampleField = fmt.Sprintf("%s: %q", r.Name, r.Default)
 					} else {
@@ -161,7 +172,7 @@ func processMarkers(
 						specField.SampleField = fmt.Sprintf("%s: %v", r.Name, r.Default)
 					}
 				} else {
-					if specField.DataType == "string" {
+					if specField.DataType == dataTypeString {
 						specField.SampleField = fmt.Sprintf("%s: %q", r.Name, r.originalValue)
 					} else {
 						specField.SampleField = fmt.Sprintf("%s: %v", r.Name, r.originalValue)
@@ -318,7 +329,7 @@ func zeroValue(val interface{}) (string, error) {
 	case "int", "int32", "int64", "float32", "float64":
 		return "0", nil
 	default:
-		return "", fmt.Errorf("unsupported data type in workload marker; supported data types: %v", SupportedMarkerDataTypes())
+		return "", fmt.Errorf("%w; supported data types: %v", ErrUnsupportedDataType, SupportedMarkerDataTypes())
 	}
 }
 
@@ -342,6 +353,8 @@ func InitializeMarkerInspector() (*inspect.Inspector, error) {
 }
 
 func TransformYAML(results ...*inspect.YAMLResult) error {
+	const varTag = "!!var"
+
 	var key *yaml.Node
 
 	var value *yaml.Node
@@ -368,7 +381,7 @@ func TransformYAML(results ...*inspect.YAMLResult) error {
 
 			t.originalValue = value.Value
 
-			value.Tag = "!!var"
+			value.Tag = varTag
 			value.Value = fmt.Sprintf("parent.Spec." + strings.Title(t.Name))
 
 			r.Object = t
@@ -381,7 +394,7 @@ func TransformYAML(results ...*inspect.YAMLResult) error {
 
 			t.originalValue = value.Value
 
-			value.Tag = "!!var"
+			value.Tag = varTag
 			value.Value = fmt.Sprintf("collection.Spec." + strings.Title(t.Name))
 
 			r.Object = t
@@ -410,7 +423,7 @@ func (f *FieldType) UnmarshalMarkerArg(in string) error {
 
 	if t, ok := types[in]; ok {
 		if t == FieldUnknownType {
-			return fmt.Errorf("unable to parse %s into FieldType", in)
+			return fmt.Errorf("%w, %s into FieldType", ErrUnableToParseFieldType, in)
 		}
 
 		*f = t
@@ -418,7 +431,7 @@ func (f *FieldType) UnmarshalMarkerArg(in string) error {
 		return nil
 	}
 
-	return fmt.Errorf("unable to parse %s into FieldType", in)
+	return fmt.Errorf("%w, %s into FieldType", ErrUnableToParseFieldType, in)
 }
 
 func (f FieldType) String() string {

@@ -4,6 +4,7 @@
 package license
 
 import (
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"net/http"
@@ -22,12 +23,12 @@ func UpdateProjectLicense(source string) error {
 
 	licenseF, err := os.Create("LICENSE")
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create file %s, %w", "LICENSE", err)
 	}
 	defer licenseF.Close()
 
 	if _, err := licenseF.WriteString(string(sourceLicense)); err != nil {
-		return err
+		return fmt.Errorf("unable to write to file %s, %w", "LICENSE", err)
 	}
 
 	return nil
@@ -47,18 +48,18 @@ func UpdateSourceHeader(source string) error {
 	if _, err = os.Stat("hack"); os.IsNotExist(err) {
 		err = os.Mkdir("hack", directoryPermissions)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to make directory %s, %w", "hack", err)
 		}
 	}
 
 	licenseB, err := os.Create("hack/boilerplate.go.txt")
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create file %s, %w", "hack/boilerplate.go.txt", err)
 	}
 	defer licenseB.Close()
 
 	if _, err := licenseB.WriteString(string(sourceLicense) + "\n"); err != nil {
-		return err
+		return fmt.Errorf("unable to write to file %s, %w", "hack/boilerplate.go.txt", err)
 	}
 
 	return nil
@@ -88,7 +89,7 @@ func UpdateExistingSourceHeader(source string) error {
 			return nil
 		},
 	); err != nil {
-		return err
+		return fmt.Errorf("an error occurred modifying license headers, %w", err)
 	}
 
 	return nil
@@ -99,15 +100,15 @@ func getSourceLicense(source string) ([]byte, error) {
 
 	if source[0:4] == "http" {
 		// source is HTTP URL
-		resp, err := http.Get(source)
+		resp, err := http.Get(source) //nolint:gosec,noctx
 		if err != nil {
-			return []byte{}, err
+			return []byte{}, fmt.Errorf("unable to get license source from %s, %w", source, err)
 		}
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return []byte{}, err
+			return []byte{}, fmt.Errorf("unable to read license source from %s, %w", source, err)
 		}
 
 		sourceLicense = body
@@ -115,7 +116,7 @@ func getSourceLicense(source string) ([]byte, error) {
 		// source is local file
 		fileContent, err := ioutil.ReadFile(source)
 		if err != nil {
-			return []byte{}, err
+			return []byte{}, fmt.Errorf("unable to get license source from %s, %w", source, err)
 		}
 		sourceLicense = fileContent
 	}
@@ -128,7 +129,7 @@ func replaceLicenseHeader(file string, header []byte) error {
 
 	input, err := ioutil.ReadFile(file)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to read file %s, %w", file, err)
 	}
 
 	lines := strings.Split(string(input), "\n")
@@ -150,9 +151,8 @@ func replaceLicenseHeader(file string, header []byte) error {
 
 	err = ioutil.WriteFile(file, []byte(output), filePermissions)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to set license header on %s, %w", file, err)
 	}
 
 	return nil
 }
-

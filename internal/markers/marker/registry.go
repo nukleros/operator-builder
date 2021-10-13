@@ -40,4 +40,3 @@ func (r *Registry) GetDefinition(name string) parser.Definition {
 
 	return &marker
 }
-

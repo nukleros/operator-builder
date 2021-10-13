@@ -46,4 +46,3 @@ func (phase *MutateResourcePhase) Execute(resource *ComponentResource) (ctrl.Res
 	return ctrl.Result{}, true, nil
 }
 `
-

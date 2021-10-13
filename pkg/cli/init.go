@@ -4,6 +4,8 @@
 package cli
 
 import (
+	"fmt"
+
 	kbcli "sigs.k8s.io/kubebuilder/v3/pkg/cli"
 	cfgv2 "sigs.k8s.io/kubebuilder/v3/pkg/config/v2"
 	cfgv3 "sigs.k8s.io/kubebuilder/v3/pkg/config/v3"
@@ -48,9 +50,8 @@ func NewKubebuilderCLI() (*kbcli.CLI, error) {
 		kbcli.WithCompletion(),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create kcli command, %w", err)
 	}
 
 	return c, nil
 }
-

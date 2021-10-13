@@ -120,4 +120,3 @@ func GetCollectionName(r common.ComponentReconciler) (string, error) {
 	return getValueFromCollection(r, "metadata", "name")
 }
 `
-

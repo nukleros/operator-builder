@@ -157,4 +157,3 @@ func handleResourcePhaseExit(
 	return (phaseError == nil && phaseIsReady), phaseError
 }
 `
-

@@ -238,4 +238,3 @@ func Test_lexer_peekedWhitespaced(t *testing.T) {
 		})
 	}
 }
-
