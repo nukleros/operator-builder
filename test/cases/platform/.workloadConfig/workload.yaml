@@ -14,7 +14,7 @@ spec:
     name: cnp
     description: Manage collection
   resources:
-  - rbac.yaml
+  - storage-class.yaml
   componentFiles:
   - tenancy/tenancy-common-component.yaml
   - tenancy/ns-operator-component.yaml

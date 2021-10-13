@@ -350,7 +350,7 @@ func (s *apiScaffolder) Scaffold() error {
 			&resourcespkg.ServiceType{},
 			&controller.Controller{
 				PackageName:       s.workload.GetPackageName(),
-				RBACRules:         &[]workloadv1.RBACRule{},
+				RBACRules:         s.workload.GetRBACRules(),
 				OwnershipRules:    s.workload.GetOwnershipRules(),
 				HasChildResources: s.workload.HasChildResources(),
 				IsStandalone:      s.workload.IsStandalone(),

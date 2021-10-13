@@ -205,8 +205,8 @@ func (c *WorkloadCollection) GetAPISpecFields() []*APISpecField {
 	return c.Spec.APISpecFields
 }
 
-func (*WorkloadCollection) GetRBACRules() *[]RBACRule {
-	return &[]RBACRule{}
+func (c *WorkloadCollection) GetRBACRules() *[]RBACRule {
+	return &c.Spec.RBACRules
 }
 
 func (*WorkloadCollection) GetOwnershipRules() *[]OwnershipRule {

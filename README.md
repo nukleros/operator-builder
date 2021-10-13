@@ -107,7 +107,7 @@ configurable for deployment into different environments.  Let's look at a simple
 example to illustrate.  Following is a Deployment, Ingress and Service that may
 be used to deploy a workload.
 
-    # app.yaml
+    # .source-manifests/app.yaml
 
     apiVersion: apps/v1
     kind: Deployment
@@ -194,9 +194,8 @@ Following is the Deployment manifest with these markers in place.
 
 These markers should always be provided as an in-line comment or as a head
 comment.  The marker always begins with `+operator-builder:field:` or
-`+operator-builder:collection:field:` (more on this later).
-
-see [Markers](docs/markers.md)
+`+operator-builder:collection:field:` See [Markers](docs/markers.md) to learn
+more.
 
 ### Step 3
 
