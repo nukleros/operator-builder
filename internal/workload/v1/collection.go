@@ -12,6 +12,12 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
+const (
+	defaultCollectionSubcommandName         = "collection"
+	defaultCollectionSubcommandDescription  = `Manage %s workload`
+	defaultCollectionRootcommandDescription = `Manage %s collection and components`
+)
+
 var ErrMissingRequiredFields = errors.New("missing required fields")
 
 func (c *WorkloadCollection) Validate() error {
@@ -55,12 +61,19 @@ func (c *WorkloadCollection) GetDomain() string {
 }
 
 func (c *WorkloadCollection) HasRootCmdName() bool {
-	return c.Spec.CompanionCliRootcmd.Name != ""
+	return c.Spec.CompanionCliRootcmd.hasName()
 }
 
-func (*WorkloadCollection) HasSubCmdName() bool {
-	// workload collections never have subcommands
-	return false
+func (c *WorkloadCollection) HasRootCmdDescription() bool {
+	return c.Spec.CompanionCliRootcmd.hasDescription()
+}
+
+func (c *WorkloadCollection) HasSubCmdName() bool {
+	return c.Spec.CompanionCliSubcmd.hasName()
+}
+
+func (c *WorkloadCollection) HasSubCmdDescription() bool {
+	return c.Spec.CompanionCliSubcmd.hasDescription()
 }
 
 func (c *WorkloadCollection) GetRootCmdName() string {
@@ -110,6 +123,10 @@ func (c *WorkloadCollection) GetSubcommandFileName() string {
 
 func (c *WorkloadCollection) GetRootcommandName() string {
 	return c.Spec.CompanionCliRootcmd.Name
+}
+
+func (c *WorkloadCollection) GetRootcommandVarName() string {
+	return c.Spec.CompanionCliRootcmd.VarName
 }
 
 func (c *WorkloadCollection) IsClusterScoped() bool {
@@ -248,23 +265,42 @@ func (c *WorkloadCollection) GetComponentResource(domain, repo string, clusterSc
 
 func (c *WorkloadCollection) SetNames() {
 	c.PackageName = utils.ToPackageName(c.Name)
-	if c.HasRootCmdName() {
-		c.Spec.CompanionCliRootcmd.VarName = utils.ToPascalCase(c.Spec.CompanionCliRootcmd.Name)
-		c.Spec.CompanionCliRootcmd.FileName = utils.ToFileName(c.Spec.CompanionCliRootcmd.Name)
-		c.Spec.CompanionCliSubcmd.VarName = utils.ToPascalCase(c.Spec.CompanionCliSubcmd.Name)
-		c.Spec.CompanionCliSubcmd.FileName = utils.ToFileName(c.Spec.CompanionCliSubcmd.Name)
+
+	// only set the names if we have specified the root command name else none
+	// of the following values will matter as the code for the cli will not be
+	// generated
+	if !c.HasRootCmdName() {
+		return
 	}
+
+	// set the root command values
+	c.Spec.CompanionCliRootcmd.setCommonValues(
+		c.Spec.API.Kind,
+		defaultCollectionRootcommandDescription,
+	)
+
+	// set the subcommand values
+	if !c.Spec.CompanionCliSubcmd.hasName() {
+		c.Spec.CompanionCliSubcmd.Name = defaultCollectionSubcommandName
+	}
+
+	c.Spec.CompanionCliSubcmd.setSubCommandValues(
+		c.Spec.API.Kind,
+		defaultCollectionSubcommandDescription,
+	)
 }
 
 func (c *WorkloadCollection) GetSubcommands() *[]CliCommand {
 	commands := []CliCommand{}
 
-	if c.Spec.CompanionCliSubcmd.Name != "" {
+	// only add a collection subcommand as a subcommand to itself if we have
+	// child resources
+	if c.HasChildResources() {
 		commands = append(commands, c.Spec.CompanionCliSubcmd)
 	}
 
 	for _, comp := range c.Spec.Components {
-		if comp.Spec.CompanionCliSubcmd.Name != "" {
+		if comp.HasSubCmdName() {
 			commands = append(commands, comp.Spec.CompanionCliSubcmd)
 		}
 	}

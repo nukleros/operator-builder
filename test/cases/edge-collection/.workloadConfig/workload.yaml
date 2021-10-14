@@ -12,7 +12,6 @@ spec:
   #   see https://github.com/vmware-tanzu-labs/operator-builder/issues/139
   companionCliRootcmd:
     name: edge-collection-ctl
-    description: Edge test cases for collection workloads
   componentFiles:
     - tenancy/tenancy-common-component.yaml
     - tenancy/ns-operator-component.yaml

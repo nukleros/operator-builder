@@ -28,7 +28,6 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/int/mutate"
 	resourcespkg "github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/int/resources"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/int/wait"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
@@ -65,7 +64,7 @@ func (s *apiScaffolder) InjectFS(fs machinery.Filesystem) {
 	s.fs = fs
 }
 
-//nolint:funlen,gocognit,gocyclo //this will be refactored later
+//nolint:funlen //this will be refactored later
 // scaffold implements cmdutil.Scaffolder.
 func (s *apiScaffolder) Scaffold() error {
 	log.Println("Building API...")
@@ -83,167 +82,10 @@ func (s *apiScaffolder) Scaffold() error {
 
 	createFuncNames, initFuncNames := s.workload.GetFuncNames()
 
-	//nolint:nestif //this will be refactored later
 	// companion CLI
-	if s.workload.IsStandalone() && s.workload.GetRootcommandName() != "" {
-		// build a subcommand for standalone, e.g. `webstorectl init`
-		err = scaffold.Execute(
-			&cli.CmdInitSub{
-				RootCmd:        s.cliRootCommandName,
-				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-				SubCmdName:     s.workload.GetSubcommandName(),
-				SubCmdDescr:    s.workload.GetSubcommandDescr(),
-				SubCmdVarName:  s.workload.GetSubcommandVarName(),
-				SubCmdFileName: s.workload.GetSubcommandFileName(),
-				SpecFields:     s.workload.GetAPISpecFields(),
-				IsComponent:    s.workload.IsComponent(),
-				ComponentResource: s.workload.GetComponentResource(
-					s.config.GetDomain(),
-					s.config.GetRepository(),
-					s.workload.IsClusterScoped(),
-				),
-			},
-			&cli.CmdGenerateSub{
-				PackageName:    s.workload.GetPackageName(),
-				RootCmd:        s.cliRootCommandName,
-				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-				SubCmdName:     s.workload.GetSubcommandName(),
-				SubCmdDescr:    s.workload.GetSubcommandDescr(),
-				IsComponent:    s.workload.IsComponent(),
-				IsCollection:   s.workload.IsCollection(),
-			},
-			&cli.CmdCommon{
-				RootCmd: s.cliRootCommandName,
-			},
-		)
-		if err != nil {
-			return fmt.Errorf("unable to scaffold companionCLI, %w", err)
-		}
-	} else if s.workload.IsCollection() && s.workload.GetRootcommandName() != "" {
-		err = scaffold.Execute(
-			&cli.CmdInit{
-				RootCmd:        s.cliRootCommandName,
-				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-				SubCommands:    s.workload.GetSubcommands(),
-			},
-			&cli.CmdGenerate{
-				RootCmd:        s.cliRootCommandName,
-				RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-				SubCommands:    s.workload.GetSubcommands(),
-			},
-			&cli.CmdCommon{
-				RootCmd: s.cliRootCommandName,
-			},
-		)
-		if err != nil {
-			return fmt.Errorf("unable to scaffold companionCLI, %w", err)
-		}
-
-		if s.workload.GetSubcommandName() != "" {
-			// build a subcommand for collection, e.g. `cnpctl init cnp`
-			err = scaffold.Execute(
-				&cli.CmdInitSub{
-					RootCmd:        s.cliRootCommandName,
-					RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-					SubCmdName:     s.workload.GetSubcommandName(),
-					SubCmdDescr:    s.workload.GetSubcommandDescr(),
-					SubCmdVarName:  s.workload.GetSubcommandVarName(),
-					SubCmdFileName: s.workload.GetSubcommandFileName(),
-					SpecFields:     s.workload.GetAPISpecFields(),
-					IsComponent:    true, // fake being a component to create subcommand for collection
-					ComponentResource: s.workload.GetComponentResource(
-						s.config.GetDomain(),
-						s.config.GetRepository(),
-						s.workload.IsClusterScoped(),
-					),
-				},
-			)
-			if err != nil {
-				return fmt.Errorf("unable to scaffold companionCLI sub commands, %w", err)
-			}
-			// we only need a generate command if there are collection resources
-			if s.workload.HasChildResources() {
-				err = scaffold.Execute(
-					&cli.CmdGenerateSub{
-						PackageName:    s.workload.GetPackageName(),
-						RootCmd:        s.cliRootCommandName,
-						RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-						SubCmdName:     s.workload.GetSubcommandName(),
-						SubCmdDescr:    s.workload.GetSubcommandDescr(),
-						SubCmdVarName:  s.workload.GetSubcommandVarName(),
-						SubCmdFileName: s.workload.GetSubcommandFileName(),
-						IsComponent:    true, // fake being a component to create subcommand for collection
-						IsCollection:   s.workload.IsCollection(),
-						ComponentResource: s.workload.GetComponentResource(
-							s.config.GetDomain(),
-							s.config.GetRepository(),
-							s.workload.IsClusterScoped(),
-						),
-						Collection: s.workload.(*workloadv1.WorkloadCollection),
-					},
-				)
-				if err != nil {
-					return fmt.Errorf("unable to scaffold companionCLI sub commands, %w", err)
-				}
-			}
-		}
-
-		for _, component := range s.workload.GetComponents() {
-			if component.GetSubcommandName() != "" {
-				// build a subcommand for the component, e.g. `cnpctl init ingress`
-				err = scaffold.Execute(
-					&cli.CmdInitSub{
-						RootCmd:        s.cliRootCommandName,
-						RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-						SubCmdName:     component.GetSubcommandName(),
-						SubCmdDescr:    component.GetSubcommandDescr(),
-						SubCmdVarName:  component.GetSubcommandVarName(),
-						SubCmdFileName: component.GetSubcommandFileName(),
-						SpecFields:     component.GetAPISpecFields(),
-						IsComponent:    component.IsComponent(),
-						ComponentResource: component.GetComponentResource(
-							s.config.GetDomain(),
-							s.config.GetRepository(),
-							s.workload.IsClusterScoped(),
-						),
-					},
-					&cli.CmdGenerateSub{
-						PackageName:    component.GetPackageName(),
-						RootCmd:        s.cliRootCommandName,
-						RootCmdVarName: utils.ToPascalCase(s.cliRootCommandName),
-						SubCmdName:     component.GetSubcommandName(),
-						SubCmdDescr:    component.GetSubcommandDescr(),
-						SubCmdVarName:  component.GetSubcommandVarName(),
-						SubCmdFileName: component.GetSubcommandFileName(),
-						IsComponent:    component.IsComponent(),
-						IsCollection:   component.IsCollection(),
-						ComponentResource: component.GetComponentResource(
-							s.config.GetDomain(),
-							s.config.GetRepository(),
-							s.workload.IsClusterScoped(),
-						),
-						Collection: s.workload.(*workloadv1.WorkloadCollection),
-					},
-				)
-				if err != nil {
-					return fmt.Errorf("unable to scaffold companionCLI component sub commands, %w", err)
-				}
-			}
-		}
-	}
-
-	if s.workload.GetRootcommandName() != "" {
-		err = scaffold.Execute(
-			&cli.CmdRootUpdater{
-				RootCmd:         s.cliRootCommandName,
-				InitCommand:     true,
-				GenerateCommand: true,
-			},
-		)
-
-		if err != nil {
-			return fmt.Errorf("unable to update root.go: %w", err)
-		}
+	err = s.scaffoldCLI(scaffold)
+	if err != nil {
+		return fmt.Errorf("error scaffolding CLI; %w", err)
 	}
 
 	//nolint:nestif //this will be refactored later
@@ -494,6 +336,119 @@ func (s *apiScaffolder) Scaffold() error {
 		if err != nil {
 			return fmt.Errorf("unable to scaffold resource files, %w", err)
 		}
+	}
+
+	return nil
+}
+
+// scaffoldCLI runs the specific logic to scaffold the companion CLI
+//nolint:funlen,gocyclo //this will be refactored later
+func (s *apiScaffolder) scaffoldCLI(scaffold *machinery.Scaffold) error {
+	// do not scaffold the cli if the root command name is blank
+	if s.cliRootCommandName == "" {
+		return nil
+	}
+
+	workloadCommands := make([]workloadv1.WorkloadAPIBuilder, len(s.workload.GetComponents())+1)
+	workloadCommands[0] = s.workload
+
+	if len(s.workload.GetComponents()) > 0 {
+		for i, component := range s.workload.GetComponents() {
+			workloadCommands[i+1] = component
+		}
+	}
+
+	for _, workloadCommand := range workloadCommands {
+		// build collection subcommands
+		if workloadCommand.IsCollection() {
+			err := scaffold.Execute(
+				&cli.CmdInit{
+					RootCmd:        s.cliRootCommandName,
+					RootCmdVarName: workloadCommand.GetRootcommandVarName(),
+					SubCommands:    workloadCommand.GetSubcommands(),
+				},
+				&cli.CmdGenerate{
+					RootCmd:        s.cliRootCommandName,
+					RootCmdVarName: workloadCommand.GetRootcommandVarName(),
+					SubCommands:    workloadCommand.GetSubcommands(),
+				},
+				&cli.CmdCommon{
+					RootCmd: s.cliRootCommandName,
+				},
+			)
+			if err != nil {
+				return fmt.Errorf("unable to scaffold workload collection subcommand, %w", err)
+			}
+		}
+
+		// build init subcommand
+		err := scaffold.Execute(
+			&cli.CmdInitSub{
+				RootCmd:        s.cliRootCommandName,
+				RootCmdVarName: workloadCommand.GetRootcommandVarName(),
+				SubCmdName:     workloadCommand.GetSubcommandName(),
+				SubCmdDescr:    workloadCommand.GetSubcommandDescr(),
+				SubCmdVarName:  workloadCommand.GetSubcommandVarName(),
+				SubCmdFileName: workloadCommand.GetSubcommandFileName(),
+				SpecFields:     workloadCommand.GetAPISpecFields(),
+				IsComponent:    workloadCommand.IsComponent() || workloadCommand.IsCollection(),
+				ComponentResource: workloadCommand.GetComponentResource(
+					s.config.GetDomain(),
+					s.config.GetRepository(),
+					workloadCommand.IsClusterScoped(),
+				),
+			},
+			&cli.CmdCommon{
+				RootCmd: s.cliRootCommandName,
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("unable to scaffold init subcommand, %w", err)
+		}
+
+		// build generate subcommand
+		generateSubCommand := &cli.CmdGenerateSub{
+			PackageName:    workloadCommand.GetPackageName(),
+			RootCmd:        s.cliRootCommandName,
+			RootCmdVarName: workloadCommand.GetRootcommandVarName(),
+			SubCmdName:     workloadCommand.GetSubcommandName(),
+			SubCmdDescr:    workloadCommand.GetSubcommandDescr(),
+			IsComponent:    workloadCommand.IsComponent() || workloadCommand.IsCollection(),
+			IsCollection:   workloadCommand.IsCollection(),
+		}
+
+		if workloadCommand.IsCollection() || workloadCommand.IsComponent() {
+			//nolint:forcetypeassert // this will be refactored later
+			generateSubCommand.Collection = s.workload.(*workloadv1.WorkloadCollection)
+			generateSubCommand.SubCmdVarName = workloadCommand.GetSubcommandVarName()
+			generateSubCommand.SubCmdFileName = workloadCommand.GetSubcommandFileName()
+			generateSubCommand.ComponentResource = workloadCommand.GetComponentResource(
+				s.config.GetDomain(),
+				s.config.GetRepository(),
+				workloadCommand.IsClusterScoped(),
+			)
+		}
+
+		// scaffold the generate command unless we have a collection without resources
+		if (workloadCommand.HasChildResources() && workloadCommand.IsCollection()) || !workloadCommand.IsCollection() {
+			err = scaffold.Execute(generateSubCommand)
+			if err != nil {
+				return fmt.Errorf("unable to scaffold generate subcommand, %w", err)
+			}
+		}
+	}
+
+	// build the root command
+	err := scaffold.Execute(
+		&cli.CmdRootUpdater{
+			RootCmd:         s.cliRootCommandName,
+			InitCommand:     true,
+			GenerateCommand: true,
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("error updating root.go, %w", err)
 	}
 
 	return nil

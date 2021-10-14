@@ -12,6 +12,10 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
+const (
+	defaultStandaloneDescription = `Manage %s workload`
+)
+
 var ErrNoComponentsOnStandalone = errors.New("cannot set component workloads on a component workload - only on collections")
 
 func (s *StandaloneWorkload) Validate() error {
@@ -55,7 +59,11 @@ func (s *StandaloneWorkload) GetDomain() string {
 }
 
 func (s *StandaloneWorkload) HasRootCmdName() bool {
-	return s.Spec.CompanionCliRootcmd.Name != ""
+	return s.Spec.CompanionCliRootcmd.hasName()
+}
+
+func (s *StandaloneWorkload) HasRootCmdDescription() bool {
+	return s.Spec.CompanionCliRootcmd.hasDescription()
 }
 
 func (*StandaloneWorkload) HasSubCmdName() bool {
@@ -114,6 +122,10 @@ func (*StandaloneWorkload) GetSubcommandFileName() string {
 
 func (s *StandaloneWorkload) GetRootcommandName() string {
 	return s.Spec.CompanionCliRootcmd.Name
+}
+
+func (s *StandaloneWorkload) GetRootcommandVarName() string {
+	return s.Spec.CompanionCliRootcmd.VarName
 }
 
 func (s *StandaloneWorkload) IsClusterScoped() bool {
@@ -188,10 +200,19 @@ func (*StandaloneWorkload) GetComponentResource(domain, repo string, clusterScop
 
 func (s *StandaloneWorkload) SetNames() {
 	s.PackageName = utils.ToPackageName(s.Name)
-	if s.HasRootCmdName() {
-		s.Spec.CompanionCliRootcmd.VarName = utils.ToPascalCase(s.Spec.CompanionCliRootcmd.Name)
-		s.Spec.CompanionCliRootcmd.FileName = utils.ToFileName(s.Spec.CompanionCliRootcmd.Name)
+
+	// only set the names if we have specified the root command name else none
+	// of the following values will matter as the code for the cli will not be
+	// generated
+	if !s.HasRootCmdName() {
+		return
 	}
+
+	// set the root command values
+	s.Spec.CompanionCliRootcmd.setCommonValues(
+		s.Spec.API.Kind,
+		defaultStandaloneDescription,
+	)
 }
 
 func (s *StandaloneWorkload) GetSubcommands() *[]CliCommand {

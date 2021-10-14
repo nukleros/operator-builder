@@ -31,8 +31,8 @@ type WorkloadShared struct {
 // CliCommand defines the command name and description for the root command or
 // subcommand of a companion CLI.
 type CliCommand struct {
-	Name        string `json:"name" yaml:"name" validate:"required_with=Description"`
-	Description string `json:"description" yaml:"description" validate:"required_with=Name"`
+	Name        string
+	Description string
 	VarName     string
 	FileName    string
 }

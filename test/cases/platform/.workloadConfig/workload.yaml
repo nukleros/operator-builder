@@ -9,10 +9,6 @@ spec:
     clusterScoped: true
   companionCliRootcmd:
     name: cnpctl
-    description: Manage platform stuff like a boss
-  companionCliSubcmd:
-    name: cnp
-    description: Manage collection
   resources:
   - storage-class.yaml
   componentFiles:
