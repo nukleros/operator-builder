@@ -69,6 +69,7 @@ To clean up:
 
     make undeploy
 
+{{ if ne .RootCmd "" -}}
 ## Companion CLI
 
 To build the companion CLI:
@@ -79,4 +80,5 @@ The CLI binary will get saved to the bin directory.  You can see the help
 message with:
 
     ./bin/{{ .RootCmd }} help
+{{ end -}}
 `
