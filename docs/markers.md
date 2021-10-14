@@ -15,6 +15,7 @@ comment.  The marker always begins with `+operator-builder:field:` or
 That is followed by arguments separated by `,`.  Arguments can be given in any order.
 
 ## Field Marker
+
 defined as `+operator-builder:field` this marker can be used to define a CRD
 field for your workload.
 
@@ -28,6 +29,7 @@ implict `=true` on the end and is treated as a flag.
 Below you will find the arguments for a field marker
 
 #### Name (required)
+
 The name you want to use for the field in the custom resource that
 Operator Builder will create.  If you're not sure what that means, it will
 become clear shortly.
@@ -35,6 +37,7 @@ become clear shortly.
 ex. +operator-builder:field:name=myName
 
 #### Type (required)
+
 The other required field is the `type` field which specifies the data type for
 the value.  The supported data types are:
 
@@ -49,6 +52,7 @@ the value.  The supported data types are:
 ex. `+operator-builder:field:name=myName,type=string`
 
 #### Default (optional)
+
 This will make configuration optional for your operator's end user. the supplied
 value will be used for the default value. If a field has no default, it will be
 a required field in the custom resource.  For example:
@@ -56,15 +60,18 @@ a required field in the custom resource.  For example:
     `operator-builder:field:name=myName,type=string,default=test`
 
 #### Replace (optional)
-There may be some instances where you may only want a specific potion of the value to be configurable (such as config maps). In these scenarios you can use the replace argument to specify a search string (or regex) to target for configuration. 
+
+There may be some instances where you only want a specific portion of a value
+to be configurable (such as config maps). In these scenarios you can use the
+replace argument to specify a search string (or regex) to target for configuration.
 
 Consider the following example:
 ```
-  ---
-  apiVersion: v1
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
-  label: 
+  labels:
     # +operator-builder:field:name=environment,default=dev,type=string,replace="dev"
     app: myapp-dev
   name: contour-configmap
@@ -79,10 +86,31 @@ data:
     justtesting: multistringyaml
 ```
 
-in this scenario three api fields will be made. The first one, `environment` will replace the `dev` portion of `myapp-dev` so if `prod` was provided as a value, the resulting deployment would have the label `app` with a value of `myapp-prod`
-the second and third fields will both replace specific sections of the config map data, the first will replace the value of the `someoption` key and the second is using regex to target the value of the `justtesting` key.
+In this scenario three custom resource fields will be generated. The value from
+the `environment` field will replace the `dev` portion of `myapp-dev`. For
+example, if `prod` is provided as a value for the `environment` field, the
+resulting config map will get the label `app: myapp-prod`. Values from the
+`configOption` and `yamlType` fields will replace corresponding strings in the
+content of `config.yaml`.  The resulting configmap will look as follows:
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: myapp-prod
+  name: contour-configmap
+  namespace: ingress-system
+data:
+  config.yaml: |-
+    ---
+    someoption: myoption
+    anotheroption: configuration1
+    justtesting: myoption
+```
 
 #### Description (optional)
+
 An optional description can be provided which will be used in the source code as
 a Doc String, backticks `` ` `` may be used to capture multiline strings (head
 comments only).
