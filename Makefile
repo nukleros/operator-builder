@@ -22,6 +22,8 @@ endef
 export BASE_DIR := $(shell pwd)
 export OPERATOR_BUILDER_PATH := $(BASE_DIR)/bin
 
+.PHONY: build install test debug
+
 build:
 	go build -o bin/operator-builder cmd/operator-builder/main.go
 

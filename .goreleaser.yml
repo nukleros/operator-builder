@@ -1,4 +1,8 @@
 ---
+before:
+  hooks:
+    - go mod tidy
+    - ./build/completions.sh
 builds:
   - id: operator-builder
     env:
@@ -32,6 +36,7 @@ snapshot:
   name_template: "{{ .Version }}-snapshot-{{.ShortCommit}}"
 changelog:
   sort: asc
+  use: github
   filters:
     exclude:
       - '^docs(\(.*\))?:'
@@ -39,3 +44,105 @@ changelog:
       - '^ci(\(.*\))?:'
       - '^chore(\(.*\))?:'
       - '^build(\(.*\))?:'
+dockers:
+  - image_templates:
+      - 'ghcr.io/vmware-tanzu-labs/operator-builder:v{{ .Version }}'
+      - 'ghcr.io/vmware-tanzu-labs/operator-builder:latest'
+    dockerfile: Dockerfile
+    use_buildx: true
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+      - "--label=VERSION={{.Version}}"
+      - "--platform=linux/amd64"
+brews:
+  - name: operator-builder
+    tap:
+      owner: vmware-tanzu-labs
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+
+    # Git author used to commit to the repository.
+    # Defaults are shown.
+    commit_author:
+      name: goreleaserbot
+      email: goreleaser@vmware-tanzu-labs.com
+
+    # Folder inside the repository to put the formula.
+    # Default is the root folder.
+    folder: Formula
+
+    # Your app's homepage.
+    # Default is empty.
+    homepage: "https://github.com/vmware-tanzu-labs/operator-builder"
+
+    # Template of your app's description.
+    # Default is empty.
+    description: "A Kubebuilder plugin to accelerate the development of Kubernetes operators."
+
+    # SPDX identifier of your app's license.
+    # Default is empty.
+    license: "MIT"
+
+    # Setting this will prevent goreleaser to actually try to commit the updated
+    # formula - instead, the formula file will be stored on the dist folder only,
+    # leaving the responsibility of publishing it to the user.
+    # If set to auto, the release will not be uploaded to the homebrew tap
+    # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
+    # Default is false.
+    skip_upload: auto
+
+    # Packages your package depends on.
+    dependencies:
+      - name: kubectl
+      - name: golang
+      - name: make
+        type: optional
+
+    install: |-
+      bin.install "operator-builder"
+      bash_completion.install "completions/operator-builder.bash" => "operator-builder"
+      zsh_completion.install "completions/operator-builder.zsh" => "_operator-builder"
+      fish_completion.install "completions/operator-builder.fish"
+
+    # So you can `brew test` your formula.
+    # Default is empty.
+    test: |
+      system "#{bin}/operator-builder version"
+nfpms:
+  - file_name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    homepage:  https://github.com/vmware-tanzu-labs/operator-builder
+    description: "A Kubebuilder plugin to accelerate the development of Kubernetes operators."
+    maintainer: Jeff Davis <jeffda@vmware.com>, Dustin Scott <sduustin@vmware.com>, Rich Lander <lander2k2@protonmail.com>
+    license: MIT
+    vendor: VMware Tanzu Labs
+    contents:
+      - src: ./completions/operator-builder.bash
+        dst: /etc/bash_completion.d/operator-builder
+      - src: ./completions/operator-builder.fish
+        dst: /usr/share/fish/completions/operator-builder.fish
+      - src: ./completions/operator-builder.zsh
+        dst: /usr/local/share/zsh/site-functions/_operator-builder
+    formats:
+      - apk
+      - deb
+      - rpm
+    recommends:
+      - kubectl
+      - golang
+      - make
+snapcrafts:
+  - name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    name: operator-builder
+    summary: "A Kubebuilder plugin to accelerate the development of Kubernetes operators."
+    description: |
+      Operator Builder extends Kubebuilder to facilitate development and maintenance of Kubernetes operators. 
+      It is especially helpful if you need to take large numbers of resources defined with static or templated 
+      yaml and migrate to managing those resources with a custom Kubernetes operator.
+    grade: stable
+    confinement: strict
+    publish: true
