@@ -1,17 +1,18 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  label: 
-    # +operator-builder:field:name=test,default=tescase-dev,type=string,replace="testcase-blah"
-    app: testcase-blah-speaker
+  labels:
+    # +operator-builder:field:name=environment,default=dev,type=string,replace="dev"
+    app: myapp-dev
   name: contour-configmap
   namespace: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
 data:
-  # +operator-builder:field:name=test,default=myoption,type=string,replace="testcase-blah"
+  # +operator-builder:field:name=configOption,default=myoption,type=string,replace="configuration2"
+  # +operator-builder:field:name=yamlType,default=myoption,type=string,replace="multi.*yaml"
   config.yaml: |
     ---
-    someoption: testcase
-    anotheroption: testcase-blah
+    someoption: configuration2
+    anotheroption: configuration1
     justtesting: multistringyaml
 ---
 apiVersion: v1
