@@ -1,7 +1,6 @@
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
-//nolint:testpackage
 package v1
 
 import (

@@ -28,7 +28,7 @@ type CmdInitSub struct {
 	SubCmdDescr       string
 	SubCmdVarName     string
 	SubCmdFileName    string
-	SpecFields        []*workloadv1.APISpecField
+	SpecFields        *workloadv1.APIFields
 	IsComponent       bool
 	ComponentResource *resource.Resource
 
@@ -70,10 +70,7 @@ const defaultManifest{{ .SubCmdVarName }} = ` + "`" + `apiVersion: {{ .Resource.
 kind: {{ .Resource.Kind }}
 metadata:
   name: {{ lower .Resource.Kind }}-sample
-spec:
-{{- range .SpecFields }}
-  {{ .SampleField -}}
-{{ end }}
+{{ .SpecFields.GenerateSampleSpec -}}
 ` + "`" + `
 
 {{ if not .IsComponent -}}

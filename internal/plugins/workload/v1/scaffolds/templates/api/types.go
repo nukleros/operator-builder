@@ -24,7 +24,7 @@ type Types struct {
 	machinery.RepositoryMixin
 	machinery.ResourceMixin
 
-	SpecFields    []*workloadv1.APISpecField
+	SpecFields    *workloadv1.APIFields
 	ClusterScoped bool
 	Dependencies  []*workloadv1.ComponentWorkload
 	IsStandalone  bool
@@ -73,22 +73,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// {{ .Resource.Kind }}Spec defines the desired state of {{ .Resource.Kind }}.
-type {{ .Resource.Kind }}Spec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	{{ range .SpecFields }}
-		{{ if .DefaultVal }}
-			// +kubebuilder:default={{ .DefaultVal }}
-			// +kubebuilder:validation:Optional
-		{{- end -}}
-		{{- range .DocumentationLines }}
-			// {{ . -}}
-		{{ end }}
-		{{ .APISpecContent }}
-	{{ end }}
-}
+{{ .SpecFields.GenerateAPISpec .Resource.Kind }}
 
 // {{ .Resource.Kind }}Status defines the observed state of {{ .Resource.Kind }}.
 type {{ .Resource.Kind }}Status struct {

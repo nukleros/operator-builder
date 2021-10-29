@@ -10,6 +10,15 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
+// CliCommand defines the command name and description for the root command or
+// subcommand of a companion CLI.
+type CliCommand struct {
+	Name        string
+	Description string
+	VarName     string
+	FileName    string
+}
+
 func (cli *CliCommand) setCommonValues(kind, descriptionTemplate string) {
 	// set the file name and variable name to be used in the generated cli
 	// codebase

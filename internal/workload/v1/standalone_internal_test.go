@@ -1,7 +1,6 @@
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
-//nolint:testpackage
 package v1
 
 import (
@@ -15,13 +14,13 @@ func Test_StandaloneSetNames(t *testing.T) {
 
 	sharedNameInput := WorkloadShared{
 		Name: "shared-name",
-		Kind: "StandaloneWorkload",
+		Kind: WorkloadKindStandalone,
 	}
 
 	sharedNameExpected := WorkloadShared{
 		Name:        "shared-name",
 		PackageName: "sharedname",
-		Kind:        "StandaloneWorkload",
+		Kind:        WorkloadKindStandalone,
 	}
 
 	for _, tt := range []struct {
@@ -46,7 +45,7 @@ func Test_StandaloneSetNames(t *testing.T) {
 			input: &StandaloneWorkload{
 				WorkloadShared: sharedNameInput,
 				Spec: StandaloneWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "StandaloneWorkloadTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -57,7 +56,7 @@ func Test_StandaloneSetNames(t *testing.T) {
 			expected: &StandaloneWorkload{
 				WorkloadShared: sharedNameExpected,
 				Spec: StandaloneWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "StandaloneWorkloadTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -74,7 +73,7 @@ func Test_StandaloneSetNames(t *testing.T) {
 			input: &StandaloneWorkload{
 				WorkloadShared: sharedNameInput,
 				Spec: StandaloneWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "StandaloneWorkloadTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -86,7 +85,7 @@ func Test_StandaloneSetNames(t *testing.T) {
 			expected: &StandaloneWorkload{
 				WorkloadShared: sharedNameExpected,
 				Spec: StandaloneWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "StandaloneWorkloadTest",
 					},
 					CompanionCliRootcmd: CliCommand{

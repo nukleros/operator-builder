@@ -10,10 +10,25 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 )
 
-func (rule *RBACRule) AddVerb(verb string) {
+const (
+	coreRBACGroup = "core"
+)
+
+// RBACRule contains the info needed to create the kubebuilder:rbac markers in
+// the controller.
+type RBACRule struct {
+	Group      string
+	Resource   string
+	Verbs      []string
+	VerbString string
+}
+
+type RBACRules []RBACRule
+
+func (r *RBACRule) AddVerb(verb string) {
 	var found bool
 
-	for _, existingVerb := range rule.Verbs {
+	for _, existingVerb := range r.Verbs {
 		if existingVerb == verb {
 			found = true
 
@@ -22,8 +37,8 @@ func (rule *RBACRule) AddVerb(verb string) {
 	}
 
 	if !found {
-		rule.Verbs = append(rule.Verbs, verb)
-		rule.VerbString = rbacVerbsToString(rule.Verbs)
+		r.Verbs = append(r.Verbs, verb)
+		r.VerbString = rbacVerbsToString(r.Verbs)
 	}
 }
 
@@ -39,18 +54,22 @@ func rbacVerbsToString(verbs []string) string {
 	return strings.Join(verbs, ";")
 }
 
-func groupResourceEqual(rbacRule, newRBACRule *RBACRule) bool {
-	if rbacRule.Group == newRBACRule.Group && rbacRule.Resource == newRBACRule.Resource {
+func (r *RBACRule) groupResourceEqual(newRBACRule *RBACRule) bool {
+	if r.Group == newRBACRule.Group && r.Resource == newRBACRule.Resource {
 		return true
 	}
 
 	return false
 }
 
-func groupResourceRecorded(rbacRules *[]RBACRule, newRBACRule *RBACRule) bool {
-	for _, r := range *rbacRules {
+func (rs *RBACRules) groupResourceRecorded(newRBACRule *RBACRule) bool {
+	if rs == nil {
+		return false
+	}
+
+	for _, r := range *rs {
 		r := r
-		if groupResourceEqual(&r, newRBACRule) {
+		if r.groupResourceEqual(newRBACRule) {
 			return true
 		}
 	}
@@ -58,14 +77,18 @@ func groupResourceRecorded(rbacRules *[]RBACRule, newRBACRule *RBACRule) bool {
 	return false
 }
 
-func rbacRulesAddOrUpdate(rbacRules *[]RBACRule, newRule *RBACRule) {
-	if !groupResourceRecorded(rbacRules, newRule) {
+func (rs *RBACRules) AddOrUpdateRules(newRule *RBACRule) {
+	if rs == nil {
+		rs = &RBACRules{}
+	}
+
+	if !rs.groupResourceRecorded(newRule) {
 		newRule.VerbString = rbacVerbsToString(newRule.Verbs)
-		*rbacRules = append(*rbacRules, *newRule)
+		*rs = append(*rs, *newRule)
 	} else {
-		rules := *rbacRules
+		rules := *rs
 		for i := range rules {
-			if groupResourceEqual(&rules[i], newRule) {
+			if rules[i].groupResourceEqual(newRule) {
 				for _, verb := range newRule.Verbs {
 					rules[i].AddVerb(verb)
 				}
@@ -101,9 +124,8 @@ func valueFromInterface(in interface{}, key string) (out interface{}) {
 	return out
 }
 
-func rbacRulesForManifest(kind, group string, rawContent interface{}, rbacRules *[]RBACRule) {
-	rbacRulesAddOrUpdate(
-		rbacRules,
+func (rs *RBACRules) addRulesForManifest(kind, group string, rawContent interface{}) {
+	rs.AddOrUpdateRules(
 		&RBACRule{
 			Group:    group,
 			Resource: getResourceForRBAC(kind),
@@ -144,8 +166,7 @@ func rbacRulesForManifest(kind, group string, rawContent interface{}, rbacRules 
 						verbs = append(verbs, verb.(string))
 					}
 
-					rbacRulesAddOrUpdate(
-						rbacRules,
+					rs.AddOrUpdateRules(
 						&RBACRule{
 							Group:    rbacGroupFromGroup(rbacGroup.(string)),
 							Resource: getResourceForRBAC(rbacKind.(string)),
@@ -155,5 +176,11 @@ func rbacRulesForManifest(kind, group string, rawContent interface{}, rbacRules 
 				}
 			}
 		}
+	}
+}
+
+func defaultResourceVerbs() []string {
+	return []string{
+		"get", "list", "watch", "create", "update", "patch", "delete",
 	}
 }

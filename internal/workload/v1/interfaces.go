@@ -53,7 +53,7 @@ type WorkloadAPIBuilder interface {
 	GetDependencies() []*ComponentWorkload
 	GetComponents() []*ComponentWorkload
 	GetSourceFiles() *[]SourceFile
-	GetAPISpecFields() []*APISpecField
+	GetAPISpecFields() *APIFields
 	GetRBACRules() *[]RBACRule
 	GetOwnershipRules() *[]OwnershipRule
 	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
@@ -63,4 +63,6 @@ type WorkloadAPIBuilder interface {
 	SetNames()
 	SetResources(workloadPath string) error
 	SetComponents(components []*ComponentWorkload) error
+
+	LoadManifests(workloadPath string) error
 }

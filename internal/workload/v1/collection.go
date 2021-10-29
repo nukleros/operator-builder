@@ -20,6 +20,22 @@ const (
 
 var ErrMissingRequiredFields = errors.New("missing required fields")
 
+// WorkloadCollectionSpec defines the attributes for a workload collection.
+type WorkloadCollectionSpec struct {
+	API                 WorkloadAPISpec `json:"api" yaml:"api"`
+	CompanionCliRootcmd CliCommand      `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
+	CompanionCliSubcmd  CliCommand      `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
+	ComponentFiles      []string        `json:"componentFiles" yaml:"componentFiles"`
+	Components          []*ComponentWorkload
+	WorkloadSpec        `yaml:",inline"`
+}
+
+// WorkloadCollection defines a workload collection.
+type WorkloadCollection struct {
+	WorkloadShared `yaml:",inline"`
+	Spec           WorkloadCollectionSpec `json:"spec" yaml:"spec" validate:"required"`
+}
+
 func (c *WorkloadCollection) Validate() error {
 	missingFields := []string{}
 
@@ -146,49 +162,20 @@ func (c *WorkloadCollection) IsCollection() bool {
 }
 
 func (c *WorkloadCollection) SetResources(workloadPath string) error {
-	resources, err := processMarkers(workloadPath, c.Spec.Resources, true, true)
+	err := c.Spec.processManifests(FieldMarkerType, CollectionMarkerType)
 	if err != nil {
 		return err
 	}
 
-	c.Spec.SourceFiles = *resources.SourceFiles
-	c.Spec.RBACRules = *resources.RBACRules
-	c.Spec.OwnershipRules = *resources.OwnershipRules
-
-	specFields := resources.SpecFields
-
-	for _, component := range c.Spec.Components {
-		componentResources, err := processMarkers(
-			component.Spec.ConfigPath,
-			component.Spec.Resources,
-			true,
-			false,
-		)
-		if err != nil {
-			return err
-		}
-
-		// add to spec fields if not present
-		for _, csf := range componentResources.SpecFields {
-			fieldPresent := false
-
-			for i, sf := range specFields {
-				if sf.FieldName == csf.FieldName {
-					if len(csf.DocumentationLines) > 0 {
-						specFields[i].DocumentationLines = csf.DocumentationLines
-					}
-
-					fieldPresent = true
-				}
-			}
-
-			if !fieldPresent {
-				specFields = append(specFields, csf)
+	for _, cpt := range c.Spec.Components {
+		for _, csr := range cpt.Spec.Resources {
+			// add to spec fields if not present
+			err := c.Spec.processMarkers(csr, CollectionMarkerType)
+			if err != nil {
+				return err
 			}
 		}
 	}
-
-	c.Spec.APISpecFields = specFields
 
 	return nil
 }
@@ -212,19 +199,21 @@ func (c *WorkloadCollection) GetComponents() []*ComponentWorkload {
 }
 
 func (c *WorkloadCollection) GetSourceFiles() *[]SourceFile {
-	return &c.Spec.SourceFiles
+	return c.Spec.SourceFiles
 }
 
 func (c *WorkloadCollection) GetFuncNames() (createFuncNames, initFuncNames []string) {
 	return getFuncNames(*c.GetSourceFiles())
 }
 
-func (c *WorkloadCollection) GetAPISpecFields() []*APISpecField {
+func (c *WorkloadCollection) GetAPISpecFields() *APIFields {
 	return c.Spec.APISpecFields
 }
 
 func (c *WorkloadCollection) GetRBACRules() *[]RBACRule {
-	return &c.Spec.RBACRules
+	var rules []RBACRule = *c.Spec.RBACRules
+
+	return &rules
 }
 
 func (*WorkloadCollection) GetOwnershipRules() *[]OwnershipRule {
@@ -306,4 +295,14 @@ func (c *WorkloadCollection) GetSubcommands() *[]CliCommand {
 	}
 
 	return &commands
+}
+
+func (c *WorkloadCollection) LoadManifests(workloadPath string) error {
+	for _, r := range c.Spec.Resources {
+		if err := r.loadManifest(workloadPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

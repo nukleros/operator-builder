@@ -75,8 +75,8 @@ linters:
     - durationcheck
     - errcheck
     - errorlint
-    - exhaustive
-    # - exhaustivestruct
+    #- exhaustive
+    #- exhaustivestruct
     - exportloopref
     - forbidigo
     - forcetypeassert
@@ -118,7 +118,7 @@ linters:
     - paralleltest
     - prealloc
     - predeclared
-    # - revive
+    #- revive
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
@@ -153,6 +153,8 @@ issues:
     - linters:
         - gocritic
       text: "unnecessaryDefer:"
+  exclude:
+    - 'declaration of "(err|ctx)" shadows declaration at'
 
 run:
   skip-dirs:

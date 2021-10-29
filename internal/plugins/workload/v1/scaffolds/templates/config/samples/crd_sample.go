@@ -20,7 +20,7 @@ type CRDSample struct {
 	machinery.TemplateMixin
 	machinery.ResourceMixin
 
-	SpecFields []*workloadv1.APISpecField
+	SpecFields *workloadv1.APIFields
 }
 
 func (f *CRDSample) SetTemplateDefaults() error {
@@ -44,8 +44,5 @@ const crdSampleTemplate = `apiVersion: {{ .Resource.QualifiedGroup }}/{{ .Resour
 kind: {{ .Resource.Kind }}
 metadata:
   name: {{ lower .Resource.Kind }}-sample
-spec:
-{{- range .SpecFields }}
-  {{ .SampleField -}}
-{{ end }}
+{{ .SpecFields.GenerateSampleSpec -}}
 `

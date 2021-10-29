@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/name: namespace-operator
     workload-collection: default-collection
   name: namespace-operator
-  namespace: tenancy-system  # +operator-builder:field:name=namespace,default=tenancy-system,type=string
+  namespace: tenancy-system  # +operator-builder:collection:field:name=test.namespace,type=string
 spec:
   replicas: 2  # +operator-builder:field:name=nsOperatorReplicas,default=2,type=int
   selector:

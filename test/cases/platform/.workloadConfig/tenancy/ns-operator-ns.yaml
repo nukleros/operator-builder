@@ -3,6 +3,6 @@ kind: Namespace
 metadata:
   #+docs: Defines the namespace in which all resources of this
   # component belong
-  name: tenancy-system  # +operator-builder:field:name=namespace,default=tenancy-system,type=string
+  name: tenancy-system  # +operator-builder:collection:field:name=test.namespace,default=tenancy-system,type=string
   labels:
     workload-collection: default-collection

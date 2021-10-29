@@ -18,6 +18,23 @@ const (
 
 var ErrNoComponentsOnComponent = errors.New("cannot set component workloads on a component workload - only on collections")
 
+// ComponentWorkloadSpec defines the attributes for a workload that is a
+// component of a collection.
+type ComponentWorkloadSpec struct {
+	API                   WorkloadAPISpec `json:"api" yaml:"api"`
+	CompanionCliSubcmd    CliCommand      `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
+	Dependencies          []string        `json:"dependencies" yaml:"dependencies"`
+	ConfigPath            string
+	ComponentDependencies []*ComponentWorkload
+	WorkloadSpec          `yaml:",inline"`
+}
+
+// ComponentWorkload defines a workload that is a component of a collection.
+type ComponentWorkload struct {
+	WorkloadShared `yaml:",inline"`
+	Spec           ComponentWorkloadSpec `json:"spec" yaml:"spec" validate:"required"`
+}
+
 func (c *ComponentWorkload) Validate() error {
 	missingFields := []string{}
 
@@ -117,15 +134,10 @@ func (*ComponentWorkload) IsCollection() bool {
 }
 
 func (c *ComponentWorkload) SetResources(workloadPath string) error {
-	resources, err := processMarkers(workloadPath, c.Spec.Resources, false, false)
+	err := c.Spec.processManifests(FieldMarkerType)
 	if err != nil {
 		return err
 	}
-
-	c.Spec.APISpecFields = resources.SpecFields
-	c.Spec.SourceFiles = *resources.SourceFiles
-	c.Spec.RBACRules = *resources.RBACRules
-	c.Spec.OwnershipRules = *resources.OwnershipRules
 
 	return nil
 }
@@ -147,23 +159,27 @@ func (*ComponentWorkload) GetComponents() []*ComponentWorkload {
 }
 
 func (c *ComponentWorkload) GetSourceFiles() *[]SourceFile {
-	return &c.Spec.SourceFiles
+	return c.Spec.SourceFiles
 }
 
 func (c *ComponentWorkload) GetFuncNames() (createFuncNames, initFuncNames []string) {
 	return getFuncNames(*c.GetSourceFiles())
 }
 
-func (c *ComponentWorkload) GetAPISpecFields() []*APISpecField {
+func (c *ComponentWorkload) GetAPISpecFields() *APIFields {
 	return c.Spec.APISpecFields
 }
 
 func (c *ComponentWorkload) GetRBACRules() *[]RBACRule {
-	return &c.Spec.RBACRules
+	var rules []RBACRule = *c.Spec.RBACRules
+
+	return &rules
 }
 
 func (c *ComponentWorkload) GetOwnershipRules() *[]OwnershipRule {
-	return &c.Spec.OwnershipRules
+	var rules []OwnershipRule = *c.Spec.OwnershipRules
+
+	return &rules
 }
 
 func (c *ComponentWorkload) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
@@ -224,4 +240,14 @@ func (c *ComponentWorkload) GetSubcommands() *[]CliCommand {
 	}
 
 	return &commands
+}
+
+func (c *ComponentWorkload) LoadManifests(workloadPath string) error {
+	for _, r := range c.Spec.Resources {
+		if err := r.loadManifest(workloadPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

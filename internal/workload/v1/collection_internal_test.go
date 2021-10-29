@@ -1,7 +1,6 @@
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
-//nolint:testpackage
 package v1
 
 import (
@@ -15,13 +14,13 @@ func Test_CollectionSetNames(t *testing.T) {
 
 	sharedNameInput := WorkloadShared{
 		Name: "shared-name",
-		Kind: "WorkloadCollection",
+		Kind: WorkloadKindCollection,
 	}
 
 	sharedNameExpected := WorkloadShared{
 		Name:        "shared-name",
 		PackageName: "sharedname",
-		Kind:        "WorkloadCollection",
+		Kind:        WorkloadKindCollection,
 	}
 
 	for _, tt := range []struct {
@@ -46,7 +45,7 @@ func Test_CollectionSetNames(t *testing.T) {
 			input: &WorkloadCollection{
 				WorkloadShared: sharedNameInput,
 				Spec: WorkloadCollectionSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "WorkloadCollectionTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -57,7 +56,7 @@ func Test_CollectionSetNames(t *testing.T) {
 			expected: &WorkloadCollection{
 				WorkloadShared: sharedNameExpected,
 				Spec: WorkloadCollectionSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "WorkloadCollectionTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -80,7 +79,7 @@ func Test_CollectionSetNames(t *testing.T) {
 			input: &WorkloadCollection{
 				WorkloadShared: sharedNameInput,
 				Spec: WorkloadCollectionSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "WorkloadCollectionTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -92,7 +91,7 @@ func Test_CollectionSetNames(t *testing.T) {
 			expected: &WorkloadCollection{
 				WorkloadShared: sharedNameExpected,
 				Spec: WorkloadCollectionSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "WorkloadCollectionTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -115,7 +114,7 @@ func Test_CollectionSetNames(t *testing.T) {
 			input: &WorkloadCollection{
 				WorkloadShared: sharedNameInput,
 				Spec: WorkloadCollectionSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "WorkloadCollectionTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -132,7 +131,7 @@ func Test_CollectionSetNames(t *testing.T) {
 			expected: &WorkloadCollection{
 				WorkloadShared: sharedNameExpected,
 				Spec: WorkloadCollectionSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "WorkloadCollectionTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -155,7 +154,7 @@ func Test_CollectionSetNames(t *testing.T) {
 			input: &WorkloadCollection{
 				WorkloadShared: sharedNameInput,
 				Spec: WorkloadCollectionSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "WorkloadCollectionTest",
 					},
 					CompanionCliRootcmd: CliCommand{
@@ -171,7 +170,7 @@ func Test_CollectionSetNames(t *testing.T) {
 			expected: &WorkloadCollection{
 				WorkloadShared: sharedNameExpected,
 				Spec: WorkloadCollectionSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "WorkloadCollectionTest",
 					},
 					CompanionCliRootcmd: CliCommand{

@@ -18,6 +18,19 @@ const (
 
 var ErrNoComponentsOnStandalone = errors.New("cannot set component workloads on a component workload - only on collections")
 
+// StandaloneWorkloadSpec defines the attributes for a standalone workload.
+type StandaloneWorkloadSpec struct {
+	API                 WorkloadAPISpec `json:"api" yaml:"api"`
+	CompanionCliRootcmd CliCommand      `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
+	WorkloadSpec        `yaml:",inline"`
+}
+
+// StandaloneWorkload defines a standalone workload.
+type StandaloneWorkload struct {
+	WorkloadShared `yaml:",inline"`
+	Spec           StandaloneWorkloadSpec `json:"spec" yaml:"spec" validate:"required"`
+}
+
 func (s *StandaloneWorkload) Validate() error {
 	missingFields := []string{}
 
@@ -145,15 +158,10 @@ func (*StandaloneWorkload) IsCollection() bool {
 }
 
 func (s *StandaloneWorkload) SetResources(workloadPath string) error {
-	resources, err := processMarkers(workloadPath, s.Spec.Resources, false, false)
+	err := s.Spec.processManifests(FieldMarkerType)
 	if err != nil {
 		return err
 	}
-
-	s.Spec.APISpecFields = resources.SpecFields
-	s.Spec.SourceFiles = *resources.SourceFiles
-	s.Spec.RBACRules = *resources.RBACRules
-	s.Spec.OwnershipRules = *resources.OwnershipRules
 
 	return nil
 }
@@ -175,23 +183,27 @@ func (s *StandaloneWorkload) GetComponents() []*ComponentWorkload {
 }
 
 func (s *StandaloneWorkload) GetSourceFiles() *[]SourceFile {
-	return &s.Spec.SourceFiles
+	return s.Spec.SourceFiles
 }
 
 func (s *StandaloneWorkload) GetFuncNames() (createFuncNames, initFuncNames []string) {
 	return getFuncNames(*s.GetSourceFiles())
 }
 
-func (s *StandaloneWorkload) GetAPISpecFields() []*APISpecField {
+func (s *StandaloneWorkload) GetAPISpecFields() *APIFields {
 	return s.Spec.APISpecFields
 }
 
 func (s *StandaloneWorkload) GetRBACRules() *[]RBACRule {
-	return &s.Spec.RBACRules
+	var rules []RBACRule = *s.Spec.RBACRules
+
+	return &rules
 }
 
 func (s *StandaloneWorkload) GetOwnershipRules() *[]OwnershipRule {
-	return &s.Spec.OwnershipRules
+	var rules []OwnershipRule = *s.Spec.OwnershipRules
+
+	return &rules
 }
 
 func (*StandaloneWorkload) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
@@ -218,4 +230,14 @@ func (s *StandaloneWorkload) SetNames() {
 func (s *StandaloneWorkload) GetSubcommands() *[]CliCommand {
 	// no subcommands for a standalone workload
 	return &[]CliCommand{}
+}
+
+func (s *StandaloneWorkload) LoadManifests(workloadPath string) error {
+	for _, r := range s.Spec.Resources {
+		if err := r.loadManifest(workloadPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

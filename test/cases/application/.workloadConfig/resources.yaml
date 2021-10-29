@@ -3,9 +3,10 @@ kind: Deployment
 metadata:
   name: webstore-deploy
 spec:
-  replicas: 2  # +operator-builder:field:name=webStoreReplicas,default=2,type=int
+  replicas: 2  # +operator-builder:field:name=webstore.really.long.nested.path.replicas,default=2,type=int
   selector:
     matchLabels:
+      # +operator-builder:field:name=app.label,type=string,default="webstore"
       app: webstore
   template:
     metadata:
@@ -14,7 +15,7 @@ spec:
     spec:
       containers:
       - name: webstore-container
-        #+operator-builder:field:name=webstoreImage,default="nginx:1.17",type=string,description="Defines the web store image"
+        #+operator-builder:field:name=webstore.really.long.path.image,default="nginx:1.17",type=string,description="Defines the web store image"
         image: nginx:1.17
         ports:
         - containerPort: 8080
@@ -38,9 +39,10 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: webstore-svc # +operator-builder:field:name=serviceName,type=string,default="webstore-svc"
+  name: webstore-svc # +operator-builder:field:name=service.name,type=string,default="webstore-svc"
 spec:
   selector:
+    # +operator-builder:field:name=app.label,type=string,default="webstore"
     app: webstore
   ports:
   - protocol: TCP

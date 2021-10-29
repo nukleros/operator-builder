@@ -1,7 +1,6 @@
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
-//nolint:testpackage
 package v1
 
 import (
@@ -15,13 +14,13 @@ func Test_ComponentSetNames(t *testing.T) {
 
 	sharedNameInput := WorkloadShared{
 		Name: "shared-name",
-		Kind: "ComponentWorkload",
+		Kind: WorkloadKindComponent,
 	}
 
 	sharedNameExpected := WorkloadShared{
 		Name:        "shared-name",
 		PackageName: "sharedname",
-		Kind:        "ComponentWorkload",
+		Kind:        WorkloadKindComponent,
 	}
 
 	for _, tt := range []struct {
@@ -34,7 +33,7 @@ func Test_ComponentSetNames(t *testing.T) {
 			input: &ComponentWorkload{
 				WorkloadShared: sharedNameInput,
 				Spec: ComponentWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "ComponentWorkloadTest",
 					},
 					CompanionCliSubcmd: CliCommand{},
@@ -43,7 +42,7 @@ func Test_ComponentSetNames(t *testing.T) {
 			expected: &ComponentWorkload{
 				WorkloadShared: sharedNameExpected,
 				Spec: ComponentWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "ComponentWorkloadTest",
 					},
 					CompanionCliSubcmd: CliCommand{
@@ -60,7 +59,7 @@ func Test_ComponentSetNames(t *testing.T) {
 			input: &ComponentWorkload{
 				WorkloadShared: sharedNameInput,
 				Spec: ComponentWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "ComponentWorkloadTest",
 					},
 					CompanionCliSubcmd: CliCommand{
@@ -74,7 +73,7 @@ func Test_ComponentSetNames(t *testing.T) {
 			expected: &ComponentWorkload{
 				WorkloadShared: sharedNameExpected,
 				Spec: ComponentWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "ComponentWorkloadTest",
 					},
 					CompanionCliSubcmd: CliCommand{
@@ -91,7 +90,7 @@ func Test_ComponentSetNames(t *testing.T) {
 			input: &ComponentWorkload{
 				WorkloadShared: sharedNameInput,
 				Spec: ComponentWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "ComponentWorkloadTest",
 					},
 					CompanionCliSubcmd: CliCommand{
@@ -104,7 +103,7 @@ func Test_ComponentSetNames(t *testing.T) {
 			expected: &ComponentWorkload{
 				WorkloadShared: sharedNameExpected,
 				Spec: ComponentWorkloadSpec{
-					API: APISpec{
+					API: WorkloadAPISpec{
 						Kind: "ComponentWorkloadTest",
 					},
 					CompanionCliSubcmd: CliCommand{

@@ -303,7 +303,6 @@ func (s *apiScaffolder) Scaffold() error {
 						ClusterScoped: component.IsClusterScoped(),
 						SourceFile:    sourceFile,
 						PackageName:   component.GetPackageName(),
-						SpecFields:    component.GetAPISpecFields(),
 						IsComponent:   component.IsComponent(),
 						Collection:    s.workload.(*workloadv1.WorkloadCollection),
 					},
@@ -329,7 +328,6 @@ func (s *apiScaffolder) Scaffold() error {
 				ClusterScoped: s.workload.IsClusterScoped(),
 				SourceFile:    sourceFile,
 				PackageName:   s.workload.GetPackageName(),
-				SpecFields:    s.workload.GetAPISpecFields(),
 				IsComponent:   s.workload.IsComponent(),
 			},
 		)
@@ -446,7 +444,6 @@ func (s *apiScaffolder) scaffoldCLI(scaffold *machinery.Scaffold) error {
 			GenerateCommand: true,
 		},
 	)
-
 	if err != nil {
 		return fmt.Errorf("error updating root.go, %w", err)
 	}
