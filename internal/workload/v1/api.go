@@ -54,6 +54,8 @@ func (api *APIFields) AddField(path string, fieldType FieldType, comments []stri
 		if !foundMatch {
 			child := obj.newChild(part, FieldStruct, sample)
 
+			child.Markers = append(child.Markers, "+kubebuilder:validation:Optional")
+
 			child.generateStructName(path)
 
 			obj.Children = append(obj.Children, child)

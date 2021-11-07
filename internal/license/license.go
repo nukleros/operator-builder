@@ -5,8 +5,8 @@ package license
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -106,7 +106,7 @@ func getSourceLicense(source string) ([]byte, error) {
 		}
 		defer resp.Body.Close()
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return []byte{}, fmt.Errorf("unable to read license source from %s, %w", source, err)
 		}
@@ -114,7 +114,7 @@ func getSourceLicense(source string) ([]byte, error) {
 		sourceLicense = body
 	} else {
 		// source is local file
-		fileContent, err := ioutil.ReadFile(source)
+		fileContent, err := os.ReadFile(source)
 		if err != nil {
 			return []byte{}, fmt.Errorf("unable to get license source from %s, %w", source, err)
 		}
@@ -127,7 +127,7 @@ func getSourceLicense(source string) ([]byte, error) {
 func replaceLicenseHeader(file string, header []byte) error {
 	const filePermissions = 0600
 
-	input, err := ioutil.ReadFile(file)
+	input, err := os.ReadFile(file)
 	if err != nil {
 		return fmt.Errorf("unable to read file %s, %w", file, err)
 	}
@@ -149,7 +149,7 @@ func replaceLicenseHeader(file string, header []byte) error {
 		}
 	}
 
-	err = ioutil.WriteFile(file, []byte(output), filePermissions)
+	err = os.WriteFile(file, []byte(output), filePermissions)
 	if err != nil {
 		return fmt.Errorf("unable to set license header on %s, %w", file, err)
 	}

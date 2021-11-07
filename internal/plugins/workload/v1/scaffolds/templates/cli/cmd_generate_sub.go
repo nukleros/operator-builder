@@ -65,7 +65,6 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -186,7 +185,7 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 	// component workload
 	wkFilename, _ := filepath.Abs(g.workloadManifest)
 
-	wkYamlFile, err := ioutil.ReadFile(wkFilename)
+	wkYamlFile, err := os.ReadFile(wkFilename)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s, %w", wkFilename, err)
 	}
@@ -208,7 +207,7 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 	// workload collection
 	colFilename, _ := filepath.Abs(g.collectionManifest)
 
-	colYamlFile, err := ioutil.ReadFile(colFilename)
+	colYamlFile, err := os.ReadFile(colFilename)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s, %w", colFilename, err)
 	}
@@ -242,7 +241,7 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 	{{ else }}
 	filename, _ := filepath.Abs(g.workloadManifest)
 
-	yamlFile, err := ioutil.ReadFile(filename)
+	yamlFile, err := os.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s, %w", filename, err)
 	}

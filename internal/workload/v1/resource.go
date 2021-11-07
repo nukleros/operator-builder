@@ -5,7 +5,7 @@ package v1
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -49,7 +49,7 @@ func (r *Resource) UnmarshalYAML(node *yaml.Node) error {
 func (r *Resource) loadManifest(path string) error {
 	manifestFile := filepath.Join(path, r.FileName)
 
-	manifestContent, err := ioutil.ReadFile(manifestFile)
+	manifestContent, err := os.ReadFile(manifestFile)
 	if err != nil {
 		return formatProcessError(manifestFile, err)
 	}
