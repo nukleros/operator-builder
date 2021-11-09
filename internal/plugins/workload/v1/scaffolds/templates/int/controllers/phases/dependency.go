@@ -31,15 +31,12 @@ const dependenciesTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	"fmt"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{ .Repo }}/apis/common"
-	"{{ .Repo }}/internal/helpers"
 )
 
 // DependencyPhase.DefaultRequeue executes checking for a parent components readiness status.
@@ -49,22 +46,11 @@ func (phase *DependencyPhase) DefaultRequeue() ctrl.Result {
 
 // DependencyPhase.Execute executes a dependency check prior to attempting to create resources.
 func (phase *DependencyPhase) Execute(r common.ComponentReconciler) (proceedToNextPhase bool, err error) {
-	// dependencies
-	component := r.GetComponent()
-
-	if !collectionConfigIsReady(r) {
-		return false, nil
-	}
-
-	// TODO: set DependenciesSatisfied field (see next TODO below)
-	if !component.GetDependencyStatus() {
+	if !r.GetComponent().GetDependencyStatus() {
 		satisfied, err := dependenciesSatisfied(r)
 		if err != nil || !satisfied {
 			return false, err
 		}
-
-		// dependencies satisfied; set and update status and continue
-		// TODO: needs implemented
 	}
 
 	return true, nil
@@ -105,27 +91,5 @@ func dependencySatisfied(r common.ComponentReconciler, dependency common.Compone
 	}
 
 	return status, nil
-}
-
-// collectionConfigIsReady determines if a component's collection is ready.
-func collectionConfigIsReady(r common.ComponentReconciler) bool {
-	// get a list of configurations from the cluster
-	collectionConfigs, err := helpers.GetCollectionConfigs(r)
-	if err != nil {
-		r.GetLogger().V(0).Info("unable to find resource of kind: [" + helpers.CollectionAPIKind + "]")
-
-		return false
-	}
-
-	// configuration is not ready if we do not have exactly one configuration
-	if len(collectionConfigs.Items) != 1 {
-		r.GetLogger().V(0).Info(
-			fmt.Sprintf("expected only 1 resource of kind: [%s]; found %v", helpers.CollectionAPIKind, len(collectionConfigs.Items)),
-		)
-
-		return false
-	}
-
-	return true
 }
 `

@@ -67,12 +67,12 @@ type ComponentReconciler interface {
 	GetController() controller.Controller
 	GetLogger() logr.Logger
 	GetScheme() *runtime.Scheme
-	GetResources() []ComponentResource
+	GetResources() ([]metav1.Object, error)
 	GetWatches() []client.Object
 	SetWatch(client.Object)
 
 	// component and child resource methods
-	CreateOrUpdate(metav1.Object) error
+	CreateOrUpdate(client.Object) error
 	UpdateStatus() error
 
 	// methods from the underlying client package
@@ -86,24 +86,5 @@ type ComponentReconciler interface {
 	CheckReady() (bool, error)
 	Mutate(*metav1.Object) ([]metav1.Object, bool, error)
 	Wait(*metav1.Object) (bool, error)
-}
-
-type ComponentResource interface {
-	// attribute exporters and setters
-	GetGroup() string
-	GetVersion() string
-	GetKind() string
-	GetName() string
-	GetNamespace() string
-	GetObject() client.Object
-	GetReconciler() ComponentReconciler
-
-	// equality checkers
-	EqualGVK(ComponentResource) bool
-	EqualNamespaceName(ComponentResource) bool
-
-	// other methods
-	IsReady() (bool, error)
-	ToCommonResource() *Resource
 }
 `

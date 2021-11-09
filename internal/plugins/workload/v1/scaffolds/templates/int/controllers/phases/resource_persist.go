@@ -34,17 +34,21 @@ import (
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{ .Repo }}/apis/common"
+	"{{ .Repo }}/internal/resources"
 )
 
 // PersistResourcePhase.Execute executes persisting resources to the Kubernetes database.
 func (phase *PersistResourcePhase) Execute(
-	resource common.ComponentResource,
+	r common.ComponentReconciler,
+	resource client.Object,
 	resourceCondition common.ResourceCondition,
 ) (ctrl.Result, bool, error) {
 	// persist the resource
 	if err := persistResource(
+		r,
 		resource,
 		resourceCondition,
 		phase,
@@ -57,13 +61,13 @@ func (phase *PersistResourcePhase) Execute(
 
 // persistResource persists a single resource to the Kubernetes database.
 func persistResource(
-	resource common.ComponentResource,
+	r common.ComponentReconciler,
+	resource client.Object,
 	condition common.ResourceCondition,
 	phase *PersistResourcePhase,
 ) error {
 	// persist resource
-	r := resource.GetReconciler()
-	if err := r.CreateOrUpdate(resource.GetObject()); err != nil {
+	if err := r.CreateOrUpdate(resource); err != nil {
 		if IsOptimisticLockError(err) {
 			return nil
 		} else {
@@ -80,6 +84,6 @@ func persistResource(
 	condition.Created = true
 
 	// update the condition to notify that we have created a child resource
-	return updateResourceConditions(r, *resource.ToCommonResource(), &condition)
+	return updateResourceConditions(r, *resources.ToCommonResource(resource), &condition)
 }
 `

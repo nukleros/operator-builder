@@ -47,8 +47,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"{{ .Repo }}/apis/common"
-	"{{ .Repo }}/internal/resources"
 	controllerphases "{{ .Repo }}/internal/controllers/phases"
+
+	"github.com/nukleros/operator-builder-tools/pkg/resources"
 )
 
 const (
@@ -92,29 +93,35 @@ func Phases(component common.Component) []controllerphases.Phase {
 	return phases
 }
 
-// getDesiredObject returns the desired object from a list stored on the
-// reconciler.
-func getDesiredObject(compared *resources.Resource) (desired *resources.Resource) {
-	for _, resource := range compared.Reconciler.GetResources() {
-		if resource.EqualGVK(compared) && resource.EqualNamespaceName(compared) {
-			return resource.(*resources.Resource)
+// GetDesiredObject returns the desired object from a list stored in memory.
+func GetDesiredObject(compared client.Object, r common.ComponentReconciler) (client.Object, error) {
+	var desired client.Object
+
+	allObjects, err := r.GetResources()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, resource := range allObjects {
+		if resources.EqualGVK(compared, resource.(client.Object)) && resources.EqualNamespaceName(compared, resource.(client.Object)) {
+			return resource.(client.Object), nil
 		}
 	}
 
-	return desired
+	return desired, nil
 }
 
 // needsReconciliation performs some simple checks and returns whether or not a
 // resource needs to be updated.
-func needsReconciliation(existing, requested resources.Resource) bool {
+func needsReconciliation(r common.ComponentReconciler, existing, requested client.Object) bool {
 	// skip if the resources versions are the same
-	if existing.Object.GetResourceVersion() == requested.Object.GetResourceVersion() {
+	if existing.GetResourceVersion() == requested.GetResourceVersion() {
 		return false
 	}
 
 	// skip if the objects support observed generation and they are equal
-	if existing.Object.GetGeneration() > 0 && requested.Object.GetGeneration() > 0 {
-		if existing.Object.GetGeneration() == requested.Object.GetGeneration() {
+	if existing.GetGeneration() > 0 && requested.GetGeneration() > 0 {
+		if existing.GetGeneration() == requested.GetGeneration() {
 			return false
 		}
 	}
@@ -122,14 +129,19 @@ func needsReconciliation(existing, requested resources.Resource) bool {
 	// get the desired object from the reconciler and ensure that we both
 	// found that desired object and that the desired object fields are equal
 	// to the existing object fields
-	desired := getDesiredObject(&requested)
+	desired, err := GetDesiredObject(requested, r)
+	if err != nil {
+		r.GetLogger().V(0).Error(err,
+			"unable to get object in memory")
+		return false
+	}
 	if desired == nil {
 		return true
 	}
 
-	equal, err := resources.AreEqual(*desired, requested)
+	equal, err := resources.AreEqual(desired, requested)
 	if err != nil {
-		requested.Reconciler.GetLogger().V(0).Error(err,
+		r.GetLogger().V(0).Error(err,
 			"unable to determine equality for reconciliation")
 
 		return true
@@ -144,8 +156,9 @@ func ResourcePredicates(r common.ComponentReconciler) predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			return needsReconciliation(
-				*resources.NewResourceFromClient(e.ObjectOld, r),
-				*resources.NewResourceFromClient(e.ObjectNew, r),
+				r,
+				e.ObjectOld,
+				e.ObjectNew,
 			)
 		},
 		GenericFunc: func(e event.GenericEvent) bool {

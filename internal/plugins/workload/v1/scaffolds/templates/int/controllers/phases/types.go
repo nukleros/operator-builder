@@ -36,6 +36,7 @@ import (
 	"strings"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{ .Repo }}/apis/common"
 )
@@ -48,7 +49,7 @@ type Phase interface {
 
 // ResourcePhase defines the specific phase of reconcilication associated with creating resources.
 type ResourcePhase interface {
-	Execute(common.ComponentResource, common.ResourceCondition) (ctrl.Result, bool, error)
+	Execute(common.ComponentReconciler, client.Object, common.ResourceCondition) (ctrl.Result, bool, error)
 }
 
 // Below are the phase types which satisfy the Phase interface.

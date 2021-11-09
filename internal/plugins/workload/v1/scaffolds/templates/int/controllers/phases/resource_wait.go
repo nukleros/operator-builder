@@ -33,6 +33,7 @@ package phases
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{ .Repo }}/apis/common"
 	"{{ .Repo }}/internal/resources"
@@ -40,12 +41,13 @@ import (
 
 // WaitForResourcePhase.Execute executes waiting for a resource to be ready before continuing.
 func (phase *WaitForResourcePhase) Execute(
-	resource common.ComponentResource,
+	r common.ComponentReconciler,
+	resource client.Object,
 	resourceCondition common.ResourceCondition,
 ) (ctrl.Result, bool, error) {
 	// TODO: loop through functions instead of repeating logic
 	// common wait logic for a resource
-	ready, err := commonWait(resource.GetReconciler(), resource)
+	ready, err := commonWait(r, resource)
 	if err != nil {
 		return ctrl.Result{}, false, err
 	}
@@ -56,8 +58,8 @@ func (phase *WaitForResourcePhase) Execute(
 	}
 
 	// specific wait logic for a resource
-	meta := resource.GetObject().(metav1.Object)
-	ready, err = resource.GetReconciler().Wait(&meta)
+	meta := resource.(metav1.Object)
+	ready, err = r.Wait(&meta)
 	if err != nil {
 		return ctrl.Result{}, false, err
 	}
@@ -87,11 +89,11 @@ func (phase *WaitForResourcePhase) Execute(
 // commonWait applies all common waiting functions for known resources.
 func commonWait(
 	r common.ComponentReconciler,
-	resource common.ComponentResource,
+	resource client.Object,
 ) (bool, error) {
 	// Namespace
-	if resource.GetObject().GetNamespace() != "" {
-		return resources.NamespaceForResourceIsReady(resource)
+	if resource.GetNamespace() != "" {
+		return resources.NamespaceForResourceIsReady(r, resource)
 	}
 
 	return true, nil

@@ -33,10 +33,14 @@ package phases
 import (
 	"time"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrl "sigs.k8s.io/controller-runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"{{ .Repo }}/apis/common"
 	"{{ .Repo }}/internal/resources"
+
+	rsrcs "github.com/nukleros/operator-builder-tools/pkg/resources"
 )
 
 // CheckReadyPhase.DefaultRequeue executes checking for a parent components readiness status.
@@ -52,7 +56,7 @@ func (phase *CheckReadyPhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {
 	// check to see if known types are ready
-	knownReady, err := resources.AreReady(r.GetResources()...)
+	knownReady, err := resourcesAreReady(r)
 	if err != nil {
 		return false, err
 	}
@@ -64,5 +68,29 @@ func (phase *CheckReadyPhase) Execute(
 	}
 
 	return (knownReady && customReady), nil
+}
+
+// resourcesAreReady gets the resources in memory, pulls the current state from the
+// clusters and determines if they are in a ready condition.
+func resourcesAreReady(r common.ComponentReconciler) (bool, error) {
+	// get resources in memory
+	desiredResources, err := r.GetResources()
+	if err != nil {
+		return false, err
+	}
+
+	// get resources from cluster
+	clusterResources := make([]metav1.Object, len(desiredResources))
+	for i, rsrc := range desiredResources {
+		clusterResource, err := resources.Get(r, rsrc.(client.Object))
+		if err != nil {
+			return false, err
+		}
+
+		clusterResources[i] = clusterResource
+	}
+
+	// check to see if known types are ready
+	return rsrcs.AreReady(clusterResources...)
 }
 `
