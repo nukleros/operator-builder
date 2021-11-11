@@ -102,10 +102,11 @@ func getFuncNames(sourceFiles []SourceFile) (createFuncNames, initFuncNames []st
 
 func determineSourceFileName(manifestFile string) SourceFile {
 	var sourceFile SourceFile
-	sourceFile.Filename = filepath.Base(manifestFile)                // get filename from path
-	sourceFile.Filename = strings.Split(sourceFile.Filename, ".")[0] // strip ".yaml"
-	sourceFile.Filename += ".go"                                     // add correct file ext
-	sourceFile.Filename = utils.ToFileName(sourceFile.Filename)      // kebab-case to snake_case
+	sourceFile.Filename = filepath.Clean(manifestFile)
+	sourceFile.Filename = strings.ReplaceAll(sourceFile.Filename, "/", "_")                              // get filename from path
+	sourceFile.Filename = strings.ReplaceAll(sourceFile.Filename, filepath.Ext(sourceFile.Filename), "") // strip ".yaml"
+	sourceFile.Filename += ".go"                                                                         // add correct file ext
+	sourceFile.Filename = utils.ToFileName(sourceFile.Filename)                                          // kebab-case to snake_case
 
 	return sourceFile
 }

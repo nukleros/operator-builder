@@ -275,10 +275,19 @@ func formatProcessError(manifestFile string, err error) error {
 }
 
 func generateUniqueResourceName(object unstructured.Unstructured) string {
-	resourceName := strings.Replace(strings.Title(object.GetName()), "-", "", -1)
-	resourceName = strings.Replace(resourceName, ".", "", -1)
-	resourceName = strings.Replace(resourceName, ":", "", -1)
-	resourceName = fmt.Sprintf("%s%s", object.GetKind(), resourceName)
+	resourceName := strings.ReplaceAll(strings.Title(object.GetName()), "-", "")
+	resourceName = strings.ReplaceAll(resourceName, ".", "")
+	resourceName = strings.ReplaceAll(resourceName, ":", "")
+	resourceName = strings.ReplaceAll(resourceName, "ParentSpec", "")
+	resourceName = strings.ReplaceAll(resourceName, "CollectionSpec", "")
+
+	namespaceName := strings.ReplaceAll(strings.Title(object.GetNamespace()), "-", "")
+	namespaceName = strings.ReplaceAll(namespaceName, ".", "")
+	namespaceName = strings.ReplaceAll(namespaceName, ":", "")
+	namespaceName = strings.ReplaceAll(namespaceName, "ParentSpec", "")
+	namespaceName = strings.ReplaceAll(namespaceName, "CollectionSpec", "")
+
+	resourceName = fmt.Sprintf("%s%s%s", object.GetKind(), namespaceName, resourceName)
 
 	return resourceName
 }
