@@ -40,7 +40,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -55,7 +54,7 @@ const (
 )
 
 // Get gets a resource.
-func Get(reconciler common.ComponentReconciler, resource client.Object) (metav1.Object, error) {
+func Get(reconciler common.ComponentReconciler, resource client.Object) (client.Object, error) {
 	// create a stub object to store the current resource in the cluster so that we do not affect
 	// the desired state of the resource object in memory
 	resourceStore := &unstructured.Unstructured{}
@@ -70,9 +69,9 @@ func Get(reconciler common.ComponentReconciler, resource client.Object) (metav1.
 			// return nil here so we can easily determine if a resource was not
 			// found without having to worry about its type
 			return nil, nil
-		} else {
-			return nil, err
 		}
+
+		return nil, fmt.Errorf("unable to get resource %s, %w", resource.GetName(), err)
 	}
 
 	return resourceStore, nil
@@ -81,11 +80,10 @@ func Get(reconciler common.ComponentReconciler, resource client.Object) (metav1.
 // Create creates a resource.
 func Create(reconciler common.ComponentReconciler, resource client.Object) error {
 	reconciler.GetLogger().V(0).Info(
-		fmt.Sprintf("creating resource; kind: [%s], name: [%s], namespace: [%s]",
-			resource.GetObjectKind().GroupVersionKind().Kind,
-			resource.GetName(),
-			resource.GetNamespace(),
-		),
+		"creating resource",
+		"kind", resource.GetObjectKind().GroupVersionKind().Kind,
+		"name", resource.GetName(),
+		"namespace", resource.GetNamespace(),
 	)
 
 	if err := reconciler.Create(
@@ -93,7 +91,7 @@ func Create(reconciler common.ComponentReconciler, resource client.Object) error
 		resource,
 		&client.CreateOptions{FieldManager: FieldManager},
 	); err != nil {
-		return fmt.Errorf("unable to create resource; %v", err)
+		return fmt.Errorf("unable to create resource; %w", err)
 	}
 
 	return nil
@@ -108,12 +106,10 @@ func Update(reconciler common.ComponentReconciler, newResource, oldResource clie
 
 	if needsUpdate {
 		reconciler.GetLogger().V(0).Info(
-			fmt.Sprintf(
-				"updating resource; kind: [%s], name: [%s], namespace: [%s]",
-				oldResource.GetObjectKind().GroupVersionKind().Kind,
-				oldResource.GetName(),
-				oldResource.GetNamespace(),
-			),
+			"updating resource",
+			"kind", oldResource.GetObjectKind().GroupVersionKind().Kind,
+			"name", oldResource.GetName(),
+			"namespace", oldResource.GetNamespace(),
 		)
 
 		if err := reconciler.Patch(
@@ -122,7 +118,7 @@ func Update(reconciler common.ComponentReconciler, newResource, oldResource clie
 			client.Merge,
 			&client.PatchOptions{FieldManager: FieldManager},
 		); err != nil {
-			return fmt.Errorf("unable to update resource; %v", err)
+			return fmt.Errorf("unable to update resource; %w", err)
 		}
 	}
 
@@ -151,22 +147,24 @@ func NeedsUpdate(reconciler common.ComponentReconciler, desired, actual client.O
 	// when resources that need to be skipped explicitly (e.g. CRDs) are seen
 	// as equal anyway
 	equal, err := rsrcs.AreEqual(desired, actual)
-	if equal || err != nil {
-		return !equal, err
+	if err != nil {
+		return false, fmt.Errorf("unable to determine if resources are equal, %w", err)
+	}
+
+	if equal {
+		return false, nil
 	}
 
 	// always skip custom resource updates as they are sensitive to modification
 	// e.g. resources provisioned by the resource definition would not
 	// understand the update to a spec
 	if desired.GetObjectKind().GroupVersionKind().Kind == "CustomResourceDefinition" {
-		message := fmt.Sprintf("skipping update of CustomResourceDefinition "+
-			"[%s]", desired.GetName())
-		messageVerbose := fmt.Sprintf("if updates to CustomResourceDefinition "+
-			"[%s] are desired, consider re-deploying the parent "+
-			"resource or generating a new api version with the desired "+
-			"changes", desired.GetName())
-		reconciler.GetLogger().V(4).Info(message)
-		reconciler.GetLogger().V(7).Info(messageVerbose)
+		messageVerbose := fmt.Sprintf("if updates are desired, consider re-deploying the parent " +
+		"resource or generating a new api version with the desired " +
+		"changes")
+
+		reconciler.GetLogger().V(4).Info("skipping update", "CustomResourceDefinition", desired.GetName())
+		reconciler.GetLogger().V(7).Info(messageVerbose, "CustomResourceDefinition", desired.GetName())	
 
 		return false, nil
 	}
@@ -186,9 +184,9 @@ func NamespaceForResourceIsReady(r common.ComponentReconciler, resource client.O
 	if err := r.Get(r.GetContext(), namespacedName, namespace); err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil
-		} else {
-			return false, err
 		}
+		
+		return false, fmt.Errorf("unable to get namespace, %w", err)
 	}
 
 	return rsrcs.IsReady(namespace)

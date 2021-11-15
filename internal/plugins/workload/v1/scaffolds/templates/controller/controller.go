@@ -52,11 +52,11 @@ package {{ .Resource.Group }}
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/go-logr/logr"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -82,7 +82,6 @@ type {{ .Resource.Kind }}Reconciler struct {
 	client.Client
 	Name       string
 	Log        logr.Logger
-	Scheme     *runtime.Scheme
 	Context    context.Context
 	Controller controller.Controller
 	Watches    []client.Object
@@ -90,6 +89,16 @@ type {{ .Resource.Kind }}Reconciler struct {
 	{{- if .IsComponent }}
 	Collection *{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}
 	{{ end }}
+}
+
+
+func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Reconciler {
+	return &{{ .Resource.Kind }}Reconciler{
+		Name:      "{{ .Resource.Kind }}",
+		Client:    mgr.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("{{ .Resource.Group }}").WithName("{{ .Resource.Kind }}"),
+		Component: &{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{},
+	}
 }
 
 // +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }},verbs=get;list;watch;create;update;patch;delete
@@ -112,11 +121,19 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	log := r.Log.WithValues("{{ .Resource.Kind | lower }}", req.NamespacedName)
 
 	// get and store the component
-	r.Component = &{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}
 	if err := r.Get(r.Context, req.NamespacedName, r.Component); err != nil {
+		if !apierrs.IsNotFound(err) {
+			log.V(0).Error(
+				err, "unable to fetch resource",
+				"kind", "{{ .Resource.Kind }}",
+			)
+
+			return ctrl.Result{}, fmt.Errorf("unable to fetch resource, %w", err)
+		}
+
 		log.V(0).Info("unable to fetch {{ .Resource.Kind }}")
 
-		return ctrl.Result{}, utils.IgnoreNotFound(err)
+		return ctrl.Result{}, fmt.Errorf("resource not found, %w", err)
 	}
 
 	{{ if .IsComponent }}
@@ -124,7 +141,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 	var collectionList {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}List
 
 	if err := r.List(r.Context, &collectionList); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("unable to list collection {{ .Collection.Spec.API.Kind }}, %w", err)
 	}
 
 	if len(collectionList.Items) == 0 {
@@ -142,27 +159,43 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 
 	// execute the phases
 	for _, phase := range utils.Phases(r.Component) {
-		r.GetLogger().V(7).Info(fmt.Sprintf("enter phase: %T", phase))
+		log.V(7).Info(
+			"enter phase",
+			"phase", reflect.TypeOf(phase).String(),
+		)
+
 		proceed, err := phase.Execute(r)
 		result, err := phases.HandlePhaseExit(r, phase, proceed, err)
 
-		// return only if we have an error or are told not to proceed
 		if err != nil || !proceed {
-			log.V(2).Info(fmt.Sprintf("not ready; requeuing phase: %T", phase))
+			log.V(2).Info(
+				"not ready; requeuing",
+				"phase", reflect.TypeOf(phase),
+			)
 
-			return result, err
+			// return only if we have an error or are told not to proceed
+			if err != nil {
+				return result, fmt.Errorf("unable to complete %T phase for %s, %w", phase, r.Component.GetName(), err)
+			}
+
+			if !proceed {
+				return result, nil
+			}
 		}
 
-		r.GetLogger().V(5).Info(fmt.Sprintf("completed phase: %T", phase))
+		log.V(5).Info(
+			"completed phase",
+			"phase", reflect.TypeOf(phase).String(),
+		)
 	}
 
 	return phases.DefaultReconcileResult(), nil
 }
 
 // GetResources resources runs the methods to properly construct the resources in memory.
-func (r *{{ .Resource.Kind }}Reconciler) GetResources() ([]metav1.Object, error) {
-	{{ if .HasChildResources }}
-	resourceObjects := []metav1.Object{}
+func (r *{{ .Resource.Kind }}Reconciler) GetResources() ([]client.Object, error) {
+	{{- if .HasChildResources }}
+	resourceObjects := []client.Object{}
 
 	// create resources in memory
 	for _, f := range {{ .PackageName }}.CreateFuncs {
@@ -172,10 +205,11 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources() ([]metav1.Object, error)
 		}
 
 		// run through the mutation functions to mutate the resources
-		mutatedResources, skip, err := r.Mutate(&resource)
+		mutatedResources, skip, err := r.Mutate(resource)
 		if err != nil {
-			return []metav1.Object{}, err
+			return []client.Object{}, err
 		}
+
 		if skip {
 			continue
 		}
@@ -185,7 +219,7 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources() ([]metav1.Object, error)
 
 	return resourceObjects, nil
 {{- else -}}
-	return []metav1.Object{}, nil
+	return []client.Object{}, nil
 {{ end -}}
 }
 
@@ -193,27 +227,31 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources() ([]metav1.Object, error)
 // if it does already exist.
 func (r *{{ .Resource.Kind }}Reconciler) CreateOrUpdate(resource client.Object) error {
 	// set ownership on the underlying resource being created or updated
-	if err := ctrl.SetControllerReference(r.Component, resource, r.Scheme); err != nil {
-		r.GetLogger().V(0).Info("unable to set owner reference on resource")
+	if err := ctrl.SetControllerReference(r.Component, resource, r.Scheme()); err != nil {
+		r.GetLogger().V(0).Error(
+			err, "unable to set owner reference on resource",
+			"name", resource.GetName(),
+			"namespace", resource.GetNamespace(),
+		)
 
-		return err
+		return fmt.Errorf("unable to set owner reference on %s, %w", resource.GetName(), err)
 	}
 
 	// get the resource from the cluster
 	clusterResource, err := resources.Get(r, resource)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to retrieve resource %s, %w", resource.GetName(), err)
 	}
 
 	// create the resource if we have a nil object, or update the resource if we have one
 	// that exists in the cluster already
 	if clusterResource == nil {
 		if err := resources.Create(r, resource); err != nil {
-			return err
+			return fmt.Errorf("unable to create resource %s, %w", resource.GetName(), err)
 		}
 	} else {
-		if err := resources.Update(r, resource, clusterResource.(client.Object)); err != nil {
-			return err
+		if err := resources.Update(r, resource, clusterResource); err != nil {
+			return fmt.Errorf("unable to update resource %s, %w", resource.GetName(), err)
 		}
 	}
 
@@ -223,16 +261,6 @@ func (r *{{ .Resource.Kind }}Reconciler) CreateOrUpdate(resource client.Object) 
 // GetLogger returns the logger from the reconciler.
 func (r *{{ .Resource.Kind }}Reconciler) GetLogger() logr.Logger {
 	return r.Log
-}
-
-// GetClient returns the client from the reconciler.
-func (r *{{ .Resource.Kind }}Reconciler) GetClient() client.Client {
-	return r.Client
-}
-
-// GetScheme returns the scheme from the reconciler.
-func (r *{{ .Resource.Kind }}Reconciler) GetScheme() *runtime.Scheme {
-	return r.Scheme
 }
 
 // GetContext returns the context from the reconciler.
@@ -265,11 +293,6 @@ func (r *{{ .Resource.Kind }}Reconciler) SetWatch(watch client.Object) {
 	r.Watches = append(r.Watches, watch)
 }
 
-// UpdateStatus updates the status for a component.
-func (r *{{ .Resource.Kind }}Reconciler) UpdateStatus() error {
-	return r.Status().Update(r.Context, r.Component)
-}
-
 // CheckReady will return whether a component is ready.
 func (r *{{ .Resource.Kind }}Reconciler) CheckReady() (bool, error) {
 	return dependencies.{{ .Resource.Kind }}CheckReady(r)
@@ -277,14 +300,14 @@ func (r *{{ .Resource.Kind }}Reconciler) CheckReady() (bool, error) {
 
 // Mutate will run the mutate phase of a resource.
 func (r *{{ .Resource.Kind }}Reconciler) Mutate(
-	object *metav1.Object,
-) ([]metav1.Object, bool, error) {
+	object client.Object,
+) ([]client.Object, bool, error) {
 	return mutate.{{ .Resource.Kind }}Mutate(r, object)
 }
 
 // Wait will run the wait phase of a resource.
 func (r *{{ .Resource.Kind }}Reconciler) Wait(
-	object *metav1.Object,
+	object client.Object,
 ) (bool, error) {
 	return wait.{{ .Resource.Kind }}Wait(r, object)
 }
@@ -300,7 +323,7 @@ func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) erro
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
 		Build(r)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to setup controller, %w", err)
 	}
 
 	r.Controller = baseController

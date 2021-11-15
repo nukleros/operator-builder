@@ -69,9 +69,8 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
@@ -134,7 +133,10 @@ func (g *generateCommand) newGenerate{{ .SubCmdVarName }}Command() {
 		"",
 		"Filepath to the workload collection manifest.",
 	)
-	generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("collection-manifest")
+	
+	if err := generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("collection-manifest"); err != nil {
+		panic(err)
+	}
 
 	g.AddCommand(generate{{ .SubCmdVarName }}Cmd.Command)
 
@@ -147,7 +149,10 @@ func (g *generateCommand) newGenerate{{ .SubCmdVarName }}Command() {
 		"",
 		"Filepath to the workload manifest.",
 	)
-	generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("workload-manifest")
+	
+	if err := generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("workload-manifest"); err != nil {
+		panic(err)
+	}
 
 	generate{{ .SubCmdVarName }}Cmd.Command.Flags().StringVarP(
 		&generate{{ .SubCmdVarName }}Cmd.collectionManifest,
@@ -156,7 +161,10 @@ func (g *generateCommand) newGenerate{{ .SubCmdVarName }}Command() {
 		"",
 		"Filepath to the workload collection manifest.",
 	)
-	generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("collection-manifest")
+	
+	if err := generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("collection-manifest"); err != nil {
+		panic(err)
+	}
 
 	g.AddCommand(generate{{ .SubCmdVarName }}Cmd.Command)
 
@@ -169,7 +177,10 @@ func (g *generateCommand) newGenerate{{ .SubCmdVarName }}Command() {
 		"",
 		"Filepath to the workload manifest to generate child resources for.",
 	)
-	generate{{ .SubCmdVarName }}Cmd.MarkFlagRequired("workload-manifest")
+	
+	if err := generateCmd.MarkFlagRequired("workload-manifest"); err != nil {
+		panic(err)
+	}
 
 	c.AddCommand(generate{{ .SubCmdVarName }}Cmd)
 	{{- end -}}
@@ -201,9 +212,9 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("error validating yaml %s, %w", wkFilename, err)
 	}
-	{{- end }}
 
-	{{ if .IsComponent }}
+	{{ end -}}
+	{{- if .IsComponent }}
 	// workload collection
 	colFilename, _ := filepath.Abs(g.collectionManifest)
 
@@ -224,10 +235,10 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error validating yaml %s, %w", colFilename, err)
 	}
 
-	resourceObjects := make([]metav1.Object, len({{ .PackageName }}.CreateFuncs))
+	resourceObjects := make([]client.Object, len({{ .PackageName }}.CreateFuncs))
 
 	for i, f := range {{ .PackageName }}.CreateFuncs {
-		{{ if .IsCollection }}
+		{{- if .IsCollection }}
 		resource, err := f(&collection)
 		{{- else }}
 		resource, err := f(&workload, &collection)
@@ -258,7 +269,7 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error validating yaml %s, %w", filename, err)
 	}
 
-	resourceObjects := make([]metav1.Object, len({{ .PackageName }}.CreateFuncs))
+	resourceObjects := make([]client.Object, len({{ .PackageName }}.CreateFuncs))
 
 	for i, f := range {{ .PackageName }}.CreateFuncs {
 		resource, err := f(&workload)
@@ -279,7 +290,7 @@ func (g *generateCommand) generate(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to write output, %w", err)
 		}
 
-		if err := e.Encode(o.(runtime.Object), os.Stdout); err != nil {
+		if err := e.Encode(o, os.Stdout); err != nil {
 			return fmt.Errorf("failed to write output, %w", err)
 		}
 	}

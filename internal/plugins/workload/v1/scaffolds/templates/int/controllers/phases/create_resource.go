@@ -34,9 +34,9 @@ package phases
 
 import (
 	"fmt"
+	"reflect"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{ .Repo }}/apis/common"
 	"{{ .Repo }}/internal/resources"
@@ -65,27 +65,34 @@ func (phase *CreateResourcesPhase) Execute(
 	// get the resources in memory
 	desiredResources, err := r.GetResources()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("unable to retrieve resources, %w", err)
 	}
 
 	// execute the resource phases against each resource
 	for _, resource := range desiredResources {
-		resourceObject := *resources.ToCommonResource(resource.(client.Object))
+		resourceObject := resources.ToCommonResource(resource)
 		resourceCondition := &common.ResourceCondition{}
 
 		for _, resourcePhase := range createResourcePhases() {
-			r.GetLogger().V(7).Info(fmt.Sprintf("enter resource phase: %T", resourcePhase))
-			_, proceed, err := resourcePhase.Execute(r, resource.(client.Object), *resourceCondition)
+			r.GetLogger().V(7).Info(
+				"enter resource phase",
+				"phase", reflect.TypeOf(resourcePhase).String(),
+			)
+
+			_, proceed, err := resourcePhase.Execute(r, resource, resourceCondition)
 
 			// set a message, return the error and result on error or when unable to proceed
 			if err != nil || !proceed {
-				return handleResourcePhaseExit(r, resourceObject, *resourceCondition, resourcePhase, proceed, err)
+				return handleResourcePhaseExit(r, resourceObject, resourceCondition, resourcePhase, proceed, err)
 			}
 
 			// set attributes on the resource condition before updating the status
 			resourceCondition.LastResourcePhase = getResourcePhaseName(resourcePhase)
 
-			r.GetLogger().V(5).Info(fmt.Sprintf("completed resource phase: %T", resourcePhase))
+			r.GetLogger().V(5).Info(
+				"completed resource phase",
+				"phase", reflect.TypeOf(resourcePhase).String(),
+			)
 		}
 	}
 

@@ -77,19 +77,9 @@ const (
 `
 	addschemeCodeFragment = `utilruntime.Must(%s.AddToScheme(scheme))
 `
-	reconcilerSetupCodeFragment = `&controllers.%sReconciler{
-		Name:   "%s",
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("%s"),
-		Scheme: mgr.GetScheme(),
-	},
+	reconcilerSetupCodeFragment = `controllers.New%sReconciler(mgr),
 `
-	multiGroupReconcilerSetupCodeFragment = `&%scontrollers.%sReconciler{
-		Name:   "%s",
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("%s").WithName("%s"),
-		Scheme: mgr.GetScheme(),
-	},
+	multiGroupReconcilerSetupCodeFragment = `%scontrollers.New%sReconciler(mgr),
 `
 	webhookSetupCodeFragment = `
 if err = (&%s.%s{}).SetupWebhookWithManager(mgr); err != nil {
@@ -135,11 +125,15 @@ func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 
 	if f.WireController {
 		if !f.MultiGroup || f.Resource.Group == "" {
-			setup = append(setup, fmt.Sprintf(reconcilerSetupCodeFragment,
-				f.Resource.Kind, f.Resource.Kind, f.Resource.Kind))
+			setup = append(setup, fmt.Sprintf(reconcilerSetupCodeFragment, f.Resource.Kind))
 		} else {
-			setup = append(setup, fmt.Sprintf(multiGroupReconcilerSetupCodeFragment,
-				f.Resource.PackageName(), f.Resource.Kind, f.Resource.Kind, f.Resource.Group, f.Resource.Kind))
+			setup = append(
+				setup, fmt.Sprintf(
+					multiGroupReconcilerSetupCodeFragment,
+					f.Resource.PackageName(),
+					f.Resource.Kind,
+				),
+			)
 		}
 	}
 

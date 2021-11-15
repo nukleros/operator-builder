@@ -48,8 +48,8 @@ const resourcesTemplate = `{{ .Boilerplate }}
 package {{ .PackageName }}
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
 	{{- if .IsComponent }}
 	{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Collection.Spec.API.Group }}/{{ .Collection.Spec.API.Version }}"
@@ -64,7 +64,7 @@ var CreateFuncs = []func(
 	{{- if $.IsComponent }}
 	*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }},
 	{{ end -}}
-) (metav1.Object, error){
+) (client.Object, error){
 	{{ range .CreateFuncNames }}
 		{{- . -}},
 	{{ end }}
@@ -83,7 +83,7 @@ var InitFuncs = []func(
 	{{- if $.IsComponent }}
 	*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }},
 	{{ end -}}
-) (metav1.Object, error){
+) (client.Object, error){
 	{{ range .InitFuncNames }}
 		{{- . -}},
 	{{ end }}

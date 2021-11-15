@@ -39,14 +39,15 @@ const componentTemplate = `{{ .Boilerplate }}
 package wait
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{ .Repo }}/apis/common"
 )
 
 // {{ .Resource.Kind }}Wait performs the logic to wait for resources that belong to the parent.
-func {{ .Resource.Kind }}Wait(reconciler common.ComponentReconciler,
-	object *metav1.Object,
+func {{ .Resource.Kind }}Wait(
+	reconciler common.ComponentReconciler,
+	object client.Object,
 ) (ready bool, err error) {
 	return true, nil
 }

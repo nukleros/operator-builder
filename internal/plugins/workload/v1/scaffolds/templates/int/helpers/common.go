@@ -35,7 +35,6 @@ import (
 	"errors"
 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -43,6 +42,8 @@ import (
 
 	"{{ .Repo }}/apis/common"
 )
+
+var ErrOnlyOneCollectionAllowed = errors.New("must have only one collection resource present in the cluster")
 
 const (
 	Domain               = "{{ .Domain }}"
@@ -54,20 +55,24 @@ const (
 // SkipResourceCreation skips the resource creation during the mutate phase.
 func SkipResourceCreation(
 	err error,
-) ([]metav1.Object, bool, error) {
-	return []metav1.Object{}, true, err
+) ([]client.Object, bool, error) {
+	return []client.Object{}, true, err
 }
 
 // GetProperObject gets a proper object type given an existing source metav1.object.
-func GetProperObject(destination metav1.Object, source metav1.Object) error {
+func GetProperObject(destination, source client.Object) error {
 	// convert the source object to an unstructured type
 	unstructuredObject, err := runtime.DefaultUnstructuredConverter.ToUnstructured(source)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to convert %s to unstructured object, %w", source.GetName(), err)
 	}
 
 	// return the outcome of converting the unstructured type to its proper type
-	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredObject, destination)
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredObject, destination); err != nil {
+		return fmt.Errorf("unable to decode unstructed object into type for object %s, %w", source.GetName(), err)
+	}
+
+	return nil
 }
 
 // getValueFromCollection gets a specific value from the {{ .Resource.Kind }} resource.
@@ -79,16 +84,16 @@ func getValueFromCollection(reconciler common.ComponentReconciler, path ...strin
 	}
 
 	if len(collectionConfigs.Items) > 1 {
-		return "", errors.New("Must have only one collection resource present in the cluster")
+		return "", ErrOnlyOneCollectionAllowed
 	}
 
 	// get the first platform config
 	collectionConfig := collectionConfigs.Items[0]
 
-	// get the value from the platform config
+	// get the value from the  config
 	collectionConfigValue, found, err := unstructured.NestedString(collectionConfig.Object, path...)
 	if !found || err != nil {
-		return "", fmt.Errorf("unable to get path %s from platform configuration; %v\n", path, err)
+		return "", fmt.Errorf("unable to get path %s from platform configuration; %w", path, err)
 	}
 
 	return collectionConfigValue, nil
@@ -109,7 +114,7 @@ func GetCollectionConfigs(
 	collectionConfigs.SetGroupVersionKind(collectionConfigGVK)
 
 	if err := r.List(r.GetContext(), &collectionConfigs, &client.ListOptions{}); err != nil {
-		return collectionConfigs, err
+		return collectionConfigs, fmt.Errorf("unable to list configuration for cluster, %w", err)
 	}
 
 	return collectionConfigs, nil

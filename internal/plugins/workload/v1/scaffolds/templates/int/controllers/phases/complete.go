@@ -46,7 +46,7 @@ func (phase *CompletePhase) Execute(
 	r common.ComponentReconciler,
 ) (proceedToNextPhase bool, err error) {
 	r.GetComponent().SetReadyStatus(true)
-	r.GetLogger().V(0).Info("successfully reconciled")
+	r.GetLogger().V(0).Info("successfully reconciled", "kind", r.GetComponent().GetComponentGVK().Kind)
 
 	return true, nil
 }

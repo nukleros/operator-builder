@@ -31,7 +31,6 @@ const typesTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -49,7 +48,7 @@ type Phase interface {
 
 // ResourcePhase defines the specific phase of reconcilication associated with creating resources.
 type ResourcePhase interface {
-	Execute(common.ComponentReconciler, client.Object, common.ResourceCondition) (ctrl.Result, bool, error)
+	Execute(common.ComponentReconciler, client.Object, *common.ResourceCondition) (ctrl.Result, bool, error)
 }
 
 // Below are the phase types which satisfy the Phase interface.
@@ -91,13 +90,13 @@ func GetFailCondition(phase Phase, err error) common.PhaseCondition {
 }
 
 func getPhaseName(phase Phase) string {
-	objectElements := strings.Split(fmt.Sprintf("%s", reflect.TypeOf(phase)), ".")
+	objectElements := strings.Split(reflect.TypeOf(phase).String(), ".")
 
 	return objectElements[len(objectElements)-1]
 }
 
 func getResourcePhaseName(resourcePhase ResourcePhase) string {
-	objectElements := strings.Split(fmt.Sprintf("%s", reflect.TypeOf(resourcePhase)), ".")
+	objectElements := strings.Split(reflect.TypeOf(resourcePhase).String(), ".")
 
 	return objectElements[len(objectElements)-1]
 }

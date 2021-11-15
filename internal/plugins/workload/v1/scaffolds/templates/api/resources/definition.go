@@ -51,8 +51,8 @@ import (
 	{{ if .SourceFile.HasStatic }}
 	"text/template"
 	{{ end }}
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	{{- if .SourceFile.HasStatic }}
 	k8s_yaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	{{ end }}
@@ -70,7 +70,7 @@ func Create{{ .UniqueName }} (
 	{{- if $.IsComponent }}
 	collection *{{ $.Collection.Spec.API.Group }}{{ $.Collection.Spec.API.Version }}.{{ $.Collection.Spec.API.Kind }},
 	{{ end -}}
-) (metav1.Object, error) {
+) (client.Object, error) {
 	{{- .SourceCode }}
 
 	{{ if not $.ClusterScoped }}

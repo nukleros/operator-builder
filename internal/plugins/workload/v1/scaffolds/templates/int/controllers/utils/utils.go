@@ -35,10 +35,8 @@ const controllerUtilsTemplate = `{{ .Boilerplate }}
 package utils
 
 import (
+	"fmt"
 	"reflect"
-
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -55,14 +53,6 @@ import (
 const (
 	FieldManager = "reconciler"
 )
-
-func IgnoreNotFound(err error) error {
-	if apierrs.IsNotFound(err) {
-		return nil
-	}
-
-	return err
-}
 
 // CreatePhases defines the phases for create and the order in which they run during the reconcile process.
 func CreatePhases() []controllerphases.Phase {
@@ -99,12 +89,12 @@ func GetDesiredObject(compared client.Object, r common.ComponentReconciler) (cli
 
 	allObjects, err := r.GetResources()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get resources, %w", err)
 	}
 
 	for _, resource := range allObjects {
-		if resources.EqualGVK(compared, resource.(client.Object)) && resources.EqualNamespaceName(compared, resource.(client.Object)) {
-			return resource.(client.Object), nil
+		if resources.EqualGVK(compared, resource) && resources.EqualNamespaceName(compared, resource) {
+			return resource, nil
 		}
 	}
 
@@ -131,18 +121,28 @@ func needsReconciliation(r common.ComponentReconciler, existing, requested clien
 	// to the existing object fields
 	desired, err := GetDesiredObject(requested, r)
 	if err != nil {
-		r.GetLogger().V(0).Error(err,
-			"unable to get object in memory")
+		r.GetLogger().V(0).Error(
+			err, "unable to get object in memory",
+			"kind", requested.GetObjectKind().GroupVersionKind().Kind,
+			"name", requested.GetName(),
+			"namespace", requested.GetNamespace(),
+		)
+
 		return false
 	}
+
 	if desired == nil {
 		return true
 	}
 
 	equal, err := resources.AreEqual(desired, requested)
 	if err != nil {
-		r.GetLogger().V(0).Error(err,
-			"unable to determine equality for reconciliation")
+		r.GetLogger().V(0).Error(
+			err, "unable to determine equality for reconciliation",
+			"kind", desired.GetObjectKind().GroupVersionKind().Kind,
+			"name", desired.GetName(),
+			"namespace", desired.GetNamespace(),
+		)
 
 		return true
 	}
@@ -216,11 +216,11 @@ func Watch(
 			&source.Kind{Type: resource},
 			&handler.EnqueueRequestForOwner{
 				IsController: true,
-				OwnerType:    r.GetComponent().(runtime.Object),
+				OwnerType:    r.GetComponent(),
 			},
 			ResourcePredicates(r),
 		); err != nil {
-			return err
+			return fmt.Errorf("unable to watch resource, %w", err)
 		}
 
 		r.SetWatch(resource)

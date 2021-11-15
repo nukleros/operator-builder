@@ -82,8 +82,8 @@ type {{ .Resource.Kind }}Status struct {
 
 	Created               bool                       ` + "`" + `json:"created,omitempty"` + "`" + `
 	DependenciesSatisfied bool                       ` + "`" + `json:"dependenciesSatisfied,omitempty"` + "`" + `
-	Conditions            []common.PhaseCondition    ` + "`" + `json:"conditions,omitempty"` + "`" + `
-	Resources             []common.Resource          ` + "`" + `json:"resources,omitempty"` + "`" + `
+	Conditions            []*common.PhaseCondition    ` + "`" + `json:"conditions,omitempty"` + "`" + `
+	Resources             []*common.Resource          ` + "`" + `json:"resources,omitempty"` + "`" + `
 }
 
 // +kubebuilder:object:root=true
@@ -132,16 +132,17 @@ func (component *{{ .Resource.Kind }}) SetDependencyStatus(dependencyStatus bool
 }
 
 // GetPhaseConditions returns the phase conditions for a component.
-func (component {{ .Resource.Kind }}) GetPhaseConditions() []common.PhaseCondition {
+func (component *{{ .Resource.Kind }}) GetPhaseConditions() []*common.PhaseCondition {
 	return component.Status.Conditions
 }
 
 // SetPhaseCondition sets the phase conditions for a component.
-func (component *{{ .Resource.Kind }}) SetPhaseCondition(condition common.PhaseCondition) {
+func (component *{{ .Resource.Kind }}) SetPhaseCondition(condition *common.PhaseCondition) {
 	if found := condition.GetPhaseConditionIndex(component); found >= 0 {
 		if condition.LastModified == "" {
 			condition.LastModified = time.Now().UTC().String()
 		}
+
 		component.Status.Conditions[found] = condition
 	} else {
 		component.Status.Conditions = append(component.Status.Conditions, condition)
@@ -149,17 +150,17 @@ func (component *{{ .Resource.Kind }}) SetPhaseCondition(condition common.PhaseC
 }
 
 // GetResources returns the resources for a component.
-func (component {{ .Resource.Kind }}) GetResources() []common.Resource {
+func (component *{{ .Resource.Kind }}) GetResources() []*common.Resource {
 	return component.Status.Resources
 }
 
 // SetResources sets the phase conditions for a component.
-func (component *{{ .Resource.Kind }}) SetResource(resource common.Resource) {
-
+func (component *{{ .Resource.Kind }}) SetResource(resource *common.Resource) {
 	if found := resource.GetResourceIndex(component); found >= 0 {
 		if resource.ResourceCondition.LastModified == "" {
 			resource.ResourceCondition.LastModified = time.Now().UTC().String()
 		}
+
 		component.Status.Resources[found] = resource
 	} else {
 		component.Status.Resources = append(component.Status.Resources, resource)
@@ -181,11 +182,7 @@ func (*{{ .Resource.Kind }}) GetDependencies() []common.Component {
 
 // GetComponentGVK returns a GVK object for the component.
 func (*{{ .Resource.Kind }}) GetComponentGVK() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   GroupVersion.Group,
-		Version: GroupVersion.Version,
-		Kind:    "{{ .Resource.Kind }}",
-	}
+	return GroupVersion.WithKind("{{ .Resource.Kind }}")
 }
 
 func init() {

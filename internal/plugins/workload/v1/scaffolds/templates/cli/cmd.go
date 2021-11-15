@@ -35,12 +35,13 @@ const cliCmdCommonTemplate = `{{ .Boilerplate }}
 package commands
 
 import (
+	"errors"
 	"fmt"
-
-	"k8s.io/apimachinery/pkg/runtime"
 
 	"{{ .Repo }}/apis/common"
 )
+
+var ErrInvalidResource = errors.New("supplied resource is incorrect")
 
 // validateWorkload validates the unmarshaled version of the workload resource
 // manifest.
@@ -48,18 +49,18 @@ func validateWorkload(
 	workload common.Component,
 ) error {
 	defaultWorkloadGVK := workload.GetComponentGVK()
-	component := workload.(runtime.Object)
 
-	if defaultWorkloadGVK != component.GetObjectKind().GroupVersionKind() {
+	if defaultWorkloadGVK != workload.GetObjectKind().GroupVersionKind() {
 		return fmt.Errorf(
-			"expected resource of kind: '%s', with group '%s' and version '%s'; "+
+			"%w, expected resource of kind: '%s', with group '%s' and version '%s'; "+
 				"found resource of kind '%s', with group '%s' and version '%s'",
+			ErrInvalidResource,
 			defaultWorkloadGVK.Kind,
 			defaultWorkloadGVK.Group,
 			defaultWorkloadGVK.Version,
-			component.GetObjectKind().GroupVersionKind().Kind,
-			component.GetObjectKind().GroupVersionKind().Group,
-			component.GetObjectKind().GroupVersionKind().Version,
+			workload.GetObjectKind().GroupVersionKind().Kind,
+			workload.GetObjectKind().GroupVersionKind().Group,
+			workload.GetObjectKind().GroupVersionKind().Version,
 		)
 	}
 

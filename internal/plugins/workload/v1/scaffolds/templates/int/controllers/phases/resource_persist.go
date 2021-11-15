@@ -31,6 +31,7 @@ const resourcePersistTemplate = `{{ .Boilerplate }}
 package phases
 
 import (
+	"fmt"
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -44,7 +45,7 @@ import (
 func (phase *PersistResourcePhase) Execute(
 	r common.ComponentReconciler,
 	resource client.Object,
-	resourceCondition common.ResourceCondition,
+	resourceCondition *common.ResourceCondition,
 ) (ctrl.Result, bool, error) {
 	// persist the resource
 	if err := persistResource(
@@ -63,18 +64,23 @@ func (phase *PersistResourcePhase) Execute(
 func persistResource(
 	r common.ComponentReconciler,
 	resource client.Object,
-	condition common.ResourceCondition,
+	condition *common.ResourceCondition,
 	phase *PersistResourcePhase,
 ) error {
 	// persist resource
 	if err := r.CreateOrUpdate(resource); err != nil {
 		if IsOptimisticLockError(err) {
 			return nil
-		} else {
-			r.GetLogger().V(0).Info(err.Error())
-
-			return err
 		}
+
+		r.GetLogger().V(0).Error(
+			err, "unable to create or update",
+			"kind", resource.GetObjectKind().GroupVersionKind().Kind,
+			"name", resource.GetName(),
+			"namespace", resource.GetNamespace(),
+		)
+
+		return fmt.Errorf("unable to create or update resource %s, %w", resource.GetName(), err)
 	}
 
 	// set attributes related to the persistence of this child resource
@@ -84,6 +90,6 @@ func persistResource(
 	condition.Created = true
 
 	// update the condition to notify that we have created a child resource
-	return updateResourceConditions(r, *resources.ToCommonResource(resource), &condition)
+	return updateResourceConditions(r, resources.ToCommonResource(resource), condition)
 }
 `
