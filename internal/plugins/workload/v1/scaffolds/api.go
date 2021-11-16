@@ -122,6 +122,7 @@ func (s *apiScaffolder) Scaffold() error {
 				IsStandalone:      s.workload.IsStandalone(),
 				IsComponent:       s.workload.IsComponent(),
 			},
+			&controller.SuiteTest{},
 			&controllersutils.Utils{
 				IsStandalone: s.workload.IsStandalone(),
 			},
@@ -182,6 +183,7 @@ func (s *apiScaffolder) Scaffold() error {
 				IsStandalone:      s.workload.IsStandalone(),
 				IsComponent:       s.workload.IsComponent(),
 			},
+			&controller.SuiteTest{},
 			&controllersutils.Utils{
 				IsStandalone: s.workload.IsStandalone(),
 			},
@@ -252,6 +254,7 @@ func (s *apiScaffolder) Scaffold() error {
 					IsComponent:       component.IsComponent(),
 					Collection:        s.workload.(*workloadv1.WorkloadCollection),
 				},
+				&controller.SuiteTest{},
 				&dependencies.Component{},
 				&mutate.Component{},
 				&helpers.Component{},

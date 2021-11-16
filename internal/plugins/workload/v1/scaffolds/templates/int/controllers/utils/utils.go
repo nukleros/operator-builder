@@ -109,13 +109,6 @@ func needsReconciliation(r common.ComponentReconciler, existing, requested clien
 		return false
 	}
 
-	// skip if the objects support observed generation and they are equal
-	if existing.GetGeneration() > 0 && requested.GetGeneration() > 0 {
-		if existing.GetGeneration() == requested.GetGeneration() {
-			return false
-		}
-	}
-
 	// get the desired object from the reconciler and ensure that we both
 	// found that desired object and that the desired object fields are equal
 	// to the existing object fields
