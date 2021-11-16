@@ -103,7 +103,7 @@ func getResourceForRBAC(kind string) string {
 	if rbacResource[0] == "*" {
 		kind = "*"
 	} else {
-		kind = resource.RegularPlural(rbacResource[0])
+		kind = getPluralRBAC(rbacResource[0])
 	}
 
 	if len(rbacResource) > 1 {
@@ -111,6 +111,21 @@ func getResourceForRBAC(kind string) string {
 	}
 
 	return kind
+}
+
+// getPluralRBAC will transform known irregulars into a proper type for rbac
+// rules.
+func getPluralRBAC(kind string) string {
+	pluralMap := map[string]string{
+		"resourcequota": "resourcequotas",
+	}
+	plural := resource.RegularPlural(kind)
+
+	if pluralMap[plural] != "" {
+		return pluralMap[plural]
+	}
+
+	return plural
 }
 
 func valueFromInterface(in interface{}, key string) (out interface{}) {
