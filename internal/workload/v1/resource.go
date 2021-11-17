@@ -105,6 +105,7 @@ func determineSourceFileName(manifestFile string) SourceFile {
 	sourceFile.Filename = filepath.Clean(manifestFile)
 	sourceFile.Filename = strings.ReplaceAll(sourceFile.Filename, "/", "_")                              // get filename from path
 	sourceFile.Filename = strings.ReplaceAll(sourceFile.Filename, filepath.Ext(sourceFile.Filename), "") // strip ".yaml"
+	sourceFile.Filename = strings.ReplaceAll(sourceFile.Filename, ".", "")                               // strip "." e.g. hidden files
 	sourceFile.Filename += ".go"                                                                         // add correct file ext
 	sourceFile.Filename = utils.ToFileName(sourceFile.Filename)                                          // kebab-case to snake_case
 
