@@ -28,6 +28,7 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/int/mutate"
 	resourcespkg "github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/int/resources"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/int/wait"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
@@ -83,8 +84,7 @@ func (s *apiScaffolder) Scaffold() error {
 	createFuncNames, initFuncNames := s.workload.GetFuncNames()
 
 	// companion CLI
-	err = s.scaffoldCLI(scaffold)
-	if err != nil {
+	if err := s.scaffoldCLI(scaffold); err != nil {
 		return fmt.Errorf("error scaffolding CLI; %w", err)
 	}
 
@@ -150,6 +150,10 @@ func (s *apiScaffolder) Scaffold() error {
 		if err != nil {
 			return fmt.Errorf("unable to scaffold standalone workload, %w", err)
 		}
+
+		if err := s.scaffoldE2ETests(scaffold, s.workload); err != nil {
+			return fmt.Errorf("unable to scaffold standalone workload e2e tests, %w", err)
+		}
 	} else {
 		// collection API
 		err = scaffold.Execute(
@@ -213,6 +217,10 @@ func (s *apiScaffolder) Scaffold() error {
 			return fmt.Errorf("unable to scaffold collection workload, %w", err)
 		}
 
+		if err := s.scaffoldE2ETests(scaffold, s.workload); err != nil {
+			return fmt.Errorf("unable to scaffold collection workload e2e tests, %w", err)
+		}
+
 		for _, component := range s.workload.GetComponents() {
 			componentScaffold := machinery.NewScaffold(s.fs,
 				machinery.WithConfig(s.config),
@@ -266,6 +274,10 @@ func (s *apiScaffolder) Scaffold() error {
 			)
 			if err != nil {
 				return fmt.Errorf("unable to scaffold component workload %s, %w", component.Name, err)
+			}
+
+			if err := s.scaffoldE2ETests(componentScaffold, component); err != nil {
+				return fmt.Errorf("unable to scaffold component workload e2e tests, %w", err)
 			}
 
 			// component child resource definition files
@@ -432,4 +444,36 @@ func (s *apiScaffolder) scaffoldCLI(scaffold *machinery.Scaffold) error {
 	}
 
 	return nil
+}
+
+// scaffoldE2ETests run the specific logic to scaffold the end to end tests.
+func (s *apiScaffolder) scaffoldE2ETests(
+	scaffold *machinery.Scaffold,
+	workload workloadv1.WorkloadAPIBuilder,
+) error {
+	e2eWorkloadBuilder := &e2e.WorkloadTestUpdater{
+		HasChildResources: workload.HasChildResources(),
+		IsStandalone:      workload.IsStandalone(),
+		IsComponent:       workload.IsComponent(),
+		IsCollection:      workload.IsCollection(),
+		PackageName:       workload.GetPackageName(),
+		IsClusterScoped:   workload.IsClusterScoped(),
+	}
+
+	if !s.workload.IsStandalone() {
+		collection, ok := s.workload.(*workloadv1.WorkloadCollection)
+		if !ok {
+			//nolint: goerr113
+			return fmt.Errorf("unable to convert workload to collection")
+		}
+
+		e2eWorkloadBuilder.Collection = collection
+	}
+
+	//nolint: wrapcheck
+	return scaffold.Execute(
+		&e2e.Test{},
+		&e2e.WorkloadTest{},
+		e2eWorkloadBuilder,
+	)
 }

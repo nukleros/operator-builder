@@ -1,6 +1,6 @@
 ---
-name: Run Integration Test
-description: Run Integration Test
+name: Run E2E Test
+description: Run E2E Test
 
 inputs:
   codebase-artifact:
@@ -48,37 +48,43 @@ runs:
     - name: Build Container
       shell: bash
       working-directory: /tmp/operator-builder-test
-      run: IMG=localhost:5000/${IMAGE_NAME}:latest make docker-build
-      env:
-        IMAGE_NAME: ${{ inputs.codebase-artifact }}
+      run: IMG=localhost:5000/${{ inputs.codebase-artifact }}:latest make docker-build
 
     - name: Push Container
       shell: bash
       working-directory: /tmp/operator-builder-test
-      run: IMG=localhost:5000/${IMAGE_NAME}:latest make docker-push
-      env:
-        IMAGE_NAME: ${{ inputs.codebase-artifact }}
+      run: IMG=localhost:5000/${{ inputs.codebase-artifact }}:latest make docker-push
+
+    - name: Sideload Docker Image for KIND
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: kind load docker-image --name operator-builder-test localhost:5000/${{ inputs.codebase-artifact }}:latest
+
+    # TODO: this would be much easier with yot and is extremely ugly with default kustomize files
+    - name: Set Image Pull Policy to IfNotPresent
+      shell: bash
+      working-directory: /tmp/operator-builder-test
+      run: |
+        sed -i '/image\: controller\:latest/a\'$'\n''        imagePullPolicy\: IfNotPresent' config/manager/manager.yaml
 
     - name: Deploy Operator
       shell: bash
       working-directory: /tmp/operator-builder-test
-      run: IMG=localhost:5000/${IMAGE_NAME}:latest make deploy
-      env:
-        IMAGE_NAME: ${{ inputs.codebase-artifact }}
+      run: IMG=localhost:5000/${{ inputs.codebase-artifact }}:latest make deploy
 
-    - name: Ensure Operator Runs
+    - name: Run E2E Tests
       shell: bash
       working-directory: /tmp/operator-builder-test
       run: |
-        # this is a placeholder for proper e2e testing that the operator is
-        # running
-        sleep 30
-        cat Makefile
+        # TODO: this is temporary to ensure we test the reconciliation loop
+        # for our test workloads.  the end goal would be to genericize this
+        # to ensure we can test any workload.
+        if [[ -f .workloadConfig/v1alpha1_workloads_test.go.test ]]; then
+          cp .workloadConfig/v1alpha1_workloads_test.go.test test/e2e/v1alpha1_workloads_test.go
+        fi
 
-    - name: Install Samples
-      shell: bash
-      working-directory: /tmp/operator-builder-test
-      run: kubectl apply -f config/samples
+        # run the e2e tests
+        DEPLOY_IN_CLUSTER="true" make test-e2e
 
     # TODO: this is a stub until this action is fixed.  currently, the make
     # targets are inconsistently missing.
@@ -90,6 +96,4 @@ runs:
     - name: Undeploy Operator
       shell: bash
       working-directory: /tmp/operator-builder-test
-      run: IMG=localhost:5000/${IMAGE_NAME}:latest make undeploy
-      env:
-        IMAGE_NAME: ${{ inputs.codebase-artifact }}
+      run: make undeploy
