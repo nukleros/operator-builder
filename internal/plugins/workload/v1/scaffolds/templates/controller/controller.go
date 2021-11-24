@@ -91,7 +91,6 @@ type {{ .Resource.Kind }}Reconciler struct {
 	{{ end }}
 }
 
-
 func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Reconciler {
 	return &{{ .Resource.Kind }}Reconciler{
 		Name:      "{{ .Resource.Kind }}",
@@ -133,7 +132,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, req ctrl
 
 		log.V(0).Info("unable to fetch {{ .Resource.Kind }}")
 
-		return ctrl.Result{}, fmt.Errorf("resource not found, %w", err)
+		return ctrl.Result{}, nil
 	}
 
 	{{ if .IsComponent }}
