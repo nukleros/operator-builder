@@ -66,6 +66,31 @@ defined is `false`.  Alternatively, the above fields can be defined
 imperatively via the `domain`, `group`, `version`, and `kind` flags
 when running either `operator-builder init` or `operater-builder create api` (see above for correct context).
 
+## Resources
+
+When specifying resource manifest files under `spec.resources`, in addition to
+providing specific filenames, you may use glob pattern matching to collect files.
+For example:
+
+```yaml
+name: webapp
+kind: StandaloneWorkload
+spec:
+  api:
+    domain: apps.acme.com
+    group: product
+    version: v1alpha1
+    kind: WebApp
+    clusterScoped: false
+  companionCliRootcmd:
+    name: webappctl
+    description: Manage webapp stuff like a boss
+  resources:
+    - rbac/*.yaml       # get all .yaml files in the rbac directory
+    - workload/**.yaml  # get all .yaml files recursively in the workload
+                        # directory and subdirectories therein
+```
+
 ## Collections
 
 The `spec.componentFiles` field can only be defined in a `WorkloadCollection`.

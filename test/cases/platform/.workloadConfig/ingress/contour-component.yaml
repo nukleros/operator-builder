@@ -11,9 +11,7 @@ spec:
     description: Manage contour component
   resources:
   - ingress-ns.yaml
-  - contour-config.yaml
-  - contour-deploy.yaml
-  - contour-svc.yaml
+  - contour-resources/**.yaml
   - envoy-ds.yaml
   dependencies:
   - ns-operator-component

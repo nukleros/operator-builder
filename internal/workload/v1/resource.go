@@ -46,12 +46,10 @@ func (r *Resource) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (r *Resource) loadManifest(path string) error {
-	manifestFile := filepath.Join(path, r.FileName)
-
-	manifestContent, err := os.ReadFile(manifestFile)
+func (r *Resource) loadManifest() error {
+	manifestContent, err := os.ReadFile(r.FileName)
 	if err != nil {
-		return formatProcessError(manifestFile, err)
+		return formatProcessError(r.FileName, err)
 	}
 
 	r.Content = manifestContent
@@ -110,4 +108,22 @@ func determineSourceFileName(manifestFile string) SourceFile {
 	sourceFile.Filename = utils.ToFileName(sourceFile.Filename)                                          // kebab-case to snake_case
 
 	return sourceFile
+}
+
+func expandResources(path string, resources []*Resource) ([]*Resource, error) {
+	var expandedResources []*Resource
+
+	for _, r := range resources {
+		files, err := filepath.Glob(filepath.Join(path, r.FileName))
+		if err != nil {
+			return []*Resource{}, fmt.Errorf("failed to process glob pattern matchingi, %w", err)
+		}
+
+		for _, f := range files {
+			res := &Resource{FileName: f}
+			expandedResources = append(expandedResources, res)
+		}
+	}
+
+	return expandedResources, nil
 }
