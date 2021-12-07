@@ -7,32 +7,33 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+
+	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
-var _ machinery.Template = &CmdCommon{}
+var _ machinery.Template = &CmdUtils{}
 
-// CmdCommon scaffolds the companion CLI's common code for the
-// workload.  This where the actual generate logic lives.
-type CmdCommon struct {
+// CmdUtils scaffolds the companion CLI's common utility code for the
+// workload.  This where the generic logic for a companion CLI lives.
+type CmdUtils struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 	machinery.RepositoryMixin
-	machinery.ResourceMixin
 
-	RootCmd string
+	Builder workloadv1.WorkloadAPIBuilder
 }
 
-func (f *CmdCommon) SetTemplateDefaults() error {
-	f.Path = filepath.Join("cmd", f.RootCmd, "commands", "commands.go")
-
-	f.TemplateBody = cliCmdCommonTemplate
+func (f *CmdUtils) SetTemplateDefaults() error {
+	// set interface variables
+	f.Path = filepath.Join("cmd", f.Builder.GetRootCommand().Name, "commands", "utils", "utils.go")
+	f.TemplateBody = cliCmdUtilsTemplate
 
 	return nil
 }
 
-const cliCmdCommonTemplate = `{{ .Boilerplate }}
+const cliCmdUtilsTemplate = `{{ .Boilerplate }}
 
-package commands
+package utils
 
 import (
 	"errors"
@@ -43,11 +44,9 @@ import (
 
 var ErrInvalidResource = errors.New("supplied resource is incorrect")
 
-// validateWorkload validates the unmarshaled version of the workload resource
+// ValidateWorkload validates the unmarshaled version of the workload resource
 // manifest.
-func validateWorkload(
-	workload common.Component,
-) error {
+func ValidateWorkload(workload common.Component) error {
 	defaultWorkloadGVK := workload.GetComponentGVK()
 
 	if defaultWorkloadGVK != workload.GetObjectKind().GroupVersionKind() {

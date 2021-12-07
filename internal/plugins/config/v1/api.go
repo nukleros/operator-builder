@@ -35,7 +35,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 
 	pluginConfig := workloadv1.PluginConfig{
 		WorkloadConfigPath: p.workloadConfigPath,
-		CliRootCommandName: workload.GetRootCmdName(),
+		CliRootCommandName: workload.GetRootCommand().Name,
 	}
 
 	if err := c.EncodePluginConfig(workloadv1.PluginConfigKey, pluginConfig); err != nil {

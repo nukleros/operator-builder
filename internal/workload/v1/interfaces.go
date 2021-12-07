@@ -19,10 +19,11 @@ type WorkloadInitializer interface {
 	HasRootCmdName() bool
 
 	GetDomain() string
-	GetRootCmdName() string
-	GetRootCmdDescr() string
+	GetRootCommand() *CliCommand
 
 	SetNames()
+
+	IsCollection() bool
 }
 
 // WorkloadAPIBuilder defines the interface that must be implemented by a
@@ -44,13 +45,8 @@ type WorkloadAPIBuilder interface {
 	GetAPIGroup() string
 	GetAPIVersion() string
 	GetAPIKind() string
-	GetSubcommandName() string
-	GetSubcommandDescr() string
-	GetSubcommandVarName() string
-	GetSubcommandFileName() string
-	GetRootcommandName() string
-	GetRootcommandVarName() string
 	GetDependencies() []*ComponentWorkload
+	GetCollection() *WorkloadCollection
 	GetComponents() []*ComponentWorkload
 	GetSourceFiles() *[]SourceFile
 	GetAPISpecFields() *APIFields
@@ -58,7 +54,8 @@ type WorkloadAPIBuilder interface {
 	GetOwnershipRules() *[]OwnershipRule
 	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
 	GetFuncNames() (createFuncNames, initFuncNames []string)
-	GetSubcommands() *[]CliCommand
+	GetRootCommand() *CliCommand
+	GetSubCommand() *CliCommand
 
 	SetNames()
 	SetResources(workloadPath string) error

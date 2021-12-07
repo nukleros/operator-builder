@@ -68,12 +68,18 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 
 	var components []*ComponentWorkload
 
+	var collection *WorkloadCollection
+
 	for kind := range workloads {
 		for _, w := range workloads[kind] {
 			switch v := w.(type) {
 			case *StandaloneWorkload:
 				workload = v
 			case *WorkloadCollection:
+				// a collection is still a collection to itself
+				collection = v
+				v.Spec.Collection = collection
+
 				workload = v
 			case *ComponentWorkload:
 				if err := v.LoadManifests(filepath.Dir(v.Spec.ConfigPath)); err != nil {
@@ -111,6 +117,9 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		}
 
 		component.SetNames()
+
+		// assign values related to the collection
+		component.Spec.Collection = collection
 	}
 
 	return workload, nil

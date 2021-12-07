@@ -65,7 +65,7 @@ func (s *apiScaffolder) InjectFS(fs machinery.Filesystem) {
 	s.fs = fs
 }
 
-//nolint:funlen //this will be refactored later
+//nolint:funlen,gocyclo //this will be refactored later
 // scaffold implements cmdutil.Scaffolder.
 func (s *apiScaffolder) Scaffold() error {
 	log.Println("Building API...")
@@ -82,11 +82,6 @@ func (s *apiScaffolder) Scaffold() error {
 	)
 
 	createFuncNames, initFuncNames := s.workload.GetFuncNames()
-
-	// companion CLI
-	if err := s.scaffoldCLI(scaffold); err != nil {
-		return fmt.Errorf("error scaffolding CLI; %w", err)
-	}
 
 	//nolint:nestif //this will be refactored later
 	// API types
@@ -283,7 +278,7 @@ func (s *apiScaffolder) Scaffold() error {
 			// component child resource definition files
 			// these are the resources defined in the static yaml manifests
 			for _, sourceFile := range *component.GetSourceFiles() {
-				scaffold := machinery.NewScaffold(s.fs,
+				resourcesScaffold := machinery.NewScaffold(s.fs,
 					machinery.WithConfig(s.config),
 					machinery.WithBoilerplate(string(boilerplate)),
 					machinery.WithResource(component.GetComponentResource(
@@ -293,7 +288,7 @@ func (s *apiScaffolder) Scaffold() error {
 					)),
 				)
 
-				err = scaffold.Execute(
+				err = resourcesScaffold.Execute(
 					&resources.Definition{
 						ClusterScoped: component.IsClusterScoped(),
 						SourceFile:    sourceFile,
@@ -312,13 +307,13 @@ func (s *apiScaffolder) Scaffold() error {
 	// child resource definition files
 	// these are the resources defined in the static yaml manifests
 	for _, sourceFile := range *s.workload.GetSourceFiles() {
-		scaffold := machinery.NewScaffold(s.fs,
+		definitionScaffold := machinery.NewScaffold(s.fs,
 			machinery.WithConfig(s.config),
 			machinery.WithBoilerplate(string(boilerplate)),
 			machinery.WithResource(s.resource),
 		)
 
-		err = scaffold.Execute(
+		err = definitionScaffold.Execute(
 			&resources.Definition{
 				ClusterScoped: s.workload.IsClusterScoped(),
 				SourceFile:    sourceFile,
@@ -331,17 +326,20 @@ func (s *apiScaffolder) Scaffold() error {
 		}
 	}
 
+	// scaffold the companion CLI last only if we have a root command name
+	if s.cliRootCommandName != "" {
+		if err = s.scaffoldCLI(scaffold); err != nil {
+			return fmt.Errorf("error scaffolding CLI; %w", err)
+		}
+	}
+
 	return nil
 }
 
-// scaffoldCLI runs the specific logic to scaffold the companion CLI
-//nolint:funlen,gocyclo //this will be refactored later
+// scaffoldCLI runs the specific logic to scaffold the companion CLI.
 func (s *apiScaffolder) scaffoldCLI(scaffold *machinery.Scaffold) error {
-	// do not scaffold the cli if the root command name is blank
-	if s.cliRootCommandName == "" {
-		return nil
-	}
-
+	// obtain a list of workload commands to generate, to include the parent collection
+	// and its children
 	workloadCommands := make([]workloadv1.WorkloadAPIBuilder, len(s.workload.GetComponents())+1)
 	workloadCommands[0] = s.workload
 
@@ -351,96 +349,58 @@ func (s *apiScaffolder) scaffoldCLI(scaffold *machinery.Scaffold) error {
 		}
 	}
 
+	// scaffold the utility code
+	if err := scaffold.Execute(&cli.CmdUtils{Builder: s.workload}); err != nil {
+		return fmt.Errorf("unable to scaffold companion cli utility code; %w", err)
+	}
+
 	for _, workloadCommand := range workloadCommands {
-		// build collection subcommands
-		if workloadCommand.IsCollection() {
-			err := scaffold.Execute(
-				&cli.CmdInit{
-					RootCmd:        s.cliRootCommandName,
-					RootCmdVarName: workloadCommand.GetRootcommandVarName(),
-					SubCommands:    workloadCommand.GetSubcommands(),
-				},
-				&cli.CmdGenerate{
-					RootCmd:        s.cliRootCommandName,
-					RootCmdVarName: workloadCommand.GetRootcommandVarName(),
-					SubCommands:    workloadCommand.GetSubcommands(),
-				},
-				&cli.CmdCommon{
-					RootCmd: s.cliRootCommandName,
-				},
-			)
-			if err != nil {
-				return fmt.Errorf("unable to scaffold workload collection subcommand, %w", err)
-			}
-		}
-
-		// build init subcommand
-		err := scaffold.Execute(
-			&cli.CmdInitSub{
-				RootCmd:        s.cliRootCommandName,
-				RootCmdVarName: workloadCommand.GetRootcommandVarName(),
-				SubCmdName:     workloadCommand.GetSubcommandName(),
-				SubCmdDescr:    workloadCommand.GetSubcommandDescr(),
-				SubCmdVarName:  workloadCommand.GetSubcommandVarName(),
-				SubCmdFileName: workloadCommand.GetSubcommandFileName(),
-				SpecFields:     workloadCommand.GetAPISpecFields(),
-				IsComponent:    workloadCommand.IsComponent() || workloadCommand.IsCollection(),
-				ComponentResource: workloadCommand.GetComponentResource(
-					s.config.GetDomain(),
-					s.config.GetRepository(),
-					workloadCommand.IsClusterScoped(),
-				),
-			},
-			&cli.CmdCommon{
-				RootCmd: s.cliRootCommandName,
-			},
+		// create this component as a kubebuilder component resource for those
+		// commands that need it
+		componentResource := workloadCommand.GetComponentResource(
+			s.config.GetDomain(),
+			s.config.GetRepository(),
+			workloadCommand.IsClusterScoped(),
 		)
-		if err != nil {
+
+		// scaffold init subcommand
+		if err := scaffold.Execute(
+			&cli.CmdInitSubLatest{Builder: workloadCommand, ComponentResource: componentResource},
+			&cli.CmdInitSub{Builder: workloadCommand, ComponentResource: componentResource},
+			&cli.CmdInitSubUpdater{Builder: workloadCommand, ComponentResource: componentResource},
+		); err != nil {
 			return fmt.Errorf("unable to scaffold init subcommand, %w", err)
-		}
-
-		// build generate subcommand
-		generateSubCommand := &cli.CmdGenerateSub{
-			PackageName:    workloadCommand.GetPackageName(),
-			RootCmd:        s.cliRootCommandName,
-			RootCmdVarName: workloadCommand.GetRootcommandVarName(),
-			SubCmdName:     workloadCommand.GetSubcommandName(),
-			SubCmdDescr:    workloadCommand.GetSubcommandDescr(),
-			IsComponent:    workloadCommand.IsComponent() || workloadCommand.IsCollection(),
-			IsCollection:   workloadCommand.IsCollection(),
-		}
-
-		if workloadCommand.IsCollection() || workloadCommand.IsComponent() {
-			//nolint:forcetypeassert // this will be refactored later
-			generateSubCommand.Collection = s.workload.(*workloadv1.WorkloadCollection)
-			generateSubCommand.SubCmdVarName = workloadCommand.GetSubcommandVarName()
-			generateSubCommand.SubCmdFileName = workloadCommand.GetSubcommandFileName()
-			generateSubCommand.ComponentResource = workloadCommand.GetComponentResource(
-				s.config.GetDomain(),
-				s.config.GetRepository(),
-				workloadCommand.IsClusterScoped(),
-			)
 		}
 
 		// scaffold the generate command unless we have a collection without resources
 		if (workloadCommand.HasChildResources() && workloadCommand.IsCollection()) || !workloadCommand.IsCollection() {
-			err = scaffold.Execute(generateSubCommand)
-			if err != nil {
+			if err := scaffold.Execute(
+				&cli.CmdGenerateSub{Builder: workloadCommand, ComponentResource: componentResource},
+				&cli.CmdGenerateSubUpdater{Builder: workloadCommand, ComponentResource: componentResource},
+			); err != nil {
 				return fmt.Errorf("unable to scaffold generate subcommand, %w", err)
 			}
 		}
-	}
 
-	// build the root command
-	err := scaffold.Execute(
-		&cli.CmdRootUpdater{
-			RootCmd:         s.cliRootCommandName,
-			InitCommand:     true,
-			GenerateCommand: true,
-		},
-	)
-	if err != nil {
-		return fmt.Errorf("error updating root.go, %w", err)
+		// scaffold version subcommand
+		if err := scaffold.Execute(
+			&cli.CmdVersionSub{Builder: workloadCommand, ComponentResource: componentResource},
+			&cli.CmdVersionSubUpdater{Builder: workloadCommand, ComponentResource: componentResource},
+		); err != nil {
+			return fmt.Errorf("unable to scaffold version subcommand, %w", err)
+		}
+
+		// scaffold the root command
+		if err := scaffold.Execute(
+			&cli.CmdRootUpdater{
+				InitCommand:     true,
+				GenerateCommand: true,
+				VersionCommand:  true,
+				Builder:         workloadCommand,
+			},
+		); err != nil {
+			return fmt.Errorf("error updating root.go, %w", err)
+		}
 	}
 
 	return nil

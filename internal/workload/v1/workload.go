@@ -37,6 +37,7 @@ type WorkloadShared struct {
 // WorkloadSpec contains information required to generate source code.
 type WorkloadSpec struct {
 	Resources      []*Resource `json:"resources" yaml:"resources"`
+	Collection     *WorkloadCollection
 	APISpecFields  *APIFields
 	SourceFiles    *[]SourceFile
 	RBACRules      *RBACRules

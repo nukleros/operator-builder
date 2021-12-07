@@ -16,8 +16,8 @@ type Makefile struct {
 	machinery.TemplateMixin
 	machinery.RepositoryMixin
 
-	RootCmd    string
-	CrdOptions string
+	RootCmdName string
+	CrdOptions  string
 }
 
 func (f *Makefile) SetTemplateDefaults() error {
@@ -146,10 +146,10 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
-{{ if ne .RootCmd "" -}}
+{{ if ne .RootCmdName "" -}}
 # Build the companion CLI
 build-cli:
-	go build -o bin/{{ .RootCmd }} cmd/{{ .RootCmd }}/main.go
+	go build -o bin/{{ .RootCmdName }} cmd/{{ .RootCmdName }}/main.go
 {{- end }}
 
 # Build the API Documentation

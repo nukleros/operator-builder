@@ -13,7 +13,7 @@ var _ machinery.Template = &Readme{}
 type Readme struct {
 	machinery.TemplateMixin
 
-	RootCmd string
+	RootCmdName string
 }
 
 // SetTemplateDefaults implements file.Template.
@@ -69,7 +69,7 @@ To clean up:
 
     make undeploy
 
-{{ if ne .RootCmd "" -}}
+{{ if ne .RootCmdName "" -}}
 ## Companion CLI
 
 To build the companion CLI:
@@ -79,6 +79,6 @@ To build the companion CLI:
 The CLI binary will get saved to the bin directory.  You can see the help
 message with:
 
-    ./bin/{{ .RootCmd }} help
+    ./bin/{{ .RootCmdName }} help
 {{ end -}}
 `

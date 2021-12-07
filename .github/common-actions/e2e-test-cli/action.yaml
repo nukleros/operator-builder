@@ -2,46 +2,64 @@
 name: Run CLI Integration Test
 description: Run CLI Integration Test
 
+inputs:
+  test-deploy:
+    description: In addition to building, whether or not to test deployment from output of CLI.
+    required: false
+    default: "false"
+  test-build:
+    description: Whether or not to test build of CLI.
+    required: false
+    default: "true"
+
 runs:
   using: composite
   steps:
     - name: Build Companion CLI
       shell: bash
       working-directory: /tmp/operator-builder-test
-      run: go mod tidy && make build-cli
+      run: if [[ "${{ inputs.test-build }}" == "true" ]]; then go mod tidy && make build-cli; fi
 
     - name: Determine CLI Name and Workload Manifest
       id: get-cli-inputs
       shell: bash
       working-directory: /tmp/operator-builder-test
       run: |
-        COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
-        MANIFEST=`find ${PWD}/config/samples -name "*.yaml" | head -1`
-        echo "::set-output name=command::${COMMAND}"
-        echo "::set-output name=manifest::${MANIFEST}"
+        if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
+          COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
+          MANIFEST=`find ${PWD}/config/samples -name "*.yaml" | head -1`
+          echo "::set-output name=command::${COMMAND}"
+          echo "::set-output name=manifest::${MANIFEST}"
+        fi
 
     - name: Generate and Apply Child Resources
       shell: bash
       run: |
-        ${{ steps.get-cli-inputs.outputs.command }} generate \
-          -w ${{ steps.get-cli-inputs.outputs.manifest }} \
-          | kubectl apply -f -
+        if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
+          ${{ steps.get-cli-inputs.outputs.command }} generate \
+            -w ${{ steps.get-cli-inputs.outputs.manifest }} \
+            | kubectl apply -f -
+        fi
 
     - name: Uninstall Child Resources
       shell: bash
       run: |
-        ${{ steps.get-cli-inputs.outputs.command }} generate \
-          -w ${{ steps.get-cli-inputs.outputs.manifest }} \
-          | kubectl delete -f -
+        if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
+          ${{ steps.get-cli-inputs.outputs.command }} generate \
+            -w ${{ steps.get-cli-inputs.outputs.manifest }} \
+            | kubectl delete -f -
+        fi
 
     - name: Initialize Parent Custom Resources
       shell: bash
       working-directory: /tmp/operator-builder-test
       run: |
-        make install
-        ${{ steps.get-cli-inputs.outputs.command }} init | kubectl apply -f -
+        if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
+          make install
+          ${{ steps.get-cli-inputs.outputs.command }} init | kubectl apply -f -
+        fi
 
     - name: Uninstall Parent Custom Resources
       shell: bash
       working-directory: /tmp/operator-builder-test
-      run: make uninstall
+      run: if [[ "${{ inputs.test-deploy }}" == "true" ]]; then make uninstall; fi

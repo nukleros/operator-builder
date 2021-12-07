@@ -13,7 +13,7 @@ import (
 
 const (
 	initCommandName  = "init"
-	initCommandDescr = "Write a sample custom resource manifest for a workload to standard out"
+	initCommandDescr = "write a sample custom resource manifest for a workload to standard out"
 )
 
 var _ machinery.Template = &CmdInit{}
@@ -25,21 +25,21 @@ type CmdInit struct {
 	machinery.TemplateMixin
 	machinery.BoilerplateMixin
 
-	RootCmd        string
-	RootCmdVarName string
+	// input variables
+	Initializer workloadv1.WorkloadInitializer
 
+	// template variables
 	InitCommandName  string
 	InitCommandDescr string
-
-	SubCommands *[]workloadv1.CliCommand
 }
 
 func (f *CmdInit) SetTemplateDefaults() error {
-	f.Path = filepath.Join("cmd", f.RootCmd, "commands", "init.go")
-
+	// set the template variables
 	f.InitCommandName = initCommandName
 	f.InitCommandDescr = initCommandDescr
 
+	// set interface variables
+	f.Path = filepath.Join("cmd", f.Initializer.GetRootCommand().Name, "commands", "init", "init.go")
 	f.TemplateBody = cliCmdInitTemplate
 
 	return nil
@@ -47,33 +47,89 @@ func (f *CmdInit) SetTemplateDefaults() error {
 
 const cliCmdInitTemplate = `{{ .Boilerplate }}
 
-package commands
+package init
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-type initCommand struct {
+type InitFunc func(*InitSubCommand) error
+
+type InitSubCommand struct {
 	*cobra.Command
+
+	// flags
+	APIVersion string
+
+	// options
+	Name         string
+	Description  string
+	SubCommandOf *cobra.Command
+
+	InitFunc InitFunc
 }
 
-// newInitCommand creates a new instance of the init subcommand.
-func (c *{{ .RootCmdVarName }}Command) newInitCommand() {
-	initCmd := &initCommand{}
-
-	initCmd.Command = &cobra.Command{
-		Use:   "{{ .InitCommandName }}",
-		Short: "{{ .InitCommandDescr }}",
-		Long: "{{ .InitCommandDescr }}",
+{{ if .Initializer.IsCollection }}
+// NewBaseInitSubCommand returns a subcommand that is meant to belong to a parent
+// subcommand but have subcommands itself.
+func NewBaseInitSubCommand(parentCommand *cobra.Command) *InitSubCommand {
+	initCmd := &InitSubCommand{
+		Name:         "{{ .InitCommandName }}",
+		Description:  "{{ .InitCommandDescr }}",
+		SubCommandOf: parentCommand,
 	}
 
-	initCmd.addCommands()
-	c.AddCommand(initCmd.Command)
+	initCmd.Setup()
+
+	return initCmd
+}
+{{ end }}
+
+// Setup sets up this command to be used as a command.
+func (i *InitSubCommand) Setup() {
+	i.Command = &cobra.Command{
+		Use:   i.Name,
+		Short: i.Description,
+		Long:  i.Description,
+	}
+
+	// run the initialize function if the function signature is set
+	if i.InitFunc != nil {
+		i.RunE = i.initialize
+	}
+
+	// always add the api-version flag
+	i.Flags().StringVarP(
+		&i.APIVersion,
+		"api-version",
+		"",
+		"",
+		"api version of the workload to generate a workload manifest for",
+	)
+
+	// add this as a subcommand of another command if set
+	if i.SubCommandOf != nil {
+		i.SubCommandOf.AddCommand(i.Command)
+	}
 }
 
-func (i *initCommand) addCommands() {
-	{{- range $cmd := .SubCommands }}
-	i.newInit{{ $cmd.VarName }}Command()
-	{{- end }}
+// GetParent is a convenience function written when the CLI code is scaffolded 
+// to return the parent command and avoid scaffolding code with bad imports.
+func GetParent(c interface{}) *cobra.Command {
+	switch subcommand := c.(type) {
+	case *InitSubCommand:
+		return subcommand.Command
+	case *cobra.Command:
+		return subcommand
+	}
+
+	panic(fmt.Sprintf("subcommand is not proper type: %T", c))
+}
+
+// initialize creates sample workload manifests for a workload's custom resource.
+func (i *InitSubCommand) initialize(cmd *cobra.Command, args []string) error {
+	return i.InitFunc(i)
 }
 `

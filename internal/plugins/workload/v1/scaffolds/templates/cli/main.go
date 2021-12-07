@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
 var _ machinery.Template = &Main{}
@@ -20,14 +21,12 @@ type Main struct {
 	machinery.BoilerplateMixin
 	machinery.RepositoryMixin
 
-	// RootCmd is the root command for the companion CLI
-	RootCmd        string
-	RootCmdVarName string
+	RootCmd workloadv1.CliCommand
 }
 
 func (f *Main) SetTemplateDefaults() error {
-	f.Path = filepath.Join("cmd", f.RootCmd, "main.go")
-
+	// set interface variables
+	f.Path = filepath.Join("cmd", f.RootCmd.Name, "main.go")
 	f.TemplateBody = cliMainTemplate
 
 	return nil
@@ -42,11 +41,11 @@ const cliMainTemplate = `{{ .Boilerplate }}
 package main
 
 import (
-	"{{ .Repo }}/cmd/{{ .RootCmd }}/commands"
+	"{{ .Repo }}/cmd/{{ .RootCmd.Name }}/commands"
 )
 
 func main() {
-	{{ .RootCmd | removeString "-" }} := commands.New{{ .RootCmdVarName }}Command()
-	{{ .RootCmd | removeString "-" }}.Run()
+	{{ .RootCmd.Name | removeString "-" }} := commands.New{{ .RootCmd.VarName }}Command()
+	{{ .RootCmd.Name | removeString "-" }}.Run()
 }
 `

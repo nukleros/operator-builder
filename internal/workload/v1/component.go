@@ -23,7 +23,8 @@ var ErrNoComponentsOnComponent = errors.New("cannot set component workloads on a
 type ComponentWorkloadSpec struct {
 	API                   WorkloadAPISpec `json:"api" yaml:"api"`
 	CompanionCliSubcmd    CliCommand      `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
-	Dependencies          []string        `json:"dependencies" yaml:"dependencies"`
+	CompanionCliRootcmd   CliCommand
+	Dependencies          []string `json:"dependencies" yaml:"dependencies"`
 	ConfigPath            string
 	ComponentDependencies []*ComponentWorkload
 	WorkloadSpec          `yaml:",inline"`
@@ -91,32 +92,6 @@ func (c *ComponentWorkload) GetAPIKind() string {
 	return c.Spec.API.Kind
 }
 
-func (c *ComponentWorkload) GetSubcommandName() string {
-	return c.Spec.CompanionCliSubcmd.Name
-}
-
-func (c *ComponentWorkload) GetSubcommandDescr() string {
-	return c.Spec.CompanionCliSubcmd.Description
-}
-
-func (c *ComponentWorkload) GetSubcommandVarName() string {
-	return c.Spec.CompanionCliSubcmd.VarName
-}
-
-func (c *ComponentWorkload) GetSubcommandFileName() string {
-	return c.Spec.CompanionCliSubcmd.FileName
-}
-
-func (*ComponentWorkload) GetRootcommandName() string {
-	// no root commands for component workloads
-	return ""
-}
-
-func (c *ComponentWorkload) GetRootcommandVarName() string {
-	// no root commands for component workloads
-	return ""
-}
-
 func (c *ComponentWorkload) IsClusterScoped() bool {
 	return c.Spec.API.ClusterScoped
 }
@@ -152,6 +127,10 @@ func (*ComponentWorkload) SetComponents(components []*ComponentWorkload) error {
 
 func (c *ComponentWorkload) HasChildResources() bool {
 	return len(c.Spec.Resources) > 0
+}
+
+func (c *ComponentWorkload) GetCollection() *WorkloadCollection {
+	return c.Spec.Collection
 }
 
 func (*ComponentWorkload) GetComponents() []*ComponentWorkload {
@@ -232,14 +211,12 @@ func (c *ComponentWorkload) SetNames() {
 	)
 }
 
-func (c *ComponentWorkload) GetSubcommands() *[]CliCommand {
-	commands := []CliCommand{}
+func (c *ComponentWorkload) GetRootCommand() *CliCommand {
+	return &c.Spec.Collection.Spec.CompanionCliRootcmd
+}
 
-	if c.HasSubCmdName() {
-		commands = append(commands, c.Spec.CompanionCliSubcmd)
-	}
-
-	return &commands
+func (c *ComponentWorkload) GetSubCommand() *CliCommand {
+	return &c.Spec.CompanionCliSubcmd
 }
 
 func (c *ComponentWorkload) LoadManifests(workloadPath string) error {

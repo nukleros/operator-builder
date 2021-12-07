@@ -15,7 +15,6 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
@@ -67,37 +66,27 @@ func (s *initScaffolder) Scaffold() error {
 	)
 
 	if s.workload.HasRootCmdName() {
-		err = scaffold.Execute(
-			&cli.Main{
-				RootCmd:        s.workload.GetRootCmdName(),
-				RootCmdVarName: utils.ToPascalCase(s.workload.GetRootCmdName()),
-			},
-			&cli.CmdRoot{
-				RootCmd:            s.workload.GetRootCmdName(),
-				RootCmdVarName:     utils.ToPascalCase(s.workload.GetRootCmdName()),
-				RootCmdDescription: s.workload.GetRootCmdDescr(),
-			},
-		)
-		if err != nil {
+		if err := scaffold.Execute(
+			&cli.Main{RootCmd: *s.workload.GetRootCommand()},
+			&cli.CmdRoot{Initializer: s.workload},
+			&cli.CmdInit{Initializer: s.workload},
+			&cli.CmdGenerate{Initializer: s.workload},
+			&cli.CmdVersion{Initializer: s.workload},
+		); err != nil {
 			return fmt.Errorf("unable to scaffold initial configuration for companionCli, %w", err)
 		}
 	}
 
-	err = scaffold.Execute(
+	if err := scaffold.Execute(
 		&templates.Main{},
 		&templates.GoMod{
 			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,
 			CobraVersion:             CobraVersion,
 		},
 		&templates.Dockerfile{},
-		&templates.Makefile{
-			RootCmd: s.workload.GetRootCmdName(),
-		},
-		&templates.Readme{
-			RootCmd: s.workload.GetRootCmdName(),
-		},
-	)
-	if err != nil {
+		&templates.Makefile{RootCmdName: s.cliRootCommandName},
+		&templates.Readme{RootCmdName: s.cliRootCommandName},
+	); err != nil {
 		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
 	}
 
