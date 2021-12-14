@@ -28,6 +28,8 @@ func (f *CmdUtils) SetTemplateDefaults() error {
 	f.Path = filepath.Join("cmd", f.Builder.GetRootCommand().Name, "commands", "utils", "utils.go")
 	f.TemplateBody = cliCmdUtilsTemplate
 
+	f.IfExistsAction = machinery.SkipFile
+
 	return nil
 }
 
@@ -39,17 +41,18 @@ import (
 	"errors"
 	"fmt"
 
-	"{{ .Repo }}/apis/common"
+	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
 )
 
 var ErrInvalidResource = errors.New("supplied resource is incorrect")
 
-// ValidateWorkload validates the unmarshaled version of the workload resource
-// manifest.
-func ValidateWorkload(workload common.Component) error {
-	defaultWorkloadGVK := workload.GetComponentGVK()
+// ValidateWorkload validates the unmarshaled version of the workload resource manifest.
+func ValidateWorkload(
+	manifest workload.Workload,
+) error {
+	defaultWorkloadGVK := manifest.GetWorkloadGVK()
 
-	if defaultWorkloadGVK != workload.GetObjectKind().GroupVersionKind() {
+	if defaultWorkloadGVK != manifest.GetObjectKind().GroupVersionKind() {
 		return fmt.Errorf(
 			"%w, expected resource of kind: '%s', with group '%s' and version '%s'; "+
 				"found resource of kind '%s', with group '%s' and version '%s'",
@@ -57,9 +60,9 @@ func ValidateWorkload(workload common.Component) error {
 			defaultWorkloadGVK.Kind,
 			defaultWorkloadGVK.Group,
 			defaultWorkloadGVK.Version,
-			workload.GetObjectKind().GroupVersionKind().Kind,
-			workload.GetObjectKind().GroupVersionKind().Group,
-			workload.GetObjectKind().GroupVersionKind().Version,
+			manifest.GetObjectKind().GroupVersionKind().Kind,
+			manifest.GetObjectKind().GroupVersionKind().Group,
+			manifest.GetObjectKind().GroupVersionKind().Version,
 		)
 	}
 

@@ -158,13 +158,13 @@ const (
 
 		workload, ok := tester.workload.(*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }})
 		if !ok {
-			return fmt.Errorf("could not convert metav1.Object to {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}")
+			return fmt.Errorf("could not convert client.Object to {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}")
 		}
 
 		{{ if .IsComponent -}}
 		collection, ok := tester.collectionTester.workload.(*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }})
 		if !ok {
-			return fmt.Errorf("could not convert metav1.Object to {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}")
+			return fmt.Errorf("could not convert client.Object to {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}")
 		}
 		{{ end }}
 
@@ -251,7 +251,8 @@ func getTesterSamplePath(r *resource.Resource) string {
 			r.Group,
 			r.Version,
 			utils.ToFileName(r.Kind),
-		)}, "/",
+		),
+	}, "/",
 	)
 }
 

@@ -54,12 +54,13 @@ const typesTemplate = `{{ .Boilerplate }}
 package {{ .Resource.Version }}
 
 import (
-	"time"
+	"errors"
 
+	"github.com/nukleros/operator-builder-tools/pkg/status"
+	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"{{ .Repo }}/apis/common"
 	{{- $Repo := .Repo }}{{- $Added := "" }}{{- range .Dependencies }}
 	{{- if ne .Spec.API.Group $.Resource.Group }}
 	{{- if not (containsString (printf "%s%s" .Spec.API.Group .Spec.API.Version) $Added) }}
@@ -69,6 +70,8 @@ import (
 	{{ end }}
 	{{ end }}
 )
+
+var ErrUnableToConvert{{ .Resource.Kind }} = errors.New("unable to convert to {{ .Resource.Kind }}")
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -82,8 +85,8 @@ type {{ .Resource.Kind }}Status struct {
 
 	Created               bool                       ` + "`" + `json:"created,omitempty"` + "`" + `
 	DependenciesSatisfied bool                       ` + "`" + `json:"dependenciesSatisfied,omitempty"` + "`" + `
-	Conditions            []*common.PhaseCondition    ` + "`" + `json:"conditions,omitempty"` + "`" + `
-	Resources             []*common.Resource          ` + "`" + `json:"resources,omitempty"` + "`" + `
+	Conditions            []*status.PhaseCondition    ` + "`" + `json:"conditions,omitempty"` + "`" + `
+	Resources             []*status.ChildResource          ` + "`" + `json:"resources,omitempty"` + "`" + `
 }
 
 // +kubebuilder:object:root=true
@@ -117,8 +120,8 @@ func (component *{{ .Resource.Kind }}) GetReadyStatus() bool {
 }
 
 // SetReadyStatus sets the ready status for a component.
-func (component *{{ .Resource.Kind }}) SetReadyStatus(status bool) {
-	component.Status.Created = status
+func (component *{{ .Resource.Kind }}) SetReadyStatus(ready bool) {
+	component.Status.Created = ready
 }
 
 // GetDependencyStatus returns the dependency status for a component.
@@ -132,44 +135,48 @@ func (component *{{ .Resource.Kind }}) SetDependencyStatus(dependencyStatus bool
 }
 
 // GetPhaseConditions returns the phase conditions for a component.
-func (component *{{ .Resource.Kind }}) GetPhaseConditions() []*common.PhaseCondition {
+func (component *{{ .Resource.Kind }}) GetPhaseConditions() []*status.PhaseCondition {
 	return component.Status.Conditions
 }
 
 // SetPhaseCondition sets the phase conditions for a component.
-func (component *{{ .Resource.Kind }}) SetPhaseCondition(condition *common.PhaseCondition) {
-	if found := condition.GetPhaseConditionIndex(component); found >= 0 {
-		if condition.LastModified == "" {
-			condition.LastModified = time.Now().UTC().String()
-		}
+func (component *{{ .Resource.Kind }}) SetPhaseCondition(condition *status.PhaseCondition) {
+	for i, currentCondition := range component.GetPhaseConditions() {
+		if currentCondition.Phase == condition.Phase {
+			component.Status.Conditions[i] = condition
 
-		component.Status.Conditions[found] = condition
-	} else {
-		component.Status.Conditions = append(component.Status.Conditions, condition)
+			return
+		}
 	}
+
+	// phase not found, lets add it to the list.
+	component.Status.Conditions = append(component.Status.Conditions, condition)
 }
 
-// GetResources returns the resources for a component.
-func (component *{{ .Resource.Kind }}) GetResources() []*common.Resource {
+// GetResources returns the child resource status for a component.
+func (component *{{ .Resource.Kind }}) GetChildResourceConditions() []*status.ChildResource {
 	return component.Status.Resources
 }
 
 // SetResources sets the phase conditions for a component.
-func (component *{{ .Resource.Kind }}) SetResource(resource *common.Resource) {
-	if found := resource.GetResourceIndex(component); found >= 0 {
-		if resource.ResourceCondition.LastModified == "" {
-			resource.ResourceCondition.LastModified = time.Now().UTC().String()
-		}
+func (component *{{ .Resource.Kind }}) SetChildResourceCondition(resource *status.ChildResource) {
+	for i, currentResource := range component.GetChildResourceConditions() {
+		if currentResource.Group == resource.Group && currentResource.Version == resource.Version && currentResource.Kind == resource.Kind {
+			if currentResource.Name == resource.Name && currentResource.Namespace == resource.Namespace {
+				component.Status.Resources[i] = resource
 
-		component.Status.Resources[found] = resource
-	} else {
-		component.Status.Resources = append(component.Status.Resources, resource)
+				return
+			}
+		}
 	}
+
+	// phase not found, lets add it to the collection
+	component.Status.Resources = append(component.Status.Resources, resource)
 }
 
 // GetDependencies returns the dependencies for a component.
-func (*{{ .Resource.Kind }}) GetDependencies() []common.Component {
-	return []common.Component{
+func (*{{ .Resource.Kind }}) GetDependencies() []workload.Workload {
+	return []workload.Workload{
 		{{- range .Dependencies }}
 		{{- if eq .Spec.API.Group $.Resource.Group }}
 			&{{ .Spec.API.Kind }}{},
@@ -181,7 +188,7 @@ func (*{{ .Resource.Kind }}) GetDependencies() []common.Component {
 }
 
 // GetComponentGVK returns a GVK object for the component.
-func (*{{ .Resource.Kind }}) GetComponentGVK() schema.GroupVersionKind {
+func (*{{ .Resource.Kind }}) GetWorkloadGVK() schema.GroupVersionKind {
 	return GroupVersion.WithKind("{{ .Resource.Kind }}")
 }
 

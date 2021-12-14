@@ -32,6 +32,8 @@ func (f *Component) SetTemplateDefaults() error {
 
 	f.TemplateBody = componentTemplate
 
+	f.IfExistsAction = machinery.SkipFile
+
 	return nil
 }
 
@@ -40,11 +42,11 @@ const componentTemplate = `{{ .Boilerplate }}
 package dependencies
 
 import (
-	"{{ .Repo }}/apis/common"
+	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
 )
 
 // {{ .Resource.Kind }}CheckReady performs the logic to determine if a {{ .Resource.Kind }} object is ready.
-func {{ .Resource.Kind }}CheckReady(reconciler common.ComponentReconciler) (bool, error) {
+func {{ .Resource.Kind }}CheckReady(r workload.Reconciler, req *workload.Request) (bool, error) {
 	return true, nil
 }
 `

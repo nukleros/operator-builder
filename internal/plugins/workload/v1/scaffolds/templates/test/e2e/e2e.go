@@ -622,7 +622,7 @@ func waitForEqualResources(tester *E2ETest, resource client.Object) error {
 func waitForChildResources(tester *E2ETest) error {
 	// wait for the resources to be ready
 	childResourcesAreReady := func() (bool, error) {
-		childResourceClusterObjects := make([]metav1.Object, len(tester.children))
+		childResourceClusterObjects := make([]client.Object, len(tester.children))
 		for i, child := range tester.children {
 			childResourceClusterObject, err := getClientForResource(tester, child).
 				Get(context.TODO(), child.GetName(), metav1.GetOptions{})

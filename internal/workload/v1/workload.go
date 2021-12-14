@@ -169,6 +169,7 @@ func (ws *WorkloadSpec) processMarkers(manifestFile *Resource, markerTypes ...Ma
 	if containsMarkerType(markerTypes, FieldMarkerType) && containsMarkerType(markerTypes, CollectionMarkerType) {
 		// find & replace collection markers with field markers
 		manifestFile.Content = []byte(strings.ReplaceAll(string(manifestFile.Content), "!!var collection", "!!var parent"))
+		manifestFile.Content = []byte(strings.ReplaceAll(string(manifestFile.Content), "!!start collection", "!!start parent"))
 	}
 
 	return nil

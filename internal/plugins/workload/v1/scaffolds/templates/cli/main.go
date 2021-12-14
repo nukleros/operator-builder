@@ -29,6 +29,8 @@ func (f *Main) SetTemplateDefaults() error {
 	f.Path = filepath.Join("cmd", f.RootCmd.Name, "main.go")
 	f.TemplateBody = cliMainTemplate
 
+	f.IfExistsAction = machinery.SkipFile
+
 	return nil
 }
 

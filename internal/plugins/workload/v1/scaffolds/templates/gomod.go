@@ -14,8 +14,9 @@ type GoMod struct {
 	machinery.TemplateMixin
 	machinery.RepositoryMixin
 
-	ControllerRuntimeVersion string
-	CobraVersion             string
+	ControllerRuntimeVersion    string
+	CobraVersion                string
+	OperatorBuilderToolsVersion string
 }
 
 func (f *GoMod) SetTemplateDefaults() error {
@@ -38,5 +39,7 @@ go 1.15
 require (
 	sigs.k8s.io/controller-runtime {{ .ControllerRuntimeVersion }}
 	github.com/spf13/cobra {{ .CobraVersion }}
+	github.com/nukleros/operator-builder-tools {{ .OperatorBuilderToolsVersion }}
+
 )
 `

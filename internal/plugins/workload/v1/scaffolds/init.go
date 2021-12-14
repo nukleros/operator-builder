@@ -18,7 +18,10 @@ import (
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
-const CobraVersion = "v1.1.3"
+const (
+	CobraVersion               = "v1.1.3"
+	OperatorBulderToolsVersion = "v0.1.0"
+)
 
 var _ plugins.Scaffolder = &initScaffolder{}
 
@@ -80,8 +83,9 @@ func (s *initScaffolder) Scaffold() error {
 	if err := scaffold.Execute(
 		&templates.Main{},
 		&templates.GoMod{
-			ControllerRuntimeVersion: scaffolds.ControllerRuntimeVersion,
-			CobraVersion:             CobraVersion,
+			ControllerRuntimeVersion:    scaffolds.ControllerRuntimeVersion,
+			CobraVersion:                CobraVersion,
+			OperatorBuilderToolsVersion: OperatorBulderToolsVersion,
 		},
 		&templates.Dockerfile{},
 		&templates.Makefile{RootCmdName: s.cliRootCommandName},

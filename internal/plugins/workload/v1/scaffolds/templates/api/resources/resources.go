@@ -48,6 +48,7 @@ const resourcesTemplate = `{{ .Boilerplate }}
 package {{ .PackageName }}
 
 import (
+	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
@@ -55,6 +56,7 @@ import (
 	{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Collection.Spec.API.Group }}/{{ .Collection.Spec.API.Version }}"
 	{{ end -}}
 )
+
 
 // CreateFuncs is an array of functions that are called to create the child resources for the controller
 // in memory during the reconciliation loop prior to persisting the changes or updates to the Kubernetes
@@ -87,5 +89,34 @@ var InitFuncs = []func(
 	{{ range .InitFuncNames }}
 		{{- . -}},
 	{{ end }}
+}
+
+{{ if $.IsComponent -}}
+func ConvertWorkload(component, collection workload.Workload) (
+	*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
+	*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }},
+	error,
+) {
+{{- else }}
+func ConvertWorkload(component workload.Workload) (*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}, error) {
+{{- end }}
+	p, ok := component.(	*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }})
+	if !ok {
+		{{- if $.IsComponent }}
+		return nil, nil, {{ .Resource.ImportAlias }}.ErrUnableToConvert{{ .Resource.Kind }}
+	}
+
+	c, ok := collection.(*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }})
+	if !ok {
+		return nil, nil, {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.ErrUnableToConvert{{ .Collection.Spec.API.Kind }}
+	}
+
+	return p, c, nil
+{{- else }}
+		return nil, {{ .Resource.ImportAlias }}.ErrUnableToConvert{{ .Resource.Kind }}
+  }
+
+	return p, nil
+{{- end }}
 }
 `

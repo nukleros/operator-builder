@@ -89,7 +89,7 @@ func (testSuite *E2EComponentTestSuite) Test_appsv1alpha1WebStore() {
 	childFromCluster, err := getResource(tester, childToUpdate)
 	require.NoErrorf(testSuite.T(), err, "failed to get updatable child from cluster")
 	deploymentToUpdate := &appsv1.Deployment{}
-	resources.ToProper(deploymentToUpdate, childFromCluster)
+	resources.ToTyped(deploymentToUpdate, childFromCluster)
 
 	// make a change to the child object
 	replicas := int32(3)
@@ -111,7 +111,7 @@ func (testSuite *E2EComponentTestSuite) Test_appsv1alpha1WebStore() {
 	require.NoErrorf(testSuite.T(), err, "failed to get parent from cluster")
 
 	// make a change to the parent workload
-	resources.ToProper(tester.workload, parentFromCluster)
+	resources.ToTyped(tester.workload, parentFromCluster)
 	tester.workload.(*appsv1alpha1.WebStore).Spec.Webstore.Really.Long.Nested.Path.Replicas = int(replicas)
 
 	// run the test and ensure it passes

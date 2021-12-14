@@ -31,6 +31,8 @@ func (f *Component) SetTemplateDefaults() error {
 
 	f.TemplateBody = componentTemplate
 
+	f.IfExistsAction = machinery.SkipFile
+
 	return nil
 }
 
@@ -39,14 +41,14 @@ const componentTemplate = `{{ .Boilerplate }}
 package mutate
 
 import (
+	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"{{ .Repo }}/apis/common"
 )
 
 // {{ .Resource.Kind }}Mutate performs the logic to mutate resources that belong to the parent.
 func {{ .Resource.Kind }}Mutate(
-	reconciler common.ComponentReconciler,
+	r workload.Reconciler,
+	req *workload.Request,
 	object client.Object,
 ) (replacedObjects []client.Object, skip bool, err error) {
 	return []client.Object{object}, false, nil
