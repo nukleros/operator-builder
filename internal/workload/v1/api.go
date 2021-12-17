@@ -221,6 +221,7 @@ func (api *APIFields) setDefault(sampleVal interface{}, hasDefault bool) {
 				api.Markers,
 				fmt.Sprintf("+kubebuilder:default=%s", api.Default),
 				"+kubebuilder:validation:Optional",
+				fmt.Sprintf("(Default: %s)", api.Default),
 			)
 		}
 
