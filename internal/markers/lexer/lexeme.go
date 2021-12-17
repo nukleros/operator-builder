@@ -12,10 +12,14 @@ const (
 	LexemeScope
 	LexemeSeparator
 	LexemeArg
+	LexemeArgAssignment
+	LexemeArgDelimiter
 	LexemeStringLiteral
 	LexemeFloatLiteral
 	LexemeIntegerLiteral
+	LexemeSyntheticBoolLiteral
 	LexemeBoolLiteral
+	LexemeQuote
 	LexemeSliceBegin
 	LexemeSliceEnd
 	LexemeSliceDelimiter

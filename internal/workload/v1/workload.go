@@ -67,7 +67,7 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
 		}
 
 		// determine sourceFile filename
-		sourceFile := determineSourceFileName(manifestFile.FileName)
+		sourceFile := determineSourceFileName(manifestFile.relativeFileName)
 
 		var childResources []ChildResource
 
@@ -280,14 +280,20 @@ func generateUniqueResourceName(object unstructured.Unstructured) string {
 	resourceName := strings.ReplaceAll(strings.Title(object.GetName()), "-", "")
 	resourceName = strings.ReplaceAll(resourceName, ".", "")
 	resourceName = strings.ReplaceAll(resourceName, ":", "")
+	resourceName = strings.ReplaceAll(resourceName, "!!Start", "")
+	resourceName = strings.ReplaceAll(resourceName, "!!End", "")
 	resourceName = strings.ReplaceAll(resourceName, "ParentSpec", "")
 	resourceName = strings.ReplaceAll(resourceName, "CollectionSpec", "")
+	resourceName = strings.ReplaceAll(resourceName, " ", "")
 
 	namespaceName := strings.ReplaceAll(strings.Title(object.GetNamespace()), "-", "")
 	namespaceName = strings.ReplaceAll(namespaceName, ".", "")
 	namespaceName = strings.ReplaceAll(namespaceName, ":", "")
+	namespaceName = strings.ReplaceAll(namespaceName, "!!Start", "")
+	namespaceName = strings.ReplaceAll(namespaceName, "!!End", "")
 	namespaceName = strings.ReplaceAll(namespaceName, "ParentSpec", "")
 	namespaceName = strings.ReplaceAll(namespaceName, "CollectionSpec", "")
+	namespaceName = strings.ReplaceAll(namespaceName, " ", "")
 
 	resourceName = fmt.Sprintf("%s%s%s", object.GetKind(), namespaceName, resourceName)
 

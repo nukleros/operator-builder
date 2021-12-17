@@ -186,11 +186,23 @@ func (api *APIFields) generateStructName(path string) {
 }
 
 func (api *APIFields) isEqual(input *APIFields) bool {
-	if api.Type == input.Type {
-		if api.Default == "" || api.Default == input.Default || input.Default == "" {
-			if len(api.Comments) == 0 || len(input.Comments) == 0 {
-				return true
+	if api.Type != input.Type {
+		return false
+	}
+
+	if api.Default == "" || api.Default == input.Default || input.Default == "" {
+		if len(api.Comments) == 0 || len(input.Comments) == 0 {
+			return true
+		}
+
+		if len(api.Comments) == len(input.Comments) {
+			for i := range api.Comments {
+				if api.Comments[i] != input.Comments[i] {
+					return false
+				}
 			}
+
+			return true
 		}
 	}
 

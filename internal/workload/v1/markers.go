@@ -93,16 +93,20 @@ func TransformYAML(results ...*inspect.YAMLResult) error {
 			value = r.Nodes[0]
 		}
 
-		key.HeadComment = ""
+		replaceText := strings.TrimSuffix(r.MarkerText, "\n")
+		replaceText = strings.ReplaceAll(replaceText, "\n", "\n#")
+
 		key.FootComment = ""
-		value.LineComment = ""
 
 		switch t := r.Object.(type) {
 		case FieldMarker:
 			if t.Description != nil {
 				*t.Description = strings.TrimPrefix(*t.Description, "\n")
-				key.HeadComment = "# " + *t.Description + ", controlled by " + t.Name
+				key.HeadComment = key.HeadComment + "\n# " + *t.Description
 			}
+
+			key.HeadComment = strings.ReplaceAll(key.HeadComment, replaceText, "controlled by field: "+t.Name)
+			value.LineComment = strings.ReplaceAll(value.LineComment, replaceText, "controlled by field: "+t.Name)
 
 			t.originalValue = value.Value
 
@@ -125,8 +129,11 @@ func TransformYAML(results ...*inspect.YAMLResult) error {
 		case CollectionFieldMarker:
 			if t.Description != nil {
 				*t.Description = strings.TrimPrefix(*t.Description, "\n")
-				key.HeadComment = "# " + *t.Description + ", controlled by " + t.Name
+				key.HeadComment = "# " + *t.Description
 			}
+
+			key.HeadComment = strings.ReplaceAll(key.HeadComment, replaceText, "controlled by collection field: "+t.Name)
+			value.LineComment = strings.ReplaceAll(value.LineComment, replaceText, "controlled by collection field: "+t.Name)
 
 			t.originalValue = value.Value
 

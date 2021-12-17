@@ -39,7 +39,7 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: webstore-svc # +operator-builder:field:name=service.name,type=string,default="webstore-svc"
+  name: webstore-svc # +operator-builder:field:name=service.name,type=string,default="webstore",replace="webstore"
 spec:
   selector:
     # +operator-builder:field:name=app.label,type=string,default="webstore"

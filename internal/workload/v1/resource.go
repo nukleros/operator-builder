@@ -36,8 +36,9 @@ type ChildResource struct {
 
 // Resource represents a single input manifest for a given config.
 type Resource struct {
-	FileName string
-	Content  []byte
+	FileName         string
+	relativeFileName string
+	Content          []byte
 }
 
 func (r *Resource) UnmarshalYAML(node *yaml.Node) error {
@@ -114,13 +115,18 @@ func expandResources(path string, resources []*Resource) ([]*Resource, error) {
 	var expandedResources []*Resource
 
 	for _, r := range resources {
-		files, err := filepath.Glob(filepath.Join(path, r.FileName))
+		files, err := Glob(filepath.Join(path, r.FileName))
 		if err != nil {
-			return []*Resource{}, fmt.Errorf("failed to process glob pattern matchingi, %w", err)
+			return []*Resource{}, fmt.Errorf("failed to process glob pattern matching, %w", err)
 		}
 
 		for _, f := range files {
-			res := &Resource{FileName: f}
+			rf, err := filepath.Rel(path, f)
+			if err != nil {
+				return []*Resource{}, fmt.Errorf("unable to determine relative file path, %w", err)
+			}
+
+			res := &Resource{FileName: f, relativeFileName: rf}
 			expandedResources = append(expandedResources, res)
 		}
 	}

@@ -96,7 +96,7 @@ func lexMarker(l *Lexer) stateFn {
 		}
 
 		l.emit(LexemeArg)
-		l.emitSynthetic(LexemeBoolLiteral, "true")
+		l.emitSynthetic(LexemeSyntheticBoolLiteral, "true")
 		l.emitSynthetic(LexemeMarkerEnd, "\n")
 
 		return lexComment
@@ -106,7 +106,8 @@ func lexMarker(l *Lexer) stateFn {
 		}
 
 		l.emit(LexemeArg)
-		l.discard()
+		l.consume(argAssignment)
+		l.emit(LexemeArgAssignment)
 
 		return lexArgValueInitial
 	default:
@@ -134,19 +135,19 @@ func lexArgs(l *Lexer) stateFn {
 	l.emit(LexemeArg)
 
 	switch {
-	case l.peeked(argAssignment):
-		l.discard()
+	case l.consumed(argAssignment):
+		l.emit(LexemeArgAssignment)
 
 		return lexArgValueInitial
 	case l.peeked(" "), l.peeked("\n"), l.peek() == eof:
-		l.emitSynthetic(LexemeBoolLiteral, "true")
+		l.emitSynthetic(LexemeSyntheticBoolLiteral, "true")
 		l.emitSynthetic(LexemeMarkerEnd, "\n")
 
 		return lexComment
 	case l.peeked(argDelimiter):
-		l.emitSynthetic(LexemeBoolLiteral, "true")
+		l.emitSynthetic(LexemeSyntheticBoolLiteral, "true")
 
-		return lexArgs
+		return lexMoreArgs
 	default:
 		return l.errorf("malformed argument: %s", l.buffer)
 	}
@@ -186,7 +187,8 @@ func lexStringLiteral(l *Lexer, nextState stateFn) (stateFn, bool) {
 		return nil, false
 	}
 
-	l.discard()
+	l.consume(quote)
+	l.emit(LexemeQuote)
 
 	pos := l.pos
 	context := l.context()
@@ -208,7 +210,8 @@ func lexStringLiteral(l *Lexer, nextState stateFn) (stateFn, bool) {
 			}
 		case l.peeked(quote):
 			l.emit(LexemeStringLiteral)
-			l.discard()
+			l.consume(quote)
+			l.emit(LexemeQuote)
 
 			return nextState, true
 		default:
@@ -300,8 +303,8 @@ func lexNakedStringLiteral(l *Lexer, nextState stateFn) (stateFn, bool) {
 
 func lexMoreArgs(l *Lexer) stateFn {
 	switch {
-	case l.peeked(argDelimiter):
-		l.discard()
+	case l.consumed(argDelimiter):
+		l.emit(LexemeArgDelimiter)
 
 		return lexArgs
 	case l.peeked(" "), l.peeked("\n"), l.peek() == eof:

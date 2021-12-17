@@ -67,8 +67,6 @@ func parseSeparator(p *Parser) stateFn {
 		return parseScope
 	case p.peeked(lexer.LexemeArg):
 		if found := p.loadDefinition(); found {
-			p.next()
-
 			return parseArg
 		}
 	}
@@ -79,15 +77,38 @@ func parseSeparator(p *Parser) stateFn {
 }
 
 func parseArg(p *Parser) stateFn {
-	if found := p.currentDefinition.LookupArgument(p.currentLexeme.Value); found {
-		return parseArgValue(p, p.currentLexeme.Value)
+	if p.consumed(lexer.LexemeArg) {
+		if found := p.currentDefinition.LookupArgument(p.currentLexeme.Value); found {
+			argName := p.currentLexeme.Value
+
+			if p.peeked(lexer.LexemeArgAssignment) {
+				p.next()
+			}
+
+			return parseArgValue(p, argName)
+		}
 	}
 
 	return parse
 }
 
 func parseArgValue(p *Parser, argName string) stateFn {
+	stripQuotes(p)
+
 	switch {
+	case p.peeked(lexer.LexemeSyntheticBoolLiteral):
+		lx := p.peek()
+
+		b, err := strconv.ParseBool(lx.Value)
+		if err != nil {
+			return p.error(err)
+		}
+
+		if err := p.currentDefinition.SetArgument(argName, b); err != nil {
+			return p.error(err)
+		}
+
+		p.discard()
 	case p.consumed(lexer.LexemeBoolLiteral):
 		b, err := strconv.ParseBool(p.currentLexeme.Value)
 		if err != nil {
@@ -121,6 +142,9 @@ func parseArgValue(p *Parser, argName string) stateFn {
 		if err := p.currentDefinition.SetArgument(argName, p.currentLexeme.Value); err != nil {
 			return p.error(err)
 		}
+
+		stripQuotes(p)
+
 	default:
 		return parse
 	}
@@ -130,7 +154,7 @@ func parseArgValue(p *Parser, argName string) stateFn {
 
 func parseMoreArgs(p *Parser) stateFn {
 	switch {
-	case p.consumed(lexer.LexemeArg):
+	case p.consumed(lexer.LexemeArgDelimiter):
 		return parseArg
 	case p.consumed(lexer.LexemeMarkerEnd):
 		err := p.emit()
@@ -141,5 +165,11 @@ func parseMoreArgs(p *Parser) stateFn {
 		return parse
 	default:
 		return parse
+	}
+}
+
+func stripQuotes(p *Parser) {
+	if p.peeked(lexer.LexemeQuote) {
+		p.next()
 	}
 }
