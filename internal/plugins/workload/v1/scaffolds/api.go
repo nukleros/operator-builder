@@ -209,7 +209,7 @@ func (s *apiScaffolder) Scaffold() error {
 					IsStandalone:    component.IsStandalone(),
 					IsCollection:    component.IsCollection(),
 					Collection:      s.workload.(*workloadv1.WorkloadCollection),
-					SpecFields:      s.workload.GetAPISpecFields(),
+					SpecFields:      component.GetAPISpecFields(),
 				},
 				&controller.Controller{
 					PackageName:       component.GetPackageName(),
