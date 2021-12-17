@@ -5,6 +5,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
@@ -43,6 +44,7 @@ type CmdGenerateSub struct {
 	cmdGenerateSubCommon
 	GenerateCommandName  string
 	GenerateCommandDescr string
+	GenerateFuncInputs   string
 }
 
 func (f *CmdGenerateSub) SetTemplateDefaults() error {
@@ -72,6 +74,16 @@ func (f *CmdGenerateSub) SetTemplateDefaults() error {
 		f.UseWorkloadManifestFlag = true
 	}
 
+	// determine the input string to the generated function
+	switch {
+	case f.UseCollectionManifestFlag && f.UseWorkloadManifestFlag:
+		f.GenerateFuncInputs = "workloadFile, collectionFile"
+	case f.UseCollectionManifestFlag && !f.UseWorkloadManifestFlag:
+		f.GenerateFuncInputs = "collectionFile"
+	default:
+		f.GenerateFuncInputs = "workloadFile"
+	}
+
 	// set interface fields
 	f.Path = f.SubCmd.GetSubCmdRelativeFileName(
 		f.RootCmd.Name,
@@ -83,8 +95,7 @@ func (f *CmdGenerateSub) SetTemplateDefaults() error {
 	f.TemplateBody = fmt.Sprintf(
 		cmdGenerateSub,
 		machinery.NewMarkerFor(f.Path, generateImportMarker),
-		machinery.NewMarkerFor(f.Path, generateSwitchMarker),
-		machinery.NewMarkerFor(f.Path, generateFuncMarker),
+		machinery.NewMarkerFor(f.Path, generateVersionMapMarker),
 	)
 
 	return nil
@@ -126,99 +137,25 @@ func (*CmdGenerateSubUpdater) GetIfExistsAction() machinery.IfExistsAction {
 }
 
 const generateImportMarker = "operator-builder:imports"
-const generateFuncMarker = "operator-builder:generatefunc"
-const generateSwitchMarker = "operator-builder:generateswitch"
+const generateVersionMapMarker = "operator-builder:versionmap"
 
 // GetMarkers implements file.Inserter interface.
 func (f *CmdGenerateSubUpdater) GetMarkers() []machinery.Marker {
 	return []machinery.Marker{
 		machinery.NewMarkerFor(f.GetPath(), generateImportMarker),
-		machinery.NewMarkerFor(f.GetPath(), generateSwitchMarker),
-		machinery.NewMarkerFor(f.GetPath(), generateFuncMarker),
+		machinery.NewMarkerFor(f.GetPath(), generateVersionMapMarker),
 	}
 }
 
 // Code Fragments.
 const (
-	// this fragment is the function that a standalone workload will use to generate
-	// its child resources.
-	generateFuncStandaloneFragment = `// %sGenerate%s returns the child resources that are associated
-// with this %s workload.
-func %sGenerate%s(yamlFile []byte) ([]client.Object, error) {
-	var workload %s.%s
-
-	if err := yaml.Unmarshal(yamlFile, &workload); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal yaml into workload, %%w", err)
-	}
-
-	if err := cmdutils.ValidateWorkload(&workload); err != nil {
-		return nil, fmt.Errorf("error validating workload yaml, %%w", err)
-	}
-
-	resourceObjects := make([]client.Object, len(%s.CreateFuncs))
-
-	for i, f := range %s.CreateFuncs {
-		resource, err := f(&workload)
-		if err != nil {
-			return nil, err
-		}
-
-		resourceObjects[i] = resource
-	}
-
-	return resourceObjects, nil
-}
-`
-
-	// this fragment is the function that a workload with a collection will use to generate
-	// its child resources.
-	generateFuncWithCollectionFragment = `// %sGenerate%s returns the child resources that are associated
-// with this %s workload.
-func %sGenerate%s(workloadFile, collectionFile []byte) ([]client.Object, error) {
-	var workload %s.%s
-	var collection %s.%s
-
-	if err := yaml.Unmarshal(workloadFile, &workload); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal yaml into workload, %%w", err)
-	}
-
-	if err := yaml.Unmarshal(collectionFile, &collection); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal yaml into workload, %%w", err)
-	}
-
-	if err := cmdutils.ValidateWorkload(&workload); err != nil {
-		return nil, fmt.Errorf("error validating workload yaml, %%w", err)
-	}
-
-	if err := cmdutils.ValidateWorkload(&collection); err != nil {
-		return nil, fmt.Errorf("error validating workload yaml, %%w", err)
-	}
-
-	resourceObjects := make([]client.Object, len(%s.CreateFuncs))
-
-	for i, f := range %s.CreateFuncs {
-		resource, err := f(&workload, &collection)
-		if err != nil {
-			return nil, err
-		}
-
-		resourceObjects[i] = resource
-	}
-
-	return resourceObjects, nil
-}
-`
-
 	// this fragment is the imports which are created and updated upon each new
 	// api version that is created.
-	generateImportFragment = `%s "%s"
-	%s "%s/%s"
+	generateImportFragment = `%s%s "%s"
 `
-
-	// this fragment switches between each new api version that is created in order
-	// to generate that specific api versions child resources.
-	generateSwitchesFragment = `case "%s":
-	resourceObjects, err = %sGenerate%s(%s)
+	// generateMapFragment is a fragment which provides a new switch for each api version
+	// that is created for use by the api-version flag.
+	generateMapFragment = `"%s": %s%s.GenerateForCLI,
 `
 )
 
@@ -254,59 +191,17 @@ func (f *CmdGenerateSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	// Generate subCommands code fragments
 	imports := make([]string, 0)
 	switches := make([]string, 0)
-	funcs := make([]string, 0)
 
-	// set some common variables
-	versionPath := fmt.Sprintf("%s/apis/%s/%s", f.Repo, f.Resource.Group, f.Resource.Version)
-	groupVersion := f.Resource.Group + f.Resource.Version
-	packageVersion := f.PackageName + f.Resource.Version
-
-	// add the imports fragment
+	// add the imports
 	imports = append(imports, fmt.Sprintf(generateImportFragment,
-		groupVersion, versionPath,
-		packageVersion, versionPath, f.PackageName))
-
-	// determine the input string to the generated function
-	var funcInputs string
-
-	switch {
-	case f.UseCollectionManifestFlag && f.UseWorkloadManifestFlag:
-		funcInputs = "workloadFile, collectionFile"
-	case f.UseCollectionManifestFlag && !f.UseWorkloadManifestFlag:
-		funcInputs = "collectionFile"
-	default:
-		funcInputs = "workloadFile"
-	}
+		f.Resource.Version,
+		strings.ToLower(f.Resource.Kind),
+		fmt.Sprintf("%s/%s", f.Resource.Path, f.Builder.GetPackageName()),
+	))
 
 	// add the switches fragment
-	switches = append(switches, fmt.Sprintf(generateSwitchesFragment,
-		f.Resource.Version, f.Resource.Version, f.Resource.Kind, funcInputs))
-
-	// add the function fragment
-	if f.Builder.IsStandalone() || f.Builder.IsCollection() {
-		funcs = append(funcs, fmt.Sprintf(generateFuncStandaloneFragment,
-			// function comments
-			f.Resource.Version, f.Resource.Kind, f.Resource.Kind,
-
-			// function body
-			f.Resource.Version, f.Resource.Kind, groupVersion, f.Resource.Kind, packageVersion,
-
-			// function loop
-			packageVersion,
-		))
-	} else {
-		funcs = append(funcs, fmt.Sprintf(generateFuncWithCollectionFragment,
-			// function comments
-			f.Resource.Version, f.Resource.Kind, f.Resource.Kind,
-
-			// function body
-			f.Resource.Version, f.Resource.Kind, groupVersion, f.Resource.Kind,
-			f.Collection.Spec.API.Group+f.Collection.Spec.API.Version, f.Collection.Spec.API.Kind, packageVersion,
-
-			// function loop
-			packageVersion,
-		))
-	}
+	switches = append(switches, fmt.Sprintf(generateMapFragment,
+		f.Resource.Version, f.Resource.Version, strings.ToLower(f.Resource.Kind)))
 
 	// Only store code fragments in the map if the slices are non-empty
 	if len(imports) != 0 {
@@ -314,11 +209,7 @@ func (f *CmdGenerateSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	}
 
 	if len(switches) != 0 {
-		fragments[machinery.NewMarkerFor(f.GetPath(), generateSwitchMarker)] = switches
-	}
-
-	if len(funcs) != 0 {
-		fragments[machinery.NewMarkerFor(f.GetPath(), generateFuncMarker)] = funcs
+		fragments[machinery.NewMarkerFor(f.GetPath(), generateVersionMapMarker)] = switches
 	}
 
 	return fragments
@@ -340,11 +231,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
 
 	// common imports for subcommands
 	cmdgenerate "{{ .Repo }}/cmd/{{ .RootCmd.Name }}/commands/generate"
-	cmdutils "{{ .Repo }}/cmd/{{ .RootCmd.Name }}/commands/utils"
 
 	// specific imports for workloads
 	{{- if .Builder.IsComponent }}
@@ -359,10 +248,20 @@ func New{{ .Resource.Kind }}SubCommand(parentCommand *cobra.Command) {
 	generateCmd := &cmdgenerate.GenerateSubCommand{
 		Name:                  "{{ .GenerateCommandName }}",
 		Description:           "{{ .GenerateCommandDescr }}",
-		UseCollectionManifest: {{ .UseCollectionManifestFlag }},
-		UseWorkloadManifest:   {{ .UseWorkloadManifestFlag }},
 		SubCommandOf:          parentCommand,
 		GenerateFunc:          Generate{{ .Resource.Kind }},
+		{{- if .UseCollectionManifestFlag }}
+		UseCollectionManifest: true,
+		{{- if .Builder.IsCollection }}
+		CollectionKind:        "{{ .Resource.Kind }}",
+		{{- else }}
+		CollectionKind:        "{{ .Collection.Spec.API.Kind }}",
+		{{ end -}}
+		{{ end -}}
+		{{ if .UseWorkloadManifestFlag -}}
+		UseWorkloadManifest:   true,
+		WorkloadKind:          "{{ .Resource.Kind }}",
+		{{ end -}}
 	}
 
 	generateCmd.Setup()
@@ -371,7 +270,6 @@ func New{{ .Resource.Kind }}SubCommand(parentCommand *cobra.Command) {
 // Generate{{ .Resource.Kind }} runs the logic to generate child resources for a
 // {{ .Resource.Kind }} workload.
 func Generate{{ .Resource.Kind }}(g *cmdgenerate.GenerateSubCommand) error {
-	var resourceObjects []client.Object
 	var apiVersion string
 
 	{{ if .UseWorkloadManifestFlag }}
@@ -381,13 +279,13 @@ func Generate{{ .Resource.Kind }}(g *cmdgenerate.GenerateSubCommand) error {
 		return fmt.Errorf("failed to open workload file %%s, %%w", workloadFile, err)
 	}
 
-	var workload interface{}
+	var workload map[string]interface{}
 
 	if err := yaml.Unmarshal(workloadFile, &workload); err != nil {
 		return fmt.Errorf("failed to unmarshal yaml into workload, %%w", err)
 	}
 
-	workloadGroupVersion := strings.Split(workload.(map[string]interface{})["apiVersion"].(string), "/")
+	workloadGroupVersion := strings.Split(workload["apiVersion"].(string), "/")
 	workloadAPIVersion := workloadGroupVersion[len(workloadGroupVersion)-1]
 
 	apiVersion = workloadAPIVersion
@@ -400,24 +298,30 @@ func Generate{{ .Resource.Kind }}(g *cmdgenerate.GenerateSubCommand) error {
 		return fmt.Errorf("failed to open collection file %%s, %%w", collectionFile, err)
 	}
 
-	var collection interface{}
+	var collection map[string]interface{}
 
 	if err := yaml.Unmarshal(collectionFile, &collection); err != nil {
 		return fmt.Errorf("failed to unmarshal yaml into collection, %%w", err)
 	}
 
-	collectionGroupVersion := strings.Split(collection.(map[string]interface{})["apiVersion"].(string), "/")
+	collectionGroupVersion := strings.Split(collection["apiVersion"].(string), "/")
 	collectionAPIVersion := collectionGroupVersion[len(collectionGroupVersion)-1]
 
 	apiVersion = collectionAPIVersion
 	{{ end }}
 
-	switch apiVersion {
-	default:
-		return fmt.Errorf("unsupported API Version: " + apiVersion)
-	%s
+	// generate a map of all versions to generate functions for each api version created
+	{{- if .Builder.IsComponent }}
+	type generateFunc func([]byte, []byte) ([]client.Object, error)
+	{{ else }}
+	type generateFunc func([]byte) ([]client.Object, error)
+	{{ end -}}
+	generateFuncMap := map[string]generateFunc{
+		%s
 	}
 
+	generate := generateFuncMap[apiVersion]
+	resourceObjects, err := generate({{ .GenerateFuncInputs }})
 	if err != nil {
 		return fmt.Errorf("unable to retrieve resources; %%w", err)
 	}
@@ -438,7 +342,5 @@ func Generate{{ .Resource.Kind }}(g *cmdgenerate.GenerateSubCommand) error {
 
 	return nil
 }
-
-%s
 `
 )

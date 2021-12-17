@@ -70,8 +70,8 @@ func (f *CmdInitSub) SetTemplateDefaults() error {
 
 	f.TemplateBody = fmt.Sprintf(
 		cmdInitSub,
-		machinery.NewMarkerFor(f.Path, initSamplesMarker),
-		machinery.NewMarkerFor(f.Path, initSwitchesMarker),
+		machinery.NewMarkerFor(f.Path, initImportsMarker),
+		machinery.NewMarkerFor(f.Path, initVersionMapMarker),
 	)
 
 	return nil
@@ -90,6 +90,7 @@ type CmdInitSubLatest struct {
 
 	// template fields
 	cmdInitSubCommon
+	PackageName string
 }
 
 func (f *CmdInitSubLatest) SetTemplateDefaults() error {
@@ -100,6 +101,7 @@ func (f *CmdInitSubLatest) SetTemplateDefaults() error {
 	// set template fields
 	f.RootCmd = *f.Builder.GetRootCommand()
 	f.SubCmd = *f.Builder.GetSubCommand()
+	f.PackageName = f.Builder.GetPackageName()
 
 	// set interface fields
 	f.Path = f.SubCmd.GetSubCmdRelativeFileName(
@@ -151,32 +153,27 @@ func (*CmdInitSubUpdater) GetIfExistsAction() machinery.IfExistsAction {
 	return machinery.OverwriteFile
 }
 
-const initSamplesMarker = "operator-builder:samples"
-const initSwitchesMarker = "operator-builder:switches"
+const initImportsMarker = "operator-builder:imports"
+const initVersionMapMarker = "operator-builder:versionmap"
 
 // GetMarkers implements file.Inserter interface.
 func (f *CmdInitSubUpdater) GetMarkers() []machinery.Marker {
 	return []machinery.Marker{
-		machinery.NewMarkerFor(f.GetPath(), initSamplesMarker),
-		machinery.NewMarkerFor(f.GetPath(), initSwitchesMarker),
+		machinery.NewMarkerFor(f.GetPath(), initImportsMarker),
+		machinery.NewMarkerFor(f.GetPath(), initVersionMapMarker),
 	}
 }
 
 // Code Fragments.
 const (
-	// initSamplesFragment is a fragment which provides the code fragment to display
-	// the sample custom resource manifest for an individual component.
-	initSamplesFragment = `const %s = ` + "`" + `apiVersion: %s/%s
-kind: %s
-metadata:
-  name: %s-sample
-%s` + "`" + `
+	// initImportsFragment is a fragment which provides the package to import
+	// for the workload.
+	initImportsFragment = `%s%s "%s"
 `
 
 	// initSwitchFragment is a fragment which provides a new switch for each api version
 	// that is created for use by the api-version flag.
-	initSwitchesFragment = `case "%s":
-	return %s, nil
+	initVersionMapFragment = `"%s": %s,
 `
 )
 
@@ -198,33 +195,32 @@ func (f *CmdInitSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	}
 
 	// Generate subCommands code fragments
-	samples := make([]string, 0)
+	imports := make([]string, 0)
 	switches := make([]string, 0)
 
-	// add the samples
-	manifestVarName := fmt.Sprintf("%s%s", f.Resource.Version, f.Resource.Kind)
-	samples = append(samples, fmt.Sprintf(initSamplesFragment,
-		manifestVarName,
-		f.Resource.QualifiedGroup(),
+	// add the imports
+	imports = append(imports, fmt.Sprintf(initImportsFragment,
 		f.Resource.Version,
-		f.Resource.Kind,
 		strings.ToLower(f.Resource.Kind),
-		f.Builder.GetAPISpecFields().GenerateSampleSpec()),
-	)
+		fmt.Sprintf("%s/%s", f.Resource.Path, f.Builder.GetPackageName()),
+	))
 
 	// add the switches
-	switches = append(switches, fmt.Sprintf(initSwitchesFragment,
+	switches = append(switches, fmt.Sprintf(initVersionMapFragment,
 		f.Resource.Version,
-		manifestVarName),
+		fmt.Sprintf("%s%s.Sample()",
+			f.Resource.Version,
+			strings.ToLower(f.Resource.Kind),
+		)),
 	)
 
 	// Only store code fragments in the map if the slices are non-empty
-	if len(samples) != 0 {
-		fragments[machinery.NewMarkerFor(f.GetPath(), initSamplesMarker)] = samples
+	if len(imports) != 0 {
+		fragments[machinery.NewMarkerFor(f.GetPath(), initImportsMarker)] = imports
 	}
 
 	if len(switches) != 0 {
-		fragments[machinery.NewMarkerFor(f.GetPath(), initSwitchesMarker)] = switches
+		fragments[machinery.NewMarkerFor(f.GetPath(), initVersionMapMarker)] = switches
 	}
 
 	return fragments
@@ -243,21 +239,30 @@ import (
 	"github.com/spf13/cobra"
 
 	cmdinit "{{ .Repo }}/cmd/{{ .RootCmd.Name }}/commands/init"
+	%s
 )
-
-%s
 
 // get{{ .Resource.Kind }}Manifest returns the sample {{ .Resource.Kind }} manifest
 // based upon API Version input.
 func get{{ .Resource.Kind }}Manifest(i *cmdinit.InitSubCommand) (string, error) {
-	switch i.APIVersion {
-	// return the latest version if unspecified or latest requested
-	case "", "latest":
+	apiVersion := i.APIVersion
+	if apiVersion == "" || apiVersion == "latest" {
 		return latest{{ .Resource.Kind }}, nil
-	%s
-	default:
-		return "", fmt.Errorf("unsupported API Version: "+i.APIVersion)
 	}
+
+	// generate a map of all versions to samples for each api version created
+	manifestMap := map[string]string{
+		%s
+	}
+
+	// return the manifest if it is not blank
+	manifest := manifestMap[apiVersion]
+	if manifest != "" {
+		return manifest, nil
+	}
+
+	// return an error if we did not find a manifest for an api version
+	return "", fmt.Errorf("unsupported API Version: " + apiVersion)
 }
 
 // New{{ .Resource.Kind }}SubCommand creates a new command and adds it to its 
@@ -296,6 +301,8 @@ func Init{{ .Resource.Kind }}(i *cmdinit.InitSubCommand) error {
 
 	package {{ .Resource.Group }}
 
-	const latest{{ .Resource.Kind }} = {{ .Resource.Version }}{{ .Resource.Kind }}
+	import {{ .Resource.Version }}{{ lower .Resource.Kind }} "{{ .Resource.Path }}/{{ .PackageName }}"
+
+	var latest{{ .Resource.Kind }} = {{ .Resource.Version }}{{ lower .Resource.Kind }}.Sample()
 `
 )

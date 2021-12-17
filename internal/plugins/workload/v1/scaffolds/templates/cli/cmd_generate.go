@@ -69,7 +69,9 @@ type GenerateSubCommand struct {
 	// options
 	Name                  string
 	Description           string
+	CollectionKind        string
 	UseCollectionManifest bool
+	WorkloadKind          string
 	UseWorkloadManifest   bool
 	SubCommandOf          *cobra.Command
 
@@ -115,7 +117,7 @@ func (g *GenerateSubCommand) Setup() {
 			"workload-manifest",
 			"w",
 			"",
-			"Filepath to the workload manifest to generate child resources for.",
+			fmt.Sprintf("filepath to the %s workload manifest used to generate child resources", g.WorkloadKind),
 		)
 
 		if err := g.MarkFlagRequired("workload-manifest"); err != nil {
@@ -130,7 +132,7 @@ func (g *GenerateSubCommand) Setup() {
 			"collection-manifest",
 			"c",
 			"",
-			"Filepath to the workload collection manifest.",
+			fmt.Sprintf("filepath to the %s collection manifest used to generate child resources", g.CollectionKind),
 		)
 
 		if err := g.MarkFlagRequired("collection-manifest"); err != nil {

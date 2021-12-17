@@ -92,10 +92,14 @@ func (s *apiScaffolder) Scaffold() error {
 				IsStandalone:  s.workload.IsStandalone(),
 			},
 			&resources.Resources{
+				RootCmdName:     s.cliRootCommandName,
 				PackageName:     s.workload.GetPackageName(),
 				CreateFuncNames: createFuncNames,
 				InitFuncNames:   initFuncNames,
 				IsComponent:     s.workload.IsComponent(),
+				IsStandalone:    s.workload.IsStandalone(),
+				IsCollection:    s.workload.IsCollection(),
+				SpecFields:      s.workload.GetAPISpecFields(),
 			},
 			&controller.Controller{
 				PackageName:       s.workload.GetPackageName(),
@@ -135,10 +139,15 @@ func (s *apiScaffolder) Scaffold() error {
 				IsStandalone:  s.workload.IsStandalone(),
 			},
 			&resources.Resources{
+				RootCmdName:     s.cliRootCommandName,
 				PackageName:     s.workload.GetPackageName(),
 				CreateFuncNames: createFuncNames,
 				InitFuncNames:   initFuncNames,
 				IsComponent:     s.workload.IsComponent(),
+				IsStandalone:    s.workload.IsStandalone(),
+				IsCollection:    s.workload.IsCollection(),
+				Collection:      s.workload.(*workloadv1.WorkloadCollection),
+				SpecFields:      s.workload.GetAPISpecFields(),
 			},
 			&controller.Controller{
 				PackageName:       s.workload.GetPackageName(),
@@ -192,11 +201,15 @@ func (s *apiScaffolder) Scaffold() error {
 				},
 				&api.Group{},
 				&resources.Resources{
+					RootCmdName:     s.cliRootCommandName,
 					PackageName:     component.GetPackageName(),
 					CreateFuncNames: createFuncNames,
 					InitFuncNames:   initFuncNames,
 					IsComponent:     component.IsComponent(),
+					IsStandalone:    component.IsStandalone(),
+					IsCollection:    component.IsCollection(),
 					Collection:      s.workload.(*workloadv1.WorkloadCollection),
+					SpecFields:      s.workload.GetAPISpecFields(),
 				},
 				&controller.Controller{
 					PackageName:       component.GetPackageName(),
@@ -297,11 +310,6 @@ func (s *apiScaffolder) scaffoldCLI(scaffold *machinery.Scaffold) error {
 		for i, component := range s.workload.GetComponents() {
 			workloadCommands[i+1] = component
 		}
-	}
-
-	// scaffold the utility code
-	if err := scaffold.Execute(&cli.CmdUtils{Builder: s.workload}); err != nil {
-		return fmt.Errorf("unable to scaffold companion cli utility code; %w", err)
 	}
 
 	for _, workloadCommand := range workloadCommands {

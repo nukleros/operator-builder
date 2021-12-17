@@ -20,7 +20,7 @@ import (
 
 const (
 	CobraVersion               = "v1.1.3"
-	OperatorBulderToolsVersion = "v0.1.0"
+	OperatorBulderToolsVersion = "v0.2.0"
 )
 
 var _ plugins.Scaffolder = &initScaffolder{}
