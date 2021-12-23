@@ -23,9 +23,10 @@ func TestAPIFields_GenerateSampleSpec(t *testing.T) {
 	}
 
 	tests := []struct {
-		name   string
-		fields fields
-		want   string
+		name         string
+		fields       fields
+		requiredOnly bool
+		want         string
 	}{
 		{
 			name: "test generation",
@@ -64,6 +65,23 @@ func TestAPIFields_GenerateSampleSpec(t *testing.T) {
 			},
 			want: "spec:\n  test:\n    levelTwo:\n      hello: world\n  levelOne: hello\n",
 		},
+		{
+			name: "test required only generation",
+			fields: fields{
+				Sample: "spec:",
+				Children: []*APIFields{
+					{
+						Sample: "test: content",
+					},
+					{
+						Sample:  "test2: content2",
+						Default: "defaultValue",
+					},
+				},
+			},
+			requiredOnly: true,
+			want:         "spec:\n  test: content\n",
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -80,7 +98,7 @@ func TestAPIFields_GenerateSampleSpec(t *testing.T) {
 				Default:      tt.fields.Default,
 				Sample:       tt.fields.Sample,
 			}
-			if got := api.GenerateSampleSpec(); got != tt.want {
+			if got := api.GenerateSampleSpec(tt.requiredOnly); got != tt.want {
 				t.Errorf("CRDFields.GenerateSampleSpec() = %v, want %v", got, tt.want)
 			}
 		})

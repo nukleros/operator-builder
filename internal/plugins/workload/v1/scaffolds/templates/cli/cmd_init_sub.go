@@ -208,7 +208,7 @@ func (f *CmdInitSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	// add the switches
 	switches = append(switches, fmt.Sprintf(initVersionMapFragment,
 		f.Resource.Version,
-		fmt.Sprintf("%s%s.Sample()",
+		fmt.Sprintf("%s%s.Sample(i.RequiredOnly)",
 			f.Resource.Version,
 			strings.ToLower(f.Resource.Kind),
 		)),
@@ -247,7 +247,7 @@ import (
 func get{{ .Resource.Kind }}Manifest(i *cmdinit.InitSubCommand) (string, error) {
 	apiVersion := i.APIVersion
 	if apiVersion == "" || apiVersion == "latest" {
-		return latest{{ .Resource.Kind }}, nil
+		return latest{{ .Resource.Kind }}(i.RequiredOnly), nil
 	}
 
 	// generate a map of all versions to samples for each api version created
@@ -303,6 +303,8 @@ func Init{{ .Resource.Kind }}(i *cmdinit.InitSubCommand) error {
 
 	import {{ .Resource.Version }}{{ lower .Resource.Kind }} "{{ .Resource.Path }}/{{ .PackageName }}"
 
-	var latest{{ .Resource.Kind }} = {{ .Resource.Version }}{{ lower .Resource.Kind }}.Sample()
+	func latest{{ .Resource.Kind }}(requiredOnly bool) string {
+		return {{ .Resource.Version }}{{ lower .Resource.Kind }}.Sample(requiredOnly)
+	}
 `
 )

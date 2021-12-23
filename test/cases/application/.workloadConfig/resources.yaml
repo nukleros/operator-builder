@@ -46,5 +46,7 @@ spec:
     app: webstore
   ports:
   - protocol: TCP
+    # +operator-builder:field:name=webstore.really.long.path.required.port,type=int
     port: 80
+    # +operator-builder:field:name=service.targetPort,type=int
     targetPort: 8080

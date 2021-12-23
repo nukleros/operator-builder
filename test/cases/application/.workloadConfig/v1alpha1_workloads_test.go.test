@@ -80,7 +80,7 @@ func (testSuite *E2EComponentTestSuite) Test_appsv1alpha1WebStore() {
 	childToUpdate := getUpdatableChild(
 		tester,
 		"webstore-deploy",
-		"",
+		"test-apps-v1alpha1-webstore",
 		"Deployment",
 	)
 	childToUpdate.SetNamespace(tester.namespace)

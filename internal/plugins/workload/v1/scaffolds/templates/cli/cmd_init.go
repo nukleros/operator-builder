@@ -61,7 +61,8 @@ type InitSubCommand struct {
 	*cobra.Command
 
 	// flags
-	APIVersion string
+	APIVersion   string
+	RequiredOnly bool
 
 	// options
 	Name         string
@@ -107,6 +108,15 @@ func (i *InitSubCommand) Setup() {
 		"",
 		"",
 		"api version of the workload to generate a workload manifest for",
+	)
+
+	// always add the required-only flag
+	i.Flags().BoolVarP(
+		&i.RequiredOnly,
+		"required-only",
+		"r",
+		false,
+		"only print required fields in the manifest output",
 	)
 
 	// add this as a subcommand of another command if set

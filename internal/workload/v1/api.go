@@ -84,22 +84,48 @@ func (api *APIFields) AddField(path string, fieldType FieldType, comments []stri
 	return nil
 }
 
-func (api *APIFields) GenerateSampleSpec() string {
+func (api *APIFields) GenerateSampleSpec(requiredOnly bool) string {
 	var buf bytes.Buffer
 
 	indent := 0
 
-	api.generateSampleSpec(&buf, indent)
+	api.generateSampleSpec(&buf, indent, requiredOnly)
 
 	return buf.String()
 }
 
-func (api *APIFields) generateSampleSpec(b io.StringWriter, indent int) {
+func (api *APIFields) generateSampleSpec(b io.StringWriter, indent int, requiredOnly bool) {
 	mustWrite(b.WriteString(fmt.Sprintf("%s%s\n", strings.Repeat("  ", indent), api.Sample)))
 
 	for _, child := range api.Children {
-		child.generateSampleSpec(b, indent+1)
+		if child.needsGenerate(requiredOnly) {
+			child.generateSampleSpec(b, indent+1, requiredOnly)
+		}
 	}
+}
+
+func (api *APIFields) needsGenerate(requiredOnly bool) bool {
+	// if required fields only are not requested, return true immediately
+	if !requiredOnly {
+		return true
+	}
+
+	// traverse the api tree for any default value
+	return api.hasRequiredField()
+}
+
+func (api *APIFields) hasRequiredField() bool {
+	if len(api.Children) == 0 && api.Default == "" {
+		return true
+	}
+
+	for _, child := range api.Children {
+		if child.hasRequiredField() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (api *APIFields) GenerateAPISpec(kind string) string {

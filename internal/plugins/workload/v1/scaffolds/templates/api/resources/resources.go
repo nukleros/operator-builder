@@ -4,10 +4,12 @@
 package resources
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
+	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/config/samples"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
@@ -20,27 +22,35 @@ type Resources struct {
 	machinery.RepositoryMixin
 	machinery.ResourceMixin
 
-	RootCmdName     string
-	PackageName     string
+	// input fields
+	Builder workloadv1.WorkloadAPIBuilder
+
+	// template fields
+	SpecFields      *workloadv1.APIFields
+	IsClusterScoped bool
 	CreateFuncNames []string
 	InitFuncNames   []string
-	IsComponent     bool
-	IsStandalone    bool
-	IsCollection    bool
-	Collection      *workloadv1.WorkloadCollection
-	SpecFields      *workloadv1.APIFields
 }
 
 func (f *Resources) SetTemplateDefaults() error {
+	// set template fields
+	f.CreateFuncNames, f.InitFuncNames = f.Builder.GetFuncNames()
+	f.SpecFields = f.Builder.GetAPISpecFields()
+	f.IsClusterScoped = f.Builder.IsClusterScoped()
+
+	// set interface fields
 	f.Path = filepath.Join(
 		"apis",
 		f.Resource.Group,
 		f.Resource.Version,
-		f.PackageName,
+		f.Builder.GetPackageName(),
 		"resources.go",
 	)
 
-	f.TemplateBody = resourcesTemplate
+	f.TemplateBody = fmt.Sprintf(resourcesTemplate,
+		samples.SampleTemplate,
+		samples.SampleTemplateRequiredOnly,
+	)
 	f.IfExistsAction = machinery.OverwriteFile
 
 	return nil
@@ -49,51 +59,55 @@ func (f *Resources) SetTemplateDefaults() error {
 //nolint:lll
 const resourcesTemplate = `{{ .Boilerplate }}
 
-package {{ .PackageName }}
+package {{ .Builder.GetPackageName }}
 
 import (
-	{{ if ne .RootCmdName "" }}"fmt"{{ end }}
+	{{ if ne .Builder.GetRootCommand.Name "" }}"fmt"{{ end }}
 
-	{{ if ne .RootCmdName "" }}"sigs.k8s.io/yaml"{{ end }}
+	{{ if ne .Builder.GetRootCommand.Name "" }}"sigs.k8s.io/yaml"{{ end }}
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
 	
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
-	{{- if .IsComponent }}
-	{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Collection.Spec.API.Group }}/{{ .Collection.Spec.API.Version }}"
+	{{- if .Builder.IsComponent }}
+	{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Builder.GetCollection.Spec.API.Group }}/{{ .Builder.GetCollection.Spec.API.Version }}"
 	{{ end -}}
 )
 
-const sample{{ .Resource.Kind }} = ` + "`" + `apiVersion: {{ .Resource.QualifiedGroup }}/{{ .Resource.Version }}
-kind: {{ .Resource.Kind }}
-metadata:
-  name: {{ lower .Resource.Kind }}-sample
-{{ .SpecFields.GenerateSampleSpec -}}` + "`" + `
+// sample{{ .Resource.Kind }} is a sample containing all fields
+const sample{{ .Resource.Kind }} = ` + "`" + `%s` + "`" + `
+
+// sample{{ .Resource.Kind }}Required is a sample containing only required fields
+const sample{{ .Resource.Kind }}Required = ` + "`" + `%s` + "`" + `
 
 // Sample returns the sample manifest for this custom resource.
-func Sample() string {
+func Sample(requiredOnly bool) string {
+	if requiredOnly {
+		return sample{{ .Resource.Kind }}Required
+	}
+
 	return sample{{ .Resource.Kind }}
 }
 
 // Generate returns the child resources that are associated with this workload given 
 // appropriate structured inputs.
-{{ if .IsComponent -}}
+{{ if .Builder.IsComponent -}}
 func Generate(
 	workloadObj {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}, 
-	collectionObj {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }},
+	collectionObj {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 ) ([]client.Object, error) {
-{{ else if .IsCollection -}}
-func Generate(collectionObj {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}) ([]client.Object, error) {
+{{ else if .Builder.IsCollection -}}
+func Generate(collectionObj {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}) ([]client.Object, error) {
 {{ else -}}
 func Generate(workloadObj {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}) ([]client.Object, error) {
 {{ end -}}
 	resourceObjects := make([]client.Object, len(CreateFuncs))
 
 	for i, f := range CreateFuncs {
-		{{ if .IsComponent -}}
+		{{ if .Builder.IsComponent -}}
 		resource, err := f(&workloadObj, &collectionObj)
-		{{ else if .IsCollection -}}
+		{{ else if .Builder.IsCollection -}}
 		resource, err := f(&collectionObj)
 		{{ else -}}
 		resource, err := f(&workloadObj)
@@ -108,38 +122,38 @@ func Generate(workloadObj {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}) ([]c
 	return resourceObjects, nil
 }
 
-{{ if ne .RootCmdName "" }}
+{{ if ne .Builder.GetRootCommand.Name "" }}
 // GenerateForCLI returns the child resources that are associated with this workload given
 // appropriate YAML manifest files.
 func GenerateForCLI(
-	{{- if or (.IsStandalone) (.IsComponent) }}workloadFile []byte,{{ end -}}
-	{{- if or (.IsComponent) (.IsCollection) }}collectionFile []byte,{{ end -}}
+	{{- if or (.Builder.IsStandalone) (.Builder.IsComponent) }}workloadFile []byte,{{ end -}}
+	{{- if or (.Builder.IsComponent) (.Builder.IsCollection) }}collectionFile []byte,{{ end -}}
 ) ([]client.Object, error) {
-	{{- if or (.IsStandalone) (.IsComponent) }}
+	{{- if or (.Builder.IsStandalone) (.Builder.IsComponent) }}
 	var workloadObj {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}
 	if err := yaml.Unmarshal(workloadFile, &workloadObj); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal yaml into workload, %w", err)
+		return nil, fmt.Errorf("failed to unmarshal yaml into workload, %%w", err)
 	}
 
 	if err := workload.Validate(&workloadObj); err != nil {
-		return nil, fmt.Errorf("error validating workload yaml, %w", err)
+		return nil, fmt.Errorf("error validating workload yaml, %%w", err)
 	}
 	{{ end }}
 
-	{{- if or (.IsComponent) (.IsCollection) }}
-	var collectionObj {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}
+	{{- if or (.Builder.IsComponent) (.Builder.IsCollection) }}
+	var collectionObj {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}
 	if err := yaml.Unmarshal(collectionFile, &collectionObj); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal yaml into collection, %w", err)
+		return nil, fmt.Errorf("failed to unmarshal yaml into collection, %%w", err)
 	}
 
 	if err := workload.Validate(&collectionObj); err != nil {
-		return nil, fmt.Errorf("error validating collection yaml, %w", err)
+		return nil, fmt.Errorf("error validating collection yaml, %%w", err)
 	}
 	{{ end }}
 
-	{{ if .IsComponent }}
+	{{ if .Builder.IsComponent }}
 	return Generate(workloadObj, collectionObj)
-	{{ else if .IsCollection }}
+	{{ else if .Builder.IsCollection }}
 	return Generate(collectionObj)
 	{{ else }}
 	return Generate(workloadObj)
@@ -152,8 +166,8 @@ func GenerateForCLI(
 // database.
 var CreateFuncs = []func(
 	*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
-	{{ if $.IsComponent -}}
-	*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }},
+	{{ if $.Builder.IsComponent -}}
+	*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
 ) (client.Object, error) {
 	{{ range .CreateFuncNames }}
@@ -171,8 +185,8 @@ var CreateFuncs = []func(
 // setup, it will fail.
 var InitFuncs = []func(
 	*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
-	{{ if $.IsComponent -}}
-	*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }},
+	{{ if $.Builder.IsComponent -}}
+	*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
 ) (client.Object, error) {
 	{{ range .InitFuncNames }}
@@ -180,24 +194,24 @@ var InitFuncs = []func(
 	{{ end }}
 }
 
-{{ if $.IsComponent -}}
+{{ if $.Builder.IsComponent -}}
 func ConvertWorkload(component, collection workload.Workload) (
 	*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
-	*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }},
+	*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 	error,
 ) {
 {{- else }}
 func ConvertWorkload(component workload.Workload) (*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}, error) {
 {{- end }}
-	p, ok := component.(	*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }})
+	p, ok := component.(*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }})
 	if !ok {
-		{{- if $.IsComponent }}
+		{{- if $.Builder.IsComponent }}
 		return nil, nil, {{ .Resource.ImportAlias }}.ErrUnableToConvert{{ .Resource.Kind }}
 	}
 
-	c, ok := collection.(*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }})
+	c, ok := collection.(*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }})
 	if !ok {
-		return nil, nil, {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.ErrUnableToConvert{{ .Collection.Spec.API.Kind }}
+		return nil, nil, {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.ErrUnableToConvert{{ .Builder.GetCollection.Spec.API.Kind }}
 	}
 
 	return p, c, nil
