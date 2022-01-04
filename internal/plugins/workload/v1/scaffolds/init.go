@@ -15,6 +15,7 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
@@ -90,6 +91,7 @@ func (s *initScaffolder) Scaffold() error {
 		&templates.Dockerfile{},
 		&templates.Makefile{RootCmdName: s.cliRootCommandName},
 		&templates.Readme{RootCmdName: s.cliRootCommandName},
+		&e2e.Test{},
 	); err != nil {
 		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
 	}

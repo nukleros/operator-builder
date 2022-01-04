@@ -35,8 +35,10 @@ const e2eTestTemplate = `//go:build e2e_test
 package e2e_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -47,6 +49,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
 
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8syaml "sigs.k8s.io/yaml"
@@ -54,6 +57,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 
@@ -63,6 +67,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/nukleros/operator-builder-tools/pkg/resources"
+	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
 	kbresource "sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 )
 
@@ -99,10 +104,11 @@ type E2ETest struct {
 	namespace          string
 	sampleManifestFile string
 	unstructured       *unstructured.Unstructured
-	workload           client.Object
+	workload           workload.Workload
 	collectionTester   *E2ETest
 	children           []client.Object
 	getChildrenFunc    getChildren
+	logSyntax          string
 }
 
 type getChildren func(*E2ETest) error
@@ -152,6 +158,9 @@ func TestMain(t *testing.T) {
 	// teardown the test suites
 	componentSuite.teardown()
 	collectionSuite.teardown()
+
+	// check all controller logs for errors
+	require.NoErrorf(t, testControllerLogsNoErrors(e2eTestSuite, ""), "found errors in controller logs")
 
 	// perform final teardown
 	require.NoErrorf(t, finalTeardown(), "error tearing down test suite")
@@ -494,6 +503,12 @@ func getClientForResource(tester *E2ETest, resource client.Object) dynamic.Resou
 		Namespace(resource.GetNamespace())
 }
 
+func getControllerDeployment(s *E2ETestSuiteConfig) (*appsv1.Deployment, error) {
+	return s.client.
+		AppsV1().Deployments(s.controllerConfig.Namespace).
+		Get(context.TODO(), (s.controllerConfig.Prefix + controllerName), metav1.GetOptions{})
+}
+
 func createCustomResource(tester *E2ETest) error {
 	_, err := getClientForResource(tester, tester.unstructured).
 		Create(context.TODO(), tester.unstructured, metav1.CreateOptions{})
@@ -529,6 +544,45 @@ func getResource(tester *E2ETest, resource client.Object) (client.Object, error)
 	}
 
 	return clusterObject, nil
+}
+
+func getControllerLogs(s *E2ETestSuiteConfig) (string, error) {
+	deployment, err := getControllerDeployment(s)
+	if err != nil {
+		return "", fmt.Errorf("unable to retrieve controller deployment; %w", err)
+	}
+
+	podListOpts := metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(deployment.Spec.Template.Labels).String(),
+	}
+
+	controllerPods, err := s.client.CoreV1().Pods(s.controllerConfig.Namespace).List(context.TODO(), podListOpts)
+	if err != nil {
+		return "", fmt.Errorf("unable to retrieve controller pods; %w", err)
+	}
+
+	buf := new(bytes.Buffer)
+
+	for _, pod := range controllerPods.Items {
+		for _, container := range pod.Spec.Containers {
+			podLogOpts := v1.PodLogOptions{Container: container.Name}
+			req := s.client.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
+
+			podLogs, err := req.Stream(context.TODO())
+			if err != nil {
+				return "", fmt.Errorf("error opening log stream for pod %s/%s; %w", pod.Namespace, pod.Name, err)
+			}
+
+			defer podLogs.Close()
+
+			_, err = io.Copy(buf, podLogs)
+			if err != nil {
+				return "", fmt.Errorf("error storing logs to string buffer; %w", err)
+			}
+		}
+	}
+
+	return buf.String(), nil
 }
 
 func updateResource(tester *E2ETest, resource client.Object) error {
@@ -791,6 +845,27 @@ func testUpdateChildResource(tester *E2ETest, childToUpdate, desiredStateChild c
 				err,
 			)
 		}
+	}
+
+	return nil
+}
+
+func testControllerLogsNoErrors(s *E2ETestSuiteConfig, searchSyntax string) error {
+	logs, err := getControllerLogs(s)
+	if err != nil {
+		return fmt.Errorf("failed fetching controller logs; %w", err)
+	}
+
+	errors := []string{}
+
+	for _, logLine := range strings.Split(logs, "\n") {
+		if strings.Contains(logLine, "ERROR") && strings.Contains(logLine, searchSyntax) {
+			errors = append(errors, logLine)
+		}
+	}
+
+	if len(errors) > 0 {
+		return fmt.Errorf("found errors in controller: +%v", errors)
 	}
 
 	return nil

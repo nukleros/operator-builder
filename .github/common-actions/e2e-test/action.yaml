@@ -35,7 +35,7 @@ runs:
 
     - name: Setup KIND Cluster
       shell: bash
-      run: kind create cluster --name operator-builder-test
+      run: kind create cluster --name operator-builder-test --config test/cases/default/kind-config.yaml
 
     - name: Install Custom Resources
       shell: bash
@@ -79,8 +79,8 @@ runs:
         # TODO: this is temporary to ensure we test the reconciliation loop
         # for our test workloads.  the end goal would be to genericize this
         # to ensure we can test any workload.
-        if [[ -f .workloadConfig/v1alpha1_workloads_test.go.test ]]; then
-          cp .workloadConfig/v1alpha1_workloads_test.go.test test/e2e/v1alpha1_workloads_test.go
+        if [[ -f .workloadConfig/apps_v1alpha1_webstore_test.go.test ]]; then
+          cp .workloadConfig/apps_v1alpha1_webstore_test.go.test test/e2e/apps_v1alpha1_webstore_test.go
         fi
 
         # run the e2e tests

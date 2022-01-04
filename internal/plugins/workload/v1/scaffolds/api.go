@@ -6,6 +6,7 @@ package scaffolds
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/spf13/afero"
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
@@ -339,29 +340,12 @@ func (s *apiScaffolder) scaffoldE2ETests(
 	scaffold *machinery.Scaffold,
 	workload workloadv1.WorkloadAPIBuilder,
 ) error {
-	e2eWorkloadBuilder := &e2e.WorkloadTestUpdater{
-		HasChildResources: workload.HasChildResources(),
-		IsStandalone:      workload.IsStandalone(),
-		IsComponent:       workload.IsComponent(),
-		IsCollection:      workload.IsCollection(),
-		PackageName:       workload.GetPackageName(),
-		IsClusterScoped:   workload.IsClusterScoped(),
+	if err := scaffold.Execute(&e2e.WorkloadTest{Builder: workload}); err != nil {
+		return fmt.Errorf("error updating test/e2e/%s_%s_%s_test.go; %w",
+			workload.GetAPIGroup(), workload.GetAPIVersion(), strings.ToLower(workload.GetAPIKind()),
+			err,
+		)
 	}
 
-	if !s.workload.IsStandalone() {
-		collection, ok := s.workload.(*workloadv1.WorkloadCollection)
-		if !ok {
-			//nolint: goerr113
-			return fmt.Errorf("unable to convert workload to collection")
-		}
-
-		e2eWorkloadBuilder.Collection = collection
-	}
-
-	//nolint: wrapcheck
-	return scaffold.Execute(
-		&e2e.Test{},
-		&e2e.WorkloadTest{},
-		e2eWorkloadBuilder,
-	)
+	return nil
 }

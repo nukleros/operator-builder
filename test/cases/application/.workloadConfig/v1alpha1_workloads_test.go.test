@@ -11,14 +11,12 @@ import (
 
 	"github.com/nukleros/operator-builder-tools/pkg/resources"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	appsv1alpha1 "github.com/acme/acme-cnp-mgr/apis/apps/v1alpha1"
 	"github.com/acme/acme-cnp-mgr/apis/apps/v1alpha1/webstore"
-	//+kubebuilder:scaffold:operator-builder:imports
 )
 
 //
@@ -26,42 +24,37 @@ import (
 //
 func appsv1alpha1WebStoreChildrenFuncs(tester *E2ETest) error {
 	// TODO: need to run r.GetResources(request) on the reconciler to get the mutated resources
-	tester.children = make([]client.Object, len(webstore.CreateFuncs))
-
-	if len(tester.children) == 0 {
+	if len(webstore.CreateFuncs) == 0 {
 		return nil
 	}
 
-	workload, ok := tester.workload.(*appsv1alpha1.WebStore)
-	if !ok {
-		return fmt.Errorf("could not convert metav1.Object to appsv1alpha1.WebStore")
+	workload, err := webstore.ConvertWorkload(tester.workload)
+	if err != nil {
+		return fmt.Errorf("error in workload conversion; %w", err)
 	}
 
-	for i, f := range webstore.CreateFuncs {
-		resource, err := f(workload)
-		if err != nil {
-			return fmt.Errorf("unable to create object in memory; %s", err)
-		}
-
-		tester.children[i] = resource.(client.Object)
+	resourceObjects, err := webstore.Generate(*workload)
+	if err != nil {
+		return fmt.Errorf("unable to create objects in memory; %w", err)
 	}
+
+	tester.children = resourceObjects
 
 	return nil
 }
 
-func appsv1alpha1WebStoreTest() *E2ETest {
+func appsv1alpha1WebStoreNewHarness(namespace string) *E2ETest {
 	return &E2ETest{
-		namespace:          "test-apps-v1alpha1-webstore",
+		namespace:          namespace,
 		unstructured:       &unstructured.Unstructured{},
 		workload:           &appsv1alpha1.WebStore{},
 		sampleManifestFile: "../../config/samples/apps_v1alpha1_webstore.yaml",
 		getChildrenFunc:    appsv1alpha1WebStoreChildrenFuncs,
+		logSyntax:          "controllers.apps.WebStore",
 	}
 }
 
-func (testSuite *E2EComponentTestSuite) Test_appsv1alpha1WebStore() {
-	// setup
-	tester := appsv1alpha1WebStoreTest()
+func (tester *E2ETest) appsv1alpha1WebStoreTest(testSuite *E2EComponentTestSuite) {
 	testSuite.suiteConfig.tests = append(testSuite.suiteConfig.tests, tester)
 	tester.suiteConfig = &testSuite.suiteConfig
 	require.NoErrorf(testSuite.T(), tester.setup(), "failed to setup test")
@@ -120,6 +113,17 @@ func (testSuite *E2EComponentTestSuite) Test_appsv1alpha1WebStore() {
 		testUpdateParentResource(tester, deploymentToUpdate),
 		"failed to reconcile update of a parent resource",
 	)
+
+	// test that controller logs do not contain errors
+	require.NoErrorf(testSuite.T(), testControllerLogsNoErrors(tester.suiteConfig, tester.logSyntax), "found errors in controller logs")
 }
 
-//+kubebuilder:scaffold:operator-builder:testworkloads
+func (testSuite *E2EComponentTestSuite) Test_appsv1alpha1WebStore() {
+	tester := appsv1alpha1WebStoreNewHarness("test-apps-v1alpha1-webstore")
+	tester.appsv1alpha1WebStoreTest(testSuite)
+}
+
+func (testSuite *E2EComponentTestSuite) Test_appsv1alpha1WebStoreMulti() {
+	tester := appsv1alpha1WebStoreNewHarness("test-apps-v1alpha1-webstore-2")
+	tester.appsv1alpha1WebStoreTest(testSuite)
+}

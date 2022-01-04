@@ -4,9 +4,7 @@
 package e2e
 
 import (
-	"bytes"
 	"fmt"
-	"html/template"
 	"strings"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
@@ -17,14 +15,11 @@ import (
 )
 
 const (
-	e2eTestWorkloadPath = "test/e2e/%s_workloads_test.go"
-	importMarker        = "operator-builder:imports"
-	testWorkloadsMarker = "operator-builder:testworkloads"
+	e2eTestWorkloadPath = "test/e2e/%s_%s_%s_test.go"
 )
 
 var (
 	_ machinery.Template = &WorkloadTest{}
-	_ machinery.Inserter = &WorkloadTestUpdater{}
 )
 
 // WorkloadTest adds API-specific scaffolding for each workload test case.
@@ -35,192 +30,44 @@ type WorkloadTest struct {
 	machinery.RepositoryMixin
 	machinery.ComponentConfigMixin
 	machinery.ResourceMixin
+
+	// input fields
+	Builder workloadv1.WorkloadAPIBuilder
+
+	// template fields
+	TesterName                string
+	TesterNamespace           string
+	TesterSamplePath          string
+	TesterCollectionName      string
+	TesterCollectionNamespace string
 }
 
 func (f *WorkloadTest) SetTemplateDefaults() error {
-	f.Path = fmt.Sprintf(e2eTestWorkloadPath, f.Resource.Version)
+	// set template fields
+	f.TesterNamespace = getTesterNamespace(f.Builder)
+	f.TesterSamplePath = getTesterSamplePath(f.Resource)
+	f.TesterName = getTesterName(f.Resource)
 
-	f.TemplateBody = fmt.Sprintf(e2eWorkloadsTemplate,
-		machinery.NewMarkerFor(f.Path, importMarker),
-		machinery.NewMarkerFor(f.Path, testWorkloadsMarker),
+	if f.Builder.GetCollection() != nil {
+		f.TesterCollectionName = getTesterCollectionName(f.Builder.GetCollection())
+		f.TesterCollectionNamespace = getTesterNamespace(f.Builder.GetCollection())
+	}
+
+	// set interface fields
+	f.Path = fmt.Sprintf(
+		e2eTestWorkloadPath,
+		f.Resource.Group,
+		f.Resource.Version,
+		strings.ToLower(f.Resource.Kind),
 	)
+
+	f.IfExistsAction = machinery.SkipFile
+	f.TemplateBody = e2eWorkloadsTemplate
 
 	return nil
 }
 
-type WorkloadTestUpdater struct {
-	machinery.RepositoryMixin
-	machinery.MultiGroupMixin
-	machinery.ResourceMixin
-
-	HasChildResources bool
-	IsStandalone      bool
-	IsComponent       bool
-	IsCollection      bool
-	IsClusterScoped   bool
-	Collection        *workloadv1.WorkloadCollection
-	PackageName       string
-
-	TesterName           string
-	TesterNamespace      string
-	TesterSamplePath     string
-	TesterCollectionName string
-}
-
-func (f *WorkloadTestUpdater) GetPath() string {
-	return fmt.Sprintf(e2eTestWorkloadPath, f.Resource.Version)
-}
-
-func (*WorkloadTestUpdater) GetIfExistsAction() machinery.IfExistsAction {
-	return machinery.OverwriteFile
-}
-
-func (f *WorkloadTestUpdater) GetMarkers() []machinery.Marker {
-	return []machinery.Marker{
-		machinery.NewMarkerFor(e2eTestWorkloadPath, importMarker),
-		machinery.NewMarkerFor(e2eTestWorkloadPath, testWorkloadsMarker),
-	}
-}
-
-func (f *WorkloadTestUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
-	const options = 3
-
-	fragments := make(machinery.CodeFragmentsMap, options)
-
-	// If resource is not being provided we are creating the file, not updating it
-	if f.Resource == nil {
-		return fragments
-	}
-
-	// Generate import code fragments
-	imports := make([]string, 0)
-	imports = append(imports, fmt.Sprintf(importCodeFragment,
-		f.Resource.ImportAlias(), f.Resource.Path,
-		f.Resource.Path, strings.ToLower(f.Resource.Kind)),
-	)
-
-	// Set variables needed for templating
-	f.TesterNamespace = getTesterNamespace(f.IsClusterScoped, f.Resource)
-	f.TesterSamplePath = getTesterSamplePath(f.Resource)
-	f.TesterName = getTesterName(f.Resource)
-
-	if f.Collection != nil {
-		f.TesterCollectionName = getTesterCollectionName(f.Collection)
-	}
-
-	t, err := template.New("testerTemplate").Parse(e2eWorkloadFragment)
-	if err != nil {
-		panic(err)
-	}
-
-	// working buffer
-	workloadTestFragmentParsed := &bytes.Buffer{}
-
-	err = t.Execute(workloadTestFragmentParsed, f)
-	if err != nil {
-		panic(err)
-	}
-
-	// Generate test code fragments
-	workloadTestFragments := make([]string, 0)
-	workloadTestFragments = append(workloadTestFragments, workloadTestFragmentParsed.String())
-
-	// Only store code fragments in the map if the slices are non-empty
-	if len(imports) != 0 {
-		fragments[machinery.NewMarkerFor(e2eTestWorkloadPath, importMarker)] = imports
-	}
-
-	if len(workloadTestFragments) != 0 {
-		fragments[machinery.NewMarkerFor(e2eTestWorkloadPath, testWorkloadsMarker)] = workloadTestFragments
-	}
-
-	return fragments
-}
-
-const (
-	importCodeFragment = `%s "%s"
-		"%s/%s"
-	`
-
-	//nolint: lll
-	e2eWorkloadFragment = `
-
-	//
-	// {{ .TesterName }} tests
-	//
-	func {{ .TesterName }}ChildrenFuncs(tester *E2ETest) error {
-		// TODO: need to run r.GetResources(request) on the reconciler to get the mutated resources
-		tester.children = make([]client.Object, len({{ .PackageName }}.CreateFuncs))
-
-		if len(tester.children) == 0 {
-			return nil
-		}
-
-		workload, ok := tester.workload.(*{{ .Resource.ImportAlias }}.{{ .Resource.Kind }})
-		if !ok {
-			return fmt.Errorf("could not convert client.Object to {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}")
-		}
-
-		{{ if .IsComponent -}}
-		collection, ok := tester.collectionTester.workload.(*{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }})
-		if !ok {
-			return fmt.Errorf("could not convert client.Object to {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}")
-		}
-		{{ end }}
-
-		for i, f := range {{ .PackageName }}.CreateFuncs {
-			resource, err := f(workload{{ if .IsComponent }}, collection){{ else }}){{ end }}
-			if err != nil {
-				return fmt.Errorf("unable to create object in memory; %s", err)
-			}
-
-			tester.children[i] = resource.(client.Object)
-		}
-
-		return nil
-	}
-
-	func {{ .TesterName }}Test() *E2ETest {
-		return &E2ETest{
-			namespace:          "{{ .TesterNamespace }}",
-			unstructured:       &unstructured.Unstructured{},
-			workload:           &{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{},
-			sampleManifestFile: "{{ .TesterSamplePath }}",
-			getChildrenFunc:    {{ .TesterName }}ChildrenFuncs,
-			{{ if .IsComponent -}}
-			collectionTester:   {{ .TesterCollectionName }}Test(),     
-			{{ end }}
-		}
-	} 
-
-	{{ if .IsCollection -}}
-	func (testSuite *E2ECollectionTestSuite) Test_{{ .TesterName }}() {
-	{{ else }}
-	func (testSuite *E2EComponentTestSuite) Test_{{ .TesterName }}() {
-	{{ end -}}
-		// setup
-		tester := {{ .TesterName }}Test()
-		testSuite.suiteConfig.tests = append(testSuite.suiteConfig.tests, tester)
-		tester.suiteConfig = &testSuite.suiteConfig
-		require.NoErrorf(testSuite.T(), tester.setup(), "failed to setup test")
-
-		// create the custom resource
-		require.NoErrorf(testSuite.T(), testCreateCustomResource(tester), "failed to create custom resource")
-
-		// test the deletion of a child object
-		require.NoErrorf(testSuite.T(), testDeleteChildResource(tester), "failed to reconcile deletion of a child resource")
-
-		// test the update of a child object
-		// TODO: need immutable fields so that we can predict which managed fields we can modify to test reconciliation
-		// see https://github.com/vmware-tanzu-labs/operator-builder/issues/67
-
-		// test the update of a parent object
-		// TODO: need immutable fields so that we can predict which managed fields we can modify to test reconciliation
-		// see https://github.com/vmware-tanzu-labs/operator-builder/issues/67
-	}
-	`
-)
-
+//nolint: lll
 const e2eWorkloadsTemplate = `// +build e2e_test
 
 {{ .Boilerplate }}
@@ -232,13 +79,92 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	%s
+	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
+	"{{ .Resource.Path }}/{{ .Builder.GetPackageName }}"
 )
 
-%s
+//
+// {{ .TesterName }} tests
+//
+func {{ .TesterName }}ChildrenFuncs(tester *E2ETest) error {
+	// TODO: need to run r.GetResources(request) on the reconciler to get the mutated resources
+	if len({{ .Builder.GetPackageName }}.CreateFuncs) == 0 {
+		return nil
+	}
+
+	workload, {{ if .Builder.IsComponent }}collection,{{ end }}err := {{ .Builder.GetPackageName }}.ConvertWorkload(tester.workload{{ if .Builder.IsComponent }},tester.collectionTester.workload){{ else }}){{ end }}
+	if err != nil {
+		return fmt.Errorf("error in workload conversion; %w", err)
+	}
+
+	resourceObjects, err := {{ .Builder.GetPackageName }}.Generate(*workload{{ if .Builder.IsComponent }}, *collection){{ else }}){{ end }}
+	if err != nil {
+		return fmt.Errorf("unable to create objects in memory; %w", err)
+	}
+
+	tester.children = resourceObjects
+
+	return nil
+}
+
+func {{ .TesterName }}NewHarness(namespace string) *E2ETest {
+	return &E2ETest{
+		namespace:          namespace,
+		unstructured:       &unstructured.Unstructured{},
+		workload:           &{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{},
+		sampleManifestFile: "{{ .TesterSamplePath }}",
+		getChildrenFunc:    {{ .TesterName }}ChildrenFuncs,
+		logSyntax:          "controllers.{{ .Resource.Group }}.{{ .Resource.Kind }}",
+		{{ if .Builder.IsComponent -}}
+		collectionTester:   {{ .TesterCollectionName }}NewHarness("{{ .TesterCollectionNamespace }}"),     
+		{{ end }}
+	}
+}
+
+{{ if .Builder.IsCollection -}}
+func (tester *E2ETest) {{ .TesterName }}Test(testSuite *E2ECollectionTestSuite) {
+{{ else }}
+func (tester *E2ETest) {{ .TesterName }}Test(testSuite *E2EComponentTestSuite) {
+{{ end -}}
+	testSuite.suiteConfig.tests = append(testSuite.suiteConfig.tests, tester)
+	tester.suiteConfig = &testSuite.suiteConfig
+	require.NoErrorf(testSuite.T(), tester.setup(), "failed to setup test")
+
+	// create the custom resource
+	require.NoErrorf(testSuite.T(), testCreateCustomResource(tester), "failed to create custom resource")
+
+	// test the deletion of a child object
+	require.NoErrorf(testSuite.T(), testDeleteChildResource(tester), "failed to reconcile deletion of a child resource")
+
+	// test the update of a child object
+	// TODO: need immutable fields so that we can predict which managed fields we can modify to test reconciliation
+	// see https://github.com/vmware-tanzu-labs/operator-builder/issues/67
+
+	// test the update of a parent object
+	// TODO: need immutable fields so that we can predict which managed fields we can modify to test reconciliation
+	// see https://github.com/vmware-tanzu-labs/operator-builder/issues/67
+
+	// test that controller logs do not contain errors
+	require.NoErrorf(testSuite.T(), testControllerLogsNoErrors(tester.suiteConfig, tester.logSyntax), "found errors in controller logs")
+}
+
+{{ if .Builder.IsCollection -}}
+func (testSuite *E2ECollectionTestSuite) Test_{{ .TesterName }}() {
+{{ else }}
+func (testSuite *E2EComponentTestSuite) Test_{{ .TesterName }}() {
+{{ end -}}
+	tester := {{ .TesterName }}NewHarness("{{ .TesterNamespace }}")
+	tester.{{ .TesterName }}Test(testSuite)
+}
+
+{{ if and (not .Builder.IsClusterScoped) (not .Builder.IsCollection) }}
+func (testSuite *E2EComponentTestSuite) Test_{{ .TesterName }}Multi() {
+	tester := {{ .TesterName }}NewHarness("{{ .TesterNamespace }}-2")
+	tester.{{ .TesterName }}Test(testSuite)
+}
+{{ end }}
 `
 
 func getTesterSamplePath(r *resource.Resource) string {
@@ -256,13 +182,13 @@ func getTesterSamplePath(r *resource.Resource) string {
 	)
 }
 
-func getTesterNamespace(clusterScoped bool, r *resource.Resource) (namespace string) {
-	if !clusterScoped {
+func getTesterNamespace(builder workloadv1.WorkloadAPIBuilder) (namespace string) {
+	if !builder.IsClusterScoped() {
 		namespaceElements := []string{
 			"test",
-			strings.ToLower(r.Group),
-			strings.ToLower(r.Version),
-			strings.ToLower(r.Kind),
+			strings.ToLower(builder.GetAPIGroup()),
+			strings.ToLower(builder.GetAPIVersion()),
+			strings.ToLower(builder.GetAPIKind()),
 		}
 		namespace = strings.Join(namespaceElements, "-")
 	}
