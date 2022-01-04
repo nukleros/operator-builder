@@ -5,6 +5,7 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -33,13 +34,7 @@ func (wk WorkloadKind) String() string {
 }
 
 func (wk *WorkloadKind) UnmarshalJSON(data []byte) error {
-	kinds := map[string]WorkloadKind{
-		"StandaloneWorkload": WorkloadKindStandalone,
-		"WorkloadCollection": WorkloadKindCollection,
-		"ComponentWorkload":  WorkloadKindComponent,
-	}
-
-	kind, ok := kinds[string(data)]
+	kind, ok := workloadKindsMap()[string(data)]
 	if !ok {
 		return ErrInvalidKind
 	}
@@ -50,13 +45,7 @@ func (wk *WorkloadKind) UnmarshalJSON(data []byte) error {
 }
 
 func (wk *WorkloadKind) UnmarshalYAML(node *yaml.Node) error {
-	kinds := map[string]WorkloadKind{
-		"StandaloneWorkload": WorkloadKindStandalone,
-		"WorkloadCollection": WorkloadKindCollection,
-		"ComponentWorkload":  WorkloadKindComponent,
-	}
-
-	kind, ok := kinds[node.Value]
+	kind, ok := workloadKindsMap()[node.Value]
 	if !ok {
 		return ErrInvalidKind
 	}
@@ -64,4 +53,39 @@ func (wk *WorkloadKind) UnmarshalYAML(node *yaml.Node) error {
 	*wk = kind
 
 	return nil
+}
+
+func workloadKindsMap() map[string]WorkloadKind {
+	return map[string]WorkloadKind{
+		"StandaloneWorkload": WorkloadKindStandalone,
+		"WorkloadCollection": WorkloadKindCollection,
+		"ComponentWorkload":  WorkloadKindComponent,
+	}
+}
+
+func decodeStandalone(dc *yaml.Decoder) (*StandaloneWorkload, error) {
+	v := &StandaloneWorkload{}
+	if err := dc.Decode(v); err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	return v, nil
+}
+
+func decodeCollection(dc *yaml.Decoder) (*WorkloadCollection, error) {
+	v := &WorkloadCollection{}
+	if err := dc.Decode(v); err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	return v, nil
+}
+
+func decodeComponent(dc *yaml.Decoder) (*ComponentWorkload, error) {
+	v := &ComponentWorkload{}
+	if err := dc.Decode(v); err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	return v, nil
 }

@@ -243,26 +243,11 @@ func parseCollectionComponents(workload *WorkloadCollection, workloadConfig stri
 func decodeKind(kind WorkloadKind, dc *yaml.Decoder) (WorkloadIdentifier, error) {
 	switch kind {
 	case WorkloadKindStandalone:
-		v := &StandaloneWorkload{}
-		if err := dc.Decode(v); err != nil {
-			return nil, fmt.Errorf("%w", err)
-		}
-
-		return v, nil
+		return decodeStandalone(dc)
 	case WorkloadKindComponent:
-		v := &ComponentWorkload{}
-		if err := dc.Decode(v); err != nil {
-			return nil, fmt.Errorf("%w", err)
-		}
-
-		return v, nil
+		return decodeComponent(dc)
 	case WorkloadKindCollection:
-		v := &WorkloadCollection{}
-		if err := dc.Decode(v); err != nil {
-			return nil, fmt.Errorf("%w", err)
-		}
-
-		return v, nil
+		return decodeCollection(dc)
 	default:
 		return nil, fmt.Errorf(
 			"%w - valid kinds: %s, %s, %s,",
