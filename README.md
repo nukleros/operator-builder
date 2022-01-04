@@ -50,17 +50,17 @@ namespace-scoped based on the requirements of the project.  More info
 
 ## Installation Options
 
-### [Download the latest binary](https://github.com/vmare-tanzu-labs/operator-builder/releases/latest)
+### [Download the latest binary](https://github.com/vmware-tanzu-labs/operator-builder/releases/latest)
 
 ### wget
 Use wget to download the pre-compiled binaries:
 
 ```bash
 wget https://github.com/vmware-tanzu-labs/operator-builder/releases/download/${VERSION}/${BINARY}.tar.gz -O - |\
-  tar xz && mv ${BINARY} /usr/bin/operator-builder
+  tar xz && sudo mv operator-builder /usr/bin/operator-builder
 ```
 
-For instance, VERSION=v0.3.1 and BINARY=operator-builder_${VERSION}_linux_amd64
+For instance, VERSION=v0.5.0 and BINARY=operator-builder_${VERSION}_Linux_x86_64
 
 ### MacOS / Linux via Homebrew install
 
