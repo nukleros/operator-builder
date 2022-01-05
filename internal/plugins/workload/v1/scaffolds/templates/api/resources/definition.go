@@ -20,11 +20,9 @@ type Definition struct {
 	machinery.RepositoryMixin
 	machinery.ResourceMixin
 
-	ClusterScoped bool
-	SourceFile    workloadv1.SourceFile
-	PackageName   string
-	IsComponent   bool
-	Collection    *workloadv1.WorkloadCollection
+	// input fields
+	Builder    workloadv1.WorkloadAPIBuilder
+	SourceFile workloadv1.SourceFile
 }
 
 func (f *Definition) SetTemplateDefaults() error {
@@ -32,7 +30,7 @@ func (f *Definition) SetTemplateDefaults() error {
 		"apis",
 		f.Resource.Group,
 		f.Resource.Version,
-		f.PackageName,
+		f.Builder.GetPackageName(),
 		f.SourceFile.Filename,
 	)
 
@@ -45,7 +43,7 @@ func (f *Definition) SetTemplateDefaults() error {
 //nolint:lll
 const definitionTemplate = `{{ .Boilerplate }}
 
-package {{ .PackageName }}
+package {{ .Builder.GetPackageName }}
 
 import (
 	{{ if .SourceFile.HasStatic }}
@@ -58,8 +56,8 @@ import (
 	{{ end }}
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
-	{{- if .IsComponent }}
-	{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Collection.Spec.API.Group }}/{{ .Collection.Spec.API.Version }}"
+	{{- if .Builder.IsComponent }}
+	{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Builder.GetCollection.Spec.API.Group }}/{{ .Builder.GetCollection.Spec.API.Version }}"
 	{{ end -}}
 )
 
@@ -67,13 +65,13 @@ import (
 // Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource.
 func Create{{ .UniqueName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
-	{{- if $.IsComponent }}
-	collection *{{ $.Collection.Spec.API.Group }}{{ $.Collection.Spec.API.Version }}.{{ $.Collection.Spec.API.Kind }},
+	{{- if $.Builder.IsComponent }}
+	collection *{{ $.Builder.GetCollection.Spec.API.Group }}{{ $.Builder.GetCollection.Spec.API.Version }}.{{ $.Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
 ) (client.Object, error) {
 	{{- .SourceCode }}
 
-	{{ if not $.ClusterScoped }}
+	{{ if not $.Builder.IsClusterScoped }}
 	resourceObj.SetNamespace(parent.Namespace)
 	{{ end }}
 

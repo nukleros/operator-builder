@@ -4,6 +4,7 @@
 package scaffolds
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -27,16 +28,36 @@ import (
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
 )
 
+const boilerplatePath = "hack/boilerplate.go.txt"
+
 var _ plugins.Scaffolder = &apiScaffolder{}
 
+var (
+	ErrScaffoldWorkload             = errors.New("error scaffolding workload")
+	ErrScaffoldMainUpdater          = errors.New("error updating main.go")
+	ErrScaffoldCRDSample            = errors.New("error scaffolding CRD sample file")
+	ErrScaffoldKustomization        = errors.New("error scaffolding kustomization overlay")
+	ErrScaffoldAPITypes             = errors.New("error scaffolding api types")
+	ErrScaffoldAPIKindInfo          = errors.New("error scaffolding api kind information")
+	ErrScaffoldAPIResources         = errors.New("error scaffolding api resource methods")
+	ErrScaffoldAPIChildResources    = errors.New("error scaffolding api child resource definitions")
+	ErrScaffoldController           = errors.New("error scaffolding controller logic")
+	ErrScaffoldE2ETest              = errors.New("error scaffolding e2e tests")
+	ErrScaffoldCompanionCLI         = errors.New("error scaffolding companion CLI")
+	ErrScaffoldCompanionCLIInit     = errors.New("error scaffolding companion CLI init sub-command")
+	ErrScaffoldCompanionCLIGenerate = errors.New("error scaffolding companion CLI generate sub-command")
+	ErrScaffoldCompanionCLIVersion  = errors.New("error scaffolding companion CLI version sub-command")
+	ErrScaffoldCompanionCLIRoot     = errors.New("error scaffolding companion CLI root.go entrypoint")
+)
+
 type apiScaffolder struct {
+	fs machinery.Filesystem
+
 	config             config.Config
 	resource           *resource.Resource
-	boilerplatePath    string
+	boilerplate        string
 	workload           workloadv1.WorkloadAPIBuilder
 	cliRootCommandName string
-
-	fs machinery.Filesystem
 }
 
 // NewAPIScaffolder returns a new Scaffolder for project initialization operations.
@@ -49,7 +70,6 @@ func NewAPIScaffolder(
 	return &apiScaffolder{
 		config:             cfg,
 		resource:           res,
-		boilerplatePath:    "hack/boilerplate.go.txt",
 		workload:           workload,
 		cliRootCommandName: cliRootCommandName,
 	}
@@ -60,291 +80,202 @@ func (s *apiScaffolder) InjectFS(fs machinery.Filesystem) {
 	s.fs = fs
 }
 
-//nolint:funlen,gocyclo //this will be refactored later
 // scaffold implements cmdutil.Scaffolder.
 func (s *apiScaffolder) Scaffold() error {
 	log.Println("Building API...")
 
-	boilerplate, err := afero.ReadFile(s.fs.FS, s.boilerplatePath)
+	boilerplate, err := afero.ReadFile(s.fs.FS, boilerplatePath)
 	if err != nil {
-		return fmt.Errorf("unable to read boilerplate file %s, %w", s.boilerplatePath, err)
+		return fmt.Errorf("unable to read boilerplate file %s, %w", boilerplatePath, err)
 	}
+
+	s.boilerplate = string(boilerplate)
 
 	scaffold := machinery.NewScaffold(s.fs,
 		machinery.WithConfig(s.config),
-		machinery.WithBoilerplate(string(boilerplate)),
+		machinery.WithBoilerplate(s.boilerplate),
 		machinery.WithResource(s.resource),
 	)
 
-	//nolint:nestif //this will be refactored later
-	// API types
-	if s.workload.IsStandalone() {
-		err = scaffold.Execute(
-			&templates.MainUpdater{
-				WireResource:   true,
-				WireController: true,
-			},
-			&api.Types{
-				SpecFields:    s.workload.GetAPISpecFields(),
-				ClusterScoped: s.workload.IsClusterScoped(),
-				Dependencies:  s.workload.GetDependencies(),
-				IsStandalone:  s.workload.IsStandalone(),
-			},
-			&resources.Resources{Builder: s.workload},
-			&controller.Controller{
-				PackageName:       s.workload.GetPackageName(),
-				RBACRules:         s.workload.GetRBACRules(),
-				OwnershipRules:    s.workload.GetOwnershipRules(),
-				HasChildResources: s.workload.HasChildResources(),
-				IsStandalone:      s.workload.IsStandalone(),
-				IsComponent:       s.workload.IsComponent(),
-			},
-			&controller.Phases{
-				PackageName: s.workload.GetPackageName(),
-			},
-			&dependencies.Component{},
-			&mutate.Component{},
-			&samples.CRDSample{
-				SpecFields:      s.workload.GetAPISpecFields(),
-				IsClusterScoped: s.workload.IsClusterScoped(),
-			},
+	// scaffold the workload
+	if err := s.scaffoldWorkload(scaffold, s.workload); err != nil {
+		return fmt.Errorf("%w; %s for workload type %T", err, ErrScaffoldWorkload, s.workload)
+	}
+
+	return nil
+}
+
+// scaffoldWorkload performs the execution of the scaffold for an individual workload.
+func (s *apiScaffolder) scaffoldWorkload(
+	scaffold *machinery.Scaffold,
+	workload workloadv1.WorkloadAPIBuilder,
+) error {
+	// override the scaffold if we have a component.  this will allow the Resource
+	// attribute of the scaffolder to be set appropriately so that things like Group,
+	// Version, and Kind are passed from the child component and not the parent
+	// workload.
+	if workload.IsComponent() {
+		scaffold = machinery.NewScaffold(s.fs,
+			machinery.WithConfig(s.config),
+			machinery.WithBoilerplate(s.boilerplate),
+			machinery.WithResource(workload.GetComponentResource(
+				s.config.GetDomain(),
+				s.config.GetRepository(),
+				workload.IsClusterScoped(),
+			)),
 		)
-		if err != nil {
-			return fmt.Errorf("unable to scaffold standalone workload, %w", err)
+	}
+
+	// scaffold the workload api.  this generates files within the apis/ folder to include
+	// items such as common resource methods, api type definitions and child resource typed
+	// object definitions.
+	if err := s.scaffoldAPI(scaffold, workload); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
+	}
+
+	// scaffold the controller.  this generates the main controller logic.
+	if err := scaffold.Execute(
+		&controller.Controller{Builder: workload},
+		&controller.Phases{PackageName: workload.GetPackageName()},
+		&dependencies.Component{},
+		&mutate.Component{},
+		&crd.Kustomization{},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldController)
+	}
+
+	// update controller main entrypoint.  this updates the main.go file with logic related to
+	// creating the new controllers.
+	if err := scaffold.Execute(
+		&templates.MainUpdater{
+			WireResource:   true,
+			WireController: true,
+		},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldMainUpdater)
+	}
+
+	// scaffold the custom resource sample files.  this will generate sample manifest files.
+	if err := scaffold.Execute(
+		&samples.CRDSample{
+			SpecFields:      workload.GetAPISpecFields(),
+			IsClusterScoped: workload.IsClusterScoped(),
+		},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldController)
+	}
+
+	// scaffold the end-to-end tests.  this will generate some common end-to-end tests for
+	// the controller.
+	if err := scaffold.Execute(&e2e.WorkloadTest{Builder: workload}); err != nil {
+		return fmt.Errorf("%w; %s - error updating test/e2e/%s_%s_%s_test.go", err, ErrScaffoldController,
+			workload.GetAPIGroup(), workload.GetAPIVersion(), strings.ToLower(workload.GetAPIKind()))
+	}
+
+	// scaffold the companion CLI only if we have a root command name
+	if s.cliRootCommandName != "" {
+		if err := s.scaffoldCLI(scaffold, workload); err != nil {
+			return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLI)
 		}
+	}
 
-		if err := s.scaffoldE2ETests(scaffold, s.workload); err != nil {
-			return fmt.Errorf("unable to scaffold standalone workload e2e tests, %w", err)
-		}
-	} else {
-		// collection API
-		err = scaffold.Execute(
-			&templates.MainUpdater{
-				WireResource:   true,
-				WireController: true,
-			},
-			&api.Types{
-				SpecFields:    s.workload.GetAPISpecFields(),
-				ClusterScoped: s.workload.IsClusterScoped(),
-				Dependencies:  s.workload.GetDependencies(),
-				IsStandalone:  s.workload.IsStandalone(),
-			},
-			&resources.Resources{Builder: s.workload},
-			&controller.Controller{
-				PackageName:       s.workload.GetPackageName(),
-				RBACRules:         s.workload.GetRBACRules(),
-				OwnershipRules:    s.workload.GetOwnershipRules(),
-				HasChildResources: s.workload.HasChildResources(),
-				IsStandalone:      s.workload.IsStandalone(),
-				IsComponent:       s.workload.IsComponent(),
-			},
-			&controller.Phases{
-				PackageName: s.workload.GetPackageName(),
-			},
-			&dependencies.Component{},
-			&mutate.Component{},
-			&samples.CRDSample{
-				SpecFields:      s.workload.GetAPISpecFields(),
-				IsClusterScoped: s.workload.IsClusterScoped(),
-			},
-			&crd.Kustomization{},
-		)
-		if err != nil {
-			return fmt.Errorf("unable to scaffold collection workload, %w", err)
-		}
-
-		if err := s.scaffoldE2ETests(scaffold, s.workload); err != nil {
-			return fmt.Errorf("unable to scaffold collection workload e2e tests, %w", err)
-		}
-
-		for _, component := range s.workload.GetComponents() {
-			componentScaffold := machinery.NewScaffold(s.fs,
-				machinery.WithConfig(s.config),
-				machinery.WithBoilerplate(string(boilerplate)),
-				machinery.WithResource(component.GetComponentResource(
-					s.config.GetDomain(),
-					s.config.GetRepository(),
-					component.IsClusterScoped(),
-				)),
-			)
-
-			err = componentScaffold.Execute(
-				&templates.MainUpdater{
-					WireResource:   true,
-					WireController: true,
-				},
-				&api.Types{
-					SpecFields:    component.Spec.APISpecFields,
-					ClusterScoped: component.IsClusterScoped(),
-					Dependencies:  component.GetDependencies(),
-					IsStandalone:  component.IsStandalone(),
-				},
-				&api.Group{},
-				&resources.Resources{Builder: component},
-				&controller.Controller{
-					PackageName:       component.GetPackageName(),
-					RBACRules:         component.GetRBACRules(),
-					OwnershipRules:    component.GetOwnershipRules(),
-					HasChildResources: component.HasChildResources(),
-					IsStandalone:      component.IsStandalone(),
-					IsComponent:       component.IsComponent(),
-					Collection:        s.workload.(*workloadv1.WorkloadCollection),
-				},
-				&controller.Phases{
-					PackageName: s.workload.GetPackageName(),
-				},
-				&dependencies.Component{},
-				&mutate.Component{},
-				&samples.CRDSample{
-					SpecFields:      component.Spec.APISpecFields,
-					IsClusterScoped: s.workload.IsClusterScoped(),
-				},
-				&crd.Kustomization{},
-			)
-			if err != nil {
-				return fmt.Errorf("unable to scaffold component workload %s, %w", component.Name, err)
-			}
-
-			if err := s.scaffoldE2ETests(componentScaffold, component); err != nil {
-				return fmt.Errorf("unable to scaffold component workload e2e tests, %w", err)
-			}
-
-			// component child resource definition files
-			// these are the resources defined in the static yaml manifests
-			for _, sourceFile := range *component.GetSourceFiles() {
-				resourcesScaffold := machinery.NewScaffold(s.fs,
-					machinery.WithConfig(s.config),
-					machinery.WithBoilerplate(string(boilerplate)),
-					machinery.WithResource(component.GetComponentResource(
-						s.config.GetDomain(),
-						s.config.GetRepository(),
-						component.IsClusterScoped(),
-					)),
-				)
-
-				err = resourcesScaffold.Execute(
-					&resources.Definition{
-						ClusterScoped: component.IsClusterScoped(),
-						SourceFile:    sourceFile,
-						PackageName:   component.GetPackageName(),
-						IsComponent:   component.IsComponent(),
-						Collection:    s.workload.(*workloadv1.WorkloadCollection),
-					},
-				)
-				if err != nil {
-					return fmt.Errorf("unable to scaffold component workload resource files for %s, %w", component.Name, err)
-				}
+	// scaffold the components of a collection if we have a collection.  this will scaffold the
+	// logic for a companion CLI.
+	if workload.IsCollection() {
+		for _, component := range workload.GetComponents() {
+			if err := s.scaffoldWorkload(scaffold, component); err != nil {
+				return fmt.Errorf("%w; %s for workload type %T", err, ErrScaffoldWorkload, component)
 			}
 		}
+	}
+
+	return nil
+}
+
+// scaffoldAPI runs the specific logic to scaffold anything existing in the apis directory.
+func (s *apiScaffolder) scaffoldAPI(
+	scaffold *machinery.Scaffold,
+	workload workloadv1.WorkloadAPIBuilder,
+) error {
+	// scaffold the base api types
+	if err := scaffold.Execute(
+		&api.Types{Builder: workload},
+		&api.Group{},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPITypes)
+	}
+
+	// scaffold the specific kind files
+	if err := scaffold.Execute(
+		&api.Kind{},
+		&api.KindLatest{PackageName: workload.GetPackageName()},
+		&api.KindUpdater{},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIKindInfo)
+	}
+
+	// scaffold the resources
+	if err := scaffold.Execute(
+		&resources.Resources{Builder: workload},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
 	}
 
 	// child resource definition files
 	// these are the resources defined in the static yaml manifests
-	for _, sourceFile := range *s.workload.GetSourceFiles() {
-		definitionScaffold := machinery.NewScaffold(s.fs,
-			machinery.WithConfig(s.config),
-			machinery.WithBoilerplate(string(boilerplate)),
-			machinery.WithResource(s.resource),
-		)
-
-		err = definitionScaffold.Execute(
-			&resources.Definition{
-				ClusterScoped: s.workload.IsClusterScoped(),
-				SourceFile:    sourceFile,
-				PackageName:   s.workload.GetPackageName(),
-				IsComponent:   s.workload.IsComponent(),
-			},
-		)
-		if err != nil {
-			return fmt.Errorf("unable to scaffold resource files, %w", err)
-		}
-	}
-
-	// scaffold the companion CLI last only if we have a root command name
-	if s.cliRootCommandName != "" {
-		if err = s.scaffoldCLI(scaffold); err != nil {
-			return fmt.Errorf("error scaffolding CLI; %w", err)
+	for _, sourceFile := range *workload.GetSourceFiles() {
+		if err := scaffold.Execute(
+			&resources.Definition{Builder: workload, SourceFile: sourceFile},
+		); err != nil {
+			return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
 		}
 	}
 
 	return nil
 }
 
-// scaffoldCLI runs the specific logic to scaffold the companion CLI.
-func (s *apiScaffolder) scaffoldCLI(scaffold *machinery.Scaffold) error {
-	// obtain a list of workload commands to generate, to include the parent collection
-	// and its children
-	workloadCommands := make([]workloadv1.WorkloadAPIBuilder, len(s.workload.GetComponents())+1)
-	workloadCommands[0] = s.workload
-
-	if len(s.workload.GetComponents()) > 0 {
-		for i, component := range s.workload.GetComponents() {
-			workloadCommands[i+1] = component
-		}
-	}
-
-	for _, workloadCommand := range workloadCommands {
-		// create this component as a kubebuilder component resource for those
-		// commands that need it
-		componentResource := workloadCommand.GetComponentResource(
-			s.config.GetDomain(),
-			s.config.GetRepository(),
-			workloadCommand.IsClusterScoped(),
-		)
-
-		// scaffold init subcommand
-		if err := scaffold.Execute(
-			&cli.CmdInitSubLatest{Builder: workloadCommand, ComponentResource: componentResource},
-			&cli.CmdInitSub{Builder: workloadCommand, ComponentResource: componentResource},
-			&cli.CmdInitSubUpdater{Builder: workloadCommand, ComponentResource: componentResource},
-		); err != nil {
-			return fmt.Errorf("unable to scaffold init subcommand, %w", err)
-		}
-
-		// scaffold the generate command unless we have a collection without resources
-		if (workloadCommand.HasChildResources() && workloadCommand.IsCollection()) || !workloadCommand.IsCollection() {
-			if err := scaffold.Execute(
-				&cli.CmdGenerateSub{Builder: workloadCommand, ComponentResource: componentResource},
-				&cli.CmdGenerateSubUpdater{Builder: workloadCommand, ComponentResource: componentResource},
-			); err != nil {
-				return fmt.Errorf("unable to scaffold generate subcommand, %w", err)
-			}
-		}
-
-		// scaffold version subcommand
-		if err := scaffold.Execute(
-			&cli.CmdVersionSub{Builder: workloadCommand, ComponentResource: componentResource},
-			&cli.CmdVersionSubUpdater{Builder: workloadCommand, ComponentResource: componentResource},
-		); err != nil {
-			return fmt.Errorf("unable to scaffold version subcommand, %w", err)
-		}
-
-		// scaffold the root command
-		if err := scaffold.Execute(
-			&cli.CmdRootUpdater{
-				InitCommand:     true,
-				GenerateCommand: true,
-				VersionCommand:  true,
-				Builder:         workloadCommand,
-			},
-		); err != nil {
-			return fmt.Errorf("error updating root.go, %w", err)
-		}
-	}
-
-	return nil
-}
-
-// scaffoldE2ETests run the specific logic to scaffold the end to end tests.
-func (s *apiScaffolder) scaffoldE2ETests(
+// scaffoldCLI runs the specific logic to scaffold the companion CLI for an
+// individual workload.
+func (s *apiScaffolder) scaffoldCLI(
 	scaffold *machinery.Scaffold,
 	workload workloadv1.WorkloadAPIBuilder,
 ) error {
-	if err := scaffold.Execute(&e2e.WorkloadTest{Builder: workload}); err != nil {
-		return fmt.Errorf("error updating test/e2e/%s_%s_%s_test.go; %w",
-			workload.GetAPIGroup(), workload.GetAPIVersion(), strings.ToLower(workload.GetAPIKind()),
-			err,
-		)
+	// scaffold init subcommand
+	if err := scaffold.Execute(
+		&cli.CmdInitSub{Builder: workload},
+		&cli.CmdInitSubUpdater{Builder: workload},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIInit)
+	}
+
+	// scaffold the generate command unless we have a collection without resources
+	if (workload.HasChildResources() && workload.IsCollection()) || !workload.IsCollection() {
+		if err := scaffold.Execute(
+			&cli.CmdGenerateSub{Builder: workload},
+			&cli.CmdGenerateSubUpdater{Builder: workload},
+		); err != nil {
+			return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIGenerate)
+		}
+	}
+
+	// scaffold version subcommand
+	if err := scaffold.Execute(
+		&cli.CmdVersionSub{Builder: workload},
+		&cli.CmdVersionSubUpdater{Builder: workload},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIVersion)
+	}
+
+	// scaffold the root command
+	if err := scaffold.Execute(
+		&cli.CmdRootUpdater{
+			InitCommand:     true,
+			GenerateCommand: true,
+			VersionCommand:  true,
+			Builder:         workload,
+		},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIRoot)
 	}
 
 	return nil

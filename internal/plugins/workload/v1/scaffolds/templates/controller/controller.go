@@ -22,13 +22,8 @@ type Controller struct {
 	machinery.RepositoryMixin
 	machinery.ResourceMixin
 
-	PackageName       string
-	RBACRules         *[]workloadv1.RBACRule
-	OwnershipRules    *[]workloadv1.OwnershipRule
-	HasChildResources bool
-	IsStandalone      bool
-	IsComponent       bool
-	Collection        *workloadv1.WorkloadCollection
+	// input fields
+	Builder workloadv1.WorkloadAPIBuilder
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -51,7 +46,7 @@ package {{ .Resource.Group }}
 
 import (
 	"context"
-	{{- if .IsComponent }}
+	{{- if .Builder.IsComponent }}
 	"errors"
 	{{- end }}
 	"fmt"
@@ -67,11 +62,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
-	{{ if .IsComponent -}}
-	{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Collection.Spec.API.Group }}/{{ .Collection.Spec.API.Version }}"
+	{{ if .Builder.IsComponent -}}
+	{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Builder.GetCollection.Spec.API.Group }}/{{ .Builder.GetCollection.Spec.API.Version }}"
 	{{ end }}
-	{{- if .HasChildResources -}}
-	"{{ .Resource.Path }}/{{ .PackageName }}"
+	{{- if .Builder.HasChildResources -}}
+	"{{ .Resource.Path }}/{{ .Builder.GetPackageName }}"
 	{{ end -}}
 	"{{ .Repo }}/internal/dependencies"
 	"{{ .Repo }}/internal/mutate"
@@ -103,7 +98,7 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 
 // +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }},verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }}/status,verbs=get;update;patch
-{{ range .RBACRules -}}
+{{ range .Builder.GetRBACRules -}}
 // +kubebuilder:rbac:groups={{ .Group }},resources={{ .Resource }},verbs={{ .VerbString }}
 {{ end }}
 
@@ -123,7 +118,7 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
 	req, err := r.NewRequest(ctx, request)
 	if err != nil {
-		{{- if .IsComponent }}
+		{{- if .Builder.IsComponent }}
 		if errors.Is(err, workload.ErrCollectionNotFound) {
 			return ctrl.Result{Requeue: true}, nil
 		}
@@ -164,14 +159,14 @@ func (r *{{ .Resource.Kind }}Reconciler) NewRequest(ctx context.Context, request
 		return nil, err
 	}
 
-	{{ if .IsComponent -}}
+	{{ if .Builder.IsComponent -}}
 	// get and store the collection
-	var collectionList {{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}List
+	var collectionList {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}List
 	
-	var collection *{{ .Collection.Spec.API.Group }}{{ .Collection.Spec.API.Version }}.{{ .Collection.Spec.API.Kind }}
+	var collection *{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}
 
 	if err := r.List(ctx, &collectionList); err != nil {
-		return nil, fmt.Errorf("unable to list collection {{ .Collection.Spec.API.Kind }}, %w", err)
+		return nil, fmt.Errorf("unable to list collection {{ .Builder.GetCollection.Spec.API.Kind }}, %w", err)
 	}
 
 	switch len(collectionList.Items) {
@@ -193,7 +188,7 @@ func (r *{{ .Resource.Kind }}Reconciler) NewRequest(ctx context.Context, request
 	return &workload.Request{
 		Context:    ctx,
 		Workload:   component,
-		{{- if .IsComponent }}
+		{{- if .Builder.IsComponent }}
 		Collection: collection,
 		{{- end }}
 		Log:        log,
@@ -202,17 +197,17 @@ func (r *{{ .Resource.Kind }}Reconciler) NewRequest(ctx context.Context, request
 
 // GetResources resources runs the methods to properly construct the resources in memory.
 func (r *{{ .Resource.Kind }}Reconciler) GetResources(req *workload.Request) ([]client.Object, error) {
-	{{- if .HasChildResources }}
+	{{- if .Builder.HasChildResources }}
 	resourceObjects := []client.Object{}
 
-	component, {{ if .IsComponent }}collection,{{ end }} err := {{ .PackageName }}.ConvertWorkload(req.Workload{{ if .IsComponent }}, req.Collection{{ end }})
+	component, {{ if .Builder.IsComponent }}collection,{{ end }} err := {{ .Builder.GetPackageName }}.ConvertWorkload(req.Workload{{ if .Builder.IsComponent }}, req.Collection{{ end }})
 	if err != nil {
 		return nil, err
 	}
 
 	// create resources in memory
-	for _, f := range {{ .PackageName }}.CreateFuncs {
-		resource, err := f(component{{ if .IsComponent }}, collection{{ end }})
+	for _, f := range {{ .Builder.GetPackageName }}.CreateFuncs {
+		resource, err := f(component{{ if .Builder.IsComponent }}, collection{{ end }})
 		if err != nil {
 			return nil, err
 		}

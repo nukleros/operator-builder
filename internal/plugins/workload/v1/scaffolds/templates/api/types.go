@@ -24,10 +24,8 @@ type Types struct {
 	machinery.RepositoryMixin
 	machinery.ResourceMixin
 
-	SpecFields    *workloadv1.APIFields
-	ClusterScoped bool
-	Dependencies  []*workloadv1.ComponentWorkload
-	IsStandalone  bool
+	// input fields
+	Builder workloadv1.WorkloadAPIBuilder
 }
 
 // SetTemplateDefaults implements file.Template.
@@ -61,7 +59,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	{{- $Repo := .Repo }}{{- $Added := "" }}{{- range .Dependencies }}
+	{{- $Repo := .Repo }}{{- $Added := "" }}{{- range .Builder.GetDependencies }}
 	{{- if ne .Spec.API.Group $.Resource.Group }}
 	{{- if not (containsString (printf "%s%s" .Spec.API.Group .Spec.API.Version) $Added) }}
 	{{- $Added = (printf "%s%s" $Added (printf "%s%s" .Spec.API.Group .Spec.API.Version)) }}
@@ -76,7 +74,7 @@ var ErrUnableToConvert{{ .Resource.Kind }} = errors.New("unable to convert to {{
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-{{ .SpecFields.GenerateAPISpec .Resource.Kind }}
+{{ .Builder.GetAPISpecFields.GenerateAPISpec .Resource.Kind }}
 
 // {{ .Resource.Kind }}Status defines the observed state of {{ .Resource.Kind }}.
 type {{ .Resource.Kind }}Status struct {
@@ -85,13 +83,13 @@ type {{ .Resource.Kind }}Status struct {
 
 	Created               bool                       ` + "`" + `json:"created,omitempty"` + "`" + `
 	DependenciesSatisfied bool                       ` + "`" + `json:"dependenciesSatisfied,omitempty"` + "`" + `
-	Conditions            []*status.PhaseCondition    ` + "`" + `json:"conditions,omitempty"` + "`" + `
-	Resources             []*status.ChildResource          ` + "`" + `json:"resources,omitempty"` + "`" + `
+	Conditions            []*status.PhaseCondition   ` + "`" + `json:"conditions,omitempty"` + "`" + `
+	Resources             []*status.ChildResource    ` + "`" + `json:"resources,omitempty"` + "`" + `
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-{{- if .ClusterScoped }}
+{{- if .Builder.IsClusterScoped }}
 // +kubebuilder:resource:scope=Cluster
 {{ end }}
 
@@ -177,7 +175,7 @@ func (component *{{ .Resource.Kind }}) SetChildResourceCondition(resource *statu
 // GetDependencies returns the dependencies for a component.
 func (*{{ .Resource.Kind }}) GetDependencies() []workload.Workload {
 	return []workload.Workload{
-		{{- range .Dependencies }}
+		{{- range .Builder.GetDependencies }}
 		{{- if eq .Spec.API.Group $.Resource.Group }}
 			&{{ .Spec.API.Kind }}{},
 		{{- else }}

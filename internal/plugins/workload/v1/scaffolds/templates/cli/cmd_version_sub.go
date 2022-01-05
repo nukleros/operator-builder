@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
-	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
@@ -33,22 +32,15 @@ type CmdVersionSub struct {
 	machinery.RepositoryMixin
 
 	// input fields
-	Builder           workloadv1.WorkloadAPIBuilder
-	ComponentResource *resource.Resource
+	Builder workloadv1.WorkloadAPIBuilder
 
 	// template fields
 	cmdVersionSubCommon
-	VersionCommandName       string
-	VersionCommandDescr      string
-	APIVersionsVarName       string
-	APIVersionsLatestVarName string
+	VersionCommandName  string
+	VersionCommandDescr string
 }
 
 func (f *CmdVersionSub) SetTemplateDefaults() error {
-	if f.Builder.IsComponent() {
-		f.Resource = f.ComponentResource
-	}
-
 	// set template fields
 	f.RootCmd = *f.Builder.GetRootCommand()
 	f.SubCmd = *f.Builder.GetSubCommand()
@@ -61,11 +53,6 @@ func (f *CmdVersionSub) SetTemplateDefaults() error {
 		f.VersionCommandDescr = f.SubCmd.Description
 	}
 
-	// prepend the kind with 'apiVersions' to guarantee uniqueness within
-	// this group and use it as the variable within the scaffolded code.
-	f.APIVersionsVarName = fmt.Sprintf("APIVersions%s", f.Resource.Kind)
-	f.APIVersionsLatestVarName = fmt.Sprintf("APIVersionLatest%s", f.Resource.Kind)
-
 	// set interface fields
 	f.Path = f.SubCmd.GetSubCmdRelativeFileName(
 		f.RootCmd.Name,
@@ -74,11 +61,7 @@ func (f *CmdVersionSub) SetTemplateDefaults() error {
 		utils.ToFileName(f.Resource.Kind),
 	)
 
-	f.TemplateBody = fmt.Sprintf(
-		cmdVersionSubHeader,
-		machinery.NewMarkerFor(f.Path, apiVersionsMarker),
-		cmdVersionSubBody,
-	)
+	f.TemplateBody = cmdVersionSub
 
 	return nil
 }
@@ -91,8 +74,7 @@ type CmdVersionSubUpdater struct { //nolint:maligned
 	machinery.ResourceMixin
 
 	// input fields
-	Builder           workloadv1.WorkloadAPIBuilder
-	ComponentResource *resource.Resource
+	Builder workloadv1.WorkloadAPIBuilder
 
 	// template fields
 	cmdVersionSubCommon
@@ -100,10 +82,6 @@ type CmdVersionSubUpdater struct { //nolint:maligned
 
 // GetPath implements file.Builder interface.
 func (f *CmdVersionSubUpdater) GetPath() string {
-	if f.Builder.IsComponent() {
-		f.Resource = f.ComponentResource
-	}
-
 	return f.SubCmd.GetSubCmdRelativeFileName(
 		f.Builder.GetRootCommand().Name,
 		"version",
@@ -141,10 +119,6 @@ func (f *CmdVersionSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 		return fragments
 	}
 
-	if f.Builder.IsComponent() {
-		f.Resource = f.ComponentResource
-	}
-
 	// set template fields
 	f.RootCmd = *f.Builder.GetRootCommand()
 	f.SubCmd = *f.Builder.GetSubCommand()
@@ -162,7 +136,7 @@ func (f *CmdVersionSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 }
 
 const (
-	cmdVersionSubHeader = `{{ .Boilerplate }}
+	cmdVersionSub = `{{ .Boilerplate }}
 
 package {{ .Resource.Group }}
 
@@ -170,16 +144,10 @@ import (
 	"github.com/spf13/cobra"
 	
 	cmdversion "{{ .Repo }}/cmd/{{ .RootCmd.Name }}/commands/version"
+
+	"{{ .Repo }}/apis/{{ .Resource.Group }}"
 )
 
-var {{ .APIVersionsLatestVarName }} = "{{ .Resource.Version }}"
-var {{ .APIVersionsVarName }} = []string{
-	%s
-}
-
-%s
-`
-	cmdVersionSubBody = `
 // New{{ .Resource.Kind }}SubCommand creates a new command and adds it to its 
 // parent command.
 func New{{ .Resource.Kind }}SubCommand(parentCommand *cobra.Command) {
@@ -194,9 +162,15 @@ func New{{ .Resource.Kind }}SubCommand(parentCommand *cobra.Command) {
 }
 
 func Version{{ .Resource.Kind }}(v *cmdversion.VersionSubCommand) error {
+	apiVersions := make([]string, len({{ .Resource.Group }}.{{ .Resource.Kind }}GroupVersions()))
+
+	for i, groupVersion := range {{ .Resource.Group }}.{{ .Resource.Kind }}GroupVersions() {
+		apiVersions[i] = groupVersion.Version
+	}
+
 	versionInfo := cmdversion.VersionInfo{
 		CLIVersion:  cmdversion.CLIVersion,
-		APIVersions: {{ .APIVersionsVarName }},
+		APIVersions: apiVersions,
 	}
 
 	return versionInfo.Display()
