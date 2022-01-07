@@ -65,17 +65,21 @@ import (
 // Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource.
 func Create{{ .UniqueName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
-	{{- if $.Builder.IsComponent }}
+	{{ if $.Builder.IsComponent -}}
 	collection *{{ $.Builder.GetCollection.Spec.API.Group }}{{ $.Builder.GetCollection.Spec.API.Version }}.{{ $.Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
-) (client.Object, error) {
+) ([]client.Object, error) {
+	resourceObjs := []client.Object{}
+
 	{{- .SourceCode }}
 
 	{{ if not $.Builder.IsClusterScoped }}
 	resourceObj.SetNamespace(parent.Namespace)
 	{{ end }}
 
-	return resourceObj, nil
+	resourceObjs = append(resourceObjs, resourceObj)
+
+	return resourceObjs, nil
 }
 {{ end }}
 `

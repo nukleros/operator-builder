@@ -206,13 +206,13 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(req *workload.Request) ([]
 	}
 
 	// create resources in memory
-	for _, f := range {{ .Builder.GetPackageName }}.CreateFuncs {
-		resource, err := f(component{{ if .Builder.IsComponent }}, collection{{ end }})
-		if err != nil {
-			return nil, err
-		}
+	resources, err := {{ .Builder.GetPackageName }}.Generate(*component{{ if .Builder.IsComponent }}, *collection{{ end }})
+	if err != nil {
+		return nil, err
+	}
 
-		// run through the mutation functions to mutate the resources
+	// run through the mutation functions to mutate the resources
+	for _, resource := range resources {
 		mutatedResources, skip, err := r.Mutate(req, resource)
 		if err != nil {
 			return []client.Object{}, err

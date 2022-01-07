@@ -102,21 +102,21 @@ func Generate(collectionObj {{ .Builder.GetCollection.Spec.API.Group }}{{ .Build
 {{ else -}}
 func Generate(workloadObj {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}) ([]client.Object, error) {
 {{ end -}}
-	resourceObjects := make([]client.Object, len(CreateFuncs))
+	resourceObjects := []client.Object{}
 
-	for i, f := range CreateFuncs {
+	for _, f := range CreateFuncs {
 		{{ if .Builder.IsComponent -}}
-		resource, err := f(&workloadObj, &collectionObj)
+		resources, err := f(&workloadObj, &collectionObj)
 		{{ else if .Builder.IsCollection -}}
-		resource, err := f(&collectionObj)
+		resources, err := f(&collectionObj)
 		{{ else -}}
-		resource, err := f(&workloadObj)
+		resources, err := f(&workloadObj)
 		{{ end }}
 		if err != nil {
 			return nil, err
 		}
 
-		resourceObjects[i] = resource
+		resourceObjects = append(resourceObjects, resources...)
 	}
 
 	return resourceObjects, nil
@@ -169,7 +169,7 @@ var CreateFuncs = []func(
 	{{ if $.Builder.IsComponent -}}
 	*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
-) (client.Object, error) {
+) ([]client.Object, error) {
 	{{ range .CreateFuncNames }}
 		{{- . -}},
 	{{ end }}
@@ -188,7 +188,7 @@ var InitFuncs = []func(
 	{{ if $.Builder.IsComponent -}}
 	*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
-) (client.Object, error) {
+) ([]client.Object, error) {
 	{{ range .InitFuncNames }}
 		{{- . -}},
 	{{ end }}
