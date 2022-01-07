@@ -20,6 +20,7 @@ type WorkloadInitializer interface {
 
 	GetDomain() string
 	GetRootCommand() *CliCommand
+	GetWorkloadKind() WorkloadKind
 
 	SetNames()
 

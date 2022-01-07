@@ -12,21 +12,17 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
-const (
-	defaultComponentDescription = `Manage %s workload`
-)
-
 var ErrNoComponentsOnComponent = errors.New("cannot set component workloads on a component workload - only on collections")
 
 // ComponentWorkloadSpec defines the attributes for a workload that is a
 // component of a collection.
 type ComponentWorkloadSpec struct {
-	API                   WorkloadAPISpec `json:"api" yaml:"api"`
-	CompanionCliSubcmd    CliCommand      `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
-	CompanionCliRootcmd   CliCommand
-	Dependencies          []string `json:"dependencies" yaml:"dependencies"`
-	ConfigPath            string
-	ComponentDependencies []*ComponentWorkload
+	API                   WorkloadAPISpec      `json:"api" yaml:"api"`
+	CompanionCliSubcmd    CliCommand           `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
+	CompanionCliRootcmd   CliCommand           `json:"-" yaml:"-" validate:"omitempty"`
+	Dependencies          []string             `json:"dependencies" yaml:"dependencies"`
+	ConfigPath            string               `json:"-" yaml:"-" validate:"omitempty"`
+	ComponentDependencies []*ComponentWorkload `json:"-" yaml:"-" validate:"omitempty"`
 	WorkloadSpec          `yaml:",inline"`
 }
 
@@ -34,6 +30,26 @@ type ComponentWorkloadSpec struct {
 type ComponentWorkload struct {
 	WorkloadShared `yaml:",inline"`
 	Spec           ComponentWorkloadSpec `json:"spec" yaml:"spec" validate:"required"`
+}
+
+func NewComponentWorkload(
+	name string,
+	spec WorkloadAPISpec,
+	resourceFiles, dependencies []string,
+) *ComponentWorkload {
+	return &ComponentWorkload{
+		WorkloadShared: WorkloadShared{
+			Kind: WorkloadKindComponent,
+			Name: name,
+		},
+		Spec: ComponentWorkloadSpec{
+			API: *NewSampleAPISpec(),
+			WorkloadSpec: WorkloadSpec{
+				Resources: getResourcesFromFiles(resourceFiles),
+			},
+			Dependencies: dependencies,
+		},
+	}
 }
 
 func (c *ComponentWorkload) Validate() error {
@@ -70,6 +86,10 @@ func (c *ComponentWorkload) GetWorkloadKind() WorkloadKind {
 // methods that implement WorkloadAPIBuilder.
 func (c *ComponentWorkload) GetDomain() string {
 	return c.Spec.API.Domain
+}
+
+func (c *ComponentWorkload) HasRootCmdName() bool {
+	return false
 }
 
 func (c *ComponentWorkload) GetName() string {
@@ -204,11 +224,7 @@ func (c *ComponentWorkload) HasSubCmdDescription() bool {
 func (c *ComponentWorkload) SetNames() {
 	c.PackageName = utils.ToPackageName(c.Name)
 
-	// set the subcommand values
-	c.Spec.CompanionCliSubcmd.setSubCommandValues(
-		c.Spec.API.Kind,
-		defaultComponentDescription,
-	)
+	c.Spec.CompanionCliSubcmd.setCommonValues(c, true)
 }
 
 func (c *ComponentWorkload) GetRootCommand() *CliCommand {

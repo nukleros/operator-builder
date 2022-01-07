@@ -12,10 +12,6 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
-const (
-	defaultStandaloneDescription = `Manage %s workload`
-)
-
 var ErrNoComponentsOnStandalone = errors.New("cannot set component workloads on a component workload - only on collections")
 
 // StandaloneWorkloadSpec defines the attributes for a standalone workload.
@@ -29,6 +25,25 @@ type StandaloneWorkloadSpec struct {
 type StandaloneWorkload struct {
 	WorkloadShared `yaml:",inline"`
 	Spec           StandaloneWorkloadSpec `json:"spec" yaml:"spec" validate:"required"`
+}
+
+func NewStandaloneWorkload(
+	name string,
+	spec WorkloadAPISpec,
+	resourceFiles []string,
+) *StandaloneWorkload {
+	return &StandaloneWorkload{
+		WorkloadShared: WorkloadShared{
+			Kind: WorkloadKindStandalone,
+			Name: name,
+		},
+		Spec: StandaloneWorkloadSpec{
+			API: spec,
+			WorkloadSpec: WorkloadSpec{
+				Resources: getResourcesFromFiles(resourceFiles),
+			},
+		},
+	}
 }
 
 func (s *StandaloneWorkload) Validate() error {
@@ -185,15 +200,10 @@ func (s *StandaloneWorkload) SetNames() {
 	// only set the names if we have specified the root command name else none
 	// of the following values will matter as the code for the cli will not be
 	// generated
-	if !s.HasRootCmdName() {
-		return
+	if s.HasRootCmdName() {
+		// set the root command values
+		s.Spec.CompanionCliRootcmd.setCommonValues(s, false)
 	}
-
-	// set the root command values
-	s.Spec.CompanionCliRootcmd.setCommonValues(
-		s.Spec.API.Kind,
-		defaultStandaloneDescription,
-	)
 }
 
 func (s *StandaloneWorkload) GetRootCommand() *CliCommand {

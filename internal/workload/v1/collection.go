@@ -22,11 +22,11 @@ var ErrMissingRequiredFields = errors.New("missing required fields")
 
 // WorkloadCollectionSpec defines the attributes for a workload collection.
 type WorkloadCollectionSpec struct {
-	API                 WorkloadAPISpec `json:"api" yaml:"api"`
-	CompanionCliRootcmd CliCommand      `json:"companionCliRootcmd" yaml:"companionCliRootcmd" validate:"omitempty"`
-	CompanionCliSubcmd  CliCommand      `json:"companionCliSubcmd" yaml:"companionCliSubcmd" validate:"omitempty"`
-	ComponentFiles      []string        `json:"componentFiles" yaml:"componentFiles"`
-	Components          []*ComponentWorkload
+	API                 WorkloadAPISpec      `json:"api" yaml:"api"`
+	CompanionCliRootcmd CliCommand           `json:"companionCliRootcmd,omitempty" yaml:"companionCliRootcmd,omitempty" validate:"omitempty"`
+	CompanionCliSubcmd  CliCommand           `json:"companionCliSubcmd,omitempty" yaml:"companionCliSubcmd,omitempty" validate:"omitempty"`
+	ComponentFiles      []string             `json:"componentFiles" yaml:"componentFiles"`
+	Components          []*ComponentWorkload `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	WorkloadSpec        `yaml:",inline"`
 }
 
@@ -34,6 +34,23 @@ type WorkloadCollectionSpec struct {
 type WorkloadCollection struct {
 	WorkloadShared `yaml:",inline"`
 	Spec           WorkloadCollectionSpec `json:"spec" yaml:"spec" validate:"required"`
+}
+
+func NewWorkloadCollection(
+	name string,
+	spec WorkloadAPISpec,
+	componentFiles []string,
+) *WorkloadCollection {
+	return &WorkloadCollection{
+		WorkloadShared: WorkloadShared{
+			Kind: WorkloadKindCollection,
+			Name: name,
+		},
+		Spec: WorkloadCollectionSpec{
+			API:            spec,
+			ComponentFiles: componentFiles,
+		},
+	}
 }
 
 func (c *WorkloadCollection) Validate() error {
@@ -230,25 +247,13 @@ func (c *WorkloadCollection) SetNames() {
 	// only set the names if we have specified the root command name else none
 	// of the following values will matter as the code for the cli will not be
 	// generated
-	if !c.HasRootCmdName() {
-		return
+	if c.HasRootCmdName() {
+		// set the root command values
+		c.Spec.CompanionCliRootcmd.setCommonValues(c, false)
+
+		// set the subcommand values
+		c.Spec.CompanionCliSubcmd.setCommonValues(c, true)
 	}
-
-	// set the root command values
-	c.Spec.CompanionCliRootcmd.setCommonValues(
-		c.Spec.API.Kind,
-		defaultCollectionRootcommandDescription,
-	)
-
-	// set the subcommand values
-	if !c.Spec.CompanionCliSubcmd.hasName() {
-		c.Spec.CompanionCliSubcmd.Name = defaultCollectionSubcommandName
-	}
-
-	c.Spec.CompanionCliSubcmd.setSubCommandValues(
-		c.Spec.API.Kind,
-		defaultCollectionSubcommandDescription,
-	)
 }
 
 func (c *WorkloadCollection) GetRootCommand() *CliCommand {

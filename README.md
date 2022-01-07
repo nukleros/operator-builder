@@ -257,8 +257,17 @@ more.
 
 Operator Builder uses a workload configuration to provide important details for
 your operator project.  This guide uses a [standalone
-workload](docs/standalone-workloads.md). Save this file to your
-`.source-manifests` directory.
+workload](docs/standalone-workloads.md). Save a workload config to your
+`.source-manifests` directory by using one of the following commands (or 
+simply copy/pasting the YAML below the commands):
+
+    # generate a workload config with the path (-p) flag
+    operator-builder init-config standalone -p .source-manifests/workload.yaml
+
+    # generate a workload config from stdout
+    operator-builder init-config standalone > .source-manifests/workload.yaml
+
+This will generate the following YAML:
 
     # .source-manifests/workload.yaml
     name: webstore
@@ -276,8 +285,7 @@ workload](docs/standalone-workloads.md). Save this file to your
       resources:
       - app.yaml
 
-For a standalone workload the `kind` must be `StandaloneWorkload`.  The `name`
-is arbitrary and can be whatever you like.
+The `name` is arbitrary and can be whatever you like.
 
 In the `spec`, the following fields are required:
 
@@ -292,7 +300,7 @@ In the `spec`, the following fields are required:
   relative path from the workload manifest to all the files that contain the
   static manifests we talked about in step 2.
 
-For more info about API groups, versions and kinds, checkout the [Kubebuilder
+For more info about API groups, versions and kinds, check out the [Kubebuilder
 docs](https://kubebuilder.io/cronjob-tutorial/gvks.html).
 
 The following fields in the `spec` are optional:

@@ -18,6 +18,15 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
 )
 
+// WorkloadAPISpec sample fields which may be used in things like testing or
+// generation of sample files.
+const (
+	SampleWorkloadAPIDomain  = "acme.com"
+	SampleWorkloadAPIGroup   = "apps"
+	SampleWorkloadAPIKind    = "MyApp"
+	SampleWorkloadAPIVersion = "v1alpha1"
+)
+
 // WorkloadAPISpec contains fields shared by all workload specs.
 type WorkloadAPISpec struct {
 	Domain        string `json:"domain" yaml:"domain"`
@@ -31,17 +40,17 @@ type WorkloadAPISpec struct {
 type WorkloadShared struct {
 	Name        string       `json:"name"  yaml:"name" validate:"required"`
 	Kind        WorkloadKind `json:"kind"  yaml:"kind" validate:"required"`
-	PackageName string
+	PackageName string       `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 }
 
 // WorkloadSpec contains information required to generate source code.
 type WorkloadSpec struct {
-	Resources      []*Resource `json:"resources" yaml:"resources"`
-	Collection     *WorkloadCollection
-	APISpecFields  *APIFields
-	SourceFiles    *[]SourceFile
-	RBACRules      *RBACRules
-	OwnershipRules *OwnershipRules
+	Resources      []*Resource         `json:"resources" yaml:"resources"`
+	Collection     *WorkloadCollection `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	APISpecFields  *APIFields          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	SourceFiles    *[]SourceFile       `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	RBACRules      *RBACRules          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	OwnershipRules *OwnershipRules     `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 }
 
 func (ws *WorkloadSpec) init() {
@@ -55,6 +64,16 @@ func (ws *WorkloadSpec) init() {
 	ws.OwnershipRules = &OwnershipRules{}
 	ws.RBACRules = &RBACRules{}
 	ws.SourceFiles = &[]SourceFile{}
+}
+
+func NewSampleAPISpec() *WorkloadAPISpec {
+	return &WorkloadAPISpec{
+		Domain:        SampleWorkloadAPIDomain,
+		Group:         SampleWorkloadAPIGroup,
+		Kind:          SampleWorkloadAPIKind,
+		Version:       SampleWorkloadAPIVersion,
+		ClusterScoped: false,
+	}
 }
 
 func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {

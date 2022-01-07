@@ -36,7 +36,7 @@ func ToFileName(name string) string {
 	return strings.ToLower(strings.Replace(name, "-", "_", -1))
 }
 
-// ToPackageName will convert a kebab-case string to an alllower name
+// ToPackageName will convert a kebab-case string to an all lower name
 // appropriate for directory and package names.
 func ToPackageName(name string) string {
 	return strings.ToLower(strings.Replace(name, "-", "", -1))

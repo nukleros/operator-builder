@@ -36,9 +36,9 @@ type ChildResource struct {
 
 // Resource represents a single input manifest for a given config.
 type Resource struct {
-	FileName         string
 	relativeFileName string
-	Content          []byte
+	FileName         string `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	Content          []byte `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 }
 
 func (r *Resource) UnmarshalYAML(node *yaml.Node) error {
@@ -81,6 +81,24 @@ func extractManifests(manifestContent []byte) []string {
 	}
 
 	return manifests
+}
+
+func ResourcesFromFiles(resourceFiles []string) []*Resource {
+	return getResourcesFromFiles(resourceFiles)
+}
+
+func getResourcesFromFiles(resourceFiles []string) []*Resource {
+	resources := make([]*Resource, len(resourceFiles))
+
+	for i, resourceFile := range resourceFiles {
+		resource := &Resource{
+			FileName: resourceFile,
+		}
+
+		resources[i] = resource
+	}
+
+	return resources
 }
 
 func getFuncNames(sourceFiles []SourceFile) (createFuncNames, initFuncNames []string) {

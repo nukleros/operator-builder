@@ -47,6 +47,7 @@ func NewKubebuilderCLI() (*kbcli.CLI, error) {
 		kbcli.WithDefaultPlugins(cfgv3.Version, gov3Bundle),
 		kbcli.WithDefaultProjectVersion(cfgv3.Version),
 		kbcli.WithExtraCommands(NewUpdateCmd()),
+		kbcli.WithExtraCommands(NewInitConfigCmd()),
 		kbcli.WithCompletion(),
 	)
 	if err != nil {
