@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 )
 
@@ -84,6 +85,32 @@ func (api *APIFields) AddField(path string, fieldType FieldType, comments []stri
 	return nil
 }
 
+func (api *APIFields) GenerateAPISpec(kind string) string {
+	var buf bytes.Buffer
+
+	mustWrite(buf.WriteString(fmt.Sprintf(`
+// %[1]sSpec defines the desired state of %[1]s.
+type %[1]sSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+`, kind)))
+
+	for _, child := range api.Children {
+		child.generateAPISpecField(&buf, kind)
+	}
+
+	mustWrite(buf.WriteString("}\n\n"))
+
+	for _, child := range api.Children {
+		if child.Children != nil {
+			child.generateAPIStruct(&buf, kind)
+		}
+	}
+
+	return buf.String()
+}
+
 func (api *APIFields) GenerateSampleSpec(requiredOnly bool) string {
 	var buf bytes.Buffer
 
@@ -126,32 +153,6 @@ func (api *APIFields) hasRequiredField() bool {
 	}
 
 	return false
-}
-
-func (api *APIFields) GenerateAPISpec(kind string) string {
-	var buf bytes.Buffer
-
-	mustWrite(buf.WriteString(fmt.Sprintf(`
-// %[1]sSpec defines the desired state of %[1]s.
-type %[1]sSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-`, kind)))
-
-	for _, child := range api.Children {
-		child.generateAPISpecField(&buf, kind)
-	}
-
-	mustWrite(buf.WriteString("}\n\n"))
-
-	for _, child := range api.Children {
-		if child.Children != nil {
-			child.generateAPIStruct(&buf, kind)
-		}
-	}
-
-	return buf.String()
 }
 
 func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
@@ -222,13 +223,7 @@ func (api *APIFields) isEqual(input *APIFields) bool {
 		}
 
 		if len(api.Comments) == len(input.Comments) {
-			for i := range api.Comments {
-				if api.Comments[i] != input.Comments[i] {
-					return false
-				}
-			}
-
-			return true
+			return reflect.DeepEqual(api.Comments, input.Comments)
 		}
 	}
 
@@ -246,29 +241,29 @@ func (api *APIFields) setSample(sampleVal interface{}) {
 	}
 }
 
-func (api *APIFields) setDefault(sampleVal interface{}, hasDefault bool) {
-	if hasDefault {
-		if api.Type == FieldString {
-			api.Default = fmt.Sprintf("%q", sampleVal)
-		} else {
-			api.Default = fmt.Sprintf("%v", sampleVal)
-		}
-
-		if len(api.Markers) == 0 {
-			api.Markers = append(
-				api.Markers,
-				fmt.Sprintf("+kubebuilder:default=%s", api.Default),
-				"+kubebuilder:validation:Optional",
-				fmt.Sprintf("(Default: %s)", api.Default),
-			)
-		}
-
-		api.setSample(sampleVal)
+func (api *APIFields) setDefault(sampleVal interface{}) {
+	if api.Type == FieldString {
+		api.Default = fmt.Sprintf("%q", sampleVal)
+	} else {
+		api.Default = fmt.Sprintf("%v", sampleVal)
 	}
+
+	if len(api.Markers) == 0 {
+		api.Markers = append(
+			api.Markers,
+			fmt.Sprintf("+kubebuilder:default=%s", api.Default),
+			"+kubebuilder:validation:Optional",
+			fmt.Sprintf("(Default: %s)", api.Default),
+		)
+	}
+
+	api.setSample(sampleVal)
 }
 
 func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interface{}, hasDefault bool) {
-	api.setDefault(sampleVal, hasDefault)
+	if hasDefault {
+		api.setDefault(sampleVal)
+	}
 
 	if comments != nil {
 		api.Comments = append(api.Comments, comments...)

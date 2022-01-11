@@ -523,3 +523,67 @@ func Test_hasDescription(t *testing.T) {
 		})
 	}
 }
+
+func TestCliCommand_GetSubCmdRelativeFileName(t *testing.T) {
+	t.Parallel()
+
+	type fields struct {
+		Name          string
+		Description   string
+		VarName       string
+		FileName      string
+		IsSubcommand  bool
+		IsRootcommand bool
+	}
+
+	type args struct {
+		rootCmdName      string
+		subCommandFolder string
+		group            string
+		fileName         string
+	}
+
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		{
+			name: "ensure file path generation is correct",
+			fields: fields{
+				Name:          "mycommand",
+				VarName:       "Mycommand",
+				FileName:      "mycommand",
+				Description:   "mycommand test",
+				IsSubcommand:  true,
+				IsRootcommand: false,
+			},
+			args: args{
+				rootCmdName:      "testctl",
+				subCommandFolder: "test",
+				group:            "test",
+				fileName:         "command",
+			},
+			want: "cmd/testctl/commands/test/test/command.go",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			cli := &CliCommand{
+				Name:          tt.fields.Name,
+				Description:   tt.fields.Description,
+				VarName:       tt.fields.VarName,
+				FileName:      tt.fields.FileName,
+				IsSubcommand:  tt.fields.IsSubcommand,
+				IsRootcommand: tt.fields.IsRootcommand,
+			}
+			if got := cli.GetSubCmdRelativeFileName(tt.args.rootCmdName, tt.args.subCommandFolder, tt.args.group, tt.args.fileName); got != tt.want {
+				t.Errorf("CliCommand.GetSubCmdRelativeFileName() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
