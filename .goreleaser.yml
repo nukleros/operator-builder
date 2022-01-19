@@ -135,14 +135,16 @@ nfpms:
       - kubectl
       - golang
       - make
-snapcrafts:
-  - name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-    name: operator-builder
-    summary: "A Kubebuilder plugin to accelerate the development of Kubernetes operators."
-    description: |
-      Operator Builder extends Kubebuilder to facilitate development and maintenance of Kubernetes operators. 
-      It is especially helpful if you need to take large numbers of resources defined with static or templated 
-      yaml and migrate to managing those resources with a custom Kubernetes operator.
-    grade: stable
-    confinement: strict
-    publish: true
+# TODO: readdress this task as it prevented a successful release
+# See action https://github.com/vmware-tanzu-labs/operator-builder/runs/4861431396?check_suite_focus=true
+# snapcrafts:
+#   - name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+#     name: operator-builder
+#     summary: "A Kubebuilder plugin to accelerate the development of Kubernetes operators."
+#     description: |
+#       Operator Builder extends Kubebuilder to facilitate development and maintenance of Kubernetes operators. 
+#       It is especially helpful if you need to take large numbers of resources defined with static or templated 
+#       yaml and migrate to managing those resources with a custom Kubernetes operator.
+#     grade: stable
+#     confinement: strict
+#     publish: true
