@@ -11,17 +11,11 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3/scaffolds"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
 	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
-)
-
-const (
-	CobraVersion               = "v1.1.3"
-	OperatorBulderToolsVersion = "v0.2.0"
 )
 
 var _ plugins.Scaffolder = &initScaffolder{}
@@ -83,11 +77,7 @@ func (s *initScaffolder) Scaffold() error {
 
 	if err := scaffold.Execute(
 		&templates.Main{},
-		&templates.GoMod{
-			ControllerRuntimeVersion:    scaffolds.ControllerRuntimeVersion,
-			CobraVersion:                CobraVersion,
-			OperatorBuilderToolsVersion: OperatorBulderToolsVersion,
-		},
+		&templates.GoMod{},
 		&templates.Dockerfile{},
 		&templates.Makefile{RootCmdName: s.cliRootCommandName},
 		&templates.Readme{RootCmdName: s.cliRootCommandName},
