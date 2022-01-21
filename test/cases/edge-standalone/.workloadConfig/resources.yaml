@@ -1,3 +1,67 @@
+---
+# +operator-builder:resource:field=provider,value="aws",include=false
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: test-exclude
+  labels:
+    provider: "aws" # +operator-builder:field:name=provider,type=string,default="aws"
+data:
+  test: "data"
+---
+# +operator-builder:resource:field=provider,value="aws",include
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: test-include
+  labels:
+    provider: "aws" # +operator-builder:field:name=provider,type=string,default="aws"
+data:
+  test: "data"
+---
+# +operator-builder:resource:field=provider,value="aws",include=true
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: test-include-true
+  labels:
+    provider: "aws" # +operator-builder:field:name=provider,type=string,default="aws"
+data:
+  test: "data"
+---
+# +operator-builder:resource:field=useVolumeExpansion,value=true,include=false
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: test-exclude-bool
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+reclaimPolicy: Delete
+allowVolumeExpansion: true # +operator-builder:field:name=useVolumeExpansion,default=true,type=bool
+mountOptions:
+  - debug
+volumeBindingMode: Immediate
+---
+# +operator-builder:resource:field=webStoreReplicas,value=2,include=false
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-exclude-int
+spec:
+  replicas: 2  # +operator-builder:field:name=webStoreReplicas,default=2,type=int
+  selector:
+    matchLabels:
+      app: webstore
+  template:
+    metadata:
+      labels:
+        app: webstore
+    spec:
+      containers:
+      - name: webstore-container
+        image: nginx:1.17
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

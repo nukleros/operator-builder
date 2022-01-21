@@ -14,21 +14,29 @@ comment.  The marker always begins with `+operator-builder:field:` or
 
 That is followed by arguments separated by `,`.  Arguments can be given in any order.
 
-## Field Marker
+## Arguments
 
-defined as `+operator-builder:field` this marker can be used to define a CRD
+Arguments come after the actual marker and are separated from the marker name 
+with a `:`. They are given in the format of `argument=value` and separated by 
+the `,`. Additionally, if the argument name is given by itself with no value, it 
+is assumed to have an implict `=true` on the end and is treated as a flag.
+
+Below you will find the supported markers and their supported arguments.
+
+## Field Markers
+
+Defined as `+operator-builder:field` this marker can be used to define a CRD
 field for your workload.
 
-### Arguments
+| Field                                | Type                           | Required |
+| ------------------------------------ | ------------------------------ | -------- |
+| [name](#name-required)               | string                         | true     |
+| [type](#type-required)               | string{string, int, bool}      | true     |
+| [default](#default-optional)         | [type](#supported-field-types) | false    |
+| [replace](#replace-optional)         | string                         | false    |
+| [description](#description-optional) | string                         | false    |
 
-Arguments are separated from the marker name with a `:` they are given in the
-format of `argument=value` and separated by the `,`. additionally if the
-argument name is given by itself with no value, it is assumed to have an
-implict `=true` on the end and is treated as a flag.
-
-Below you will find the arguments for a field marker
-
-#### Name (required)
+### Name (required)
 
 The name you want to use for the field in the custom resource that
 Operator Builder will create.  If you're not sure what that means, it will
@@ -36,10 +44,12 @@ become clear shortly.
 
 ex. +operator-builder:field:name=myName
 
-#### Type (required)
+### Type (required)
 
 The other required field is the `type` field which specifies the data type for
-the value.  The supported data types are:
+the value.  
+
+[#supported-field-types]() The supported data types are:
 
 - bool
 - string
@@ -51,7 +61,7 @@ the value.  The supported data types are:
 
 ex. `+operator-builder:field:name=myName,type=string`
 
-#### Default (optional)
+### Default (optional)
 
 This will make configuration optional for your operator's end user. the supplied
 value will be used for the default value. If a field has no default, it will be
@@ -59,7 +69,7 @@ a required field in the custom resource.  For example:
 
     `operator-builder:field:name=myName,type=string,default=test`
 
-#### Replace (optional)
+### Replace (optional)
 
 There may be some instances where you only want a specific portion of a value
 to be configurable (such as config maps). In these scenarios you can use the
@@ -109,7 +119,7 @@ data:
     justtesting: myoption
 ```
 
-#### Description (optional)
+### Description (optional)
 
 An optional description can be provided which will be used in the source code as
 a Doc String, backticks `` ` `` may be used to capture multiline strings (head
@@ -183,3 +193,170 @@ resource](workload-collections.md#collection-resources) it will be treated as a
 collection marker and will configure a field in the collection's custom
 resource.
 
+## Resource Markers
+
+Defined as `+operator-builder:resource` this marker can be used to control a specific
+resource with arguments in the marker.
+
+| Field                                               | Type                           | Required |
+| --------------------------------------------------- | ------------------------------ | -------- |
+| [field](#field--collectionfield-required)           | string                         | true     |
+| [collectionField](#field--collectionfield-required) | string{string, int, bool}      | true     |
+| [value](#value-required)                            | [type](#supported-field-types) | true     |
+| [include](#include-required)                        | bool                           | true    |
+
+### Field / CollectionField (required)
+
+The conditional field to associate with an action (currently only [include](#include-required)).
+One of `field` or `collectionField` must be provided depending upon if you are 
+checking a condition against a collection, or a component/standalone workload spec.  
+The field input relates directly to a given workload marker such as 
+`+operator-builder:field:name=provider` would produce a field of `provider` to be used 
+in a resource marker with argument `field=provider`.
+
+ex. +operator-builder:resource:collectionField=provider,value="aws",include
+ex. +operator-builder:resource:field=provider,value="aws",include=false
+
+### Value (required)
+
+The conditional value to associate with an action (currently only `include` - see
+above).  The `value` input relates directly to the value of `field` as it exists
+in the API spec requested by the user.
+
+ex. +operator-builder:resource:collectionField=provider,value="aws",include
+ex. +operator-builder:resource:field=provider,value="aws",include=false
+
+### Include (required)
+
+The action to perform on the resource.  Include will include the resource for
+deployment during a control loop given a `field` or `collectionField` and a `value`.  
+Using this means that the resource will **only be included** if this condition 
+is met.  If the condition is not met, the resource will not be deployed.
+
+Here are some sample marker examples:
+
+ex. +operator-builder:resource:field=provider,value="aws",include
+ex. +operator-builder:resource:field=provider,value="aws",include=true
+ex. +operator-builder:resource:collectionField=provider,value="aws",include
+ex. +operator-builder:resource:collectionField=provider,value="aws",include=true
+
+With include set to `false`, the opposite is true and the resource is 
+excluded from being deployed during a control loop if a condition is met:
+
+ex. +operator-builder:resource:field=provider,value="aws",include=false
+ex. +operator-builder:resource:collectionField=provider,value="aws",include=false
+
+At this time, the `include` argument with `field` and `value` can be simply thought of 
+as (pseudo-code):
+
+  if field == value {
+    if include {
+      includeResource()
+    }
+  }
+
+**IMPORTANT:** A resource marker is not required and should only be used when there is a desire 
+to act upon a resource.  If no resource marker is provided, a resource is always 
+deployed during a control loop.
+
+#### Include Resource On Condition
+
+Below is a sample of how to include a resource only if a condition is met.  If the
+condition is not met, the resource is not deployed during the control loop:
+
+```yaml
+# +operator-builder:resource:field=provider,value="aws",include
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: aws-storage-class
+  annotations:
+    storageclass.kubernetes.io/is-default-class: true
+  labels:
+    provider: "aws" # +operator-builder:field:name=provider,type=string,default="aws"
+allowVolumeExpansion: false
+provisioner: "kubernetes.io/aws-ebs"
+reclaimPolicy: "Delete"
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: "gp2"
+  iopsPerGB: 10
+  fsType: "ext4"
+  encrypted: false
+```
+
+Given the below CRD, the resource would be included:
+
+```yaml
+apiVersion: apps.acme.com/v1alpha1
+kind: Sample
+metadata:
+  name: sample
+  namespace: default
+spec:
+  provider: "aws"
+```
+
+Given the below CRD, the resource would **NOT** be included:
+
+```yaml
+apiVersion: apps.acme.com/v1alpha1
+kind: Sample
+metadata:
+  name: sample
+  namespace: default
+spec:
+  provider: "azure"
+```
+
+#### Exclude Resource On Condition
+
+Below is a sample of how to exclude a resource only if a condition is met.  If the
+condition is not met, the resource is not deployed during the control loop:
+
+```yaml
+# +operator-builder:resource:field=provider,value="azure",include=false
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: aws-storage-class
+  annotations:
+    storageclass.kubernetes.io/is-default-class: true
+  labels:
+    provider: "aws" # +operator-builder:field:name=provider,type=string,default="aws"
+allowVolumeExpansion: false
+provisioner: "kubernetes.io/aws-ebs"
+reclaimPolicy: "Delete"
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: "gp2"
+  iopsPerGB: 10
+  fsType: "ext4"
+  encrypted: false
+```
+
+Given the below CRD, the resource would be included:
+
+```yaml
+apiVersion: apps.acme.com/v1alpha1
+kind: Sample
+metadata:
+  name: sample
+  namespace: default
+spec:
+  provider: "aws"
+```
+
+Given the below CRD, the resource would **NOT** be included:
+
+```yaml
+apiVersion: apps.acme.com/v1alpha1
+kind: Sample
+metadata:
+  name: sample
+  namespace: default
+spec:
+  provider: "azure"
+```

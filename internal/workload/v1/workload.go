@@ -45,12 +45,14 @@ type WorkloadShared struct {
 
 // WorkloadSpec contains information required to generate source code.
 type WorkloadSpec struct {
-	Resources      []*Resource         `json:"resources" yaml:"resources"`
-	Collection     *WorkloadCollection `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	APISpecFields  *APIFields          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	SourceFiles    *[]SourceFile       `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	RBACRules      *RBACRules          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	OwnershipRules *OwnershipRules     `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	Resources              []*Resource              `json:"resources" yaml:"resources"`
+	FieldMarkers           []*FieldMarker           `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	CollectionFieldMarkers []*CollectionFieldMarker `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	Collection             *WorkloadCollection      `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	APISpecFields          *APIFields               `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	SourceFiles            *[]SourceFile            `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	RBACRules              *RBACRules               `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	OwnershipRules         *OwnershipRules          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 }
 
 func (ws *WorkloadSpec) init() {
@@ -90,7 +92,7 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
 
 		var childResources []ChildResource
 
-		for _, manifest := range extractManifests(manifestFile.Content) {
+		for _, manifest := range manifestFile.extractManifests() {
 			// decode manifest into unstructured data type
 			var manifestObject unstructured.Unstructured
 
@@ -145,19 +147,27 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
 		*ws.SourceFiles = append(*ws.SourceFiles, sourceFile)
 	}
 
+	return ws.postProcessManifests()
+}
+
+func (ws *WorkloadSpec) postProcessManifests() error {
 	// ensure no duplicate file names exist within the source files
 	ws.deduplicateFileNames()
+
+	// process the child resource markers
+	for _, sourceFile := range *ws.SourceFiles {
+		for i := range sourceFile.Children {
+			if err := sourceFile.Children[i].processMarkers(ws); err != nil {
+				return err
+			}
+		}
+	}
 
 	return nil
 }
 
 func (ws *WorkloadSpec) processMarkers(manifestFile *Resource, markerTypes ...MarkerType) error {
-	insp, err := InitializeMarkerInspector(markerTypes...)
-	if err != nil {
-		return formatProcessError(manifestFile.FileName, err)
-	}
-
-	nodes, markerResults, err := insp.InspectYAML(manifestFile.Content, TransformYAML)
+	nodes, markerResults, err := inspectMarkersForYAML(manifestFile.Content, markerTypes...)
 	if err != nil {
 		return formatProcessError(manifestFile.FileName, err)
 	}
@@ -225,6 +235,8 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 				return err
 			}
 
+			ws.FieldMarkers = append(ws.FieldMarkers, &r)
+
 		case CollectionFieldMarker:
 			comments := []string{}
 
@@ -249,6 +261,8 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 				return err
 			}
 
+			ws.CollectionFieldMarkers = append(ws.CollectionFieldMarkers, &r)
+
 		default:
 			continue
 		}
@@ -272,6 +286,7 @@ func (ws *WorkloadSpec) deduplicateFileNames() {
 	for i, sourceFile := range sourceFiles {
 		var count int
 
+		// deduplicate the file names
 		for _, fileName := range fileNames {
 			if fileName == "" {
 				continue

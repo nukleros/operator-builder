@@ -69,6 +69,9 @@ func Create{{ .UniqueName }} (
 	collection *{{ $.Builder.GetCollection.Spec.API.Group }}{{ $.Builder.GetCollection.Spec.API.Version }}.{{ $.Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
 ) ([]client.Object, error) {
+
+	{{- if ne .IncludeCode "" }}{{ .IncludeCode }}{{ end }}
+
 	resourceObjs := []client.Object{}
 
 	{{- .SourceCode }}

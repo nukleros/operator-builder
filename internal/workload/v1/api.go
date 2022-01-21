@@ -25,6 +25,7 @@ type APIFields struct {
 	Children     []*APIFields
 	Default      string
 	Sample       string
+	Last         bool
 }
 
 func (api *APIFields) AddField(path string, fieldType FieldType, comments []string, sample interface{}, hasDefault bool) error {
@@ -65,6 +66,7 @@ func (api *APIFields) AddField(path string, fieldType FieldType, comments []stri
 	}
 
 	newChild := obj.newChild(last, fieldType, sample)
+	newChild.Last = true
 
 	newChild.setCommentsAndDefault(comments, sample, hasDefault)
 

@@ -32,6 +32,7 @@ type ChildResource struct {
 	Kind          string
 	StaticContent string
 	SourceCode    string
+	IncludeCode   string
 }
 
 // Resource represents a single input manifest for a given config.
@@ -47,21 +48,30 @@ func (r *Resource) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (r *Resource) loadManifest() error {
+func (r *Resource) loadContent(isCollection bool) error {
 	manifestContent, err := os.ReadFile(r.FileName)
 	if err != nil {
 		return formatProcessError(r.FileName, err)
 	}
 
-	r.Content = manifestContent
+	if isCollection {
+		// replace all instances of collection markers and collection field markers with regular field markers
+		// as a collection marker on a collection is simply a field marker to itself
+		content := strings.ReplaceAll(string(manifestContent), collectionFieldMarker, fieldMarker)
+		content = strings.ReplaceAll(content, resourceMarkerCollectionFieldName, resourceMarkerFieldName)
+
+		r.Content = []byte(content)
+	} else {
+		r.Content = manifestContent
+	}
 
 	return nil
 }
 
-func extractManifests(manifestContent []byte) []string {
+func (r *Resource) extractManifests() []string {
 	var manifests []string
 
-	lines := strings.Split(string(manifestContent), "\n")
+	lines := strings.Split(string(r.Content), "\n")
 
 	var manifest string
 
@@ -103,10 +113,10 @@ func getResourcesFromFiles(resourceFiles []string) []*Resource {
 
 func getFuncNames(sourceFiles []SourceFile) (createFuncNames, initFuncNames []string) {
 	for _, sourceFile := range sourceFiles {
-		for _, childResource := range sourceFile.Children {
-			funcName := fmt.Sprintf("Create%s", childResource.UniqueName)
+		for i := range sourceFile.Children {
+			funcName := fmt.Sprintf("Create%s", sourceFile.Children[i].UniqueName)
 
-			if strings.EqualFold(childResource.Kind, "customresourcedefinition") {
+			if strings.EqualFold(sourceFile.Children[i].Kind, "customresourcedefinition") {
 				initFuncNames = append(initFuncNames, funcName)
 			}
 
@@ -150,4 +160,56 @@ func expandResources(path string, resources []*Resource) ([]*Resource, error) {
 	}
 
 	return expandedResources, nil
+}
+
+const (
+	includeCode = `if %s != %s {
+		return []client.Object{}, nil
+	}`
+
+	excludeCode = `if %s == %s {
+		return []client.Object{}, nil
+	}`
+)
+
+func (cr *ChildResource) processMarkers(spec *WorkloadSpec) error {
+	// obtain the marker results from the input yaml
+	_, markerResults, err := inspectMarkersForYAML([]byte(cr.StaticContent), ResourceMarkerType)
+	if err != nil {
+		return err
+	}
+
+	// if we have no resource markers, return
+	if len(markerResults) == 0 {
+		return nil
+	}
+
+	var resourceMarker *ResourceMarker
+
+	for _, markerResult := range markerResults {
+		switch marker := markerResult.Object.(type) {
+		case ResourceMarker:
+			marker.associateFieldMarker(spec)
+
+			if marker.fieldMarker != nil {
+				resourceMarker = &marker
+
+				break
+			}
+		default:
+			continue
+		}
+	}
+
+	if err := resourceMarker.process(); err != nil {
+		return err
+	}
+
+	if *resourceMarker.Include {
+		cr.IncludeCode = fmt.Sprintf(includeCode, resourceMarker.sourceCodeVar, resourceMarker.sourceCodeValue)
+	} else {
+		cr.IncludeCode = fmt.Sprintf(excludeCode, resourceMarker.sourceCodeVar, resourceMarker.sourceCodeValue)
+	}
+
+	return nil
 }

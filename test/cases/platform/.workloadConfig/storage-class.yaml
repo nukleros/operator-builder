@@ -1,7 +1,11 @@
+---
+# +operator-builder:resource:collectionField=provider,value="aws",include
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: opb-aws-test
+  labels:
+    provider: "aws" # +operator-builder:collection:field:name=provider,type=string,default="aws"
 provisioner: kubernetes.io/aws-ebs
 parameters:
   type: gp2
@@ -10,4 +14,17 @@ allowVolumeExpansion: true
 mountOptions:
   - debug
 volumeBindingMode: Immediate
-
+---
+# +operator-builder:resource:collectionField=provider,value="aws",include=false
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: opb-aws-test-exclude
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+mountOptions:
+  - debug
+volumeBindingMode: Immediate
