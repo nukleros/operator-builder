@@ -48,6 +48,7 @@ type WorkloadSpec struct {
 	Resources              []*Resource              `json:"resources" yaml:"resources"`
 	FieldMarkers           []*FieldMarker           `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	CollectionFieldMarkers []*CollectionFieldMarker `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	ForCollection          bool                     `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	Collection             *WorkloadCollection      `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	APISpecFields          *APIFields               `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	SourceFiles            *[]SourceFile            `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
@@ -63,9 +64,76 @@ func (ws *WorkloadSpec) init() {
 		Sample: "spec:",
 	}
 
+	// append the collection ref if we need to
+	if ws.needsCollectionRef() {
+		ws.appendCollectionRef()
+	}
+
 	ws.OwnershipRules = &OwnershipRules{}
 	ws.RBACRules = &RBACRules{}
 	ws.SourceFiles = &[]SourceFile{}
+}
+
+func (ws *WorkloadSpec) appendCollectionRef() {
+	// ensure api spec and collection is already set
+	if ws.APISpecFields == nil || ws.Collection == nil {
+		return
+	}
+
+	// ensure we are adding to the spec field
+	if ws.APISpecFields.Name != "Spec" {
+		return
+	}
+
+	var sampleNamespace string
+
+	if ws.Collection.IsClusterScoped() {
+		sampleNamespace = ""
+	} else {
+		sampleNamespace = "default"
+	}
+
+	// append to children
+	collectionField := &APIFields{
+		Name:       "Collection",
+		Type:       FieldStruct,
+		Tags:       fmt.Sprintf("`json:%q`", "collection"),
+		Sample:     "#collection:",
+		StructName: "CollectionSpec",
+		Markers: []string{
+			"+kubebuilder:validation:Optional",
+			"Specifies a reference to the collection to use for this workload.",
+			"Requires the name and namespace input to find the collection.",
+			"If no collection field is set, default to selecting the only",
+			"workload collection in the cluster, which will result in an error",
+			"if not exactly one collection is found.",
+		},
+		Children: []*APIFields{
+			{
+				Name:   "Name",
+				Type:   FieldString,
+				Tags:   fmt.Sprintf("`json:%q`", "name"),
+				Sample: fmt.Sprintf("#name: %q", strings.ToLower(ws.Collection.GetAPIKind())+"-sample"),
+				Markers: []string{
+					"Required if specifying collection.  The name of the collection",
+					"within a specific collection.namespace to reference.",
+				},
+			},
+			{
+				Name:   "Namespace",
+				Type:   FieldString,
+				Tags:   fmt.Sprintf("`json:%q`", "namespace"),
+				Sample: fmt.Sprintf("#namespace: %q", sampleNamespace),
+				Markers: []string{
+					"+kubebuilder:validation:Optional",
+					"(Default: \"\") The namespace where the collection exists.  Required only if",
+					"the collection is namespace scoped and not cluster scoped.",
+				},
+			},
+		},
+	}
+
+	ws.APISpecFields.Children = append(ws.APISpecFields.Children, collectionField)
 }
 
 func NewSampleAPISpec() *WorkloadAPISpec {
@@ -304,6 +372,15 @@ func (ws *WorkloadSpec) deduplicateFileNames() {
 
 		fileNames[i] = sourceFile.Filename
 	}
+}
+
+// needsCollectionRef determines if the workload spec needs a collection ref as
+// part of its spec for determining which collection to use.  In this case, we
+// want to check and see if a collection is set, but also ensure that this is not
+// a workload spec that belongs to a collection, as nested collections are
+// unsupported.
+func (ws *WorkloadSpec) needsCollectionRef() bool {
+	return ws.Collection != nil && !ws.ForCollection
 }
 
 func formatProcessError(manifestFile string, err error) error {

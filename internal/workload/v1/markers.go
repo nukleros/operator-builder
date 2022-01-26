@@ -15,6 +15,10 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
 )
 
+var (
+	ErrReservedFieldMarker = errors.New("field marker cannot be used and is reserved for internal purposes")
+)
+
 const (
 	FieldMarkerType MarkerType = iota
 	CollectionMarkerType
@@ -127,6 +131,24 @@ func defineResourceMarker(registry *marker.Registry) error {
 	return nil
 }
 
+func reservedMarkerNames() []string {
+	return []string{
+		"collection",
+		"collection.Name",
+		"collection.Namespace",
+	}
+}
+
+func isReservedMarker(name string) bool {
+	for _, reserved := range reservedMarkerNames() {
+		if name == reserved {
+			return true
+		}
+	}
+
+	return false
+}
+
 func InitializeMarkerInspector(markerTypes ...MarkerType) (*inspect.Inspector, error) {
 	registry := marker.NewRegistry()
 
@@ -150,6 +172,7 @@ func InitializeMarkerInspector(markerTypes ...MarkerType) (*inspect.Inspector, e
 	return inspect.NewInspector(registry), nil
 }
 
+//nolint:gocognit
 func TransformYAML(results ...*inspect.YAMLResult) error {
 	const varTag = "!!var"
 
@@ -175,6 +198,10 @@ func TransformYAML(results ...*inspect.YAMLResult) error {
 
 		switch t := r.Object.(type) {
 		case FieldMarker:
+			if isReservedMarker(t.Name) {
+				return fmt.Errorf("%s %w", t.Name, ErrReservedFieldMarker)
+			}
+
 			if t.Description != nil {
 				*t.Description = strings.TrimPrefix(*t.Description, "\n")
 				key.HeadComment = key.HeadComment + "\n# " + *t.Description
@@ -202,6 +229,10 @@ func TransformYAML(results ...*inspect.YAMLResult) error {
 			r.Object = t
 
 		case CollectionFieldMarker:
+			if isReservedMarker(t.Name) {
+				return fmt.Errorf("%s %w", t.Name, ErrReservedFieldMarker)
+			}
+
 			if t.Description != nil {
 				*t.Description = strings.TrimPrefix(*t.Description, "\n")
 				key.HeadComment = "# " + *t.Description

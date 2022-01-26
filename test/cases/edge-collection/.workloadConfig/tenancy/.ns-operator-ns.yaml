@@ -5,4 +5,4 @@ metadata:
   # component belong
   name: tenancy-system  # +operator-builder:field:name=namespace,default=tenancy-system,type=string
   labels:
-    workload-collection: default-collection
+    workload-collection: default-collection # +operator-builder:collection:field:name=collectionLabel,default=default-collection,type=string

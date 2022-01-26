@@ -79,6 +79,7 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 				// a collection is still a collection to itself
 				collection = v
 				v.Spec.Collection = collection
+				v.Spec.ForCollection = true
 
 				workload = v
 			case *ComponentWorkload:
@@ -112,14 +113,14 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 	workload.SetNames()
 
 	for _, component := range components {
+		// assign values related to the collection
+		component.Spec.Collection = collection
+
 		if err := component.SetResources(component.Spec.ConfigPath); err != nil {
 			return nil, err
 		}
 
 		component.SetNames()
-
-		// assign values related to the collection
-		component.Spec.Collection = collection
 	}
 
 	return workload, nil

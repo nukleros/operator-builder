@@ -148,7 +148,7 @@ func (r *{{ .Resource.Kind }}Reconciler) NewRequest(ctx context.Context, request
 		"namespace", request.Namespace,
 	)
 
-	// get and store the component
+	// get the component from the cluster
 	if err := r.Get(ctx, request.NamespacedName, component); err != nil {
 		if !apierrs.IsNotFound(err) {
 			log.Error(err, "unable to fetch workload")
@@ -159,41 +159,86 @@ func (r *{{ .Resource.Kind }}Reconciler) NewRequest(ctx context.Context, request
 		return nil, err
 	}
 
-	{{ if .Builder.IsComponent -}}
+	// create the workload request
+	workloadRequest := &workload.Request{
+		Context:  ctx,
+		Workload: component,
+		Log:      log,
+	}
+
+	{{ if .Builder.IsComponent }}
+	// store the collection and return any resulting error
+	return workloadRequest, r.SetCollection(component, workloadRequest)
+	{{- else }}
+	return workloadRequest, nil
+	{{- end }}
+}
+
+{{- if .Builder.IsComponent }}
+// SetCollection sets the collection for a particular workload request.
+func (r *{{ .Resource.Kind }}Reconciler) SetCollection(component *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}, req *workload.Request) error {
 	// get and store the collection
 	var collectionList {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}List
-	
-	var collection *{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}
 
-	if err := r.List(ctx, &collectionList); err != nil {
-		return nil, fmt.Errorf("unable to list collection {{ .Builder.GetCollection.Spec.API.Kind }}, %w", err)
+	if err := r.List(req.Context, &collectionList); err != nil {
+		return fmt.Errorf("unable to list collection {{ .Builder.GetCollection.Spec.API.Kind }}, %w", err)
 	}
+
+	// determine if we have requested a specific collection
+	var collectionRef {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}CollectionSpec
+
+	collectionRequested := component.Spec.Collection != collectionRef && component.Spec.Collection.Name != ""
 
 	switch len(collectionList.Items) {
 	case 0:
 		if component.GetDeletionTimestamp().IsZero() {
-			log.Info("no collections available; initiating controller requeue")
+			req.Log.Info("no collections available; initiating controller requeue")
 
-			return nil, workload.ErrCollectionNotFound
+			return workload.ErrCollectionNotFound
 		}
 	case 1:
-		collection = &collectionList.Items[0]
+		if collectionRequested {
+			if collection := r.GetCollection(component, collectionList); collection != nil {
+				req.Collection = collection
+			} else {
+				return fmt.Errorf("no valid {{ .Builder.GetCollection.Spec.API.Kind }} collections found in namespace %s with name %s",
+					component.Spec.Collection.Namespace, component.Spec.Collection.Name)
+			}
+		}
+		
+		req.Collection = &collectionList.Items[0]
 	default:
-		log.Info("multiple collections found; expected 1; cannot proceed")
+		if collectionRequested {
+			if collection := r.GetCollection(component, collectionList); collection != nil {
+				req.Collection = collection
+			} else {
+				return fmt.Errorf("no valid {{ .Builder.GetCollection.Spec.API.Kind }} collections found in namespace %s with name %s",
+					component.Spec.Collection.Namespace, component.Spec.Collection.Name)
+			}
+		}
 
-		return nil, nil
+		return fmt.Errorf("multiple valid collections found; expected 1; cannot proceed")
 	}
-	{{- end }}
 
-	return &workload.Request{
-		Context:    ctx,
-		Workload:   component,
-		{{- if .Builder.IsComponent }}
-		Collection: collection,
-		{{- end }}
-		Log:        log,
-	}, nil
+	return nil
 }
+
+// GetCollection gets a collection for a component given a list.
+func (r *{{ .Resource.Kind }}Reconciler) GetCollection(
+	component *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
+	collectionList {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}List,
+) *{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }} {
+	name, namespace := component.Spec.Collection.Name, component.Spec.Collection.Namespace
+
+	for _, collection := range collectionList.Items {
+		if collection.Name == name && collection.Namespace == namespace {
+			return &collection
+		}
+	}
+
+	return nil
+}
+{{- end }}
 
 // GetResources resources runs the methods to properly construct the resources in memory.
 func (r *{{ .Resource.Kind }}Reconciler) GetResources(req *workload.Request) ([]client.Object, error) {
