@@ -136,6 +136,15 @@ func determineSourceFileName(manifestFile string) SourceFile {
 	sourceFile.Filename += ".go"                                                                         // add correct file ext
 	sourceFile.Filename = utils.ToFileName(sourceFile.Filename)                                          // kebab-case to snake_case
 
+	// strip any prefix that begins with _ or even multiple _s because go does not recognize these files
+	for _, char := range sourceFile.Filename {
+		if string(char) == "_" {
+			sourceFile.Filename = strings.TrimPrefix(sourceFile.Filename, "_")
+		} else {
+			break
+		}
+	}
+
 	return sourceFile
 }
 

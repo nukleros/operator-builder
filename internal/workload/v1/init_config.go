@@ -13,12 +13,9 @@ import (
 )
 
 var (
-	ErrConvertArrayInterface     = errors.New("unable to convert to []interface{}")
-	ErrConvertMapStringInterface = errors.New("unable to convert to map[string]interface{}")
-	ErrConvertString             = errors.New("unable to convert to string")
-	ErrFileExists                = errors.New("force was not requested and file exists")
-	ErrWriteFile                 = errors.New("unable to write to file")
-	ErrWriteStdout               = errors.New("unable to write to stdout")
+	ErrFileExists  = errors.New("force was not requested and file exists")
+	ErrWriteFile   = errors.New("unable to write to file")
+	ErrWriteStdout = errors.New("unable to write to stdout")
 )
 
 const (
@@ -120,27 +117,27 @@ func mutateConfig(workloadConfig WorkloadInitializer) ([]byte, error) {
 }
 
 func mutateResources(yamlData map[string]interface{}) error {
-	specField, ok := yamlData["spec"].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("%w; error converting workload config spec", ErrConvertMapStringInterface)
+	specField, err := toMapStringInterface(yamlData["spec"])
+	if err != nil {
+		return fmt.Errorf("%w; error converting workload config spec %v", err, yamlData["spec"])
 	}
 
-	resourceObjs, ok := specField["resources"].([]interface{})
-	if !ok {
-		return fmt.Errorf("%w; error converting spec.resources", ErrConvertArrayInterface)
+	resourceObjs, err := toArrayInterface(specField["resources"])
+	if err != nil {
+		return fmt.Errorf("%w; error converting spec.resources %v", err, specField["resources"])
 	}
 
 	resources := make([]string, len(resourceObjs))
 
 	for i, resource := range resourceObjs {
-		resourceMap, ok := resource.(map[string]interface{})
-		if !ok {
-			return fmt.Errorf("%w; error converting spec.resources item", ErrConvertMapStringInterface)
+		resourceMap, err := toMapStringInterface(resource)
+		if err != nil {
+			return fmt.Errorf("%w; error converting spec.resources item %v", err, resource)
 		}
 
-		filename, ok := resourceMap["filename"].(string)
-		if !ok {
-			return fmt.Errorf("%w; error converting spec.resources.filename", ErrConvertString)
+		filename, err := toString(resourceMap["filename"])
+		if err != nil {
+			return fmt.Errorf("%w; error converting spec.resources.filename %v", err, resource)
 		}
 
 		resources[i] = filename

@@ -33,6 +33,14 @@ install: build
 #
 # traditional testing
 #
+GOLANGCI_LINT_VERSION ?= v1.44.0
+install-linter:
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+		sh -s -- -b $$(go env GOPATH)/bin $(GOLANGCI_LINT_VERSION)
+
+lint:
+	golangci-lint run
+
 test:
 	go test -cover -coverprofile=./bin/coverage.out ./...
 

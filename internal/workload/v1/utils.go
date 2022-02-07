@@ -4,12 +4,20 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+)
+
+var (
+	ErrConvertArrayInterface     = errors.New("unable to convert to []interface{}")
+	ErrConvertArrayString        = errors.New("unable to convert to []string")
+	ErrConvertMapStringInterface = errors.New("unable to convert to map[string]interface{}")
+	ErrConvertString             = errors.New("unable to convert to string")
 )
 
 func ReadStream(fileName string) (io.ReadCloser, error) {
@@ -88,4 +96,40 @@ func expand(g []string) ([]string, error) {
 	}
 
 	return matches, nil
+}
+
+func toArrayInterface(in interface{}) ([]interface{}, error) {
+	out, ok := in.([]interface{})
+	if !ok {
+		return nil, ErrConvertArrayInterface
+	}
+
+	return out, nil
+}
+
+func toArrayString(in interface{}) ([]string, error) {
+	out, ok := in.([]string)
+	if !ok {
+		return nil, ErrConvertArrayString
+	}
+
+	return out, nil
+}
+
+func toMapStringInterface(in interface{}) (map[string]interface{}, error) {
+	out, ok := in.(map[string]interface{})
+	if !ok {
+		return nil, ErrConvertMapStringInterface
+	}
+
+	return out, nil
+}
+
+func toString(in interface{}) (string, error) {
+	out, ok := in.(string)
+	if !ok {
+		return "", ErrConvertString
+	}
+
+	return out, nil
 }

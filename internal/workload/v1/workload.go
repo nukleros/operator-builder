@@ -176,8 +176,11 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
 			// determine resource group and version
 			resourceVersion, resourceGroup := versionGroupFromAPIVersion(manifestObject.GetAPIVersion())
 
-			// determine group and resource for RBAC rule generation
-			ws.RBACRules.addRulesForManifest(manifestObject.GetKind(), resourceGroup, manifestObject.Object)
+			// add the rules for this manifest
+			err = ws.RBACRules.addRulesForManifest(manifestObject.GetKind(), resourceGroup, manifestObject.Object)
+			if err != nil {
+				return err
+			}
 
 			ws.OwnershipRules.addOrUpdateOwnership(
 				manifestObject.GetAPIVersion(),

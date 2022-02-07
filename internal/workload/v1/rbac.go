@@ -23,6 +23,16 @@ type RBACRule struct {
 	VerbString string
 }
 
+// RBACRoleRule contains the info needed to create the kubebuilder:rbac markers
+// in the controller when a resource that is of a role or clusterrole type is
+// found.  This is because the underlying controller needs the same permissions
+// for the role or clusterrole that it is attempting to manage.
+type RBACRoleRule struct {
+	Groups    []string
+	Resources []string
+	Verbs     []string
+}
+
 type RBACRules []RBACRule
 
 func (r *RBACRule) AddVerb(verb string) {
@@ -78,10 +88,6 @@ func (rs *RBACRules) groupResourceRecorded(newRBACRule *RBACRule) bool {
 }
 
 func (rs *RBACRules) AddOrUpdateRules(newRule *RBACRule) {
-	if rs == nil {
-		rs = &RBACRules{}
-	}
-
 	if !rs.groupResourceRecorded(newRule) {
 		newRule.VerbString = rbacVerbsToString(newRule.Verbs)
 		*rs = append(*rs, *newRule)
@@ -93,6 +99,33 @@ func (rs *RBACRules) AddOrUpdateRules(newRule *RBACRule) {
 					rules[i].AddVerb(verb)
 				}
 			}
+		}
+	}
+}
+
+func (rs *RBACRules) AddOrUpdateRoleRules(newRule *RBACRoleRule) {
+	// assign a new rule for each group and kind match
+	if len(newRule.Groups) == 0 {
+		return
+	}
+
+	for _, rbacGroup := range newRule.Groups {
+		if len(newRule.Resources) == 0 {
+			return
+		}
+
+		for _, rbacKind := range newRule.Resources {
+			if len(newRule.Verbs) == 0 {
+				return
+			}
+
+			rs.AddOrUpdateRules(
+				&RBACRule{
+					Group:    rbacGroupFromGroup(rbacGroup),
+					Resource: getResourceForRBAC(rbacKind),
+					Verbs:    newRule.Verbs,
+				},
+			)
 		}
 	}
 }
@@ -139,7 +172,7 @@ func valueFromInterface(in interface{}, key string) (out interface{}) {
 	return out
 }
 
-func (rs *RBACRules) addRulesForManifest(kind, group string, rawContent interface{}) {
+func (rs *RBACRules) addRulesForManifest(kind, group string, rawContent interface{}) error {
 	rs.AddOrUpdateRules(
 		&RBACRule{
 			Group:    group,
@@ -151,47 +184,50 @@ func (rs *RBACRules) addRulesForManifest(kind, group string, rawContent interfac
 	// if we are working with roles and cluster roles, we must also grant rbac to the resources
 	// which are managed by them
 	if strings.EqualFold(kind, "clusterrole") || strings.EqualFold(kind, "role") {
-		resourceRules := valueFromInterface(rawContent, "rules")
-		if resourceRules == nil {
-			return
+		rules := valueFromInterface(rawContent, "rules")
+		if rules == nil {
+			return nil
 		}
 
-		for _, resourceRule := range resourceRules.([]interface{}) {
-			rbacGroups := valueFromInterface(resourceRule, "apiGroups")
-			rbacKinds := valueFromInterface(resourceRule, "resources")
-			rbacVerbs := valueFromInterface(resourceRule, "verbs")
+		rbacRoleRules, err := toArrayInterface(rules)
+		if err != nil {
+			return fmt.Errorf("%w; error converting resource rules %v", err, rules)
+		}
 
-			// assign a new rule for each group and kind match
-			if rbacGroups == nil {
-				continue
+		for _, rbacRoleRule := range rbacRoleRules {
+			rule := &RBACRoleRule{}
+			if err := rule.processRawRule(rbacRoleRule); err != nil {
+				return fmt.Errorf("%w; error processing rbac role rule %v", err, rules)
 			}
 
-			for _, rbacGroup := range rbacGroups.([]interface{}) {
-				if rbacKinds == nil {
-					continue
-				}
-
-				for _, rbacKind := range rbacKinds.([]interface{}) {
-					if rbacVerbs == nil {
-						continue
-					}
-					// gather verbs and convert to strings
-					var verbs []string
-					for _, verb := range rbacVerbs.([]interface{}) {
-						verbs = append(verbs, verb.(string))
-					}
-
-					rs.AddOrUpdateRules(
-						&RBACRule{
-							Group:    rbacGroupFromGroup(rbacGroup.(string)),
-							Resource: getResourceForRBAC(rbacKind.(string)),
-							Verbs:    verbs,
-						},
-					)
-				}
-			}
+			rs.AddOrUpdateRoleRules(rule)
 		}
 	}
+
+	return nil
+}
+
+func (roleRule *RBACRoleRule) processRawRule(rule interface{}) error {
+	rbacGroups, err := toArrayString(valueFromInterface(rule, "apiGroups"))
+	if err != nil {
+		return fmt.Errorf("%w; error converting rbac groups for rule %v", err, rule)
+	}
+
+	rbacKinds, err := toArrayString(valueFromInterface(rule, "resources"))
+	if err != nil {
+		return fmt.Errorf("%w; error converting rbac kinds for rule %v", err, rule)
+	}
+
+	rbacVerbs, err := toArrayString(valueFromInterface(rule, "verbs"))
+	if err != nil {
+		return fmt.Errorf("%w; error converting rbac verbs for rule %v", err, rule)
+	}
+
+	roleRule.Groups = rbacGroups
+	roleRule.Resources = rbacKinds
+	roleRule.Verbs = rbacVerbs
+
+	return nil
 }
 
 func defaultResourceVerbs() []string {
