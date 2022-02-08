@@ -223,17 +223,22 @@ func parseCollectionComponents(workload *WorkloadCollection, workloadConfig stri
 	var workloads []WorkloadIdentifier
 
 	for _, componentFile := range workload.Spec.ComponentFiles {
-		componentPath := filepath.Join(filepath.Dir(workloadConfig), componentFile)
-
-		w, err := parseConfig(componentPath)
+		componentPaths, err := Glob(filepath.Join(filepath.Dir(workloadConfig), componentFile))
 		if err != nil {
 			return nil, err
 		}
 
-		for _, component := range w[WorkloadKindComponent] {
-			if cw, ok := component.(*ComponentWorkload); ok {
-				cw.Spec.ConfigPath = componentPath
-				workloads = append(workloads, cw)
+		for _, componentPath := range componentPaths {
+			w, err := parseConfig(componentPath)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, component := range w[WorkloadKindComponent] {
+				if cw, ok := component.(*ComponentWorkload); ok {
+					cw.Spec.ConfigPath = componentPath
+					workloads = append(workloads, cw)
+				}
 			}
 		}
 	}

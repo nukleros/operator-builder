@@ -10,8 +10,7 @@ spec:
     name: ns-operator
     description: Manage namespace operator component
   resources:
-  - ns-operator-crd.yaml
-  - ns-operator-deploy.yaml
-  - ../resource-up-one-level.yaml
+    - ../resource-up-one-level.yaml
+    - ns-operator-glob-*.yaml
   dependencies:
-  - tenancy-common-component
+    - tenancy-common-component

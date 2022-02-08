@@ -10,4 +10,4 @@ spec:
     name: tenancy-common
     description: Manage common tenancy component
   resources:
-  - .ns-operator-ns.yaml
+    - .ns-operator-ns.yaml
