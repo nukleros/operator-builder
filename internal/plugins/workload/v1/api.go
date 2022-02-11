@@ -57,9 +57,7 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 
 func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 	// load the workload config
-	workload, err := workloadv1.ProcessAPIConfig(
-		p.workloadConfigPath,
-	)
+	workload, err := workloadv1.ProcessAPIConfig(p.workloadConfigPath)
 	if err != nil {
 		return fmt.Errorf("unable to process api config for %s, %w", p.workloadConfigPath, err)
 	}

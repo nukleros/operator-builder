@@ -46,9 +46,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 }
 
 func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
-	workload, err := workloadv1.ProcessAPIConfig(
-		p.workloadConfigPath,
-	)
+	workload, err := workloadv1.ProcessAPIConfig(p.workloadConfigPath)
 	if err != nil {
 		return fmt.Errorf("unable to inject resource into %s, %w", p.workloadConfigPath, err)
 	}

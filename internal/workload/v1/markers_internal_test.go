@@ -307,8 +307,8 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 	fieldOne := "fieldOne"
 	fieldTwo := "fieldTwo"
 
-	testWorkloadSpec := &WorkloadSpec{
-		CollectionFieldMarkers: []*CollectionFieldMarker{
+	testMarkers := &markerCollection{
+		collectionFieldMarkers: []*CollectionFieldMarker{
 			{
 				Name: collectionFieldOne,
 				Type: FieldString,
@@ -318,7 +318,7 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 				Type: FieldString,
 			},
 		},
-		FieldMarkers: []*FieldMarker{
+		fieldMarkers: []*FieldMarker{
 			{
 				Name: fieldOne,
 				Type: FieldString,
@@ -341,7 +341,7 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 	}
 
 	type args struct {
-		spec *WorkloadSpec
+		markers *markerCollection
 	}
 
 	tests := []struct {
@@ -353,7 +353,7 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 		{
 			name: "resource marker with non-collection field first",
 			args: args{
-				spec: testWorkloadSpec,
+				markers: testMarkers,
 			},
 			fields: fields{
 				Field: &fieldOne,
@@ -369,7 +369,7 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 		{
 			name: "resource marker with non-collection field second",
 			args: args{
-				spec: testWorkloadSpec,
+				markers: testMarkers,
 			},
 			fields: fields{
 				Field: &fieldTwo,
@@ -385,7 +385,7 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 		{
 			name: "resource marker with collection field first",
 			args: args{
-				spec: testWorkloadSpec,
+				markers: testMarkers,
 			},
 			fields: fields{
 				CollectionField: &collectionFieldOne,
@@ -401,7 +401,7 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 		{
 			name: "resource marker with collection field second",
 			args: args{
-				spec: testWorkloadSpec,
+				markers: testMarkers,
 			},
 			fields: fields{
 				CollectionField: &collectionFieldTwo,
@@ -417,7 +417,7 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 		{
 			name: "resource marker with no related fields",
 			args: args{
-				spec: testWorkloadSpec,
+				markers: testMarkers,
 			},
 			fields: fields{
 				CollectionField: &testMissing,
@@ -443,7 +443,7 @@ func TestResourceMarker_associateFieldMarker(t *testing.T) {
 				sourceCodeValue: tt.fields.sourceCodeValue,
 				fieldMarker:     tt.fields.fieldMarker,
 			}
-			rm.associateFieldMarker(tt.args.spec)
+			rm.associateFieldMarker(tt.args.markers)
 			assert.Equal(t, tt.want, rm)
 		})
 	}

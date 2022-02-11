@@ -120,9 +120,27 @@ func toArrayInterface(in interface{}) ([]interface{}, error) {
 }
 
 func toArrayString(in interface{}) ([]string, error) {
+	// attempt direct conversion
 	out, ok := in.([]string)
 	if !ok {
-		return nil, ErrConvertArrayString
+		// attempt conversion for each item
+		outInterfaces, err := toArrayInterface(in)
+		if err != nil {
+			return nil, fmt.Errorf("%w; %s", err, ErrConvertArrayString)
+		}
+
+		outStrings := make([]string, len(outInterfaces))
+
+		for i := range outInterfaces {
+			outString, err := toString(outInterfaces[i])
+			if err != nil {
+				return nil, fmt.Errorf("%w; %s", err, ErrConvertArrayString)
+			}
+
+			outStrings[i] = outString
+		}
+
+		return outStrings, nil
 	}
 
 	return out, nil

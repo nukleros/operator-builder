@@ -218,21 +218,8 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
 		*ws.SourceFiles = append(*ws.SourceFiles, sourceFile)
 	}
 
-	return ws.postProcessManifests()
-}
-
-func (ws *WorkloadSpec) postProcessManifests() error {
 	// ensure no duplicate file names exist within the source files
 	ws.deduplicateFileNames()
-
-	// process the child resource markers
-	for _, sourceFile := range *ws.SourceFiles {
-		for i := range sourceFile.Children {
-			if err := sourceFile.Children[i].processMarkers(ws); err != nil {
-				return err
-			}
-		}
-	}
 
 	return nil
 }
@@ -275,6 +262,18 @@ func (ws *WorkloadSpec) processMarkers(manifestFile *Resource, markerTypes ...Ma
 	return nil
 }
 
+func (ws *WorkloadSpec) processResourceMarkers(markers *markerCollection) error {
+	for _, sourceFile := range *ws.SourceFiles {
+		for i := range sourceFile.Children {
+			if err := sourceFile.Children[i].processResourceMarkers(markers); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult) error {
 	for _, markerResult := range markerResults {
 		var defaultFound bool
@@ -306,6 +305,7 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 				return err
 			}
 
+			r.forCollection = ws.ForCollection
 			ws.FieldMarkers = append(ws.FieldMarkers, &r)
 
 		case CollectionFieldMarker:
@@ -332,6 +332,7 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 				return err
 			}
 
+			r.forCollection = ws.ForCollection
 			ws.CollectionFieldMarkers = append(ws.CollectionFieldMarkers, &r)
 
 		default:

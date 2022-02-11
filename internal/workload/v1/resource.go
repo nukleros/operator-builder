@@ -181,35 +181,46 @@ const (
 	}`
 )
 
-func (cr *ChildResource) processMarkers(spec *WorkloadSpec) error {
+func (cr *ChildResource) processResourceMarkers(markers *markerCollection) error {
 	// obtain the marker results from the input yaml
 	_, markerResults, err := inspectMarkersForYAML([]byte(cr.StaticContent), ResourceMarkerType)
 	if err != nil {
 		return err
 	}
 
-	// if we have no resource markers, return
+	// ensure we have the expected number of resource markers
+	//   - 0: return immediately as resource markers are not required
+	//   - 1: continue processing normally
+	//   - 2: return an error notifying the user that we only expect 1
+	//        resource marker
 	if len(markerResults) == 0 {
 		return nil
 	}
 
+	filtered := filterResourceMarkers(markerResults)
+
 	var resourceMarker *ResourceMarker
 
-	for _, markerResult := range markerResults {
-		switch marker := markerResult.Object.(type) {
-		case ResourceMarker:
-			marker.associateFieldMarker(spec)
+	//nolint: godox // depends on https://github.com/vmware-tanzu-labs/operator-builder/issues/271
+	// TODO: we need to ensure only one marker is found and return an error if we find more than one.
+	// this becomes difficult as the results are returned as yaml nodes.  for now, we just focus on the
+	// first result and all others are ignored but we should notify the user.
+	// if len(filtered) == 1 {
+	marker := filtered[0]
 
-			if marker.fieldMarker != nil {
-				resourceMarker = &marker
+	// associate the marker with a field marker
+	marker.associateFieldMarker(markers)
 
-				break
-			}
-		default:
-			continue
-		}
+	if marker.fieldMarker != nil {
+		resourceMarker = marker
+	} else {
+		return fmt.Errorf("%w; %v", ErrAssociateResourceMarker, marker)
 	}
+	// } else {
+	// 	return fmt.Errorf("%w, found %d; markers: %v", ErrNumberResourceMarkers, len(filtered), filtered[1].Value)
+	// }
 
+	// process the marker and set the code snippet
 	if err := resourceMarker.process(); err != nil {
 		return err
 	}

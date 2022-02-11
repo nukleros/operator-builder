@@ -1,0 +1,26 @@
+---
+# +operator-builder:resource:collectionField=provider,value="aws",include
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contour-config-test-collection-field
+  namespace: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
+data:
+  this: "serves no purpose other than to test resource markers on collection fields"
+---
+# +operator-builder:resource:collectionField=provider,value="aws",include
+# Note: Comments with spaces can cause problems with parsing.  Leave this here 
+# for functional testing purposes.
+#
+# This appears to be a bug in upstream yaml.v3:
+#   see https://github.com/vmware-tanzu-labs/operator-builder/issues/271
+# Until such bug is fixed, we will leaves this without spaces and with comments.
+#
+# The spaces above is actually what causes the problem.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contour-config-test-parse-comment
+  namespace: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
+data:
+  this: "serves no purpose other than to test comment spaces for resource markers on collection fields"

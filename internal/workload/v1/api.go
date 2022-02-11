@@ -277,7 +277,7 @@ func (api *APIFields) newChild(name string, fieldType FieldType, sample interfac
 		Name:         strings.Title(name),
 		manifestName: name,
 		Type:         fieldType,
-		Tags:         fmt.Sprintf("`json:%q`", name),
+		Tags:         fmt.Sprintf("`json:%q`", fmt.Sprintf("%s,%s", name, "omitempty")),
 		Comments:     []string{},
 		Markers:      []string{},
 	}

@@ -58,6 +58,7 @@ func ProcessInitConfig(workloadConfig string) (WorkloadInitializer, error) {
 	return workload, nil
 }
 
+//nolint:gocyclo //needs refactor
 func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 	workloads, err := parseConfig(workloadConfig)
 	if err != nil {
@@ -112,6 +113,11 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 
 	workload.SetNames()
 
+	markers := &markerCollection{
+		fieldMarkers:           []*FieldMarker{},
+		collectionFieldMarkers: []*CollectionFieldMarker{},
+	}
+
 	for _, component := range components {
 		// assign values related to the collection
 		component.Spec.Collection = collection
@@ -121,6 +127,24 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		}
 
 		component.SetNames()
+
+		markers.fieldMarkers = append(markers.fieldMarkers, component.Spec.FieldMarkers...)
+		markers.collectionFieldMarkers = append(markers.collectionFieldMarkers, component.Spec.CollectionFieldMarkers...)
+	}
+
+	if collection != nil {
+		markers.fieldMarkers = append(markers.fieldMarkers, collection.Spec.FieldMarkers...)
+		markers.collectionFieldMarkers = append(markers.collectionFieldMarkers, collection.Spec.CollectionFieldMarkers...)
+
+		if err := collection.Spec.processResourceMarkers(markers); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, component := range components {
+		if err := component.Spec.processResourceMarkers(markers); err != nil {
+			return nil, err
+		}
 	}
 
 	return workload, nil

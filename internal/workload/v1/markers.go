@@ -16,7 +16,9 @@ import (
 )
 
 var (
-	ErrReservedFieldMarker = errors.New("field marker cannot be used and is reserved for internal purposes")
+	ErrReservedFieldMarker     = errors.New("field marker cannot be used and is reserved for internal purposes")
+	ErrNumberResourceMarkers   = errors.New("expected only 1 resource marker")
+	ErrAssociateResourceMarker = errors.New("unable to associate resource marker with field marker")
 )
 
 const (
@@ -40,11 +42,13 @@ const (
 type MarkerType int
 
 type FieldMarker struct {
-	Name          string
-	Type          FieldType
-	Description   *string
-	Default       interface{} `marker:",optional"`
-	Replace       *string
+	Name        string
+	Type        FieldType
+	Description *string
+	Default     interface{} `marker:",optional"`
+	Replace     *string
+
+	forCollection bool
 	originalValue interface{}
 }
 
@@ -59,6 +63,11 @@ type ResourceMarker struct {
 	fieldMarker     interface{}
 }
 
+type markerCollection struct {
+	fieldMarkers           []*FieldMarker
+	collectionFieldMarkers []*CollectionFieldMarker
+}
+
 var (
 	ErrMismatchedMarkerTypes            = errors.New("resource marker and field marker have mismatched types")
 	ErrResourceMarkerUnknownValueType   = errors.New("resource marker 'value' is of unknown type")
@@ -68,6 +77,7 @@ var (
 	ErrFieldMarkerInvalidType           = errors.New("field marker type is invalid")
 )
 
+//nolint:gocritic //needed to implement string interface
 func (fm FieldMarker) String() string {
 	return fmt.Sprintf("FieldMarker{Name: %s Type: %v Description: %q Default: %v}",
 		fm.Name,
@@ -90,6 +100,7 @@ func defineFieldMarker(registry *marker.Registry) error {
 
 type CollectionFieldMarker FieldMarker
 
+//nolint:gocritic //needed to implement string interface
 func (cfm CollectionFieldMarker) String() string {
 	return fmt.Sprintf("CollectionFieldMarker{Name: %s Type: %v Description: %q Default: %v}",
 		cfm.Name,
@@ -328,14 +339,14 @@ func (rm *ResourceMarker) hasValue() bool {
 	return rm.Value != nil
 }
 
-func (rm *ResourceMarker) associateFieldMarker(spec *WorkloadSpec) {
+func (rm *ResourceMarker) associateFieldMarker(markers *markerCollection) {
 	// return immediately if our entire workload spec has no field markers
-	if len(spec.CollectionFieldMarkers) == 0 && len(spec.FieldMarkers) == 0 {
+	if len(markers.collectionFieldMarkers) == 0 && len(markers.fieldMarkers) == 0 {
 		return
 	}
 
 	// associate first relevant field marker with this marker
-	for _, fm := range spec.FieldMarkers {
+	for _, fm := range markers.fieldMarkers {
 		if rm.Field != nil {
 			if fm.Name == *rm.Field {
 				rm.fieldMarker = fm
@@ -343,10 +354,20 @@ func (rm *ResourceMarker) associateFieldMarker(spec *WorkloadSpec) {
 				return
 			}
 		}
+
+		if fm.forCollection {
+			if rm.CollectionField != nil {
+				if fm.Name == *rm.CollectionField {
+					rm.fieldMarker = fm
+
+					return
+				}
+			}
+		}
 	}
 
 	// associate first relevant collection field marker with this marker
-	for _, cm := range spec.CollectionFieldMarkers {
+	for _, cm := range markers.collectionFieldMarkers {
 		if rm.CollectionField != nil {
 			if cm.Name == *rm.CollectionField {
 				rm.fieldMarker = cm
@@ -424,4 +445,21 @@ func (rm *ResourceMarker) process() error {
 	}
 
 	return nil
+}
+
+// filterResourceMarkers removes all comments from the results as resource markers
+// are required to exist on the same line.
+func filterResourceMarkers(results []*inspect.YAMLResult) []*ResourceMarker {
+	var markers []*ResourceMarker
+
+	for _, marker := range results {
+		switch marker := marker.Object.(type) {
+		case ResourceMarker:
+			markers = append(markers, &marker)
+		default:
+			continue
+		}
+	}
+
+	return markers
 }
