@@ -176,14 +176,6 @@ func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
 
 func (api *APIFields) generateAPIStruct(b io.StringWriter, kind string) {
 	if api.Type == FieldStruct {
-		for _, m := range api.Markers {
-			mustWrite(b.WriteString(fmt.Sprintf("//%s\n", m)))
-		}
-
-		for _, c := range api.Comments {
-			mustWrite(b.WriteString(fmt.Sprintf("//%s\n", c)))
-		}
-
 		mustWrite(b.WriteString(fmt.Sprintf("type %s %s{\n", kind+api.StructName, api.Type.String())))
 
 		for _, child := range api.Children {

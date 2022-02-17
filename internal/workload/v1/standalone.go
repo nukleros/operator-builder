@@ -108,6 +108,10 @@ func (s *StandaloneWorkload) GetPackageName() string {
 	return s.PackageName
 }
 
+func (s *StandaloneWorkload) GetAPISpec() WorkloadAPISpec {
+	return s.Spec.API
+}
+
 func (s *StandaloneWorkload) GetAPIGroup() string {
 	return s.Spec.API.Group
 }
@@ -134,6 +138,10 @@ func (*StandaloneWorkload) IsComponent() bool {
 
 func (*StandaloneWorkload) IsCollection() bool {
 	return false
+}
+
+func (s *StandaloneWorkload) SetRBAC() {
+	s.Spec.RBACRules.addRulesForWorkload(s)
 }
 
 func (s *StandaloneWorkload) SetResources(workloadPath string) error {
@@ -180,12 +188,6 @@ func (s *StandaloneWorkload) GetAPISpecFields() *APIFields {
 
 func (s *StandaloneWorkload) GetRBACRules() *[]RBACRule {
 	var rules []RBACRule = *s.Spec.RBACRules
-
-	return &rules
-}
-
-func (s *StandaloneWorkload) GetOwnershipRules() *[]OwnershipRule {
-	var rules []OwnershipRule = *s.Spec.OwnershipRules
 
 	return &rules
 }

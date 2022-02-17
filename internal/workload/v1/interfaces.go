@@ -52,13 +52,13 @@ type WorkloadAPIBuilder interface {
 	GetSourceFiles() *[]SourceFile
 	GetAPISpecFields() *APIFields
 	GetRBACRules() *[]RBACRule
-	GetOwnershipRules() *[]OwnershipRule
 	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
 	GetFuncNames() (createFuncNames, initFuncNames []string)
 	GetRootCommand() *CliCommand
 	GetSubCommand() *CliCommand
 
 	SetNames()
+	SetRBAC()
 	SetResources(workloadPath string) error
 	SetComponents(components []*ComponentWorkload) error
 

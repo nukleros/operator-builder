@@ -24,6 +24,12 @@ type Controller struct {
 
 	// input fields
 	Builder workloadv1.WorkloadAPIBuilder
+
+	// template fields
+	BaseImports       []string
+	OtherImports      []string
+	InternalImports   []string
+	CollectionImports []string
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -36,7 +42,121 @@ func (f *Controller) SetTemplateDefaults() error {
 	f.TemplateBody = controllerTemplate
 	f.IfExistsAction = machinery.OverwriteFile
 
+	f.setBaseImports()
+	f.setOtherImports()
+	f.setInternalImports()
+
+	if f.Builder.IsCollection() {
+		f.setCollectionImports()
+	}
+
 	return nil
+}
+
+func (f *Controller) setBaseImports() {
+	f.BaseImports = []string{`"context"`, `"fmt"`}
+
+	if f.Builder.IsComponent() {
+		f.BaseImports = append(f.BaseImports, `"errors"`, `"reflect"`)
+	}
+}
+
+func (f *Controller) setOtherImports() {
+	f.OtherImports = []string{
+		`"github.com/go-logr/logr"`,
+		`apierrs "k8s.io/apimachinery/pkg/api/errors"`,
+		`"k8s.io/client-go/tools/record"`,
+		`ctrl "sigs.k8s.io/controller-runtime"`,
+		`"sigs.k8s.io/controller-runtime/pkg/client"`,
+		`"sigs.k8s.io/controller-runtime/pkg/controller"`,
+		`"github.com/nukleros/operator-builder-tools/pkg/controller/phases"`,
+		`"github.com/nukleros/operator-builder-tools/pkg/controller/predicates"`,
+		`"github.com/nukleros/operator-builder-tools/pkg/controller/workload"`,
+	}
+
+	if f.Builder.IsComponent() {
+		f.OtherImports = append(f.OtherImports,
+			`"github.com/nukleros/operator-builder-tools/pkg/resources"`,
+			`"sigs.k8s.io/controller-runtime/pkg/event"`,
+			`"sigs.k8s.io/controller-runtime/pkg/handler"`,
+			`"sigs.k8s.io/controller-runtime/pkg/predicate"`,
+			`"sigs.k8s.io/controller-runtime/pkg/reconcile"`,
+			`"sigs.k8s.io/controller-runtime/pkg/source"`,
+			`"k8s.io/apimachinery/pkg/types"`,
+		)
+	}
+}
+
+func (f *Controller) setInternalImports() {
+	f.InternalImports = []string{
+		fmt.Sprintf(`"%s/internal/dependencies"`, f.Repo),
+		fmt.Sprintf(`"%s/internal/mutate"`, f.Repo),
+		fmt.Sprintf(`%s %q`, f.Resource.ImportAlias(), f.Resource.Path),
+	}
+
+	if f.Builder.IsComponent() {
+		f.InternalImports = append(f.InternalImports, f.getAPITypesPath(f.Builder.GetCollection()))
+	}
+
+	if f.Builder.HasChildResources() {
+		f.InternalImports = append(f.InternalImports,
+			fmt.Sprintf(`"%s/%s"`,
+				f.Resource.Path,
+				f.Builder.GetPackageName(),
+			),
+		)
+	}
+}
+
+func (f *Controller) setCollectionImports() {
+	for _, component := range f.Builder.GetComponents() {
+		if !f.importIsDefined(f.getAPITypesPath(component)) {
+			f.CollectionImports = append(f.CollectionImports, f.getAPITypesPath(component))
+		}
+	}
+
+	f.deduplicateCollectionImports()
+}
+
+func (f *Controller) importIsDefined(importCheck string) bool {
+	existingImports := []string{}
+	existingImports = append(existingImports, f.BaseImports...)
+	existingImports = append(existingImports, f.OtherImports...)
+	existingImports = append(existingImports, f.InternalImports...)
+
+	for _, existing := range existingImports {
+		if importCheck == existing {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (f *Controller) deduplicateCollectionImports() {
+	keys := make(map[string]bool)
+
+	collectionImports := []string{}
+
+	for _, existing := range f.CollectionImports {
+		if _, value := keys[existing]; !value {
+			keys[existing] = true
+
+			collectionImports = append(collectionImports, existing)
+		}
+	}
+
+	f.CollectionImports = collectionImports
+}
+
+func (f *Controller) getAPITypesPath(builder workloadv1.WorkloadAPIBuilder) string {
+	return fmt.Sprintf(`%s%s "%s/apis/%s/%s"`,
+		builder.GetAPIGroup(),
+		builder.GetAPIVersion(),
+		f.Repo,
+		builder.GetAPIGroup(),
+		builder.GetAPIVersion(),
+	)
 }
 
 //nolint: lll
@@ -45,31 +165,23 @@ const controllerTemplate = `{{ .Boilerplate }}
 package {{ .Resource.Group }}
 
 import (
-	"context"
-	{{- if .Builder.IsComponent }}
-	"errors"
-	{{- end }}
-	"fmt"
-
-	"github.com/go-logr/logr"
-	"github.com/nukleros/operator-builder-tools/pkg/controller/phases"
-	"github.com/nukleros/operator-builder-tools/pkg/controller/predicates"
-	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/tools/record"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-
-	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
-	{{ if .Builder.IsComponent -}}
-	{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Builder.GetCollection.Spec.API.Group }}/{{ .Builder.GetCollection.Spec.API.Version }}"
+	{{ range .BaseImports -}}
+	{{ . }}
 	{{ end }}
-	{{- if .Builder.HasChildResources -}}
-	"{{ .Resource.Path }}/{{ .Builder.GetPackageName }}"
-	{{ end -}}
-	"{{ .Repo }}/internal/dependencies"
-	"{{ .Repo }}/internal/mutate"
+
+	{{ range .OtherImports -}}
+	{{ . }}
+	{{ end }}
+
+	{{ range .InternalImports -}}
+	{{ . }}
+	{{ end }}
+
+	{{ if .Builder.IsCollection -}}
+	{{ range .CollectionImports -}}
+	{{ . }}
+	{{ end }}
+	{{ end }}
 )
 
 // {{ .Resource.Kind }}Reconciler reconciles a {{ .Resource.Kind }} object.
@@ -96,10 +208,8 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 	}
 }
 
-// +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }},verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups={{ .Resource.Group }}.{{ .Resource.Domain }},resources={{ .Resource.Plural }}/status,verbs=get;update;patch
 {{ range .Builder.GetRBACRules -}}
-// +kubebuilder:rbac:groups={{ .Group }},resources={{ .Resource }},verbs={{ .VerbString }}
+{{ .ToMarker }}
 {{ end }}
 
 // Until Webhooks are implemented we need to list and watch namespaces to ensure
@@ -177,64 +287,118 @@ func (r *{{ .Resource.Kind }}Reconciler) NewRequest(ctx context.Context, request
 {{- if .Builder.IsComponent }}
 // SetCollection sets the collection for a particular workload request.
 func (r *{{ .Resource.Kind }}Reconciler) SetCollection(component *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}, req *workload.Request) error {
-	// get and store the collection
-	var collectionList {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}List
-
-	if err := r.List(req.Context, &collectionList); err != nil {
-		return fmt.Errorf("unable to list collection {{ .Builder.GetCollection.Spec.API.Kind }}, %w", err)
+	collection, err := r.GetCollection(component, req)
+	if err != nil || collection == nil {
+		return fmt.Errorf("unable to set collection, %w", err)
 	}
 
-	// determine if we have requested a specific collection
-	var collectionRef {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}CollectionSpec
+	req.Collection = collection
 
-	collectionRequested := component.Spec.Collection != collectionRef && component.Spec.Collection.Name != ""
+	// set the owner reference so that we can reconcile this workload on changes to the collection
+	if err := ctrl.SetControllerReference(collection, req.Workload, r.Scheme()); err != nil {
+		req.Log.Error(
+			err, "unable to set collection owner reference on component workload",
+			"Name", req.Workload.GetName(),
+			"Namespace", req.Workload.GetNamespace(),
+			"collection.Name", collection.GetName(),
+			"collection.Namespace", collection.GetNamespace(),
+		)
 
-	switch len(collectionList.Items) {
-	case 0:
-		if component.GetDeletionTimestamp().IsZero() {
-			req.Log.Info("no collections available; initiating controller requeue")
-
-			return workload.ErrCollectionNotFound
-		}
-	case 1:
-		if collectionRequested {
-			if collection := r.GetCollection(component, collectionList); collection != nil {
-				req.Collection = collection
-			} else {
-				return fmt.Errorf("no valid {{ .Builder.GetCollection.Spec.API.Kind }} collections found in namespace %s with name %s",
-					component.Spec.Collection.Namespace, component.Spec.Collection.Name)
-			}
-		}
-		
-		req.Collection = &collectionList.Items[0]
-	default:
-		if collectionRequested {
-			if collection := r.GetCollection(component, collectionList); collection != nil {
-				req.Collection = collection
-			} else {
-				return fmt.Errorf("no valid {{ .Builder.GetCollection.Spec.API.Kind }} collections found in namespace %s with name %s",
-					component.Spec.Collection.Namespace, component.Spec.Collection.Name)
-			}
-		}
-
-		return fmt.Errorf("multiple valid collections found; expected 1; cannot proceed")
+		return fmt.Errorf("unable to set owner reference on %s, %w", req.Workload.GetName(), err)
 	}
 
-	return nil
+	return r.EnqueueRequestOnCollectionChange(req)
 }
 
 // GetCollection gets a collection for a component given a list.
 func (r *{{ .Resource.Kind }}Reconciler) GetCollection(
 	component *{{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
-	collectionList {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}List,
-) *{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }} {
+	req *workload.Request,
+) (*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}, error) {
+	var collectionList {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}List
+
+	if err := r.List(req.Context, &collectionList); err != nil {
+		return nil, fmt.Errorf("unable to list collection {{ .Builder.GetCollection.Spec.API.Kind }}, %w", err)
+	}
+
+	// determine if we have requested a specific collection
 	name, namespace := component.Spec.Collection.Name, component.Spec.Collection.Namespace
 
+	var collectionRef {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}CollectionSpec
+
+	hasSpecificCollection := component.Spec.Collection != collectionRef && component.Spec.Collection.Name != ""
+
+	// if a specific collection has not been requested, we ensure only one exists
+	if !hasSpecificCollection {
+		if len(collectionList.Items) != 1 {
+			return nil, fmt.Errorf("expected only 1 {{ .Builder.GetCollection.Spec.API.Kind }} collection, found %v", len(collectionList.Items))
+		}
+
+		return &collectionList.Items[0], nil
+	}
+
+	// find the collection that was requested and return it
 	for _, collection := range collectionList.Items {
 		if collection.Name == name && collection.Namespace == namespace {
-			return &collection
+			return &collection, nil
 		}
 	}
+
+	return nil, workload.ErrCollectionNotFound
+}
+
+// EnqueueRequestOnCollectionChange enqueues a reconcile request when an associated collection object changes.
+func (r *{{ .Resource.Kind }}Reconciler) EnqueueRequestOnCollectionChange(req *workload.Request) error {
+	if len(r.Watches) > 0 {
+		for _, watched := range r.Watches {
+			if reflect.DeepEqual(
+				req.Collection.GetObjectKind().GroupVersionKind(),
+				watched.GetObjectKind().GroupVersionKind(),
+			) {
+				return nil
+			}
+		}
+	}
+
+	// create a function which maps this specific reconcile request
+	mapFn := func(collection client.Object) []reconcile.Request {
+		return []reconcile.Request{
+			{
+				NamespacedName: types.NamespacedName{
+					Name:      req.Workload.GetName(),
+					Namespace: req.Workload.GetNamespace(),
+				},
+			},
+		}
+	}
+
+	// watch the collection and use our map function to enqueue the request
+	if err := r.Controller.Watch(
+		&source.Kind{Type: req.Collection},
+		handler.EnqueueRequestsFromMapFunc(mapFn),
+		predicate.Funcs{
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				if !resources.EqualNamespaceName(e.ObjectNew, req.Collection) {
+					return false
+				}
+
+				return e.ObjectNew != e.ObjectOld
+			},
+			CreateFunc: func(e event.CreateEvent) bool {
+				return false
+			},
+			GenericFunc: func(e event.GenericEvent) bool {
+				return false
+			},
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				return false
+			},
+		},
+	); err != nil {
+		return err
+	}
+
+	r.Watches = append(r.Watches, req.Collection)
 
 	return nil
 }
@@ -330,6 +494,11 @@ func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) erro
 	baseController, err := ctrl.NewControllerManagedBy(mgr).
 		WithEventFilter(predicates.WorkloadPredicates()).
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
+		{{ if .Builder.IsCollection -}}
+		{{ range .Builder.GetComponents -}}
+		Owns(&{{ .Spec.API.Group }}{{ .Spec.API.Version }}.{{ .Spec.API.Kind }}{}).
+		{{ end -}}
+		{{ end -}}
 		Build(r)
 	if err != nil {
 		return fmt.Errorf("unable to setup controller, %w", err)

@@ -100,6 +100,10 @@ func (c *ComponentWorkload) GetPackageName() string {
 	return c.PackageName
 }
 
+func (c *ComponentWorkload) GetAPISpec() WorkloadAPISpec {
+	return c.Spec.API
+}
+
 func (c *ComponentWorkload) GetAPIGroup() string {
 	return c.Spec.API.Group
 }
@@ -126,6 +130,10 @@ func (*ComponentWorkload) IsComponent() bool {
 
 func (*ComponentWorkload) IsCollection() bool {
 	return false
+}
+
+func (c *ComponentWorkload) SetRBAC() {
+	c.Spec.RBACRules.addRulesForWorkload(c)
 }
 
 func (c *ComponentWorkload) SetResources(workloadPath string) error {
@@ -175,23 +183,10 @@ func (c *ComponentWorkload) GetRBACRules() *[]RBACRule {
 	return &rules
 }
 
-func (c *ComponentWorkload) GetOwnershipRules() *[]OwnershipRule {
-	var rules []OwnershipRule = *c.Spec.OwnershipRules
-
-	return &rules
-}
-
 func (c *ComponentWorkload) GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource {
-	var namespaced bool
-	if clusterScoped {
-		namespaced = false
-	} else {
-		namespaced = true
-	}
-
 	api := resource.API{
 		CRDVersion: "v1",
-		Namespaced: namespaced,
+		Namespaced: !clusterScoped,
 	}
 
 	return &resource.Resource{

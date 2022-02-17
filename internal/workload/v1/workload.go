@@ -53,7 +53,6 @@ type WorkloadSpec struct {
 	APISpecFields          *APIFields               `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	SourceFiles            *[]SourceFile            `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	RBACRules              *RBACRules               `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	OwnershipRules         *OwnershipRules          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 }
 
 func (ws *WorkloadSpec) init() {
@@ -69,7 +68,6 @@ func (ws *WorkloadSpec) init() {
 		ws.appendCollectionRef()
 	}
 
-	ws.OwnershipRules = &OwnershipRules{}
 	ws.RBACRules = &RBACRules{}
 	ws.SourceFiles = &[]SourceFile{}
 }
@@ -97,7 +95,7 @@ func (ws *WorkloadSpec) appendCollectionRef() {
 	collectionField := &APIFields{
 		Name:       "Collection",
 		Type:       FieldStruct,
-		Tags:       fmt.Sprintf("`json:%q`", "collection"),
+		Tags:       fmt.Sprintf("`json:%q`", "collection,omitempty"),
 		Sample:     "#collection:",
 		StructName: "CollectionSpec",
 		Markers: []string{
@@ -108,22 +106,26 @@ func (ws *WorkloadSpec) appendCollectionRef() {
 			"workload collection in the cluster, which will result in an error",
 			"if not exactly one collection is found.",
 		},
+		Comments: nil,
 		Children: []*APIFields{
 			{
-				Name:   "Name",
-				Type:   FieldString,
-				Tags:   fmt.Sprintf("`json:%q`", "name"),
-				Sample: fmt.Sprintf("#name: %q", strings.ToLower(ws.Collection.GetAPIKind())+"-sample"),
+				Name:     "Name",
+				Type:     FieldString,
+				Tags:     fmt.Sprintf("`json:%q`", "name,omitempty"),
+				Sample:   fmt.Sprintf("#name: %q", strings.ToLower(ws.Collection.GetAPIKind())+"-sample"),
+				Comments: nil,
 				Markers: []string{
+					"+kubebuilder:validation:Required",
 					"Required if specifying collection.  The name of the collection",
 					"within a specific collection.namespace to reference.",
 				},
 			},
 			{
-				Name:   "Namespace",
-				Type:   FieldString,
-				Tags:   fmt.Sprintf("`json:%q`", "namespace"),
-				Sample: fmt.Sprintf("#namespace: %q", sampleNamespace),
+				Name:     "Namespace",
+				Type:     FieldString,
+				Tags:     fmt.Sprintf("`json:%q`", "namespace,omitempty"),
+				Sample:   fmt.Sprintf("#namespace: %q", sampleNamespace),
+				Comments: nil,
 				Markers: []string{
 					"+kubebuilder:validation:Optional",
 					"(Default: \"\") The namespace where the collection exists.  Required only if",
@@ -173,6 +175,7 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
 
 			// generate a unique name for the resource using the kind and name
 			resourceUniqueName := generateUniqueResourceName(manifestObject)
+
 			// determine resource group and version
 			resourceVersion, resourceGroup := versionGroupFromAPIVersion(manifestObject.GetAPIVersion())
 
@@ -181,12 +184,6 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
 			if err != nil {
 				return err
 			}
-
-			ws.OwnershipRules.addOrUpdateOwnership(
-				manifestObject.GetAPIVersion(),
-				manifestObject.GetKind(),
-				resourceGroup,
-			)
 
 			resource := ChildResource{
 				Name:       manifestObject.GetName(),

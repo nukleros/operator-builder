@@ -160,7 +160,9 @@ func TestMain(t *testing.T) {
 	collectionSuite.teardown()
 
 	// check all controller logs for errors
-	require.NoErrorf(t, testControllerLogsNoErrors(e2eTestSuite, ""), "found errors in controller logs")
+	if os.Getenv("DEPLOY_IN_CLUSTER") == "true" {
+		require.NoErrorf(t, testControllerLogsNoErrors(e2eTestSuite, ""), "found errors in controller logs")
+	}
 
 	// perform final teardown
 	require.NoErrorf(t, finalTeardown(), "error tearing down test suite")

@@ -11,10 +11,9 @@ import (
 
 func NewRBACTest() *RBACRule {
 	return &RBACRule{
-		Group:      "core",
-		Resource:   "exampleResource",
-		Verbs:      []string{"get"},
-		VerbString: "get",
+		Group:    "core",
+		Resource: "exampleResource",
+		Verbs:    []string{"get"},
 	}
 }
 
@@ -44,9 +43,9 @@ func TestRBACRule_AddVerb(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			r := tt.rbac
-			r.AddVerb(tt.args.verb)
+			r.addVerb(tt.args.verb)
 
-			assert.Equal(t, r.VerbString, "get;delete")
+			assert.Equal(t, r.Verbs, []string{"get", "delete"})
 		})
 	}
 }

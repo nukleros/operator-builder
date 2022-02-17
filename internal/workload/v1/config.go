@@ -112,6 +112,7 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 	}
 
 	workload.SetNames()
+	workload.SetRBAC()
 
 	markers := &markerCollection{
 		fieldMarkers:           []*FieldMarker{},
@@ -121,12 +122,14 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 	for _, component := range components {
 		// assign values related to the collection
 		component.Spec.Collection = collection
+		component.Spec.API.Domain = collection.Spec.API.Domain
 
 		if err := component.SetResources(component.Spec.ConfigPath); err != nil {
 			return nil, err
 		}
 
 		component.SetNames()
+		component.SetRBAC()
 
 		markers.fieldMarkers = append(markers.fieldMarkers, component.Spec.FieldMarkers...)
 		markers.collectionFieldMarkers = append(markers.collectionFieldMarkers, component.Spec.CollectionFieldMarkers...)
