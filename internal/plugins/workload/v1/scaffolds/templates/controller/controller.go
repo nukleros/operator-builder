@@ -26,10 +26,9 @@ type Controller struct {
 	Builder workloadv1.WorkloadAPIBuilder
 
 	// template fields
-	BaseImports       []string
-	OtherImports      []string
-	InternalImports   []string
-	CollectionImports []string
+	BaseImports     []string
+	OtherImports    []string
+	InternalImports []string
 }
 
 func (f *Controller) SetTemplateDefaults() error {
@@ -45,10 +44,6 @@ func (f *Controller) SetTemplateDefaults() error {
 	f.setBaseImports()
 	f.setOtherImports()
 	f.setInternalImports()
-
-	if f.Builder.IsCollection() {
-		f.setCollectionImports()
-	}
 
 	return nil
 }
@@ -108,47 +103,6 @@ func (f *Controller) setInternalImports() {
 	}
 }
 
-func (f *Controller) setCollectionImports() {
-	for _, component := range f.Builder.GetComponents() {
-		if !f.importIsDefined(f.getAPITypesPath(component)) {
-			f.CollectionImports = append(f.CollectionImports, f.getAPITypesPath(component))
-		}
-	}
-
-	f.deduplicateCollectionImports()
-}
-
-func (f *Controller) importIsDefined(importCheck string) bool {
-	existingImports := []string{}
-	existingImports = append(existingImports, f.BaseImports...)
-	existingImports = append(existingImports, f.OtherImports...)
-	existingImports = append(existingImports, f.InternalImports...)
-
-	for _, existing := range existingImports {
-		if importCheck == existing {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (f *Controller) deduplicateCollectionImports() {
-	keys := make(map[string]bool)
-
-	collectionImports := []string{}
-
-	for _, existing := range f.CollectionImports {
-		if _, value := keys[existing]; !value {
-			keys[existing] = true
-
-			collectionImports = append(collectionImports, existing)
-		}
-	}
-
-	f.CollectionImports = collectionImports
-}
-
 func (f *Controller) getAPITypesPath(builder workloadv1.WorkloadAPIBuilder) string {
 	return fmt.Sprintf(`%s%s "%s/apis/%s/%s"`,
 		builder.GetAPIGroup(),
@@ -175,12 +129,6 @@ import (
 
 	{{ range .InternalImports -}}
 	{{ . }}
-	{{ end }}
-
-	{{ if .Builder.IsCollection -}}
-	{{ range .CollectionImports -}}
-	{{ . }}
-	{{ end }}
 	{{ end }}
 )
 
@@ -293,19 +241,6 @@ func (r *{{ .Resource.Kind }}Reconciler) SetCollection(component *{{ .Resource.I
 	}
 
 	req.Collection = collection
-
-	// set the owner reference so that we can reconcile this workload on changes to the collection
-	if err := ctrl.SetControllerReference(collection, req.Workload, r.Scheme()); err != nil {
-		req.Log.Error(
-			err, "unable to set collection owner reference on component workload",
-			"Name", req.Workload.GetName(),
-			"Namespace", req.Workload.GetNamespace(),
-			"collection.Name", collection.GetName(),
-			"collection.Namespace", collection.GetNamespace(),
-		)
-
-		return fmt.Errorf("unable to set owner reference on %s, %w", req.Workload.GetName(), err)
-	}
 
 	return r.EnqueueRequestOnCollectionChange(req)
 }
@@ -494,11 +429,6 @@ func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) erro
 	baseController, err := ctrl.NewControllerManagedBy(mgr).
 		WithEventFilter(predicates.WorkloadPredicates()).
 		For(&{{ .Resource.ImportAlias }}.{{ .Resource.Kind }}{}).
-		{{ if .Builder.IsCollection -}}
-		{{ range .Builder.GetComponents -}}
-		Owns(&{{ .Spec.API.Group }}{{ .Spec.API.Version }}.{{ .Spec.API.Kind }}{}).
-		{{ end -}}
-		{{ end -}}
 		Build(r)
 	if err != nil {
 		return fmt.Errorf("unable to setup controller, %w", err)
