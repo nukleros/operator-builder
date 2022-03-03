@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
 )
 
 const (
@@ -155,7 +156,7 @@ func (c *WorkloadCollection) SetRBAC() {
 }
 
 func (c *WorkloadCollection) SetResources(workloadPath string) error {
-	err := c.Spec.processManifests(FieldMarkerType, CollectionMarkerType)
+	err := c.Spec.processManifests(markers.FieldMarkerType, markers.CollectionMarkerType)
 	if err != nil {
 		return err
 	}
@@ -163,7 +164,7 @@ func (c *WorkloadCollection) SetResources(workloadPath string) error {
 	for _, cpt := range c.Spec.Components {
 		for _, csr := range cpt.Spec.Resources {
 			// add to spec fields if not present
-			err := c.Spec.processMarkers(csr, CollectionMarkerType)
+			err := c.Spec.processMarkers(csr, markers.CollectionMarkerType)
 			if err != nil {
 				return err
 			}

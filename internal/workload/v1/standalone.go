@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
 )
 
 var ErrNoComponentsOnStandalone = errors.New("cannot set component workloads on a component workload - only on collections")
@@ -145,7 +146,7 @@ func (s *StandaloneWorkload) SetRBAC() {
 }
 
 func (s *StandaloneWorkload) SetResources(workloadPath string) error {
-	err := s.Spec.processManifests(FieldMarkerType)
+	err := s.Spec.processManifests(markers.FieldMarkerType)
 	if err != nil {
 		return err
 	}

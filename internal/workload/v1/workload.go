@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
 )
 
 // WorkloadAPISpec sample fields which may be used in things like testing or
@@ -45,20 +46,20 @@ type WorkloadShared struct {
 
 // WorkloadSpec contains information required to generate source code.
 type WorkloadSpec struct {
-	Resources              []*Resource              `json:"resources" yaml:"resources"`
-	FieldMarkers           []*FieldMarker           `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	CollectionFieldMarkers []*CollectionFieldMarker `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	ForCollection          bool                     `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	Collection             *WorkloadCollection      `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	APISpecFields          *APIFields               `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	SourceFiles            *[]SourceFile            `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	RBACRules              *RBACRules               `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	Resources              []*Resource                      `json:"resources" yaml:"resources"`
+	FieldMarkers           []*markers.FieldMarker           `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	CollectionFieldMarkers []*markers.CollectionFieldMarker `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	ForCollection          bool                             `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	Collection             *WorkloadCollection              `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	APISpecFields          *APIFields                       `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	SourceFiles            *[]SourceFile                    `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	RBACRules              *RBACRules                       `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 }
 
 func (ws *WorkloadSpec) init() {
 	ws.APISpecFields = &APIFields{
 		Name:   "Spec",
-		Type:   FieldStruct,
+		Type:   markers.FieldStruct,
 		Tags:   fmt.Sprintf("`json: %q`", "spec"),
 		Sample: "spec:",
 	}
@@ -94,8 +95,8 @@ func (ws *WorkloadSpec) appendCollectionRef() {
 	// append to children
 	collectionField := &APIFields{
 		Name:       "Collection",
-		Type:       FieldStruct,
-		Tags:       fmt.Sprintf("`json:%q`", "collection,omitempty"),
+		Type:       markers.FieldStruct,
+		Tags:       fmt.Sprintf("`json:%q`", "collection"),
 		Sample:     "#collection:",
 		StructName: "CollectionSpec",
 		Markers: []string{
@@ -109,11 +110,10 @@ func (ws *WorkloadSpec) appendCollectionRef() {
 		Comments: nil,
 		Children: []*APIFields{
 			{
-				Name:     "Name",
-				Type:     FieldString,
-				Tags:     fmt.Sprintf("`json:%q`", "name,omitempty"),
-				Sample:   fmt.Sprintf("#name: %q", strings.ToLower(ws.Collection.GetAPIKind())+"-sample"),
-				Comments: nil,
+				Name:   "Name",
+				Type:   markers.FieldString,
+				Tags:   fmt.Sprintf("`json:%q`", "name"),
+				Sample: fmt.Sprintf("#name: %q", strings.ToLower(ws.Collection.GetAPIKind())+"-sample"),
 				Markers: []string{
 					"+kubebuilder:validation:Required",
 					"Required if specifying collection.  The name of the collection",
@@ -121,11 +121,10 @@ func (ws *WorkloadSpec) appendCollectionRef() {
 				},
 			},
 			{
-				Name:     "Namespace",
-				Type:     FieldString,
-				Tags:     fmt.Sprintf("`json:%q`", "namespace,omitempty"),
-				Sample:   fmt.Sprintf("#namespace: %q", sampleNamespace),
-				Comments: nil,
+				Name:   "Namespace",
+				Type:   markers.FieldString,
+				Tags:   fmt.Sprintf("`json:%q`", "namespace"),
+				Sample: fmt.Sprintf("#namespace: %q", sampleNamespace),
 				Markers: []string{
 					"+kubebuilder:validation:Optional",
 					"(Default: \"\") The namespace where the collection exists.  Required only if",
@@ -148,7 +147,7 @@ func NewSampleAPISpec() *WorkloadAPISpec {
 	}
 }
 
-func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
+func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) error {
 	ws.init()
 
 	for _, manifestFile := range ws.Resources {
@@ -221,8 +220,8 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...MarkerType) error {
 	return nil
 }
 
-func (ws *WorkloadSpec) processMarkers(manifestFile *Resource, markerTypes ...MarkerType) error {
-	nodes, markerResults, err := inspectMarkersForYAML(manifestFile.Content, markerTypes...)
+func (ws *WorkloadSpec) processMarkers(manifestFile *Resource, markerTypes ...markers.MarkerType) error {
+	nodes, markerResults, err := markers.InspectForYAML(manifestFile.Content, markerTypes...)
 	if err != nil {
 		return formatProcessError(manifestFile.FileName, err)
 	}
@@ -250,7 +249,8 @@ func (ws *WorkloadSpec) processMarkers(manifestFile *Resource, markerTypes ...Ma
 	// where there should be collection markers - they will result in
 	// code that won't compile.  We will convert collection markers to
 	// field markers for the sake of UX.
-	if containsMarkerType(markerTypes, FieldMarkerType) && containsMarkerType(markerTypes, CollectionMarkerType) {
+	if markers.ContainsMarkerType(markerTypes, markers.FieldMarkerType) &&
+		markers.ContainsMarkerType(markerTypes, markers.CollectionMarkerType) {
 		// find & replace collection markers with field markers
 		manifestFile.Content = []byte(strings.ReplaceAll(string(manifestFile.Content), "!!var collection", "!!var parent"))
 		manifestFile.Content = []byte(strings.ReplaceAll(string(manifestFile.Content), "!!start collection", "!!start parent"))
@@ -259,10 +259,10 @@ func (ws *WorkloadSpec) processMarkers(manifestFile *Resource, markerTypes ...Ma
 	return nil
 }
 
-func (ws *WorkloadSpec) processResourceMarkers(markers *markerCollection) error {
+func (ws *WorkloadSpec) processResourceMarkers(markerCollection *markers.MarkerCollection) error {
 	for _, sourceFile := range *ws.SourceFiles {
 		for i := range sourceFile.Children {
-			if err := sourceFile.Children[i].processResourceMarkers(markers); err != nil {
+			if err := sourceFile.Children[i].processResourceMarkers(markerCollection); err != nil {
 				return err
 			}
 		}
@@ -277,64 +277,47 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 
 		var sampleVal interface{}
 
-		switch r := markerResult.Object.(type) {
-		case FieldMarker:
-			comments := []string{}
+		// convert to interface
+		var marker markers.FieldMarkerProcessor
 
-			if r.Description != nil {
-				comments = append(comments, strings.Split(*r.Description, "\n")...)
-			}
-
-			if r.Default != nil {
-				defaultFound = true
-				sampleVal = r.Default
-			} else {
-				sampleVal = r.originalValue
-			}
-
-			if err := ws.APISpecFields.AddField(
-				r.Name,
-				r.Type,
-				comments,
-				sampleVal,
-				defaultFound,
-			); err != nil {
-				return err
-			}
-
-			r.forCollection = ws.ForCollection
-			ws.FieldMarkers = append(ws.FieldMarkers, &r)
-
-		case CollectionFieldMarker:
-			comments := []string{}
-
-			if r.Description != nil {
-				comments = append(comments, strings.Split(*r.Description, "\n")...)
-			}
-
-			if r.Default != nil {
-				defaultFound = true
-				sampleVal = r.Default
-			} else {
-				sampleVal = r.originalValue
-			}
-
-			if err := ws.APISpecFields.AddField(
-				r.Name,
-				r.Type,
-				comments,
-				sampleVal,
-				defaultFound,
-			); err != nil {
-				return err
-			}
-
-			r.forCollection = ws.ForCollection
-			ws.CollectionFieldMarkers = append(ws.CollectionFieldMarkers, &r)
-
+		switch t := markerResult.Object.(type) {
+		case *markers.FieldMarker:
+			marker = t
+			ws.FieldMarkers = append(ws.FieldMarkers, t)
+		case *markers.CollectionFieldMarker:
+			marker = t
+			ws.CollectionFieldMarkers = append(ws.CollectionFieldMarkers, t)
 		default:
 			continue
 		}
+
+		// set the comments based on the description field of a field marker
+		comments := []string{}
+
+		if marker.GetDescription() != "" {
+			comments = append(comments, strings.Split(marker.GetDescription(), "\n")...)
+		}
+
+		// set the sample value based on if a default was specified in the marker or not
+		if marker.GetDefault() != nil {
+			defaultFound = true
+			sampleVal = marker.GetDefault()
+		} else {
+			sampleVal = marker.GetOriginalValue()
+		}
+
+		// add the field to the api specification
+		if err := ws.APISpecFields.AddField(
+			marker.GetName(),
+			marker.GetFieldType(),
+			comments,
+			sampleVal,
+			defaultFound,
+		); err != nil {
+			return err
+		}
+
+		marker.SetForCollection(ws.ForCollection)
 	}
 
 	return nil

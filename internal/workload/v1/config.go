@@ -12,6 +12,8 @@ import (
 
 	"github.com/go-playground/validator"
 	"gopkg.in/yaml.v3"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
 )
 
 var (
@@ -114,9 +116,9 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 	workload.SetNames()
 	workload.SetRBAC()
 
-	markers := &markerCollection{
-		fieldMarkers:           []*FieldMarker{},
-		collectionFieldMarkers: []*CollectionFieldMarker{},
+	fieldMarkers := &markers.MarkerCollection{
+		FieldMarkers:           []*markers.FieldMarker{},
+		CollectionFieldMarkers: []*markers.CollectionFieldMarker{},
 	}
 
 	for _, component := range components {
@@ -131,21 +133,21 @@ func ProcessAPIConfig(workloadConfig string) (WorkloadAPIBuilder, error) {
 		component.SetNames()
 		component.SetRBAC()
 
-		markers.fieldMarkers = append(markers.fieldMarkers, component.Spec.FieldMarkers...)
-		markers.collectionFieldMarkers = append(markers.collectionFieldMarkers, component.Spec.CollectionFieldMarkers...)
+		fieldMarkers.FieldMarkers = append(fieldMarkers.FieldMarkers, component.Spec.FieldMarkers...)
+		fieldMarkers.CollectionFieldMarkers = append(fieldMarkers.CollectionFieldMarkers, component.Spec.CollectionFieldMarkers...)
 	}
 
 	if collection != nil {
-		markers.fieldMarkers = append(markers.fieldMarkers, collection.Spec.FieldMarkers...)
-		markers.collectionFieldMarkers = append(markers.collectionFieldMarkers, collection.Spec.CollectionFieldMarkers...)
+		fieldMarkers.FieldMarkers = append(fieldMarkers.FieldMarkers, collection.Spec.FieldMarkers...)
+		fieldMarkers.CollectionFieldMarkers = append(fieldMarkers.CollectionFieldMarkers, collection.Spec.CollectionFieldMarkers...)
 
-		if err := collection.Spec.processResourceMarkers(markers); err != nil {
+		if err := collection.Spec.processResourceMarkers(fieldMarkers); err != nil {
 			return nil, err
 		}
 	}
 
 	for _, component := range components {
-		if err := component.Spec.processResourceMarkers(markers); err != nil {
+		if err := component.Spec.processResourceMarkers(fieldMarkers); err != nil {
 			return nil, err
 		}
 	}

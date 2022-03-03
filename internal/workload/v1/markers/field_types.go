@@ -1,7 +1,7 @@
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
-package v1
+package markers
 
 import (
 	"errors"
@@ -10,6 +10,8 @@ import (
 
 var ErrUnableToParseFieldType = errors.New("unable to parse field")
 
+// FieldType defines the types of fields for a field marker that are accepted
+// during parsing of a manifest.
 type FieldType int
 
 const (
@@ -20,6 +22,8 @@ const (
 	FieldStruct
 )
 
+// UnmarshalMarkerArg will convert the type argument within a field or collection
+// field marker into its underlying FieldType object.
 func (f *FieldType) UnmarshalMarkerArg(in string) error {
 	types := map[string]FieldType{
 		"":       FieldUnknownType,
@@ -41,6 +45,7 @@ func (f *FieldType) UnmarshalMarkerArg(in string) error {
 	return fmt.Errorf("%w, %s into FieldType", ErrUnableToParseFieldType, in)
 }
 
+// String simply returns a FieldType in string format.
 func (f FieldType) String() string {
 	types := map[FieldType]string{
 		FieldUnknownType: "",

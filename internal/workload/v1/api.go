@@ -10,6 +10,8 @@ import (
 	"io"
 	"reflect"
 	"strings"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
 )
 
 var ErrOverwriteExistingValue = errors.New("an attempt to overwrite existing value was made")
@@ -18,7 +20,7 @@ type APIFields struct {
 	Name         string
 	StructName   string
 	manifestName string
-	Type         FieldType
+	Type         markers.FieldType
 	Tags         string
 	Comments     []string
 	Markers      []string
@@ -28,7 +30,7 @@ type APIFields struct {
 	Last         bool
 }
 
-func (api *APIFields) AddField(path string, fieldType FieldType, comments []string, sample interface{}, hasDefault bool) error {
+func (api *APIFields) AddField(path string, fieldType markers.FieldType, comments []string, sample interface{}, hasDefault bool) error {
 	obj := api
 
 	parts := strings.Split(path, ".")
@@ -41,7 +43,7 @@ func (api *APIFields) AddField(path string, fieldType FieldType, comments []stri
 		if obj.Children != nil {
 			for i := range obj.Children {
 				if obj.Children[i].manifestName == part {
-					if obj.Children[i].Type != FieldStruct {
+					if obj.Children[i].Type != markers.FieldStruct {
 						return fmt.Errorf("%w for api field %s", ErrOverwriteExistingValue, path)
 					}
 
@@ -54,7 +56,7 @@ func (api *APIFields) AddField(path string, fieldType FieldType, comments []stri
 		}
 
 		if !foundMatch {
-			child := obj.newChild(part, FieldStruct, sample)
+			child := obj.newChild(part, markers.FieldStruct, sample)
 
 			child.Markers = append(child.Markers, "+kubebuilder:validation:Optional")
 
@@ -159,7 +161,7 @@ func (api *APIFields) hasRequiredField() bool {
 
 func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
 	typeName := api.Type.String()
-	if api.Type == FieldStruct {
+	if api.Type == markers.FieldStruct {
 		typeName = kind + api.StructName
 	}
 
@@ -175,7 +177,7 @@ func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
 }
 
 func (api *APIFields) generateAPIStruct(b io.StringWriter, kind string) {
-	if api.Type == FieldStruct {
+	if api.Type == markers.FieldStruct {
 		mustWrite(b.WriteString(fmt.Sprintf("type %s %s{\n", kind+api.StructName, api.Type.String())))
 
 		for _, child := range api.Children {
@@ -224,23 +226,43 @@ func (api *APIFields) isEqual(input *APIFields) bool {
 	return false
 }
 
+// getSampleValue exists to solve the problem of the sample value being a brittle, generic interface
+// which can change when we move from proper typed objects to pointers.  This function serves to
+// solve both use cases.
+func (api *APIFields) getSampleValue(sampleVal interface{}) string {
+	switch t := sampleVal.(type) {
+	case *string:
+		if api.Type == markers.FieldString {
+			return fmt.Sprintf(`%q`, *t)
+		}
+
+		return *t
+	case *int:
+		return fmt.Sprintf(`%v`, *t)
+	case *bool:
+		return fmt.Sprintf(`%v`, *t)
+	case string:
+		if api.Type == markers.FieldString {
+			return fmt.Sprintf(`%q`, t)
+		}
+
+		return t
+	default:
+		return fmt.Sprintf(`%v`, t)
+	}
+}
+
 func (api *APIFields) setSample(sampleVal interface{}) {
 	switch api.Type {
-	case FieldString:
-		api.Sample = fmt.Sprintf("%s: %q", api.manifestName, sampleVal)
-	case FieldStruct:
+	case markers.FieldStruct:
 		api.Sample = fmt.Sprintf("%s:", api.manifestName)
 	default:
-		api.Sample = fmt.Sprintf("%s: %v", api.manifestName, sampleVal)
+		api.Sample = fmt.Sprintf("%s: %v", api.manifestName, api.getSampleValue(sampleVal))
 	}
 }
 
 func (api *APIFields) setDefault(sampleVal interface{}) {
-	if api.Type == FieldString {
-		api.Default = fmt.Sprintf("%q", sampleVal)
-	} else {
-		api.Default = fmt.Sprintf("%v", sampleVal)
-	}
+	api.Default = api.getSampleValue(sampleVal)
 
 	if len(api.Markers) == 0 {
 		api.Markers = append(
@@ -264,7 +286,7 @@ func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interfa
 	}
 }
 
-func (api *APIFields) newChild(name string, fieldType FieldType, sample interface{}) *APIFields {
+func (api *APIFields) newChild(name string, fieldType markers.FieldType, sample interface{}) *APIFields {
 	child := &APIFields{
 		Name:         strings.Title(name),
 		manifestName: name,

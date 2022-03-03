@@ -4,6 +4,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +13,12 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
+)
+
+var (
+	ErrChildResourceResourceMarkerInspect = errors.New("error inspecting resource markers for child resource")
+	ErrChildResourceResourceMarkerProcess = errors.New("error processing resource markers for child resource")
 )
 
 // SourceFile represents a golang source code file that contains one or more
@@ -57,8 +64,8 @@ func (r *Resource) loadContent(isCollection bool) error {
 	if isCollection {
 		// replace all instances of collection markers and collection field markers with regular field markers
 		// as a collection marker on a collection is simply a field marker to itself
-		content := strings.ReplaceAll(string(manifestContent), collectionFieldMarker, fieldMarker)
-		content = strings.ReplaceAll(content, resourceMarkerCollectionFieldName, resourceMarkerFieldName)
+		content := strings.ReplaceAll(string(manifestContent), markers.CollectionFieldMarkerPrefix, markers.FieldMarkerPrefix)
+		content = strings.ReplaceAll(content, markers.ResourceMarkerCollectionFieldName, markers.ResourceMarkerFieldName)
 
 		r.Content = []byte(content)
 	} else {
@@ -171,21 +178,11 @@ func expandResources(path string, resources []*Resource) ([]*Resource, error) {
 	return expandedResources, nil
 }
 
-const (
-	includeCode = `if %s != %s {
-		return []client.Object{}, nil
-	}`
-
-	excludeCode = `if %s == %s {
-		return []client.Object{}, nil
-	}`
-)
-
-func (cr *ChildResource) processResourceMarkers(markers *markerCollection) error {
-	// obtain the marker results from the input yaml
-	_, markerResults, err := inspectMarkersForYAML([]byte(cr.StaticContent), ResourceMarkerType)
+func (cr *ChildResource) processResourceMarkers(markerCollection *markers.MarkerCollection) error {
+	// obtain the marker results from the child resource input yaml
+	_, markerResults, err := markers.InspectForYAML([]byte(cr.StaticContent), markers.ResourceMarkerType)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w; %s", err, ErrChildResourceResourceMarkerInspect)
 	}
 
 	// ensure we have the expected number of resource markers
@@ -197,38 +194,24 @@ func (cr *ChildResource) processResourceMarkers(markers *markerCollection) error
 		return nil
 	}
 
-	filtered := filterResourceMarkers(markerResults)
-
-	var resourceMarker *ResourceMarker
-
 	//nolint: godox // depends on https://github.com/vmware-tanzu-labs/operator-builder/issues/271
 	// TODO: we need to ensure only one marker is found and return an error if we find more than one.
 	// this becomes difficult as the results are returned as yaml nodes.  for now, we just focus on the
 	// first result and all others are ignored but we should notify the user.
-	// if len(filtered) == 1 {
-	marker := filtered[0]
+	result := markerResults[0]
 
-	// associate the marker with a field marker
-	marker.associateFieldMarker(markers)
-
-	if marker.fieldMarker != nil {
-		resourceMarker = marker
-	} else {
-		return fmt.Errorf("%w; %v", ErrAssociateResourceMarker, marker)
-	}
-	// } else {
-	// 	return fmt.Errorf("%w, found %d; markers: %v", ErrNumberResourceMarkers, len(filtered), filtered[1].Value)
-	// }
-
-	// process the marker and set the code snippet
-	if err := resourceMarker.process(); err != nil {
-		return err
+	// process the marker
+	marker, ok := result.Object.(markers.ResourceMarker)
+	if !ok {
+		return ErrChildResourceResourceMarkerProcess
 	}
 
-	if *resourceMarker.Include {
-		cr.IncludeCode = fmt.Sprintf(includeCode, resourceMarker.sourceCodeVar, resourceMarker.sourceCodeValue)
-	} else {
-		cr.IncludeCode = fmt.Sprintf(excludeCode, resourceMarker.sourceCodeVar, resourceMarker.sourceCodeValue)
+	if err := marker.Process(markerCollection); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrChildResourceResourceMarkerProcess)
+	}
+
+	if marker.GetIncludeCode() != "" {
+		cr.IncludeCode = marker.GetIncludeCode()
 	}
 
 	return nil
