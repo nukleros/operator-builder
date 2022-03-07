@@ -11,6 +11,7 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
 )
 
 var ErrNoComponentsOnComponent = errors.New("cannot set component workloads on a component workload - only on collections")
@@ -134,7 +135,7 @@ func (*ComponentWorkload) IsCollection() bool {
 }
 
 func (c *ComponentWorkload) SetRBAC() {
-	c.Spec.RBACRules.addRulesForWorkload(c)
+	c.Spec.RBACRules.Add(rbac.ForWorkloads(c, c.Spec.Collection))
 }
 
 func (c *ComponentWorkload) SetResources(workloadPath string) error {
@@ -178,8 +179,8 @@ func (c *ComponentWorkload) GetAPISpecFields() *APIFields {
 	return c.Spec.APISpecFields
 }
 
-func (c *ComponentWorkload) GetRBACRules() *[]RBACRule {
-	var rules []RBACRule = *c.Spec.RBACRules
+func (c *ComponentWorkload) GetRBACRules() *[]rbac.Rule {
+	var rules []rbac.Rule = *c.Spec.RBACRules
 
 	return &rules
 }

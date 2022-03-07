@@ -10,6 +10,8 @@ import (
 	"os"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
 var (
@@ -117,12 +119,12 @@ func mutateConfig(workloadConfig WorkloadInitializer) ([]byte, error) {
 }
 
 func mutateResources(yamlData map[string]interface{}) error {
-	specField, err := toMapStringInterface(yamlData["spec"])
+	specField, err := utils.ToMapStringInterface(yamlData["spec"])
 	if err != nil {
 		return fmt.Errorf("%w; error converting workload config spec %v", err, yamlData["spec"])
 	}
 
-	resourceObjs, err := toArrayInterface(specField["resources"])
+	resourceObjs, err := utils.ToArrayInterface(specField["resources"])
 	if err != nil {
 		return fmt.Errorf("%w; error converting spec.resources %v", err, specField["resources"])
 	}
@@ -130,12 +132,12 @@ func mutateResources(yamlData map[string]interface{}) error {
 	resources := make([]string, len(resourceObjs))
 
 	for i, resource := range resourceObjs {
-		resourceMap, err := toMapStringInterface(resource)
+		resourceMap, err := utils.ToMapStringInterface(resource)
 		if err != nil {
 			return fmt.Errorf("%w; error converting spec.resources item %v", err, resource)
 		}
 
-		filename, err := toString(resourceMap["filename"])
+		filename, err := utils.ToString(resourceMap["filename"])
 		if err != nil {
 			return fmt.Errorf("%w; error converting spec.resources.filename %v", err, resource)
 		}

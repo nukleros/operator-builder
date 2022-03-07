@@ -11,6 +11,7 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
 )
 
 const (
@@ -152,7 +153,7 @@ func (c *WorkloadCollection) IsCollection() bool {
 }
 
 func (c *WorkloadCollection) SetRBAC() {
-	c.Spec.RBACRules.addRulesForWorkload(c)
+	c.Spec.RBACRules.Add(rbac.ForWorkloads(c))
 }
 
 func (c *WorkloadCollection) SetResources(workloadPath string) error {
@@ -208,8 +209,8 @@ func (c *WorkloadCollection) GetAPISpecFields() *APIFields {
 	return c.Spec.APISpecFields
 }
 
-func (c *WorkloadCollection) GetRBACRules() *[]RBACRule {
-	var rules []RBACRule = *c.Spec.RBACRules
+func (c *WorkloadCollection) GetRBACRules() *[]rbac.Rule {
+	var rules []rbac.Rule = *c.Spec.RBACRules
 
 	return &rules
 }

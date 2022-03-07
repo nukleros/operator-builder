@@ -17,6 +17,7 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
 )
 
 // WorkloadAPISpec sample fields which may be used in things like testing or
@@ -53,7 +54,7 @@ type WorkloadSpec struct {
 	Collection             *WorkloadCollection              `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	APISpecFields          *APIFields                       `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	SourceFiles            *[]SourceFile                    `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	RBACRules              *RBACRules                       `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	RBACRules              *rbac.Rules                      `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 }
 
 func (ws *WorkloadSpec) init() {
@@ -69,7 +70,7 @@ func (ws *WorkloadSpec) init() {
 		ws.appendCollectionRef()
 	}
 
-	ws.RBACRules = &RBACRules{}
+	ws.RBACRules = &rbac.Rules{}
 	ws.SourceFiles = &[]SourceFile{}
 }
 
@@ -167,35 +168,40 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) erro
 
 			decoder := serializer.NewCodecFactory(scheme.Scheme).UniversalDecoder()
 
-			err := runtime.DecodeInto(decoder, []byte(manifest), &manifestObject)
-			if err != nil {
+			if err := runtime.DecodeInto(decoder, []byte(manifest), &manifestObject); err != nil {
 				return formatProcessError(manifestFile.FileName, err)
 			}
 
-			// generate a unique name for the resource using the kind and name
-			resourceUniqueName := generateUniqueResourceName(manifestObject)
-
-			// determine resource group and version
-			resourceVersion, resourceGroup := versionGroupFromAPIVersion(manifestObject.GetAPIVersion())
-
 			// add the rules for this manifest
-			err = ws.RBACRules.addRulesForManifest(manifestObject.GetKind(), resourceGroup, manifestObject.Object)
+			rules, err := rbac.ForManifest(&manifestObject)
 			if err != nil {
-				return err
+				return fmt.Errorf(
+					"%w; error generating rbac for kind [%s] with name [%s]",
+					formatProcessError(manifestFile.FileName, err),
+					manifestObject.GetKind(),
+					manifestObject.GetName(),
+				)
 			}
+
+			ws.RBACRules.Add(rules)
 
 			resource := ChildResource{
 				Name:       manifestObject.GetName(),
-				UniqueName: resourceUniqueName,
-				Group:      resourceGroup,
-				Version:    resourceVersion,
+				UniqueName: generateUniqueResourceName(manifestObject),
+				Group:      manifestObject.GetObjectKind().GroupVersionKind().Group,
+				Version:    manifestObject.GetObjectKind().GroupVersionKind().Version,
 				Kind:       manifestObject.GetKind(),
 			}
 
 			// generate the object source code
 			resourceDefinition, err := generate.Generate([]byte(manifest), "resourceObj")
 			if err != nil {
-				return formatProcessError(manifestFile.FileName, err)
+				return fmt.Errorf(
+					"%w; error generating resource definition for kind [%s] with name [%s]",
+					formatProcessError(manifestFile.FileName, err),
+					manifestObject.GetKind(),
+					manifestObject.GetName(),
+				)
 			}
 
 			// add the source code to the resource
@@ -368,7 +374,7 @@ func (ws *WorkloadSpec) needsCollectionRef() bool {
 }
 
 func formatProcessError(manifestFile string, err error) error {
-	return fmt.Errorf("error processing file %s; %w", manifestFile, err)
+	return fmt.Errorf("%w; error processing file %s", err, manifestFile)
 }
 
 func generateUniqueResourceName(object unstructured.Unstructured) string {
@@ -393,18 +399,4 @@ func generateUniqueResourceName(object unstructured.Unstructured) string {
 	resourceName = fmt.Sprintf("%s%s%s", object.GetKind(), namespaceName, resourceName)
 
 	return resourceName
-}
-
-func versionGroupFromAPIVersion(apiVersion string) (version, group string) {
-	apiVersionElements := strings.Split(apiVersion, "/")
-
-	if len(apiVersionElements) == 1 {
-		version = apiVersionElements[0]
-		group = coreRBACGroup
-	} else {
-		version = apiVersionElements[1]
-		group = rbacGroupFromGroup(apiVersionElements[0])
-	}
-
-	return version, group
 }

@@ -3,7 +3,11 @@
 
 package v1
 
-import "sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+import (
+	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
+)
 
 // WorkloadIdentifier defines an interface for identifying any workload.
 type WorkloadIdentifier interface {
@@ -51,7 +55,7 @@ type WorkloadAPIBuilder interface {
 	GetComponents() []*ComponentWorkload
 	GetSourceFiles() *[]SourceFile
 	GetAPISpecFields() *APIFields
-	GetRBACRules() *[]RBACRule
+	GetRBACRules() *[]rbac.Rule
 	GetComponentResource(domain, repo string, clusterScoped bool) *resource.Resource
 	GetFuncNames() (createFuncNames, initFuncNames []string)
 	GetRootCommand() *CliCommand

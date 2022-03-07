@@ -13,6 +13,7 @@ spec:
   #   name: contour
   #   description: Manage contour component
   resources:
+  - rbac.yaml
   - ingress-ns.yaml
   - contour-config.yaml
   - contour-deploy.yaml

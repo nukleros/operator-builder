@@ -13,6 +13,7 @@ import (
 	"github.com/go-playground/validator"
 	"gopkg.in/yaml.v3"
 
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
 )
 
@@ -182,12 +183,12 @@ func parseConfig(workloadConfig string) (map[WorkloadKind][]WorkloadIdentifier, 
 		return nil, ErrConfigMustExist
 	}
 
-	file, err := ReadStream(workloadConfig)
+	file, err := utils.ReadStream(workloadConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w; error reading file %s", err, workloadConfig)
 	}
 
-	defer CloseFile(file)
+	defer utils.CloseFile(file)
 
 	var kindReader bytes.Buffer
 	reader := io.TeeReader(file, &kindReader)
@@ -252,9 +253,9 @@ func parseCollectionComponents(workload *WorkloadCollection, workloadConfig stri
 	var workloads []WorkloadIdentifier
 
 	for _, componentFile := range workload.Spec.ComponentFiles {
-		componentPaths, err := Glob(filepath.Join(filepath.Dir(workloadConfig), componentFile))
+		componentPaths, err := utils.Glob(filepath.Join(filepath.Dir(workloadConfig), componentFile))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w; error globbing workload config at path %s", err, componentFile)
 		}
 
 		for _, componentPath := range componentPaths {
