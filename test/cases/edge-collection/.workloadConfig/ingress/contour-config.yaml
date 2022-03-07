@@ -10,6 +10,21 @@ data:
     anotheroption: another
     justtesting: multistringyaml
 ---
+# +operator-builder:resource:collectionField=provider,value="aws",include
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: test-include
+  namespace: ingress-system  # +operator-builder:field:name=namespace,default=ingress-system,type=string
+  labels:
+    # +operator-builder:collection:field:name=provider,type=string,default="aws",description=`
+    # +kubebuilder:validation:Enum=aws;azure;vmware
+    # This test ensures that kubebuilder markers with a semicolon properly work.
+    # See https://github.com/vmware-tanzu-labs/operator-builder/issues/260 for details.`
+    provider: "aws"
+data:
+  test: "data"
+---
 apiVersion: v1
 kind: Secret
 metadata:

@@ -289,7 +289,7 @@ func lexNakedStringLiteral(l *Lexer, nextState stateFn) (stateFn, bool) {
 	exceptions := []rune{
 		':', '=', ' ', '"', '\'', '`',
 		',', '+', '{', '}', '[', ']',
-		'(', ')', ';', '\n', eof,
+		'(', ')', '\n', eof,
 	}
 
 	if argValue := l.consumeUntil(exceptions...); !argValue {

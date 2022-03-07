@@ -383,6 +383,23 @@ func TestLexer(t *testing.T) {
 				{Type: lexer.LexemeEOF, Value: ""},
 			},
 		},
+		{
+			name:  "kubebuilder marker",
+			input: `# +kubebuilder:validation:Enum=aws;azure;vmware`,
+			expected: []lexer.Lexeme{
+				{Type: lexer.LexemeComment, Value: "#"},
+				{Type: lexer.LexemeMarkerStart, Value: "+"},
+				{Type: lexer.LexemeScope, Value: "kubebuilder"},
+				{Type: lexer.LexemeSeparator, Value: ":"},
+				{Type: lexer.LexemeScope, Value: "validation"},
+				{Type: lexer.LexemeSeparator, Value: ":"},
+				{Type: lexer.LexemeArg, Value: "Enum"},
+				{Type: lexer.LexemeArgAssignment, Value: "="},
+				{Type: lexer.LexemeStringLiteral, Value: "aws;azure;vmware"},
+				{Type: lexer.LexemeMarkerEnd, Value: "\n"},
+				{Type: lexer.LexemeEOF, Value: ""},
+			},
+		},
 	}
 
 	focused := false

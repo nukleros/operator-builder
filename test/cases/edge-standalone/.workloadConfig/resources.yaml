@@ -17,7 +17,11 @@ apiVersion: v1
 metadata:
   name: test-include
   labels:
-    provider: "aws" # +operator-builder:field:name=provider,type=string,default="aws"
+    # +operator-builder:field:name=provider,type=string,default="aws",description=`
+    # +kubebuilder:validation:Enum=aws;azure;vmware
+    # This test ensures that kubebuilder markers with a semicolon properly work.
+    # See https://github.com/vmware-tanzu-labs/operator-builder/issues/260 for details.`
+    provider: "aws"
 data:
   test: "data"
 ---
