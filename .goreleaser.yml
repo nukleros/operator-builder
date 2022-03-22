@@ -30,6 +30,7 @@ archives:
     files:
       - README.md
       - LICENSE
+      - completions/*
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -49,7 +50,6 @@ dockers:
       - 'ghcr.io/vmware-tanzu-labs/operator-builder:v{{ .Version }}'
       - 'ghcr.io/vmware-tanzu-labs/operator-builder:latest'
     dockerfile: Dockerfile
-    use_buildx: true
     build_flag_templates:
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
