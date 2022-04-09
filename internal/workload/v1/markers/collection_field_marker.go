@@ -99,6 +99,12 @@ func (cfm *CollectionFieldMarker) IsForCollection() bool {
 }
 
 func (cfm *CollectionFieldMarker) SetOriginalValue(value string) {
+	if cfm.GetReplaceText() != "" {
+		cfm.originalValue = cfm.GetReplaceText()
+
+		return
+	}
+
 	cfm.originalValue = &value
 }
 

@@ -115,6 +115,12 @@ func (fm *FieldMarker) IsForCollection() bool {
 }
 
 func (fm *FieldMarker) SetOriginalValue(value string) {
+	if fm.GetReplaceText() != "" {
+		fm.originalValue = fm.GetReplaceText()
+
+		return
+	}
+
 	fm.originalValue = &value
 }
 
