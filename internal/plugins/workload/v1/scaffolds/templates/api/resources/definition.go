@@ -8,7 +8,8 @@ import (
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/manifests"
 )
 
 var _ machinery.Template = &Definition{}
@@ -21,8 +22,8 @@ type Definition struct {
 	machinery.ResourceMixin
 
 	// input fields
-	Builder    workloadv1.WorkloadAPIBuilder
-	SourceFile workloadv1.SourceFile
+	Builder  kinds.WorkloadBuilder
+	Manifest *manifests.Manifest
 }
 
 func (f *Definition) SetTemplateDefaults() error {
@@ -31,7 +32,7 @@ func (f *Definition) SetTemplateDefaults() error {
 		f.Resource.Group,
 		f.Resource.Version,
 		f.Builder.GetPackageName(),
-		f.SourceFile.Filename,
+		f.Manifest.SourceFilename,
 	)
 
 	f.TemplateBody = definitionTemplate
@@ -46,14 +47,8 @@ const definitionTemplate = `{{ .Boilerplate }}
 package {{ .Builder.GetPackageName }}
 
 import (
-	{{ if .SourceFile.HasStatic }}
-	"text/template"
-	{{ end }}
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	{{- if .SourceFile.HasStatic }}
-	k8s_yaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
-	{{ end }}
 
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
 	{{- if .Builder.IsComponent }}
@@ -61,9 +56,9 @@ import (
 	{{ end -}}
 )
 
-{{ range .SourceFile.Children }}
-// Create{{ .UniqueName }} creates the {{ .Name }} {{ .Kind }} resource.
-func Create{{ .UniqueName }} (
+{{ range .Manifest.ChildResources }}
+// {{ .CreateFuncName }} creates the {{ .Name }} {{ .Kind }} resource.
+func {{ .CreateFuncName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
 	{{ if $.Builder.IsComponent -}}
 	collection *{{ $.Builder.GetCollection.Spec.API.Group }}{{ $.Builder.GetCollection.Spec.API.Version }}.{{ $.Builder.GetCollection.Spec.API.Kind }},

@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	workloadconfig "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/config"
 )
 
 type initSubcommand struct {
@@ -25,23 +25,21 @@ func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
-	workload, err := workloadv1.ProcessInitConfig(
-		p.workloadConfigPath,
-	)
+	processor, err := workloadconfig.Parse(p.workloadConfigPath)
 	if err != nil {
 		return fmt.Errorf("unable to inject config into %s, %w", p.workloadConfigPath, err)
 	}
 
-	pluginConfig := workloadv1.PluginConfig{
+	pluginConfig := workloadconfig.Plugin{
 		WorkloadConfigPath: p.workloadConfigPath,
-		CliRootCommandName: workload.GetRootCommand().Name,
+		CliRootCommandName: processor.Workload.GetRootCommand().Name,
 	}
 
-	if err := c.EncodePluginConfig(workloadv1.PluginConfigKey, pluginConfig); err != nil {
+	if err := c.EncodePluginConfig(workloadconfig.PluginKey, pluginConfig); err != nil {
 		return fmt.Errorf("unable to encode operatorbuilder config key at %s, %w", p.workloadConfigPath, err)
 	}
 
-	if err := c.SetDomain(workload.GetDomain()); err != nil {
+	if err := c.SetDomain(processor.Workload.GetDomain()); err != nil {
 		return fmt.Errorf("unable to set project domain, %w", err)
 	}
 

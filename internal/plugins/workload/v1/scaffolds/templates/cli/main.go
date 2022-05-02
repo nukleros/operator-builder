@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/companion"
 )
 
 var _ machinery.Template = &Main{}
@@ -21,7 +21,7 @@ type Main struct {
 	machinery.BoilerplateMixin
 	machinery.RepositoryMixin
 
-	RootCmd workloadv1.CliCommand
+	RootCmd companion.CLI
 }
 
 func (f *Main) SetTemplateDefaults() error {

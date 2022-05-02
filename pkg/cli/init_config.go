@@ -9,7 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/subcommand"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/manifests"
 )
 
 var (
@@ -42,7 +44,7 @@ const (
 type initConfigSubCommand struct {
 	subCommandName        string
 	subCommandDescription string
-	options               *workloadv1.InitConfigOptions
+	options               *subcommand.InitConfigOptions
 }
 
 func NewInitConfigCmd() *cobra.Command {
@@ -71,7 +73,7 @@ func newInitConfigSubCommand(subCmdName, subCmdDescription string) *initConfigSu
 	return &initConfigSubCommand{
 		subCommandName:        subCmdName,
 		subCommandDescription: subCmdDescription,
-		options:               &workloadv1.InitConfigOptions{},
+		options:               &subcommand.InitConfigOptions{},
 	}
 }
 
@@ -106,7 +108,7 @@ func (i *initConfigSubCommand) addInitSubCommand(parentCommand *cobra.Command) e
 	}
 
 	subCommand.RunE = func(cmd *cobra.Command, args []string) error {
-		if err := workloadv1.WriteConfig(i.options); err != nil {
+		if err := subcommand.InitConfig(i.options); err != nil {
 			return fmt.Errorf("%w; %s", err, returnErr)
 		}
 
@@ -128,24 +130,24 @@ func (i *initConfigSubCommand) addCommonFlags(cmd *cobra.Command) error {
 	return nil
 }
 
-func newCollectionConfigSample() *workloadv1.WorkloadCollection {
-	sample := workloadv1.NewWorkloadCollection(
+func newCollectionConfigSample() *kinds.WorkloadCollection {
+	sample := kinds.NewWorkloadCollection(
 		collectionSampleName,
-		*workloadv1.NewSampleAPISpec(),
+		*kinds.NewSampleAPISpec(),
 		[]string{sampleComponentFile},
 	)
 
 	sample.Spec.CompanionCliRootcmd.SetDefaults(sample, false)
 	sample.Spec.CompanionCliSubcmd.SetDefaults(sample, true)
-	sample.Spec.Resources = workloadv1.ResourcesFromFiles([]string{sampleResourceFile})
+	sample.Spec.Manifests = manifests.FromFiles([]string{sampleResourceFile})
 
 	return sample
 }
 
-func newComponentConfigSample() *workloadv1.ComponentWorkload {
-	sample := workloadv1.NewComponentWorkload(
+func newComponentConfigSample() *kinds.ComponentWorkload {
+	sample := kinds.NewComponentWorkload(
 		componentSampleName,
-		*workloadv1.NewSampleAPISpec(),
+		*kinds.NewSampleAPISpec(),
 		[]string{sampleComponentFile},
 		[]string{componentSampleName + "-2"},
 	)
@@ -155,10 +157,10 @@ func newComponentConfigSample() *workloadv1.ComponentWorkload {
 	return sample
 }
 
-func newStandaloneConfigSample() *workloadv1.StandaloneWorkload {
-	sample := workloadv1.NewStandaloneWorkload(
+func newStandaloneConfigSample() *kinds.StandaloneWorkload {
+	sample := kinds.NewStandaloneWorkload(
 		standaloneSampleName,
-		*workloadv1.NewSampleAPISpec(),
+		*kinds.NewSampleAPISpec(),
 		[]string{sampleResourceFile},
 	)
 

@@ -9,7 +9,8 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/companion"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 var (
@@ -20,8 +21,8 @@ var (
 // cmdVersionSubCommon include the common fields that are shared by all version
 // subcommand structs for templating purposes.
 type cmdVersionSubCommon struct {
-	RootCmd workloadv1.CliCommand
-	SubCmd  workloadv1.CliCommand
+	RootCmd companion.CLI
+	SubCmd  companion.CLI
 }
 
 // CmdVersionSub scaffolds the root command file for the companion CLI.
@@ -32,7 +33,7 @@ type CmdVersionSub struct {
 	machinery.RepositoryMixin
 
 	// input fields
-	Builder workloadv1.WorkloadAPIBuilder
+	Builder kinds.WorkloadBuilder
 
 	// template fields
 	cmdVersionSubCommon
@@ -74,7 +75,7 @@ type CmdVersionSubUpdater struct { //nolint:maligned
 	machinery.ResourceMixin
 
 	// input fields
-	Builder workloadv1.WorkloadAPIBuilder
+	Builder kinds.WorkloadBuilder
 
 	// template fields
 	cmdVersionSubCommon

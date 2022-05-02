@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 var _ machinery.Template = &Types{}
@@ -25,7 +25,7 @@ type Types struct {
 	machinery.ResourceMixin
 
 	// input fields
-	Builder workloadv1.WorkloadAPIBuilder
+	Builder kinds.WorkloadBuilder
 }
 
 // SetTemplateDefaults implements file.Template.

@@ -23,8 +23,10 @@ In order to test the effect of changes made to Operator Builder, use `make
 func-test` or `make debug`.
 
 At a minimum, ensure your changes work for:
-- application: This tests a basic standalone workload use case.
-- platform: This tests a basic workload colleciton use case.
+- standalone: This tests a basic standalone workload use case.
+- collection: This tests a basic workload colleciton use case.
+- edge-standalone: This tests standalone workloads which contain edge cases.
+- edge-collection: This tests a collection workload which contains edge cases.
 
 See the [testing docs](docs/testing.md) for insturctions on how to run these
 tests.

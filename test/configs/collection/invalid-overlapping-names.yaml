@@ -1,0 +1,19 @@
+kind: WorkloadCollection
+name: collection-overlapping-component-names
+spec:
+  api:
+    clusterScoped: false
+    domain: acme.com
+    group: apps
+    kind: MyCollection
+    version: v1alpha1
+  companionCliRootcmd:
+    description: Manage mycollection collection and components
+    name: mycollection
+  companionCliSubcmd:
+    description: Manage mycollection workload
+    name: collection
+  componentFiles:
+    - ../component/valid.yaml
+    - ../component/valid-duplicate-names.yaml
+  resources: []

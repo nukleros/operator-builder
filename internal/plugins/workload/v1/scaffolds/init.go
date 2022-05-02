@@ -15,7 +15,7 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 var _ plugins.Scaffolder = &initScaffolder{}
@@ -23,7 +23,7 @@ var _ plugins.Scaffolder = &initScaffolder{}
 type initScaffolder struct {
 	config             config.Config
 	boilerplatePath    string
-	workload           workloadv1.WorkloadInitializer
+	workload           kinds.WorkloadBuilder
 	cliRootCommandName string
 
 	fs machinery.Filesystem
@@ -32,7 +32,7 @@ type initScaffolder struct {
 // NewInitScaffolder returns a new Scaffolder for project initialization operations.
 func NewInitScaffolder(
 	cfg config.Config,
-	workload workloadv1.WorkloadInitializer,
+	workload kinds.WorkloadBuilder,
 	cliRootCommandName string,
 ) plugins.Scaffolder {
 	return &initScaffolder{

@@ -1,0 +1,13 @@
+kind: StandaloneWorkload
+name: standalone-missing-group
+spec:
+  api:
+    clusterScoped: false
+    domain: acme.com
+    kind: MyApp
+    version: v1alpha1
+  companionCliRootcmd:
+    description: Manage myapp workload
+    name: myapp
+  resources:
+    - /path/to/my/child-resources.yaml

@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 var _ machinery.Template = &CRDSample{}
@@ -20,7 +20,7 @@ type CRDSample struct {
 	machinery.TemplateMixin
 	machinery.ResourceMixin
 
-	SpecFields      *workloadv1.APIFields
+	SpecFields      *kinds.APIFields
 	IsClusterScoped bool
 	RequiredOnly    bool
 }

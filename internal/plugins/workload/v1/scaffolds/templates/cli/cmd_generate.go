@@ -8,7 +8,7 @@ import (
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 const (
@@ -27,7 +27,7 @@ type CmdGenerate struct {
 	machinery.RepositoryMixin
 
 	// input variables
-	Initializer workloadv1.WorkloadInitializer
+	Initializer kinds.WorkloadBuilder
 
 	// template variables
 	GenerateCommandName  string

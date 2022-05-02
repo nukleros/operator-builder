@@ -1,11 +1,11 @@
 bin/*
 .idea/*
 dist/*
-test/cases/application/*
+test/cases/standalone/*
 test/cases/edge-collection/*
 test/cases/edge-standalone/*
-test/cases/platform/*
-!test/cases/application/.workloadConfig/
+test/cases/collection/*
+!test/cases/standalone/.workloadConfig/
 !test/cases/edge-collection/.workloadConfig/
 !test/cases/edge-standalone/.workloadConfig/
-!test/cases/platform/.workloadConfig/
+!test/cases/collection/.workloadConfig/

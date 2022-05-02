@@ -29,7 +29,7 @@ integration tests will be added to test the generated operator.
 
 ## Run Functional Testing
 
-To run the default `application` test in the default `FUNC_TEST_PATH`:
+To run the default `application` (based on a standalone use case) test in the default `FUNC_TEST_PATH`:
 
     make func-test
 

@@ -25,7 +25,7 @@ import (
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/int/dependencies"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/int/mutate"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 const boilerplatePath = "hack/boilerplate.go.txt"
@@ -56,7 +56,7 @@ type apiScaffolder struct {
 	config             config.Config
 	resource           *resource.Resource
 	boilerplate        string
-	workload           workloadv1.WorkloadAPIBuilder
+	workload           kinds.WorkloadBuilder
 	cliRootCommandName string
 }
 
@@ -64,7 +64,7 @@ type apiScaffolder struct {
 func NewAPIScaffolder(
 	cfg config.Config,
 	res *resource.Resource,
-	workload workloadv1.WorkloadAPIBuilder,
+	workload kinds.WorkloadBuilder,
 	cliRootCommandName string,
 ) plugins.Scaffolder {
 	return &apiScaffolder{
@@ -108,7 +108,7 @@ func (s *apiScaffolder) Scaffold() error {
 // scaffoldWorkload performs the execution of the scaffold for an individual workload.
 func (s *apiScaffolder) scaffoldWorkload(
 	scaffold *machinery.Scaffold,
-	workload workloadv1.WorkloadAPIBuilder,
+	workload kinds.WorkloadBuilder,
 ) error {
 	// override the scaffold if we have a component.  this will allow the Resource
 	// attribute of the scaffolder to be set appropriately so that things like Group,
@@ -195,7 +195,7 @@ func (s *apiScaffolder) scaffoldWorkload(
 // scaffoldAPI runs the specific logic to scaffold anything existing in the apis directory.
 func (s *apiScaffolder) scaffoldAPI(
 	scaffold *machinery.Scaffold,
-	workload workloadv1.WorkloadAPIBuilder,
+	workload kinds.WorkloadBuilder,
 ) error {
 	// scaffold the base api types
 	if err := scaffold.Execute(
@@ -223,9 +223,9 @@ func (s *apiScaffolder) scaffoldAPI(
 
 	// child resource definition files
 	// these are the resources defined in the static yaml manifests
-	for _, sourceFile := range *workload.GetSourceFiles() {
+	for _, manifest := range *workload.GetManifests() {
 		if err := scaffold.Execute(
-			&resources.Definition{Builder: workload, SourceFile: sourceFile},
+			&resources.Definition{Builder: workload, Manifest: manifest},
 		); err != nil {
 			return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
 		}
@@ -238,7 +238,7 @@ func (s *apiScaffolder) scaffoldAPI(
 // individual workload.
 func (s *apiScaffolder) scaffoldCLI(
 	scaffold *machinery.Scaffold,
-	workload workloadv1.WorkloadAPIBuilder,
+	workload kinds.WorkloadBuilder,
 ) error {
 	// scaffold init subcommand
 	if err := scaffold.Execute(

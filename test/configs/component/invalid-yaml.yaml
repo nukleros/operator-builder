@@ -1,0 +1,17 @@
+kind: ComponentWorkload
+name: component-invalid-yaml
+spec:
+  api:
+    clusterScoped: false
+    domain: acme.com
+    group: apps
+    kind: MyApp
+    version: v1alpha1
+  companionCliSubcmd:
+    description: Manage myapp workload
+    name: myapp
+  dependencies:
+    - component-workload-config-2
+    thisIsInvalid: true
+  resources:
+    - /path/to/my/component-workload-config.yaml

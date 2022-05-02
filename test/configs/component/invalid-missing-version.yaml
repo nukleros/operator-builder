@@ -1,0 +1,14 @@
+kind: ComponentWorkload
+name: component-missing-version
+spec:
+  api:
+    clusterScoped: false
+    domain: acme.com
+    group: apps
+    kind: MyApp
+  companionCliSubcmd:
+    description: Manage myapp workload
+    name: myapp
+  dependencies: []
+  resources:
+    - /path/to/my/component-workload-config.yaml

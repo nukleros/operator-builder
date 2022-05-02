@@ -65,13 +65,13 @@ jobs:
         include:
           - name: Standalone Operator
             artifact: standalone-codebase
-            test-workload-path: test/cases/application
+            test-workload-path: test/cases/standalone
           - name: Standalone Edge Cases Operator
             artifact: standalone-edge-codebase
             test-workload-path: test/cases/edge-standalone
           - name: Workload Collection Operator
             artifact: collection-codebase
-            test-workload-path: test/cases/platform
+            test-workload-path: test/cases/collection
           - name: Workload Collection Edge Cases Operator
             artifact: collection-edge-codebase
             test-workload-path: test/cases/edge-collection

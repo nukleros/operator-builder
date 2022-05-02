@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 const (
@@ -32,7 +32,7 @@ type WorkloadTest struct {
 	machinery.ResourceMixin
 
 	// input fields
-	Builder workloadv1.WorkloadAPIBuilder
+	Builder kinds.WorkloadBuilder
 
 	// template fields
 	TesterName                string
@@ -185,7 +185,7 @@ func getTesterSamplePath(r *resource.Resource) string {
 	)
 }
 
-func getTesterNamespace(builder workloadv1.WorkloadAPIBuilder) (namespace string) {
+func getTesterNamespace(builder kinds.WorkloadBuilder) (namespace string) {
 	if !builder.IsClusterScoped() {
 		namespaceElements := []string{
 			"test",
@@ -203,7 +203,7 @@ func getTesterName(r *resource.Resource) string {
 	return r.ImportAlias() + r.Kind
 }
 
-func getTesterCollectionName(collection *workloadv1.WorkloadCollection) string {
+func getTesterCollectionName(collection *kinds.WorkloadCollection) string {
 	return strings.ToLower(collection.Spec.API.Group) +
 		strings.ToLower(collection.GetAPIVersion()) +
 		collection.Spec.API.Kind

@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 var _ machinery.Template = &Controller{}
@@ -23,7 +23,7 @@ type Controller struct {
 	machinery.ResourceMixin
 
 	// input fields
-	Builder workloadv1.WorkloadAPIBuilder
+	Builder kinds.WorkloadBuilder
 
 	// template fields
 	BaseImports     []string
@@ -103,7 +103,7 @@ func (f *Controller) setInternalImports() {
 	}
 }
 
-func (f *Controller) getAPITypesPath(builder workloadv1.WorkloadAPIBuilder) string {
+func (f *Controller) getAPITypesPath(builder kinds.WorkloadBuilder) string {
 	return fmt.Sprintf(`%s%s "%s/apis/%s/%s"`,
 		builder.GetAPIGroup(),
 		builder.GetAPIVersion(),

@@ -10,7 +10,8 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/companion"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 var _ machinery.Template = &CmdGenerateSub{}
@@ -19,9 +20,9 @@ var _ machinery.Inserter = &CmdGenerateSubUpdater{}
 // cmdGenerateSubCommon include the common fields that are shared by all generate
 // subcommand structs for templating purposes.
 type cmdGenerateSubCommon struct {
-	RootCmd    workloadv1.CliCommand
-	SubCmd     workloadv1.CliCommand
-	Collection *workloadv1.WorkloadCollection
+	RootCmd    companion.CLI
+	SubCmd     companion.CLI
+	Collection *kinds.WorkloadCollection
 
 	UseCollectionManifestFlag bool
 	UseWorkloadManifestFlag   bool
@@ -36,7 +37,7 @@ type CmdGenerateSub struct {
 	machinery.ResourceMixin
 
 	// input fields
-	Builder workloadv1.WorkloadAPIBuilder
+	Builder kinds.WorkloadBuilder
 
 	// template fields
 	cmdGenerateSubCommon
@@ -103,7 +104,7 @@ type CmdGenerateSubUpdater struct { //nolint:maligned
 	machinery.ResourceMixin
 
 	// input fields
-	Builder workloadv1.WorkloadAPIBuilder
+	Builder kinds.WorkloadBuilder
 
 	// template fields
 	cmdGenerateSubCommon

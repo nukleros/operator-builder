@@ -4,6 +4,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
@@ -12,7 +13,9 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/subcommand"
+	workloadconfig "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/config"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
 )
 
 type createAPISubcommand struct {
@@ -22,8 +25,10 @@ type createAPISubcommand struct {
 
 	workloadConfigPath string
 	cliRootCommandName string
-	workload           workloadv1.WorkloadAPIBuilder
+	workload           kinds.WorkloadBuilder
 }
+
+var ErrScaffoldCreateAPI = errors.New("unable to scaffold api")
 
 var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
 
@@ -38,8 +43,8 @@ func (p *createAPISubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdM
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 	p.config = c
 
-	var pluginConfig workloadv1.PluginConfig
-	if err := c.DecodePluginConfig(workloadv1.PluginConfigKey, &pluginConfig); err != nil {
+	var pluginConfig workloadconfig.Plugin
+	if err := c.DecodePluginConfig(workloadconfig.PluginKey, &pluginConfig); err != nil {
 		return fmt.Errorf("unable to decode operatorbuilder config key at %s, %w", p.workloadConfigPath, err)
 	}
 
@@ -56,19 +61,16 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 }
 
 func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
-	// load the workload config
-	workload, err := workloadv1.ProcessAPIConfig(p.workloadConfigPath)
+	processor, err := workloadconfig.Parse(p.workloadConfigPath)
 	if err != nil {
-		return fmt.Errorf("unable to process api config for %s, %w", p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI, p.workloadConfigPath, err)
 	}
 
-	// validate the workload config
-	err = workload.Validate()
-	if err != nil {
-		return fmt.Errorf("unable to validate config %s, %w", p.workloadConfigPath, err)
+	if err := subcommand.CreateAPI(processor); err != nil {
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI, p.workloadConfigPath, err)
 	}
 
-	p.workload = workload
+	p.workload = processor.Workload
 
 	return nil
 }
@@ -83,7 +85,7 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 	scaffolder.InjectFS(fs)
 
 	if err := scaffolder.Scaffold(); err != nil {
-		return fmt.Errorf("unable to scaffold api, %w", err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit, p.workloadConfigPath, err)
 	}
 
 	return nil

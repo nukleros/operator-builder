@@ -1,0 +1,15 @@
+kind: ComponentWorkload
+name: component-valid-config-2
+spec:
+  api:
+    clusterScoped: false
+    domain: acme.com
+    group: apps
+    kind: MyApp
+    version: v1alpha1
+  companionCliSubcmd:
+    description: Manage myapp workload
+    name: myapp
+  dependencies: []
+  resources:
+    - /path/to/my/component-workload-config.yaml

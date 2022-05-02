@@ -1,0 +1,17 @@
+kind: WorkloadCollection
+name: collection-valid-config
+spec:
+  api:
+    clusterScoped: false
+    domain: acme.com
+    group: apps
+    kind: MyCollection
+  companionCliRootcmd:
+    description: Manage mycollection collection and components
+    name: mycollection
+  companionCliSubcmd:
+    description: Manage mycollection workload
+    name: collection
+  componentFiles:
+    - ../component/valid.yaml
+  resources: []
