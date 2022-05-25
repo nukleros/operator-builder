@@ -54,8 +54,8 @@ func (rules *Rules) addForWorkload(workload rbacWorkloadProcessor) {
 	rules.Add(workloadRule, statusRule)
 }
 
-// addForManifest will add a particular rule given an unstructured manifest.
-func (rules *Rules) addForManifest(manifest *unstructured.Unstructured) error {
+// addForResource will add a particular rule given an unstructured manifest.
+func (rules *Rules) addForResource(manifest *unstructured.Unstructured) error {
 	kind := manifest.GetKind()
 
 	rules.Add(

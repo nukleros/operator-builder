@@ -284,7 +284,7 @@ func TestRules_addForManifest(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if err := tt.rules.addForManifest(tt.args.manifest); (err != nil) != tt.wantErr {
+			if err := tt.rules.addForResource(tt.args.manifest); (err != nil) != tt.wantErr {
 				t.Errorf("Rules.addForManifest() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			assert.Equal(t, tt.want, tt.rules)

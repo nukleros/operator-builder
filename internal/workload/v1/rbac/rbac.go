@@ -59,14 +59,14 @@ func knownIrregulars() map[string]string {
 	}
 }
 
-// ForManifest will return a set of rules for a particular manifest.  This includes
-// a rule for the manifest itself, in addition to adding particular rules for whatever
+// ForResource will return a set of rules for a particular kubernetes resource.  This includes
+// a rule for the resource itself, in addition to adding particular rules for whatever
 // roles and cluster roles are requesting.  This is because the controller needs to have
 // permissions to manage the children that roles and cluster roles are requesting.
-func ForManifest(manifest *unstructured.Unstructured) (*Rules, error) {
+func ForResource(manifest *unstructured.Unstructured) (*Rules, error) {
 	rules := &Rules{}
 
-	if err := rules.addForManifest(manifest); err != nil {
+	if err := rules.addForResource(manifest); err != nil {
 		return rules, err
 	}
 

@@ -57,6 +57,11 @@ import (
 )
 
 {{ range .Manifest.ChildResources }}
+{{ range .RBAC }}
+{{- .ToMarker }}
+{{ end }}
+{{ if ne .NameConstant "" }}const {{ .UniqueName }} = "{{ .NameConstant }}"{{ end }}
+
 // {{ .CreateFuncName }} creates the {{ .Name }} {{ .Kind }} resource.
 func {{ .CreateFuncName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},

@@ -11,11 +11,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
 )
 
 var (
 	ErrChildResourceResourceMarkerInspect = errors.New("error inspecting resource markers for child resource")
 	ErrChildResourceResourceMarkerProcess = errors.New("error processing resource markers for child resource")
+	ErrChildResourceRBACGenerate          = errors.New("error generating RBAC for child resource")
 )
 
 // ChildResource contains attributes for resources created by the custom resource.
@@ -32,18 +34,28 @@ type ChildResource struct {
 	StaticContent string
 	SourceCode    string
 	IncludeCode   string
+	RBAC          *rbac.Rules
 }
 
 // NewChildResource returns a representation of a ChildResource object given an unstructured
 // Kubernetes object.
-func NewChildResource(object unstructured.Unstructured) *ChildResource {
+func NewChildResource(object unstructured.Unstructured) (*ChildResource, error) {
+	rbacRules, err := rbac.ForResource(&object)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"%w with kind [%s] and name [%s]",
+			ErrChildResourceRBACGenerate, object.GetKind(), object.GetName(),
+		)
+	}
+
 	return &ChildResource{
 		Name:       object.GetName(),
 		UniqueName: uniqueName(object),
 		Group:      object.GetObjectKind().GroupVersionKind().Group,
 		Version:    object.GetObjectKind().GroupVersionKind().Version,
 		Kind:       object.GetKind(),
-	}
+		RBAC:       rbacRules,
+	}, nil
 }
 
 //nolint:gocritic // needed to satisfy the stringer interface
@@ -105,6 +117,17 @@ func (resource *ChildResource) InitFuncName() string {
 	}
 
 	return ""
+}
+
+// NameConstant returns the constant which is generated in the code for re-use.  It
+// is needed for instances that the metadata.name field is a field marker, in which
+// case we have no way to return the name constant.
+func (resource *ChildResource) NameConstant() string {
+	if strings.HasPrefix(strings.ToLower(resource.Name), "!!start") {
+		return ""
+	}
+
+	return resource.Name
 }
 
 // uniqueName returns the unique name of a resource.  This combines the name, namespace, and kind

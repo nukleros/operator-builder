@@ -9,3 +9,4 @@ test/cases/collection/*
 !test/cases/edge-collection/.workloadConfig/
 !test/cases/edge-standalone/.workloadConfig/
 !test/cases/collection/.workloadConfig/
+**/*.log

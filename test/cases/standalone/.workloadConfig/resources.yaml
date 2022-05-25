@@ -54,3 +54,18 @@ spec:
     port: 80
     # +operator-builder:field:name=service.targetPort,type=int
     targetPort: 8080
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: webstore-role
+rules:
+  - apiGroups: ["apps"]
+    resources: ["pods", "deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
