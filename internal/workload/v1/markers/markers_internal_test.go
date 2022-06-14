@@ -219,11 +219,25 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 	fieldMarkerTest := &FieldMarker{
 		Name:          "field.marker",
 		sourceCodeVar: "parent.Spec.Field.Marker",
+		Type:          FieldString,
 	}
 
 	collectionFieldMarkerTest := &CollectionFieldMarker{
 		Name:          "collection",
 		sourceCodeVar: "collection.Spec.Collection",
+		Type:          FieldString,
+	}
+
+	intTest := &FieldMarker{
+		Name:          "field.integer",
+		sourceCodeVar: "parent.Spec.Field.Integer",
+		Type:          FieldInt,
+	}
+
+	failTest := &FieldMarker{
+		Name:          "field.fail",
+		sourceCodeVar: "parent.Spec.Field.Fail",
+		Type:          FieldBool,
 	}
 
 	type args struct {
@@ -231,23 +245,42 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 	}
 
 	tests := []struct {
-		name string
-		args args
-		want string
+		name    string
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
 			name: "ensure field marker returns a correct source code variable field",
 			args: args{
 				marker: fieldMarkerTest,
 			},
-			want: "!!start parent.Spec.Field.Marker !!end",
+			want:    "!!start parent.Spec.Field.Marker !!end",
+			wantErr: false,
 		},
 		{
 			name: "ensure collection field marker returns a correct source code variable field",
 			args: args{
 				marker: collectionFieldMarkerTest,
 			},
-			want: "!!start collection.Spec.Collection !!end",
+			want:    "!!start collection.Spec.Collection !!end",
+			wantErr: false,
+		},
+		{
+			name: "ensure integer field marker returns a correct source code variable field",
+			args: args{
+				marker: intTest,
+			},
+			want:    "!!start rune(parent.Spec.Field.Integer) !!end",
+			wantErr: false,
+		},
+		{
+			name: "ensure unsupported field marker returns an error",
+			args: args{
+				marker: failTest,
+			},
+			want:    "",
+			wantErr: true,
 		},
 	}
 
@@ -255,7 +288,12 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := getSourceCodeFieldVariable(tt.args.marker); got != tt.want {
+			got, err := getSourceCodeFieldVariable(tt.args.marker)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getSourceCodeFieldVariable() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if got != tt.want {
 				t.Errorf("getSourceCodeFieldVariable() = %v, want %v", got, tt.want)
 			}
 		})

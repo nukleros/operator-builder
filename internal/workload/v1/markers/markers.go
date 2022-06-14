@@ -175,8 +175,15 @@ func isReserved(fieldName string) bool {
 // getSourceCodeFieldVariable gets a full variable name for a marker as it is intended to be
 // passed into the generate package to generate the source code.  This includes particular
 // tags that are needed by the generator to properly identify when a variable starts and ends.
-func getSourceCodeFieldVariable(marker FieldMarkerProcessor) string {
-	return fmt.Sprintf("!!start %s !!end", marker.GetSourceCodeVariable())
+func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
+	switch marker.GetFieldType() {
+	case FieldString:
+		return fmt.Sprintf("!!start %s !!end", marker.GetSourceCodeVariable()), nil
+	case FieldInt:
+		return fmt.Sprintf("!!start string(rune(%s)) !!end", marker.GetSourceCodeVariable()), nil
+	default:
+		return "", fmt.Errorf("cannot handle field type: %s", marker.GetFieldType())
+	}
 }
 
 // getSourceCodeVariable gets a full variable name for a marker as it is intended to be
@@ -240,7 +247,12 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 			return fmt.Errorf("unable to convert %s to regex, %w", markerReplaceText, err)
 		}
 
-		value.Value = re.ReplaceAllString(value.Value, getSourceCodeFieldVariable(marker))
+		fieldVar, err := getSourceCodeFieldVariable(marker)
+		if err != nil {
+			return fmt.Errorf("unable to get source code field variable for marker %s, %w", marker, err)
+		}
+
+		value.Value = re.ReplaceAllString(value.Value, fieldVar)
 	} else {
 		value.Tag = varTag
 		value.Value = marker.GetSourceCodeVariable()
