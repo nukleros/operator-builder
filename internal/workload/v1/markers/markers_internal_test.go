@@ -216,14 +216,33 @@ func Test_isReserved(t *testing.T) {
 func Test_getSourceCodeFieldVariable(t *testing.T) {
 	t.Parallel()
 
+	fieldMarkerTestString := "field.marker"
+	collectionFieldMarkerTestString := "collection"
+	intMarkerTest := "field.integer"
+	failTestString := "field.fail"
+
 	fieldMarkerTest := &FieldMarker{
-		Name:          "field.marker",
+		Name:          &fieldMarkerTestString,
 		sourceCodeVar: "parent.Spec.Field.Marker",
+		Type:          FieldString,
 	}
 
 	collectionFieldMarkerTest := &CollectionFieldMarker{
-		Name:          "collection",
+		Name:          &collectionFieldMarkerTestString,
 		sourceCodeVar: "collection.Spec.Collection",
+		Type:          FieldString,
+	}
+
+	intTest := &FieldMarker{
+		Name:          &intMarkerTest,
+		sourceCodeVar: "parent.Spec.Field.Integer",
+		Type:          FieldInt,
+	}
+
+	failTest := &FieldMarker{
+		Name:          &failTestString,
+		sourceCodeVar: "parent.Spec.Field.Fail",
+		Type:          FieldBool,
 	}
 
 	type args struct {
@@ -231,23 +250,42 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 	}
 
 	tests := []struct {
-		name string
-		args args
-		want string
+		name    string
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
 			name: "ensure field marker returns a correct source code variable field",
 			args: args{
 				marker: fieldMarkerTest,
 			},
-			want: "!!start parent.Spec.Field.Marker !!end",
+			want:    "!!start parent.Spec.Field.Marker !!end",
+			wantErr: false,
 		},
 		{
 			name: "ensure collection field marker returns a correct source code variable field",
 			args: args{
 				marker: collectionFieldMarkerTest,
 			},
-			want: "!!start collection.Spec.Collection !!end",
+			want:    "!!start collection.Spec.Collection !!end",
+			wantErr: false,
+		},
+		{
+			name: "ensure integer field marker returns a correct source code variable field",
+			args: args{
+				marker: intTest,
+			},
+			want:    "!!start string(rune(parent.Spec.Field.Integer)) !!end",
+			wantErr: false,
+		},
+		{
+			name: "ensure unsupported field marker returns an error",
+			args: args{
+				marker: failTest,
+			},
+			want:    "",
+			wantErr: true,
 		},
 	}
 
@@ -255,7 +293,12 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := getSourceCodeFieldVariable(tt.args.marker); got != tt.want {
+			got, err := getSourceCodeFieldVariable(tt.args.marker)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getSourceCodeFieldVariable() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if got != tt.want {
 				t.Errorf("getSourceCodeFieldVariable() = %v, want %v", got, tt.want)
 			}
 		})
@@ -265,12 +308,34 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 func Test_getSourceCodeVariable(t *testing.T) {
 	t.Parallel()
 
+	highlyNested := "this.is.a.highly.nested.field"
+	flat := "flat"
+
 	fieldMarkerTest := &FieldMarker{
-		Name: "this.is.a.highly.nested.field",
+		Name: &highlyNested,
 	}
 
 	collectionFieldMarkerTest := &CollectionFieldMarker{
-		Name: "flat",
+		Name: &flat,
+	}
+
+	validParent := "metadata.name"
+	invalidParent := "metadata.namespace"
+
+	fieldMarkerParentTest := &FieldMarker{
+		Parent: &validParent,
+	}
+
+	fieldMarkerInvalidParentTest := &FieldMarker{
+		Parent: &invalidParent,
+	}
+
+	collectionFieldMarkerParentTest := &CollectionFieldMarker{
+		Parent: &validParent,
+	}
+
+	collectionFieldMarkerInvalidParentTest := &CollectionFieldMarker{
+		Parent: &invalidParent,
 	}
 
 	fieldMarkerField := "test.field.marker.field"
@@ -289,37 +354,74 @@ func Test_getSourceCodeVariable(t *testing.T) {
 	}
 
 	tests := []struct {
-		name string
-		args args
-		want string
+		name    string
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
 			name: "ensure field marker returns a correct source code variable",
 			args: args{
 				marker: fieldMarkerTest,
 			},
-			want: "parent.Spec.This.Is.A.Highly.Nested.Field",
+			want:    "parent.Spec.This.Is.A.Highly.Nested.Field",
+			wantErr: false,
 		},
 		{
 			name: "ensure collection field marker returns a correct source code variable",
 			args: args{
 				marker: collectionFieldMarkerTest,
 			},
-			want: "collection.Spec.Flat",
+			want:    "collection.Spec.Flat",
+			wantErr: false,
 		},
 		{
 			name: "ensure resource marker with field marker field returns a correct source code variable",
 			args: args{
 				marker: resourceMarkerFieldTest,
 			},
-			want: "parent.Spec.Test.Field.Marker.Field",
+			want:    "parent.Spec.Test.Field.Marker.Field",
+			wantErr: false,
 		},
 		{
 			name: "ensure resource marker with collection field marker field returns a correct source code variable",
 			args: args{
 				marker: resourceMarkerCollectionFieldTest,
 			},
-			want: "collection.Spec.Test.Collection.Field.Marker.Field",
+			want:    "collection.Spec.Test.Collection.Field.Marker.Field",
+			wantErr: false,
+		},
+		{
+			name: "ensure field marker with parent returns a correct source code variable",
+			args: args{
+				marker: fieldMarkerParentTest,
+			},
+			want:    "parent.Name",
+			wantErr: false,
+		},
+		{
+			name: "ensure field marker with invalid parent returns an error",
+			args: args{
+				marker: fieldMarkerInvalidParentTest,
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "ensure collection field marker with parent returns a correct source code variable",
+			args: args{
+				marker: collectionFieldMarkerParentTest,
+			},
+			want:    "collection.Name",
+			wantErr: false,
+		},
+		{
+			name: "ensure collection field marker with invalid parent returns an error",
+			args: args{
+				marker: collectionFieldMarkerInvalidParentTest,
+			},
+			want:    "",
+			wantErr: true,
 		},
 	}
 
@@ -327,7 +429,12 @@ func Test_getSourceCodeVariable(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := getSourceCodeVariable(tt.args.marker); got != tt.want {
+			got, err := getSourceCodeVariable(tt.args.marker)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getSourceCodeVariable() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if got != tt.want {
 				t.Errorf("getSourceCodeVariable() = %v, want %v", got, tt.want)
 			}
 		})
@@ -403,6 +510,7 @@ func Test_setValue(t *testing.T) {
 	//nolint: goconst
 	testInvalidReplaceText := "*&^%"
 	testReplaceText := "<replace me>"
+	testField := "test.field.set"
 
 	type args struct {
 		marker FieldMarkerProcessor
@@ -419,8 +527,9 @@ func Test_setValue(t *testing.T) {
 			name: "ensure value is set appropriately when replace text is not requested",
 			args: args{
 				marker: &FieldMarker{
-					Name:          "test.field",
-					sourceCodeVar: "parent.Spec.Test.Field",
+					Name:          &testField,
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
+					Type:          FieldString,
 				},
 				value: &yaml.Node{
 					Tag:   "testTag",
@@ -430,16 +539,17 @@ func Test_setValue(t *testing.T) {
 			wantErr: false,
 			want: &yaml.Node{
 				Tag:   "!!var",
-				Value: "parent.Spec.Test.Field",
+				Value: "parent.Spec.Test.Field.Set",
 			},
 		},
 		{
 			name: "ensure value is set appropriately when replace text is requested",
 			args: args{
 				marker: &FieldMarker{
-					Name:          "test.field",
+					Name:          &testField,
 					Replace:       &testReplaceText,
-					sourceCodeVar: "parent.Spec.Test.Field",
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
+					Type:          FieldString,
 				},
 				value: &yaml.Node{
 					Tag:   "testTag",
@@ -449,16 +559,17 @@ func Test_setValue(t *testing.T) {
 			wantErr: false,
 			want: &yaml.Node{
 				Tag:   "!!str",
-				Value: "test !!start parent.Spec.Test.Field !!end value",
+				Value: "test !!start parent.Spec.Test.Field.Set !!end value",
 			},
 		},
 		{
 			name: "ensure invalid replace text returns an error",
 			args: args{
 				marker: &FieldMarker{
-					Name:          "test.field",
+					Name:          &testField,
 					Replace:       &testInvalidReplaceText,
-					sourceCodeVar: "parent.Spec.Test.Field",
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
+					Type:          FieldString,
 				},
 				value: &yaml.Node{
 					Tag:   "testTag",
@@ -510,7 +621,7 @@ func Test_setComments(t *testing.T) {
 			name: "ensure head comment is set correctly with a description",
 			args: args{
 				marker: &FieldMarker{
-					Name:        testName,
+					Name:        &testName,
 					Description: &testHeadCommentDescription,
 				},
 				result: &inspect.YAMLResult{
@@ -534,7 +645,7 @@ func Test_setComments(t *testing.T) {
 			name: "ensure head comment is set correctly without a description",
 			args: args{
 				marker: &FieldMarker{
-					Name: testName,
+					Name: &testName,
 				},
 				result: &inspect.YAMLResult{
 					Result: &parser.Result{
@@ -557,7 +668,7 @@ func Test_setComments(t *testing.T) {
 			name: "ensure line comment is set correctly with a description",
 			args: args{
 				marker: &CollectionFieldMarker{
-					Name:        testName,
+					Name:        &testName,
 					Description: &testHeadCommentDescription,
 				},
 				result: &inspect.YAMLResult{
@@ -580,7 +691,7 @@ func Test_setComments(t *testing.T) {
 			name: "ensure line comment is set correctly without a description",
 			args: args{
 				marker: &CollectionFieldMarker{
-					Name: testName,
+					Name: &testName,
 				},
 				result: &inspect.YAMLResult{
 					Result: &parser.Result{
@@ -619,6 +730,8 @@ func Test_transformYAML(t *testing.T) {
 	t.Parallel()
 
 	badReplaceText := "*&^%"
+	realField := "real.field"
+	collectionName := "collection.name"
 
 	type args struct {
 		results []*inspect.YAMLResult
@@ -637,7 +750,7 @@ func Test_transformYAML(t *testing.T) {
 						Result: &parser.Result{
 							MarkerText: "test",
 							Object: FieldMarker{
-								Name: "real.field",
+								Name: &realField,
 							},
 						},
 						Nodes: []*yaml.Node{
@@ -673,7 +786,7 @@ func Test_transformYAML(t *testing.T) {
 						Result: &parser.Result{
 							MarkerText: "test",
 							Object: FieldMarker{
-								Name: "collection.name",
+								Name: &collectionName,
 							},
 						},
 					},
@@ -689,7 +802,7 @@ func Test_transformYAML(t *testing.T) {
 						Result: &parser.Result{
 							MarkerText: "test",
 							Object: CollectionFieldMarker{
-								Name: "collection.name",
+								Name: &collectionName,
 							},
 						},
 					},
@@ -705,7 +818,7 @@ func Test_transformYAML(t *testing.T) {
 						Result: &parser.Result{
 							MarkerText: "test",
 							Object: CollectionFieldMarker{
-								Name:    "real.field",
+								Name:    &realField,
 								Replace: &badReplaceText,
 							},
 						},

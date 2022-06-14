@@ -364,14 +364,16 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 		}
 
 		// add the field to the api specification
-		if err := ws.APISpecFields.AddField(
-			marker.GetName(),
-			marker.GetFieldType(),
-			comments,
-			sampleVal,
-			defaultFound,
-		); err != nil {
-			return err
+		if marker.GetName() != "" {
+			if err := ws.APISpecFields.AddField(
+				marker.GetName(),
+				marker.GetFieldType(),
+				comments,
+				sampleVal,
+				defaultFound,
+			); err != nil {
+				return err
+			}
 		}
 
 		marker.SetForCollection(ws.ForCollection)

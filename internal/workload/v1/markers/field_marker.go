@@ -17,6 +17,7 @@ var (
 
 const (
 	FieldMarkerPrefix = "+operator-builder:field"
+	FieldPrefix       = "parent"
 	FieldSpecPrefix   = "parent.Spec"
 )
 
@@ -25,11 +26,12 @@ const (
 // and matches the constants defined by the fieldMarker constant above.
 type FieldMarker struct {
 	// inputs from the marker itself
-	Name        string
+	Name        *string
 	Type        FieldType
 	Description *string
 	Default     interface{} `marker:",optional"`
 	Replace     *string
+	Parent      *string
 
 	// other values which we use to pass information
 	forCollection bool
@@ -40,7 +42,7 @@ type FieldMarker struct {
 //nolint:gocritic //needed to implement string interface
 func (fm FieldMarker) String() string {
 	return fmt.Sprintf("FieldMarker{Name: %s Type: %v Description: %q Default: %v}",
-		fm.Name,
+		fm.GetName(),
 		fm.Type,
 		fm.GetDescription(),
 		fm.Default,
@@ -63,7 +65,11 @@ func defineFieldMarker(registry *marker.Registry) error {
 // FieldMarker Processor interface methods.
 //
 func (fm *FieldMarker) GetName() string {
-	return fm.Name
+	if fm.Name == nil {
+		return ""
+	}
+
+	return *fm.Name
 }
 
 func (fm *FieldMarker) GetDefault() interface{} {
@@ -90,12 +96,24 @@ func (fm *FieldMarker) GetReplaceText() string {
 	return *fm.Replace
 }
 
+func (fm *FieldMarker) GetPrefix() string {
+	return FieldPrefix
+}
+
 func (fm *FieldMarker) GetSpecPrefix() string {
 	return FieldSpecPrefix
 }
 
 func (fm *FieldMarker) GetOriginalValue() interface{} {
 	return fm.originalValue
+}
+
+func (fm *FieldMarker) GetParent() string {
+	if fm.Parent == nil {
+		return ""
+	}
+
+	return *fm.Parent
 }
 
 func (fm *FieldMarker) GetSourceCodeVariable() string {

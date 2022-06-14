@@ -15,9 +15,10 @@ func TestCollectionFieldMarker_String(t *testing.T) {
 	t.Parallel()
 
 	testString := "cfm test"
+	testName := "test"
 
 	type fields struct {
-		Name        string
+		Name        *string
 		Type        FieldType
 		Description *string
 		Default     interface{}
@@ -31,20 +32,20 @@ func TestCollectionFieldMarker_String(t *testing.T) {
 		{
 			name: "ensure collection field string output matches expected",
 			fields: fields{
-				Name:        "test",
+				Name:        &testName,
 				Type:        FieldString,
 				Description: &testString,
-				Default:     "test",
+				Default:     testName,
 			},
 			want: "CollectionFieldMarker{Name: test Type: string Description: \"cfm test\" Default: test}",
 		},
 		{
 			name: "ensure collection field with nil values output matches expected",
 			fields: fields{
-				Name:        "test",
+				Name:        &testName,
 				Type:        FieldString,
 				Description: nil,
-				Default:     "test",
+				Default:     testName,
 			},
 			want: "CollectionFieldMarker{Name: test Type: string Description: \"\" Default: test}",
 		},
@@ -143,11 +144,14 @@ func TestCollectionFieldMarker_GetDefault(t *testing.T) {
 	}
 }
 
-func TestCollectionFieldMarker_GetDescription(t *testing.T) {
+func TestCollectionFieldMarker_GetName(t *testing.T) {
 	t.Parallel()
 
+	name := "test"
+	emptyName := ""
+
 	type fields struct {
-		Name string
+		Name *string
 	}
 
 	tests := []struct {
@@ -158,14 +162,14 @@ func TestCollectionFieldMarker_GetDescription(t *testing.T) {
 		{
 			name: "ensure collection field name returns as expected",
 			fields: fields{
-				Name: "test",
+				Name: &name,
 			},
 			want: "test",
 		},
 		{
 			name: "ensure collection field name with empty value returns as expected",
 			fields: fields{
-				Name: "",
+				Name: &emptyName,
 			},
 			want: "",
 		},
@@ -185,7 +189,7 @@ func TestCollectionFieldMarker_GetDescription(t *testing.T) {
 	}
 }
 
-func TestCollectionFieldMarker_GetName(t *testing.T) {
+func TestCollectionFieldMarker_GetDescription(t *testing.T) {
 	t.Parallel()
 
 	cfmDescription := "test collection description"

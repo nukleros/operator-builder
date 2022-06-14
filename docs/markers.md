@@ -36,13 +36,20 @@ field for your workload.
 | [replace](#replace-optional)         | string                         | false    |
 | [description](#description-optional) | string                         | false    |
 
-### Name (required)
+### Name (required if Parent is unspecified)
 
 The name you want to use for the field in the custom resource that
 Operator Builder will create.  If you're not sure what that means, it will
 become clear shortly.
 
 ex. +operator-builder:field:name=myName
+
+### Parent (required if Name is unspecified)
+
+The parent field in which you wish to substitute.  Currently, only `metadata.name` is supported.  This 
+will allow you to use the parent name as a value in the child resource.
+
+ex. +operator-builder:field:parent=metadata.name
 
 ### Type (required)
 

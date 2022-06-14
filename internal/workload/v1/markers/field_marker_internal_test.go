@@ -14,10 +14,11 @@ import (
 func TestFieldMarker_String(t *testing.T) {
 	t.Parallel()
 
+	testName := "test"
 	testString := "fm test"
 
 	type fields struct {
-		Name        string
+		Name        *string
 		Type        FieldType
 		Description *string
 		Default     interface{}
@@ -31,20 +32,20 @@ func TestFieldMarker_String(t *testing.T) {
 		{
 			name: "ensure field string output matches expected",
 			fields: fields{
-				Name:        "test",
+				Name:        &testName,
 				Type:        FieldString,
 				Description: &testString,
-				Default:     "test",
+				Default:     testName,
 			},
 			want: "FieldMarker{Name: test Type: string Description: \"fm test\" Default: test}",
 		},
 		{
 			name: "ensure field with nil values output matches expected",
 			fields: fields{
-				Name:        "test",
+				Name:        &testName,
 				Type:        FieldString,
 				Description: nil,
-				Default:     "test",
+				Default:     testName,
 			},
 			want: "FieldMarker{Name: test Type: string Description: \"\" Default: test}",
 		},
@@ -143,11 +144,14 @@ func TestFieldMarker_GetDefault(t *testing.T) {
 	}
 }
 
-func TestFieldMarker_GetDescription(t *testing.T) {
+func TestFieldMarker_GetName(t *testing.T) {
 	t.Parallel()
 
+	name := "test"
+	emptyName := ""
+
 	type fields struct {
-		Name string
+		Name *string
 	}
 
 	tests := []struct {
@@ -158,14 +162,14 @@ func TestFieldMarker_GetDescription(t *testing.T) {
 		{
 			name: "ensure field name returns as expected",
 			fields: fields{
-				Name: "test",
+				Name: &name,
 			},
 			want: "test",
 		},
 		{
 			name: "ensure field name with empty value returns as expected",
 			fields: fields{
-				Name: "",
+				Name: &emptyName,
 			},
 			want: "",
 		},
@@ -185,7 +189,7 @@ func TestFieldMarker_GetDescription(t *testing.T) {
 	}
 }
 
-func TestFieldMarker_GetName(t *testing.T) {
+func TestFieldMarker_GetDescription(t *testing.T) {
 	t.Parallel()
 
 	fmDescription := "test description"

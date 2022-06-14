@@ -4,6 +4,7 @@
 package markers
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -12,6 +13,12 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
 	markerparser "github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+)
+
+var (
+	ErrMissingParentOrName           = errors.New("missing either parent=value or name=value marker")
+	ErrInvalidReplaceMarkerFieldType = errors.New("invalid marker type using replace")
+	ErrInvalidParentField            = errors.New("invalid parent field")
 )
 
 // MarkerType defines the types of markers that are accepted by the parser.
@@ -32,6 +39,7 @@ type FieldMarkerProcessor interface {
 	GetDescription() string
 	GetFieldType() FieldType
 	GetOriginalValue() interface{}
+	GetParent() string
 	GetReplaceText() string
 	GetSpecPrefix() string
 	GetSourceCodeVariable() string
@@ -49,7 +57,9 @@ type FieldMarkerProcessor interface {
 // necessary for parsing any type of marker.
 type MarkerProcessor interface {
 	GetName() string
+	GetPrefix() string
 	GetSpecPrefix() string
+	GetParent() string
 }
 
 // MarkerCollection is an object that stores a set of markers.
@@ -121,13 +131,28 @@ func transformYAML(results ...*inspect.YAMLResult) error {
 
 		switch t := result.Object.(type) {
 		case FieldMarker:
-			t.sourceCodeVar = getSourceCodeVariable(&t)
+			sourceCodeVar, err := getSourceCodeVariable(&t)
+			if err != nil {
+				return err
+			}
+
+			t.sourceCodeVar = sourceCodeVar
 			marker = &t
 		case CollectionFieldMarker:
-			t.sourceCodeVar = getSourceCodeVariable(&t)
+			sourceCodeVar, err := getSourceCodeVariable(&t)
+			if err != nil {
+				return err
+			}
+
+			t.sourceCodeVar = sourceCodeVar
 			marker = &t
 		default:
 			continue
+		}
+
+		// ensure that either a parent or a name is set
+		if marker.GetName() == "" && marker.GetParent() == "" {
+			return fmt.Errorf("%w for marker %s", ErrMissingParentOrName, marker)
 		}
 
 		// get common variables and confirm that we are not working with a reserved marker
@@ -160,11 +185,30 @@ func reservedMarkers() []string {
 	}
 }
 
+// supportedParents represents a map of parent fields to their go variable values
+// which are currently supported.
+func supportedParents() map[string]string {
+	return map[string]string{
+		"metadata.name": "Name",
+	}
+}
+
 // isReserved is a convenience method which returns whether or not a marker, given
 // the fieldName as a string, is reserved for internal purposes.
 func isReserved(fieldName string) bool {
-	for _, reserved := range reservedMarkers() {
-		if strings.Title(fieldName) == strings.Title(reserved) {
+	return validField(fieldName, reservedMarkers())
+}
+
+// isSupported is a convenience method which returns whether or not a marker, given
+// the parentField as a string, is supported.
+func isSupported(parentField string) bool {
+	return supportedParents()[parentField] != ""
+}
+
+// validField determines if a field is valid based on a known list of valid fields.
+func validField(field string, validFields []string) bool {
+	for _, valid := range validFields {
+		if strings.Title(valid) == strings.Title(field) {
 			return true
 		}
 	}
@@ -175,14 +219,29 @@ func isReserved(fieldName string) bool {
 // getSourceCodeFieldVariable gets a full variable name for a marker as it is intended to be
 // passed into the generate package to generate the source code.  This includes particular
 // tags that are needed by the generator to properly identify when a variable starts and ends.
-func getSourceCodeFieldVariable(marker FieldMarkerProcessor) string {
-	return fmt.Sprintf("!!start %s !!end", marker.GetSourceCodeVariable())
+func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
+	switch marker.GetFieldType() {
+	case FieldString:
+		return fmt.Sprintf("!!start %s !!end", marker.GetSourceCodeVariable()), nil
+	case FieldInt:
+		return fmt.Sprintf("!!start string(rune(%s)) !!end", marker.GetSourceCodeVariable()), nil
+	default:
+		return "", fmt.Errorf("%w with field type %s", ErrInvalidReplaceMarkerFieldType, marker.GetFieldType())
+	}
 }
 
 // getSourceCodeVariable gets a full variable name for a marker as it is intended to be
 // scaffolded in the source code.
-func getSourceCodeVariable(marker MarkerProcessor) string {
-	return fmt.Sprintf("%s.%s", marker.GetSpecPrefix(), strings.Title((marker.GetName())))
+func getSourceCodeVariable(marker MarkerProcessor) (string, error) {
+	if marker.GetParent() == "" {
+		return fmt.Sprintf("%s.%s", marker.GetSpecPrefix(), strings.Title((marker.GetName()))), nil
+	}
+
+	if isSupported(marker.GetParent()) {
+		return fmt.Sprintf("%s.%s", marker.GetPrefix(), supportedParents()[marker.GetParent()]), nil
+	}
+
+	return "", fmt.Errorf("%w %s. supported parent fields are: %v", ErrInvalidParentField, marker.GetParent(), supportedParents())
 }
 
 // getKeyValue gets the key and value from a YAML result.
@@ -210,9 +269,9 @@ func setComments(marker FieldMarkerProcessor, result *inspect.YAMLResult, key, v
 	var appendText string
 	switch t := marker.(type) {
 	case *FieldMarker:
-		appendText = "controlled by field: " + t.Name
+		appendText = "controlled by field: " + t.GetName()
 	case *CollectionFieldMarker:
-		appendText = "controlled by collection field: " + t.Name
+		appendText = "controlled by collection field: " + t.GetName()
 	}
 
 	// set the comments on the yaml nodes
@@ -240,7 +299,12 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 			return fmt.Errorf("unable to convert %s to regex, %w", markerReplaceText, err)
 		}
 
-		value.Value = re.ReplaceAllString(value.Value, getSourceCodeFieldVariable(marker))
+		fieldVar, err := getSourceCodeFieldVariable(marker)
+		if err != nil {
+			return fmt.Errorf("unable to get source code field variable for marker %s, %w", marker, err)
+		}
+
+		value.Value = re.ReplaceAllString(value.Value, fieldVar)
 	} else {
 		value.Tag = varTag
 		value.Value = marker.GetSourceCodeVariable()

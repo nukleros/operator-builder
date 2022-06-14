@@ -127,6 +127,16 @@ func (rm *ResourceMarker) GetField() string {
 	return *rm.Field
 }
 
+// GetPrefix is a convenience function to return the prefix of a requested
+// variable for a resource marker.
+func (rm *ResourceMarker) GetPrefix() string {
+	if rm.Field != nil {
+		return FieldPrefix
+	}
+
+	return CollectionFieldPrefix
+}
+
 // GetSpecPrefix is a convenience function to return the spec prefix of a requested
 // variable for a resource marker.
 func (rm *ResourceMarker) GetSpecPrefix() string {
@@ -135,6 +145,13 @@ func (rm *ResourceMarker) GetSpecPrefix() string {
 	}
 
 	return CollectionFieldSpecPrefix
+}
+
+// GetParent is a convenience function to satisfy the MarkerProcessor interface.  It will
+// always return an empty string for a resource marker because we do not care about parent
+// fields.
+func (rm *ResourceMarker) GetParent() string {
+	return ""
 }
 
 // Process will process a resource marker from a collection of collection field markers
@@ -242,7 +259,10 @@ func (rm *ResourceMarker) setSourceCode() error {
 	var sourceCodeVar, sourceCodeValue string
 
 	// get the source code variable
-	sourceCodeVar = getSourceCodeVariable(rm)
+	sourceCodeVar, err := getSourceCodeVariable(rm)
+	if err != nil {
+		return fmt.Errorf("%w; error retrieving source code variable for resource marker: %s", err, rm)
+	}
 
 	// set the source code value and ensure the types match
 	switch value := rm.Value.(type) {

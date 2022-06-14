@@ -428,6 +428,8 @@ func TestResourceMarker_isAssociated(t *testing.T) {
 	t.Parallel()
 
 	randomString := "thisIsRandom"
+	testMarkerString := "test"
+	testCollectionString := "test.collection"
 
 	// this is the test of a standard marker which would be discovered in any manifest type
 	// standalone = no collection involved
@@ -437,21 +439,21 @@ func TestResourceMarker_isAssociated(t *testing.T) {
 	//              that all field markers on a collection are immediately discovered
 	//              as field markers, regardless of how they are labeled.
 	testFieldMarker := &FieldMarker{
-		Name:          "test",
+		Name:          &testMarkerString,
 		Type:          FieldString,
 		forCollection: false,
 	}
 
 	// this is the test of a standard marker which was discovered on a collection
 	testFieldMarkerOnCollection := &FieldMarker{
-		Name:          "test.collection",
+		Name:          &testCollectionString,
 		Type:          FieldString,
 		forCollection: true,
 	}
 
 	// this is the test of a standard collection marker.
 	testCollectionMarker := &CollectionFieldMarker{
-		Name:          "test",
+		Name:          &testMarkerString,
 		Type:          FieldString,
 		forCollection: false,
 	}
@@ -478,7 +480,7 @@ func TestResourceMarker_isAssociated(t *testing.T) {
 		{
 			name: "operator-builder:resource:field=test is associated with a field marker",
 			fields: fields{
-				Field: &testFieldMarker.Name,
+				Field: testFieldMarker.Name,
 			},
 			args: args{
 				fromMarker: testFieldMarker,
@@ -488,7 +490,7 @@ func TestResourceMarker_isAssociated(t *testing.T) {
 		{
 			name: "operator-builder:resource:field=test is not associated with a collection field marker",
 			fields: fields{
-				Field: &testCollectionMarker.Name,
+				Field: testCollectionMarker.Name,
 			},
 			args: args{
 				fromMarker: testCollectionMarker,
@@ -538,7 +540,7 @@ func TestResourceMarker_isAssociated(t *testing.T) {
 		{
 			name: "operator-builder:resource:collectionField=testCollection is associated with a field marker",
 			fields: fields{
-				CollectionField: &testCollectionMarker.Name,
+				CollectionField: testCollectionMarker.Name,
 			},
 			args: args{
 				fromMarker: testCollectionMarker,
@@ -548,7 +550,7 @@ func TestResourceMarker_isAssociated(t *testing.T) {
 		{
 			name: "operator-builder:resource:collectionField=test is associated with a field marker from a collection",
 			fields: fields{
-				CollectionField: &testFieldMarkerOnCollection.Name,
+				CollectionField: testFieldMarkerOnCollection.Name,
 			},
 			args: args{
 				fromMarker: testFieldMarkerOnCollection,
@@ -586,27 +588,27 @@ func TestResourceMarker_getFieldMarker(t *testing.T) {
 	testMarkers := &MarkerCollection{
 		CollectionFieldMarkers: []*CollectionFieldMarker{
 			{
-				Name: fieldOne,
+				Name: &fieldOne,
 				Type: FieldString,
 			},
 			{
-				Name: fieldTwo,
+				Name: &fieldTwo,
 				Type: FieldString,
 			},
 		},
 		FieldMarkers: []*FieldMarker{
 			{
-				Name:          fieldOne,
+				Name:          &fieldOne,
 				Type:          FieldString,
 				forCollection: false,
 			},
 			{
-				Name:          fieldOne,
+				Name:          &fieldOne,
 				Type:          FieldString,
 				forCollection: true,
 			},
 			{
-				Name:          fieldTwo,
+				Name:          &fieldTwo,
 				Type:          FieldString,
 				forCollection: false,
 			},
@@ -640,7 +642,7 @@ func TestResourceMarker_getFieldMarker(t *testing.T) {
 				Field: &fieldOne,
 			},
 			want: &FieldMarker{
-				Name: fieldOne,
+				Name: &fieldOne,
 				Type: FieldString,
 			},
 		},
@@ -653,7 +655,7 @@ func TestResourceMarker_getFieldMarker(t *testing.T) {
 				CollectionField: &fieldTwo,
 			},
 			want: &CollectionFieldMarker{
-				Name: fieldTwo,
+				Name: &fieldTwo,
 				Type: FieldString,
 			},
 		},
@@ -666,7 +668,7 @@ func TestResourceMarker_getFieldMarker(t *testing.T) {
 				Field: &fieldTwo,
 			},
 			want: &FieldMarker{
-				Name: fieldTwo,
+				Name: &fieldTwo,
 				Type: FieldString,
 			},
 		},
@@ -679,7 +681,7 @@ func TestResourceMarker_getFieldMarker(t *testing.T) {
 				CollectionField: &fieldOne,
 			},
 			want: &FieldMarker{
-				Name:          fieldOne,
+				Name:          &fieldOne,
 				Type:          FieldString,
 				forCollection: true,
 			},
@@ -742,23 +744,23 @@ func TestResourceMarker_Process(t *testing.T) {
 	testMarkers := &MarkerCollection{
 		CollectionFieldMarkers: []*CollectionFieldMarker{
 			{
-				Name: fieldOne,
+				Name: &fieldOne,
 				Type: FieldString,
 			},
 		},
 		FieldMarkers: []*FieldMarker{
 			{
-				Name:          fieldOne,
+				Name:          &fieldOne,
 				Type:          FieldString,
 				forCollection: true,
 			},
 			{
-				Name:          fieldOne,
+				Name:          &fieldOne,
 				Type:          FieldString,
 				forCollection: false,
 			},
 			{
-				Name:          fieldTwo,
+				Name:          &fieldTwo,
 				Type:          FieldString,
 				forCollection: true,
 			},
@@ -873,17 +875,17 @@ func TestResourceMarker_setSourceCode(t *testing.T) {
 	testSourceCodeField := "test.nested.field"
 
 	testCollectionMarker := &CollectionFieldMarker{
-		Name: testSourceCodeField,
+		Name: &testSourceCodeField,
 		Type: FieldString,
 	}
 
 	testFieldMarker := &FieldMarker{
-		Name: testSourceCodeField,
+		Name: &testSourceCodeField,
 		Type: FieldInt,
 	}
 
 	testInvalidMarker := &FieldMarker{
-		Name: testSourceCodeField,
+		Name: &testSourceCodeField,
 		Type: FieldUnknownType,
 	}
 
