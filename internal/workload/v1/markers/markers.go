@@ -4,6 +4,7 @@
 package markers
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -12,6 +13,12 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
 	markerparser "github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+)
+
+var (
+	ErrMissingParentOrName           = errors.New("missing either parent=value or name=value marker")
+	ErrInvalidReplaceMarkerFieldType = errors.New("invalid marker type using replace")
+	ErrInvalidParentField            = errors.New("invalid parent field")
 )
 
 // MarkerType defines the types of markers that are accepted by the parser.
@@ -145,7 +152,7 @@ func transformYAML(results ...*inspect.YAMLResult) error {
 
 		// ensure that either a parent or a name is set
 		if marker.GetName() == "" && marker.GetParent() == "" {
-			return fmt.Errorf("must set either parent=value or name=value for marker %s", marker)
+			return fmt.Errorf("%w for marker %s", ErrMissingParentOrName, marker)
 		}
 
 		// get common variables and confirm that we are not working with a reserved marker
@@ -219,7 +226,7 @@ func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
 	case FieldInt:
 		return fmt.Sprintf("!!start string(rune(%s)) !!end", marker.GetSourceCodeVariable()), nil
 	default:
-		return "", fmt.Errorf("cannot handle field type: %s", marker.GetFieldType())
+		return "", fmt.Errorf("%w with field type %s", ErrInvalidReplaceMarkerFieldType, marker.GetFieldType())
 	}
 }
 
@@ -234,7 +241,7 @@ func getSourceCodeVariable(marker MarkerProcessor) (string, error) {
 		return fmt.Sprintf("%s.%s", marker.GetPrefix(), supportedParents()[marker.GetParent()]), nil
 	}
 
-	return "", fmt.Errorf("parent field requested %s but is not supported.  supported parent fields are: %v", marker.GetParent(), supportedParents())
+	return "", fmt.Errorf("%w %s. supported parent fields are: %v", ErrInvalidParentField, marker.GetParent(), supportedParents())
 }
 
 // getKeyValue gets the key and value from a YAML result.

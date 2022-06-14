@@ -510,7 +510,7 @@ func Test_setValue(t *testing.T) {
 	//nolint: goconst
 	testInvalidReplaceText := "*&^%"
 	testReplaceText := "<replace me>"
-	testField := "test.field"
+	testField := "test.field.set"
 
 	type args struct {
 		marker FieldMarkerProcessor
@@ -528,7 +528,7 @@ func Test_setValue(t *testing.T) {
 			args: args{
 				marker: &FieldMarker{
 					Name:          &testField,
-					sourceCodeVar: "parent.Spec.Test.Field",
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
 					Type:          FieldString,
 				},
 				value: &yaml.Node{
@@ -539,7 +539,7 @@ func Test_setValue(t *testing.T) {
 			wantErr: false,
 			want: &yaml.Node{
 				Tag:   "!!var",
-				Value: "parent.Spec.Test.Field",
+				Value: "parent.Spec.Test.Field.Set",
 			},
 		},
 		{
@@ -548,7 +548,7 @@ func Test_setValue(t *testing.T) {
 				marker: &FieldMarker{
 					Name:          &testField,
 					Replace:       &testReplaceText,
-					sourceCodeVar: "parent.Spec.Test.Field",
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
 					Type:          FieldString,
 				},
 				value: &yaml.Node{
@@ -559,7 +559,7 @@ func Test_setValue(t *testing.T) {
 			wantErr: false,
 			want: &yaml.Node{
 				Tag:   "!!str",
-				Value: "test !!start parent.Spec.Test.Field !!end value",
+				Value: "test !!start parent.Spec.Test.Field.Set !!end value",
 			},
 		},
 		{
@@ -568,7 +568,7 @@ func Test_setValue(t *testing.T) {
 				marker: &FieldMarker{
 					Name:          &testField,
 					Replace:       &testInvalidReplaceText,
-					sourceCodeVar: "parent.Spec.Test.Field",
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
 					Type:          FieldString,
 				},
 				value: &yaml.Node{
