@@ -11,6 +11,7 @@ import (
 
 const (
 	CollectionFieldMarkerPrefix = "+operator-builder:collection:field"
+	CollectionFieldPrefix       = "collection"
 	CollectionFieldSpecPrefix   = "collection.Spec"
 )
 
@@ -24,7 +25,7 @@ type CollectionFieldMarker FieldMarker
 //nolint:gocritic //needed to implement string interface
 func (cfm CollectionFieldMarker) String() string {
 	return fmt.Sprintf("CollectionFieldMarker{Name: %s Type: %v Description: %q Default: %v}",
-		cfm.Name,
+		cfm.GetName(),
 		cfm.Type,
 		cfm.GetDescription(),
 		cfm.Default,
@@ -47,7 +48,11 @@ func defineCollectionFieldMarker(registry *marker.Registry) error {
 // FieldMarkerProcessor interface methods.
 //
 func (cfm *CollectionFieldMarker) GetName() string {
-	return cfm.Name
+	if cfm.Name == nil {
+		return ""
+	}
+
+	return *cfm.Name
 }
 
 func (cfm *CollectionFieldMarker) GetDefault() interface{} {
@@ -74,6 +79,10 @@ func (cfm *CollectionFieldMarker) GetReplaceText() string {
 	return *cfm.Replace
 }
 
+func (cfm *CollectionFieldMarker) GetPrefix() string {
+	return CollectionFieldPrefix
+}
+
 func (cfm *CollectionFieldMarker) GetSpecPrefix() string {
 	return CollectionFieldSpecPrefix
 }
@@ -84,6 +93,14 @@ func (cfm *CollectionFieldMarker) GetSourceCodeVariable() string {
 
 func (cfm *CollectionFieldMarker) GetOriginalValue() interface{} {
 	return cfm.originalValue
+}
+
+func (cfm *CollectionFieldMarker) GetParent() string {
+	if cfm.Parent == nil {
+		return ""
+	}
+
+	return *cfm.Parent
 }
 
 func (cfm *CollectionFieldMarker) IsCollectionFieldMarker() bool {
