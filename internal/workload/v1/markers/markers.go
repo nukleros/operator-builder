@@ -224,7 +224,9 @@ func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
 	case FieldString:
 		return fmt.Sprintf("!!start %s !!end", marker.GetSourceCodeVariable()), nil
 	case FieldInt:
-		return fmt.Sprintf("!!start string(rune(%s)) !!end", marker.GetSourceCodeVariable()), nil
+		return fmt.Sprintf("!!start strconv.Itoa(%s) !!end", marker.GetSourceCodeVariable()), nil
+	case FieldBool:
+		return fmt.Sprintf("!!start strconv.FormatBool(%s) !!end", marker.GetSourceCodeVariable()), nil
 	default:
 		return "", fmt.Errorf("%w with field type %s", ErrInvalidReplaceMarkerFieldType, marker.GetFieldType())
 	}

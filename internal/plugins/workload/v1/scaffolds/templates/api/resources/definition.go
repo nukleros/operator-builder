@@ -24,6 +24,9 @@ type Definition struct {
 	// input fields
 	Builder  kinds.WorkloadBuilder
 	Manifest *manifests.Manifest
+
+	// template fields
+	UseStrConv bool
 }
 
 func (f *Definition) SetTemplateDefaults() error {
@@ -34,6 +37,15 @@ func (f *Definition) SetTemplateDefaults() error {
 		f.Builder.GetPackageName(),
 		f.Manifest.SourceFilename,
 	)
+
+	// determine if we need to import the strconv package
+	for _, child := range f.Manifest.ChildResources {
+		if child.UseStrConv {
+			f.UseStrConv = true
+
+			break
+		}
+	}
 
 	f.TemplateBody = definitionTemplate
 	f.IfExistsAction = machinery.OverwriteFile
@@ -47,6 +59,8 @@ const definitionTemplate = `{{ .Boilerplate }}
 package {{ .Builder.GetPackageName }}
 
 import (
+	{{ if .UseStrConv }}"strconv"{{ end }}
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 

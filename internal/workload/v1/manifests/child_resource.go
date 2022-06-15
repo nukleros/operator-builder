@@ -34,6 +34,7 @@ type ChildResource struct {
 	StaticContent string
 	SourceCode    string
 	IncludeCode   string
+	UseStrConv    bool
 	RBAC          *rbac.Rules
 }
 
