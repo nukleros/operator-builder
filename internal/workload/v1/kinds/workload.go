@@ -278,6 +278,12 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) erro
 			childResource.SourceCode = resourceDefinition
 			childResource.StaticContent = manifest
 
+			// HACK: we should handle this better, for now this will work.  we are passing info along that one of our
+			// resources needs to use the strconv package and needs to be included in the generated code.
+			if strings.Contains(resourceDefinition, "strconv.Itoa") || strings.Contains(resourceDefinition, "strconv.FormatBool") {
+				childResource.UseStrConv = true
+			}
+
 			childResources = append(childResources, *childResource)
 		}
 
