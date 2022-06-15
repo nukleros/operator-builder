@@ -10,6 +10,10 @@
 
 **Accelerate the development of Kubernetes Operators.**
 
+Operator Builder is a command line tool that ingests Kubernetes manifests and
+generates the source code for a working Kubernetes operator based on the
+resources defined in those manifests.
+
 Operator Builder extends [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)
 to facilitate development and maintenance of Kubernetes operators.  It is especially
 helpful if you need to take large numbers of resources defined with static or
@@ -31,26 +35,20 @@ The custom resource defined in the source code can be cluster-scoped or
 namespace-scoped based on the requirements of the project.  More info
 [here](docs/resource-scope.md).
 
-## Installation
+User Documentation:
 
-See our [installation options](docs/installation.md)
+* [Installation](docs/installation.md)
+* [Getting Started](docs/getting-started.md)
+* [Workloads](docs/workloads.md)
+* [Standalone Workloads](docs/standalone-workloads.md)
+* [Workload Collections](docs/workload-collections.md)
+* [Markers](docs/markers.md)
+* [Resource Scope](docs/resource-scope.md)
+* [Companion CLI](docs/companion-cli.md)
+* [API Updates & Upgrades](docs/api-updates-upgrades.md)
+* [License Manaagement](docs/license.md)
 
-## Getting Started
+Develpoer Documentation
 
-Follow our [getting started guide](docs/getting-started.md)
-
-## Workload Collections
-
-Operator Builder can generate source code for operators that manage multiple
-related and dependent workloads.  See [workload collections](docs/workload-collections.md)
-for more info.
-
-## Licensing
-
-Operator Builder can help manage licensing for the resulting project.  More
-info [here](docs/license.md).
-
-## Testing
-
-Testing of Operator Builder is documented [here](docs/testing.md).
+* [Testing](docs/testing.md)
 

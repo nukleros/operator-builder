@@ -12,17 +12,18 @@ You have the following options to install the operator-builder CLI:
 Use wget to download the pre-compiled binaries:
 
 ```bash
-wget https://github.com/vmware-tanzu-labs/operator-builder/releases/download/${VERSION}/${BINARY}.tar.gz -O - |\
-  tar xz && sudo mv operator-builder /usr/bin/operator-builder
+VERSION=v0.6.0
+OS=Linux
+ARCH=x86_64
+wget https://github.com/nukleros/operator-builder/releases/download/${VERSION}/operator-builder_${VERSION}_${OS}_${ARCH}.gz -O - |\
+    gzip -d && sudo mv operator-builder_${VERSION}_${OS}_${ARCH} /usr/local/bin/operator-builder
 ```
-
-For instance, VERSION=v0.5.0 and BINARY=operator-builder_${VERSION}_Linux_x86_64
 
 ### Homebrew
 
 Available for Mac and Linux.
 
-Using [Homebrew](https://brew.sh/)  
+Using [Homebrew](https://brew.sh/)
 
 ```bash
 brew tap vmware-tanzu-labs/tap
@@ -50,7 +51,6 @@ docker pull ghcr.io/vmawre-tanzu-labs/operator-builder
 ```bash
 docker run --rm -v "${PWD}":/workdir ghcr.io/vmware-tanzu-labs/operator-builder [flags]
 ```
-
 
 #### Run container commands interactively
 

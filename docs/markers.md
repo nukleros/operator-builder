@@ -74,7 +74,9 @@ This will make configuration optional for your operator's end user. the supplied
 value will be used for the default value. If a field has no default, it will be
 a required field in the custom resource.  For example:
 
-    `operator-builder:field:name=myName,type=string,default=test`
+```
++operator-builder:field:name=myName,type=string,default=test
+```
 
 ### Replace (optional)
 
@@ -83,8 +85,8 @@ to be configurable (such as config maps). In these scenarios you can use the
 replace argument to specify a search string (or regex) to target for configuration.
 
 Consider the following example:
-```
----
+
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -110,7 +112,7 @@ resulting config map will get the label `app: myapp-prod`. Values from the
 `configOption` and `yamlType` fields will replace corresponding strings in the
 content of `config.yaml`.  The resulting configmap will look as follows:
 
-```
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -138,34 +140,38 @@ able to run `kubectl explain` against their resource and having documentation
 right at their fingertips without having to navigate to API documentation in
 order to see the usage of the API.  For example:
 
-    operator-builder:field:name=myName,type=string,default=test,description="Hello World"
+```
++operator-builder:field:name=myName,type=string,default=test,description="Hello World"
+```
 
 *Note: that you can use a single custom resource field name to configure multiple
 fields in the resource.*
 
 Consider the following Deployment:
 
-    apiVersion: apps/v1
-    kind: Deployment
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-deploy
+  labels:
+    production: false  # +operator-builder:field:name=production,default=false,type=bool
+spec:
+  replicas: 2  # +operator-builder:field:name=webAppReplicas,default=2,type=int
+  selector:
+    matchLabels:
+      app: webapp
+  template:
     metadata:
-      name: webapp-deploy
       labels:
-        production: false  # +operator-builder:field:name=production,default=false,type=bool
+        app: webapp
     spec:
-      replicas: 2  # +operator-builder:field:name=webAppReplicas,default=2,type=int
-      selector:
-        matchLabels:
-          app: webapp
-      template:
-        metadata:
-          labels:
-            app: webapp
-        spec:
-          containers:
-          - name: webapp-container
-            image: nginx:1.17  # +operator-builder:field:name=webAppImage,type=string
-            ports:
-            - containerPort: 8080
+      containers:
+      - name: webapp-container
+        image: nginx:1.17  # +operator-builder:field:name=webAppImage,type=string
+        ports:
+        - containerPort: 8080
+```
 
 In this case, operator-builder will create and add three fields to the custom
 resource:
@@ -180,14 +186,16 @@ resource:
 Now the end-user of the operator will be able to define a custom resource
 similar to the following to configure the deployment created:
 
-	apiVersion: product.apps.acme.com/v1alpha1
-	kind: WebApp
-	metadata:
-	  name: dev-webapp
-	spec:
-      production: false
-      webAppReplicas: 2
-      webAppImage: acmerepo/webapp:3.5.3
+```yaml
+apiVersion: product.apps.acme.com/v1alpha1
+kind: WebApp
+metadata:
+  name: dev-webapp
+spec:
+  production: false
+  webAppReplicas: 2
+  webAppImage: acmerepo/webapp:3.5.3
+```
 
 ## Collection Markers
 
@@ -215,10 +223,10 @@ resource with arguments in the marker.
 ### Field / CollectionField (required)
 
 The conditional field to associate with an action (currently only [include](#include-required)).
-One of `field` or `collectionField` must be provided depending upon if you are 
-checking a condition against a collection, or a component/standalone workload spec.  
-The field input relates directly to a given workload marker such as 
-`+operator-builder:field:name=provider` would produce a field of `provider` to be used 
+One of `field` or `collectionField` must be provided depending upon if you are
+checking a condition against a collection, or a component/standalone workload spec.
+The field input relates directly to a given workload marker such as
+`+operator-builder:field:name=provider` would produce a field of `provider` to be used
 in a resource marker with argument `field=provider`.
 
 ex. +operator-builder:resource:collectionField=provider,value="aws",include
@@ -230,40 +238,52 @@ The conditional value to associate with an action (currently only `include` - se
 above).  The `value` input relates directly to the value of `field` as it exists
 in the API spec requested by the user.
 
-ex. +operator-builder:resource:collectionField=provider,value="aws",include
-ex. +operator-builder:resource:field=provider,value="aws",include=false
+Examples:
+
+```
++operator-builder:resource:collectionField=provider,value="aws",include
++operator-builder:resource:field=provider,value="aws",include=false
+```
 
 ### Include (required)
 
 The action to perform on the resource.  Include will include the resource for
-deployment during a control loop given a `field` or `collectionField` and a `value`.  
-Using this means that the resource will **only be included** if this condition 
+deployment during a control loop given a `field` or `collectionField` and a `value`.
+Using this means that the resource will **only be included** if this condition
 is met.  If the condition is not met, the resource will not be deployed.
 
 Here are some sample marker examples:
 
-ex. +operator-builder:resource:field=provider,value="aws",include
-ex. +operator-builder:resource:field=provider,value="aws",include=true
-ex. +operator-builder:resource:collectionField=provider,value="aws",include
-ex. +operator-builder:resource:collectionField=provider,value="aws",include=true
+```
++operator-builder:resource:field=provider,value="aws",include
++operator-builder:resource:field=provider,value="aws",include=true
++operator-builder:resource:collectionField=provider,value="aws",include
++operator-builder:resource:collectionField=provider,value="aws",include=true
+```
 
-With include set to `false`, the opposite is true and the resource is 
+With include set to `false`, the opposite is true and the resource is
 excluded from being deployed during a control loop if a condition is met:
 
-ex. +operator-builder:resource:field=provider,value="aws",include=false
-ex. +operator-builder:resource:collectionField=provider,value="aws",include=false
+Examples:
 
-At this time, the `include` argument with `field` and `value` can be simply thought of 
+```
++operator-builder:resource:field=provider,value="aws",include=false
++operator-builder:resource:collectionField=provider,value="aws",include=false
+```
+
+At this time, the `include` argument with `field` and `value` can be simply thought of
 as (pseudo-code):
 
-  if field == value {
-    if include {
-      includeResource()
-    }
+```
+if field == value {
+  if include {
+    includeResource()
   }
+}
+```
 
-**IMPORTANT:** A resource marker is not required and should only be used when there is a desire 
-to act upon a resource.  If no resource marker is provided, a resource is always 
+**IMPORTANT:** A resource marker is not required and should only be used when there is a desire
+to act upon a resource.  If no resource marker is provided, a resource is always
 deployed during a control loop.
 
 #### Include Resource On Condition
@@ -367,3 +387,4 @@ metadata:
 spec:
   provider: "azure"
 ```
+
