@@ -18,11 +18,13 @@ describe how to overwrite an existing API to update the existing spec.
 
 After making the necessary changes to your manifests run the following:
 
-    operator-builder create api \
-        --workload-config [path/to/workload/config] \
-        --controller=false \
-        --resource \
-        --force
+```bash
+operator-builder create api \
+    --workload-config [path/to/workload/config] \
+    --controller=false \
+    --resource \
+    --force
+```
 
 You will pass the same workload config file.  The `--controller=false` flag will
 skip generating controller code but `--resource` and `--force` will cause the
@@ -111,7 +113,7 @@ the software when other features not related to an API are released.
 To create a new version of an existing API, update the `spec.api.version` value
 in your workload config, for example:
 
-```
+```yaml
 name: webstore
 kind: StandaloneWorkload
 spec:
@@ -130,11 +132,13 @@ spec:
 
 Now reference the config in a new `create api` command:
 
-    operator-builder create api \
-        --workload-config [path/to/workload/config] \
-        --controller \
-        --resource \
-        --force
+```bash
+operator-builder create api \
+    --workload-config [path/to/workload/config] \
+    --controller \
+    --resource \
+    --force
+```
 
 Note that we _do_ want to re-generate the controller in this case.
 A new API definition will be create alongside the previous version.  If the
@@ -143,24 +147,26 @@ version.
 
 For example if your APIs look as follows:
 
-    tree apis/apps
-    apis/apps
-    ├── v1alpha1
-    │   ├── groupversion_info.go
-    │   ├── webstore
-    │   │   ├── app.go
-    │   │   └── resources.go
-    │   ├── webstore_types.go
-    │   └── zz_generated.deepcopy.go
-    └── v1alpha2
-        ├── groupversion_info.go
-        ├── webstore
-        │   ├── app.go
-        │   └── resources.go
-        ├── webstore_types.go
-        └── zz_generated.deepcopy.go
+```bash
+tree apis/apps
+apis/apps
+├── v1alpha1
+│   ├── groupversion_info.go
+│   ├── webstore
+│   │   ├── app.go
+│   │   └── resources.go
+│   ├── webstore_types.go
+│   └── zz_generated.deepcopy.go
+└── v1alpha2
+    ├── groupversion_info.go
+    ├── webstore
+    │   ├── app.go
+    │   └── resources.go
+    ├── webstore_types.go
+    └── zz_generated.deepcopy.go
 
-    4 directories, 10 files
+4 directories, 10 files
+```
 
 You will delete the earlier version with `rm -rf apis/apps/v1alpha1`.
 

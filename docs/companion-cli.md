@@ -1,6 +1,8 @@
 # Companion CLI
 
-Generate source code for a companion CLI to a Kubernetes operator.
+When you generate the source code for a Kubernetes operator with Operator
+Builder, it can include the code for a companion CLI.  The source code for the
+companion CLI will be found in the `cmd` directory of the generated codebase.
 
 The companion CLI does three things:
 1. Generate Sample Manifests: the `init` command will save a sample manifest to

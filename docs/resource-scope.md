@@ -5,18 +5,19 @@ resources (CRs) created with workload-api can be either.  By default, they are
 namespace-scoped.  If you wish to create a cluster-scoped CR, you
 will need to specify in the WorkloadConfig manifest as shown in this example:
 
-    name: webapp
-    spec:
-      group: apps
-      version: v1alpha1
-      kind: WebApp
-      clusterScoped: false  # <-- indicates custom resource should be cluster-scoped
-      companionCliRootcmd:
-        name: webappctl
-        description: Manage webapp stuff like a boss
-      resources:
-      - app.yaml
-
+```yaml
+name: webapp
+spec:
+  group: apps
+  version: v1alpha1
+  kind: WebApp
+  clusterScoped: false  # <-- indicates custom resource should be cluster-scoped
+  companionCliRootcmd:
+    name: webappctl
+    description: Manage webapp stuff like a boss
+  resources:
+  - app.yaml
+```
 
 In general, you will want to use the default namespace-scoped CR
 unless your CR will be a parent for cluster-scoped resources, e.g. namespaces or
