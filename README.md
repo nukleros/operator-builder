@@ -35,20 +35,22 @@ The custom resource defined in the source code can be cluster-scoped or
 namespace-scoped based on the requirements of the project.  More info
 [here](docs/resource-scope.md).
 
-User Documentation:
+## Documentation
+
+### User Docs
 
 * [Installation](docs/installation.md)
 * [Getting Started](docs/getting-started.md)
 * [Workloads](docs/workloads.md)
-* [Standalone Workloads](docs/standalone-workloads.md)
-* [Workload Collections](docs/workload-collections.md)
+    * [Standalone Workloads](docs/standalone-workloads.md)
+    * [Workload Collections](docs/workload-collections.md)
 * [Markers](docs/markers.md)
 * [Resource Scope](docs/resource-scope.md)
 * [Companion CLI](docs/companion-cli.md)
 * [API Updates & Upgrades](docs/api-updates-upgrades.md)
 * [License Manaagement](docs/license.md)
 
-Develpoer Documentation
+### Developer Docs
 
 * [Testing](docs/testing.md)
 
