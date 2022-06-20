@@ -5,13 +5,11 @@ package templates
 
 import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
 var _ machinery.Template = &GoMod{}
-
-const (
-	GoVersionMinimum = "1.17"
-)
 
 // GoMod scaffolds a file that defines the project dependencies.
 type GoMod struct {
@@ -57,7 +55,7 @@ func (f *GoMod) SetTemplateDefaults() error {
 		f.Path = "go.mod"
 	}
 
-	f.GoVersionMinimum = GoVersionMinimum
+	f.GoVersionMinimum = utils.GeneratedGoVersionMinimum
 	f.Dependencies = goModDependencyMap()
 	f.IndirectDependencies = goModIndirectDependencyMap()
 	f.TemplateBody = goModTemplate
