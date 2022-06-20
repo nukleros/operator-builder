@@ -61,7 +61,7 @@ func (f *GoMod) SetTemplateDefaults() error {
 const goModTemplate = `
 module {{ .Repo }}
 
-go {{ .GoVersion }}
+go {{ .GoVersionMinimum }}
 
 require (
 	{{ range $package, $version := $.Dependencies }}
