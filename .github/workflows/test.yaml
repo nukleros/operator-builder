@@ -11,6 +11,12 @@ jobs:
   unit-test:
     name: Unit Test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - go-version: 1.17
+          - go-version: 1.18
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -20,7 +26,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: ${{ matrix.go-version }}
 
       - name: Run Test
         uses: ./.github/common-actions/unit-test
@@ -32,6 +38,12 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: unit-test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - go-version: 1.17
+          - go-version: 1.18
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -41,7 +53,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: ${{ matrix.version }}
 
       - name: Build Binary Artifact (operator-builder)
         run: make build
@@ -66,15 +78,19 @@ jobs:
           - name: Standalone Operator
             artifact: standalone-codebase
             test-workload-path: test/cases/standalone
+            go-version: 1.17
           - name: Standalone Edge Cases Operator
             artifact: standalone-edge-codebase
             test-workload-path: test/cases/edge-standalone
+            go-version: 1.18
           - name: Workload Collection Operator
             artifact: collection-codebase
             test-workload-path: test/cases/collection
+            go-version: 1.18
           - name: Workload Collection Edge Cases Operator
             artifact: collection-edge-codebase
             test-workload-path: test/cases/edge-collection
+            go-version: 1.17
     env:
       TEST_WORKLOAD_PATH: "${{ matrix.test-workload-path }}"
       TEST_PATH: "/tmp/operator-builder-func-test"
@@ -93,7 +109,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: ${{ matrix.go-version }}
 
       - name: Initialize ${{ matrix.name }} Codebase
         run: |
@@ -129,18 +145,22 @@ jobs:
             artifact: standalone-codebase
             test-build: "true"
             test-deploy: "true"
+            go-version: 1.17
           - name: Standalone Edge Cases Operator
             artifact: standalone-edge-codebase
             test-build: "false"
             test-deploy: "false"
+            go-version: 1.18
           - name: Workload Collection Operator
             artifact: collection-codebase
             test-build: "true"
             test-deploy: "false"
+            go-version: 1.18
           - name: Workload Collection Edge Cases Operator
             artifact: collection-edge-codebase
             test-build: "true"
             test-deploy: "false"
+            go-version: 1.17
     services:
       registry:
         image: registry:2
@@ -158,7 +178,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: ${{ matrix.go-version }}
 
       - name: Download ${{ matrix.name }} Codebase
         uses: actions/download-artifact@v2

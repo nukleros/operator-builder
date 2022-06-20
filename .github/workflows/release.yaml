@@ -17,7 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: 1.18
 
       # TODO: readdress this task as it prevented a successful release
       # See action https://github.com/vmware-tanzu-labs/operator-builder/runs/4861431396?check_suite_focus=true
