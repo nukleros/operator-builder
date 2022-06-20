@@ -10,6 +10,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
 )
@@ -139,7 +140,7 @@ func (resource *ChildResource) NameConstant() string {
 // when we generate the function names to avoid collisions.
 func uniqueName(object unstructured.Unstructured) string {
 	// get the resource name taking into account appropriate yaml tags
-	resourceName := strings.ReplaceAll(strings.Title(object.GetName()), "-", "")
+	resourceName := strings.ReplaceAll(utils.ToTitle(object.GetName()), "-", "")
 	resourceName = strings.ReplaceAll(resourceName, ".", "")
 	resourceName = strings.ReplaceAll(resourceName, ":", "")
 	resourceName = strings.ReplaceAll(resourceName, "!!Start", "")
@@ -149,7 +150,7 @@ func uniqueName(object unstructured.Unstructured) string {
 	resourceName = strings.ReplaceAll(resourceName, " ", "")
 
 	// get the namespace name taking into account appropriate yaml tags
-	namespaceName := strings.ReplaceAll(strings.Title(object.GetNamespace()), "-", "")
+	namespaceName := strings.ReplaceAll(utils.ToTitle(object.GetNamespace()), "-", "")
 	namespaceName = strings.ReplaceAll(namespaceName, ".", "")
 	namespaceName = strings.ReplaceAll(namespaceName, ":", "")
 	namespaceName = strings.ReplaceAll(namespaceName, "!!Start", "")

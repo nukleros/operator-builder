@@ -100,7 +100,7 @@ func getSourceLicense(source string) ([]byte, error) {
 
 	if source[0:4] == "http" {
 		// source is HTTP URL
-		resp, err := http.Get(source) //nolint:gosec
+		resp, err := http.Get(source) //nolint:gosec,noctx
 		if err != nil {
 			return []byte{}, fmt.Errorf("unable to get license source from %s, %w", source, err)
 		}

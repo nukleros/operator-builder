@@ -13,6 +13,7 @@ import (
 
 	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
 	markerparser "github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
 var (
@@ -208,7 +209,7 @@ func isSupported(parentField string) bool {
 // validField determines if a field is valid based on a known list of valid fields.
 func validField(field string, validFields []string) bool {
 	for _, valid := range validFields {
-		if strings.Title(valid) == strings.Title(field) {
+		if utils.ToTitle(valid) == utils.ToTitle(field) {
 			return true
 		}
 	}
@@ -236,7 +237,7 @@ func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
 // scaffolded in the source code.
 func getSourceCodeVariable(marker MarkerProcessor) (string, error) {
 	if marker.GetParent() == "" {
-		return fmt.Sprintf("%s.%s", marker.GetSpecPrefix(), strings.Title((marker.GetName()))), nil
+		return fmt.Sprintf("%s.%s", marker.GetSpecPrefix(), utils.ToTitle(marker.GetName())), nil
 	}
 
 	if isSupported(marker.GetParent()) {
