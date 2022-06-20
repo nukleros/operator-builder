@@ -53,7 +53,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.version }}
+          go-version: ${{ matrix.go-version }}
 
       - name: Build Binary Artifact (operator-builder)
         run: make build
