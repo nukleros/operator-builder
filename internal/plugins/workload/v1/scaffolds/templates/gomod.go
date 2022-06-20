@@ -18,8 +18,9 @@ type GoMod struct {
 	machinery.TemplateMixin
 	machinery.RepositoryMixin
 
-	GoVersionMinimum string
-	Dependencies     map[string]string
+	GoVersionMinimum     string
+	Dependencies         map[string]string
+	IndirectDependencies map[string]string
 }
 
 // goModDependencyMap pins the versions within the go.mod file so that they
@@ -45,6 +46,12 @@ func goModDependencyMap() map[string]string {
 	}
 }
 
+func goModIndirectDependencyMap() map[string]string {
+	return map[string]string{
+		"gopkg.in/check.v1": "v1.0.0-20201130134442-10cb98267c6c",
+	}
+}
+
 func (f *GoMod) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = "go.mod"
@@ -52,6 +59,7 @@ func (f *GoMod) SetTemplateDefaults() error {
 
 	f.GoVersionMinimum = GoVersionMinimum
 	f.Dependencies = goModDependencyMap()
+	f.IndirectDependencies = goModIndirectDependencyMap()
 	f.TemplateBody = goModTemplate
 	f.IfExistsAction = machinery.OverwriteFile
 
@@ -66,6 +74,12 @@ go {{ .GoVersionMinimum }}
 require (
 	{{ range $package, $version := $.Dependencies }}
 	"{{ $package }}" {{ $version }}
-	{{ end -}}
+	{{- end }}
+)
+
+require (
+	{{ range $package, $version := $.IndirectDependencies }}
+	"{{ $package }}" {{ $version }}
+	{{- end }}
 )
 `
