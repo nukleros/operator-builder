@@ -5,9 +5,6 @@ package utils
 
 import (
 	"strings"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 // ToPascalCase will convert a kebab-case string to a PascalCase name appropriate to
@@ -47,6 +44,11 @@ func ToPackageName(name string) string {
 
 // ToTitle replaces the strings.Title method, which is deprecated in go1.18.  This is a helper
 // method to make titling a string much more readable than the new methodology.
+//nolint:godox
+// TODO: use commented code below eventually.  It returns different at this time but will
+// eventually be deprecated.
 func ToTitle(in string) string {
-	return cases.Title(language.AmericanEnglish, cases.NoLower).String(in)
+	//nolint:gocritic
+	// return cases.Title(language.Und, cases.NoLower, cases.NoLower).String(in)
+	return strings.Title(in)
 }
