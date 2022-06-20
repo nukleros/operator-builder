@@ -10,7 +10,7 @@ import (
 var _ machinery.Template = &GoMod{}
 
 const (
-	GoVersion = "1.18"
+	GoVersionMinimum = "1.17"
 )
 
 // GoMod scaffolds a file that defines the project dependencies.
@@ -18,8 +18,8 @@ type GoMod struct {
 	machinery.TemplateMixin
 	machinery.RepositoryMixin
 
-	GoVersion    string
-	Dependencies map[string]string
+	GoVersionMinimum string
+	Dependencies     map[string]string
 }
 
 // goModDependencyMap pins the versions within the go.mod file so that they
@@ -50,7 +50,7 @@ func (f *GoMod) SetTemplateDefaults() error {
 		f.Path = "go.mod"
 	}
 
-	f.GoVersion = GoVersion
+	f.GoVersionMinimum = GoVersionMinimum
 	f.Dependencies = goModDependencyMap()
 	f.TemplateBody = goModTemplate
 	f.IfExistsAction = machinery.OverwriteFile

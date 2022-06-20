@@ -1,6 +1,6 @@
 module github.com/vmware-tanzu-labs/operator-builder
 
-go 1.18
+go 1.17
 
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
