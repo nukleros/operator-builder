@@ -14,7 +14,7 @@ import (
 func TestResourceMarker_String(t *testing.T) {
 	t.Parallel()
 
-	testField := "test"
+	testField := "rmtest"
 	testIncludeTrue := true
 
 	type fields struct {
@@ -33,19 +33,19 @@ func TestResourceMarker_String(t *testing.T) {
 			name: "ensure resource marker with set field values output matches expected",
 			fields: fields{
 				Field:   &testField,
-				Value:   "test",
+				Value:   testField,
 				Include: &testIncludeTrue,
 			},
-			want: "ResourceMarker{Field: test CollectionField:  Value: test Include: true}",
+			want: "ResourceMarker{Field: rmtest CollectionField:  Value: rmtest Include: true}",
 		},
 		{
 			name: "ensure resource marker with set collection field values output matches expected",
 			fields: fields{
 				CollectionField: &testField,
-				Value:           "test",
+				Value:           testField,
 				Include:         &testIncludeTrue,
 			},
-			want: "ResourceMarker{Field:  CollectionField: test Value: test Include: true}",
+			want: "ResourceMarker{Field:  CollectionField: rmtest Value: rmtest Include: true}",
 		},
 		{
 			name: "ensure resource marker with nil values output matches expected",
