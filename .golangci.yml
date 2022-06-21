@@ -58,6 +58,10 @@ linters-settings:
     allow-unused: false
     require-explanation: false
     require-specific: false
+  staticcheck:
+    checks:
+      - all
+      - '-SA1019' # disable strings.Title check
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.

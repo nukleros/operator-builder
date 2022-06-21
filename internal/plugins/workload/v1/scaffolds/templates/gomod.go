@@ -5,6 +5,8 @@ package templates
 
 import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
 var _ machinery.Template = &GoMod{}
@@ -14,7 +16,9 @@ type GoMod struct {
 	machinery.TemplateMixin
 	machinery.RepositoryMixin
 
-	Dependencies map[string]string
+	GoVersionMinimum     string
+	Dependencies         map[string]string
+	IndirectDependencies map[string]string
 }
 
 // goModDependencyMap pins the versions within the go.mod file so that they
@@ -23,19 +27,26 @@ type GoMod struct {
 // See https://github.com/vmware-tanzu-labs/operator-builder/issues/250
 func goModDependencyMap() map[string]string {
 	return map[string]string{
-		"github.com/go-logr/logr":                    "v0.4.0",
-		"github.com/nukleros/operator-builder-tools": "v0.2.0",
-		"github.com/onsi/ginkgo":                     "v1.16.4",
-		"github.com/onsi/gomega":                     "v1.15.0",
-		"github.com/spf13/cobra":                     "v1.2.1",
-		"github.com/stretchr/testify":                "v1.7.0",
+		"github.com/go-logr/logr":                    "v1.2.3",
+		"github.com/nukleros/operator-builder-tools": "v0.3.0",
+		"github.com/onsi/ginkgo":                     "v1.16.5",
+		"github.com/onsi/gomega":                     "v1.19.0",
+		"github.com/spf13/cobra":                     "v1.4.0",
+		"github.com/stretchr/testify":                "v1.7.3",
+		"google.golang.org/api":                      "v0.84.0",
 		"gopkg.in/yaml.v2":                           "v2.4.0",
-		"k8s.io/api":                                 "v0.22.2",
-		"k8s.io/apimachinery":                        "v0.22.2",
-		"k8s.io/client-go":                           "v0.22.2",
-		"sigs.k8s.io/controller-runtime":             "v0.10.2",
-		"sigs.k8s.io/kubebuilder/v3":                 "v3.2.0",
-		"sigs.k8s.io/yaml":                           "v1.2.0",
+		"k8s.io/api":                                 "v0.24.2",
+		"k8s.io/apimachinery":                        "v0.24.2",
+		"k8s.io/client-go":                           "v0.24.2",
+		"sigs.k8s.io/controller-runtime":             "v0.12.1",
+		"sigs.k8s.io/kubebuilder/v3":                 "v3.4.1",
+		"sigs.k8s.io/yaml":                           "v1.3.0",
+	}
+}
+
+func goModIndirectDependencyMap() map[string]string {
+	return map[string]string{
+		"gopkg.in/check.v1": "v1.0.0-20201130134442-10cb98267c6c",
 	}
 }
 
@@ -44,7 +55,9 @@ func (f *GoMod) SetTemplateDefaults() error {
 		f.Path = "go.mod"
 	}
 
+	f.GoVersionMinimum = utils.GeneratedGoVersionMinimum
 	f.Dependencies = goModDependencyMap()
+	f.IndirectDependencies = goModIndirectDependencyMap()
 	f.TemplateBody = goModTemplate
 	f.IfExistsAction = machinery.OverwriteFile
 
@@ -54,11 +67,17 @@ func (f *GoMod) SetTemplateDefaults() error {
 const goModTemplate = `
 module {{ .Repo }}
 
-go 1.15
+go {{ .GoVersionMinimum }}
 
 require (
-	{{ range $k, $v := $.Dependencies }}
-	"{{ $k }}" {{ $v }}
-	{{ end -}}
+	{{ range $package, $version := $.Dependencies }}
+	"{{ $package }}" {{ $version }}
+	{{- end }}
+)
+
+require (
+	{{ range $package, $version := $.IndirectDependencies }}
+	"{{ $package }}" {{ $version }}
+	{{- end }}
 )
 `

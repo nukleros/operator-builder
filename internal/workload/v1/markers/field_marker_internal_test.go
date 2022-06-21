@@ -14,7 +14,7 @@ import (
 func TestFieldMarker_String(t *testing.T) {
 	t.Parallel()
 
-	testName := "test"
+	testName := "fmtest"
 	testString := "fm test"
 
 	type fields struct {
@@ -37,7 +37,7 @@ func TestFieldMarker_String(t *testing.T) {
 				Description: &testString,
 				Default:     testName,
 			},
-			want: "FieldMarker{Name: test Type: string Description: \"fm test\" Default: test}",
+			want: "FieldMarker{Name: fmtest Type: string Description: \"fm test\" Default: fmtest}",
 		},
 		{
 			name: "ensure field with nil values output matches expected",
@@ -47,7 +47,7 @@ func TestFieldMarker_String(t *testing.T) {
 				Description: nil,
 				Default:     testName,
 			},
-			want: "FieldMarker{Name: test Type: string Description: \"\" Default: test}",
+			want: "FieldMarker{Name: fmtest Type: string Description: \"\" Default: fmtest}",
 		},
 	}
 
@@ -147,7 +147,7 @@ func TestFieldMarker_GetDefault(t *testing.T) {
 func TestFieldMarker_GetName(t *testing.T) {
 	t.Parallel()
 
-	name := "test"
+	name := "testGetFmName"
 	emptyName := ""
 
 	type fields struct {
@@ -164,7 +164,7 @@ func TestFieldMarker_GetName(t *testing.T) {
 			fields: fields{
 				Name: &name,
 			},
-			want: "test",
+			want: name,
 		},
 		{
 			name: "ensure field name with empty value returns as expected",
@@ -347,6 +347,8 @@ func TestFieldMarker_GetSpecPrefix(t *testing.T) {
 func TestFieldMarker_GetOriginalValue(t *testing.T) {
 	t.Parallel()
 
+	name := "fmOriginalName"
+
 	type fields struct {
 		originalValue interface{}
 	}
@@ -359,9 +361,9 @@ func TestFieldMarker_GetOriginalValue(t *testing.T) {
 		{
 			name: "ensure field original value string returns as expected",
 			fields: fields{
-				originalValue: "test",
+				originalValue: name,
 			},
-			want: "test",
+			want: name,
 		},
 		{
 			name: "ensure field original value integer returns as expected",
@@ -531,6 +533,7 @@ func TestFieldMarker_SetOriginalValue(t *testing.T) {
 	t.Parallel()
 
 	fmOriginalValue := "testUpdateOriginal"
+	fmFake := "testFmFake"
 
 	type fields struct {
 		originalValue interface{}
@@ -549,7 +552,7 @@ func TestFieldMarker_SetOriginalValue(t *testing.T) {
 		{
 			name: "ensure field original value with string already set is set as expected",
 			fields: fields{
-				originalValue: "test",
+				originalValue: fmFake,
 			},
 			args: args{
 				value: fmOriginalValue,

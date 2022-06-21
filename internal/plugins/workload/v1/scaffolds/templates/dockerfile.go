@@ -5,6 +5,8 @@ package templates
 
 import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 )
 
 const (
@@ -16,6 +18,8 @@ var _ machinery.Template = &Dockerfile{}
 // Dockerfile scaffolds a file that defines the containerized build process.
 type Dockerfile struct {
 	machinery.TemplateMixin
+
+	GoVersion string
 }
 
 // SetTemplateDefaults implements file.Template.
@@ -24,15 +28,15 @@ func (f *Dockerfile) SetTemplateDefaults() error {
 		f.Path = defaultDockerfilePath
 	}
 
+	f.GoVersion = utils.GeneratedGoVersionPreferred
 	f.IfExistsAction = machinery.OverwriteFile
-
 	f.TemplateBody = dockerfileTemplate
 
 	return nil
 }
 
 const dockerfileTemplate = `# Build the manager binary
-FROM golang:1.16 as builder
+FROM golang:{{ .GoVersion }} as builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests

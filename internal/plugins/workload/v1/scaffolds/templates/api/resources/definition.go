@@ -39,8 +39,8 @@ func (f *Definition) SetTemplateDefaults() error {
 	)
 
 	// determine if we need to import the strconv package
-	for _, child := range f.Manifest.ChildResources {
-		if child.UseStrConv {
+	for i := range f.Manifest.ChildResources {
+		if f.Manifest.ChildResources[i].UseStrConv {
 			f.UseStrConv = true
 
 			break

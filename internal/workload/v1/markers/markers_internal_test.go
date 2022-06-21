@@ -242,7 +242,7 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 	failTest := &FieldMarker{
 		Name:          &failTestString,
 		sourceCodeVar: "parent.Spec.Field.Fail",
-		Type:          FieldBool,
+		Type:          FieldUnknownType,
 	}
 
 	type args struct {
@@ -276,7 +276,7 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 			args: args{
 				marker: intTest,
 			},
-			want:    "!!start string(rune(parent.Spec.Field.Integer)) !!end",
+			want:    "!!start strconv.Itoa(parent.Spec.Field.Integer) !!end",
 			wantErr: false,
 		},
 		{
@@ -732,6 +732,7 @@ func Test_transformYAML(t *testing.T) {
 	badReplaceText := "*&^%"
 	realField := "real.field"
 	collectionName := "collection.name"
+	testString := "transformTest"
 
 	type args struct {
 		results []*inspect.YAMLResult
@@ -748,15 +749,15 @@ func Test_transformYAML(t *testing.T) {
 				results: []*inspect.YAMLResult{
 					{
 						Result: &parser.Result{
-							MarkerText: "test",
+							MarkerText: testString,
 							Object: FieldMarker{
 								Name: &realField,
 							},
 						},
 						Nodes: []*yaml.Node{
 							{
-								Tag:   "test",
-								Value: "test",
+								Tag:   testString,
+								Value: testString,
 							},
 						},
 					},
@@ -770,7 +771,7 @@ func Test_transformYAML(t *testing.T) {
 				results: []*inspect.YAMLResult{
 					{
 						Result: &parser.Result{
-							MarkerText: "test",
+							MarkerText: testString,
 							Object:     "this is a string no a marker",
 						},
 					},
@@ -784,7 +785,7 @@ func Test_transformYAML(t *testing.T) {
 				results: []*inspect.YAMLResult{
 					{
 						Result: &parser.Result{
-							MarkerText: "test",
+							MarkerText: testString,
 							Object: FieldMarker{
 								Name: &collectionName,
 							},
@@ -800,7 +801,7 @@ func Test_transformYAML(t *testing.T) {
 				results: []*inspect.YAMLResult{
 					{
 						Result: &parser.Result{
-							MarkerText: "test",
+							MarkerText: testString,
 							Object: CollectionFieldMarker{
 								Name: &collectionName,
 							},
@@ -816,7 +817,7 @@ func Test_transformYAML(t *testing.T) {
 				results: []*inspect.YAMLResult{
 					{
 						Result: &parser.Result{
-							MarkerText: "test",
+							MarkerText: testString,
 							Object: CollectionFieldMarker{
 								Name:    &realField,
 								Replace: &badReplaceText,
@@ -824,8 +825,8 @@ func Test_transformYAML(t *testing.T) {
 						},
 						Nodes: []*yaml.Node{
 							{
-								Tag:   "test",
-								Value: "test",
+								Tag:   testString,
+								Value: testString,
 							},
 						},
 					},

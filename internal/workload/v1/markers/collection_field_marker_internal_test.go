@@ -15,7 +15,7 @@ func TestCollectionFieldMarker_String(t *testing.T) {
 	t.Parallel()
 
 	testString := "cfm test"
-	testName := "test"
+	testName := "cfmtest"
 
 	type fields struct {
 		Name        *string
@@ -37,7 +37,7 @@ func TestCollectionFieldMarker_String(t *testing.T) {
 				Description: &testString,
 				Default:     testName,
 			},
-			want: "CollectionFieldMarker{Name: test Type: string Description: \"cfm test\" Default: test}",
+			want: "CollectionFieldMarker{Name: cfmtest Type: string Description: \"cfm test\" Default: cfmtest}",
 		},
 		{
 			name: "ensure collection field with nil values output matches expected",
@@ -47,7 +47,7 @@ func TestCollectionFieldMarker_String(t *testing.T) {
 				Description: nil,
 				Default:     testName,
 			},
-			want: "CollectionFieldMarker{Name: test Type: string Description: \"\" Default: test}",
+			want: "CollectionFieldMarker{Name: cfmtest Type: string Description: \"\" Default: cfmtest}",
 		},
 	}
 
@@ -147,7 +147,7 @@ func TestCollectionFieldMarker_GetDefault(t *testing.T) {
 func TestCollectionFieldMarker_GetName(t *testing.T) {
 	t.Parallel()
 
-	name := "test"
+	name := "getNameTest"
 	emptyName := ""
 
 	type fields struct {
@@ -164,7 +164,7 @@ func TestCollectionFieldMarker_GetName(t *testing.T) {
 			fields: fields{
 				Name: &name,
 			},
-			want: "test",
+			want: name,
 		},
 		{
 			name: "ensure collection field name with empty value returns as expected",
@@ -347,6 +347,8 @@ func TestCollectionFieldMarker_GetSpecPrefix(t *testing.T) {
 func TestCollectionFieldMarker_GetOriginalValue(t *testing.T) {
 	t.Parallel()
 
+	originalValue := "originalValueTest"
+
 	type fields struct {
 		originalValue interface{}
 	}
@@ -359,9 +361,9 @@ func TestCollectionFieldMarker_GetOriginalValue(t *testing.T) {
 		{
 			name: "ensure collection field original value string returns as expected",
 			fields: fields{
-				originalValue: "test",
+				originalValue: originalValue,
 			},
-			want: "test",
+			want: originalValue,
 		},
 		{
 			name: "ensure collection field original value integer returns as expected",

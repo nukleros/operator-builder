@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
 	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
 )
 
@@ -198,7 +199,7 @@ func (api *APIFields) generateStructName(path string) {
 	mustWrite(buf.WriteString("Spec"))
 
 	for _, part := range strings.Split(path, ".") {
-		mustWrite(buf.WriteString(strings.Title(part)))
+		mustWrite(buf.WriteString(utils.ToTitle(part)))
 
 		if part == api.manifestName {
 			break
@@ -288,7 +289,7 @@ func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interfa
 
 func (api *APIFields) newChild(name string, fieldType markers.FieldType, sample interface{}) *APIFields {
 	child := &APIFields{
-		Name:         strings.Title(name),
+		Name:         utils.ToTitle(name),
 		manifestName: name,
 		Type:         fieldType,
 		Tags:         fmt.Sprintf("`json:%q`", fmt.Sprintf("%s,%s", name, "omitempty")),
