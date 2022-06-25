@@ -25,6 +25,7 @@ type initScaffolder struct {
 	boilerplatePath    string
 	workload           kinds.WorkloadBuilder
 	cliRootCommandName string
+	controllerImg      string
 
 	fs machinery.Filesystem
 }
@@ -34,12 +35,14 @@ func NewInitScaffolder(
 	cfg config.Config,
 	workload kinds.WorkloadBuilder,
 	cliRootCommandName string,
+	controllerImg string,
 ) plugins.Scaffolder {
 	return &initScaffolder{
 		config:             cfg,
 		boilerplatePath:    "hack/boilerplate.go.txt",
 		workload:           workload,
 		cliRootCommandName: cliRootCommandName,
+		controllerImg:      controllerImg,
 	}
 }
 
@@ -79,7 +82,7 @@ func (s *initScaffolder) Scaffold() error {
 		&templates.Main{},
 		&templates.GoMod{},
 		&templates.Dockerfile{},
-		&templates.Makefile{RootCmdName: s.cliRootCommandName},
+		&templates.Makefile{RootCmdName: s.cliRootCommandName, ControllerImg: s.controllerImg},
 		&templates.Readme{RootCmdName: s.cliRootCommandName},
 		&e2e.Test{},
 	); err != nil {

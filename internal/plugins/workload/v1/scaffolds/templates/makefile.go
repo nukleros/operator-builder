@@ -16,8 +16,9 @@ type Makefile struct {
 	machinery.TemplateMixin
 	machinery.RepositoryMixin
 
-	RootCmdName string
-	CrdOptions  string
+	RootCmdName   string
+	CrdOptions    string
+	ControllerImg string
 }
 
 func (f *Makefile) SetTemplateDefaults() error {
@@ -36,7 +37,7 @@ func (f *Makefile) SetTemplateDefaults() error {
 //nolint: lll
 const makefileTemplate = `
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= "{{ .ControllerImg }}"
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "{{ .CrdOptions }}"
 
