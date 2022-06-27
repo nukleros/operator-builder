@@ -14,7 +14,7 @@ builds:
     main: ./cmd/operator-builder
     binary: operator-builder
     ldflags:
-      - -s -w -X github.com/vmware-tanzu-labs/operator-builder/pkg/cli.version={{.Version}} -extldflags '-static'
+      - -s -w -X github.com/nukleros/operator-builder/pkg/cli.version={{.Version}} -extldflags '-static'
 
 archives:
   - replacements:
@@ -47,8 +47,8 @@ changelog:
       - '^build(\(.*\))?:'
 dockers:
   - image_templates:
-      - 'ghcr.io/vmware-tanzu-labs/operator-builder:v{{ .Version }}'
-      - 'ghcr.io/vmware-tanzu-labs/operator-builder:latest'
+      - 'ghcr.io/nukleros/operator-builder:v{{ .Version }}'
+      - 'ghcr.io/nukleros/operator-builder:latest'
     dockerfile: Dockerfile
     build_flag_templates:
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -62,15 +62,14 @@ dockers:
 brews:
   - name: operator-builder
     tap:
-      owner: vmware-tanzu-labs
+      owner: nukleros
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 
     # Git author used to commit to the repository.
     # Defaults are shown.
     commit_author:
       name: goreleaserbot
-      email: goreleaser@vmware-tanzu-labs.com
+      email: goreleaser@nukleros.io
 
     # Folder inside the repository to put the formula.
     # Default is the root folder.
@@ -78,7 +77,7 @@ brews:
 
     # Your app's homepage.
     # Default is empty.
-    homepage: "https://github.com/vmware-tanzu-labs/operator-builder"
+    homepage: "https://github.com/nukleros/operator-builder"
 
     # Template of your app's description.
     # Default is empty.
@@ -115,11 +114,11 @@ brews:
       system "#{bin}/operator-builder version"
 nfpms:
   - file_name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-    homepage:  https://github.com/vmware-tanzu-labs/operator-builder
+    homepage:  https://github.com/nukleros/operator-builder
     description: "A Kubebuilder plugin to accelerate the development of Kubernetes operators."
-    maintainer: Jeff Davis <jeffda@vmware.com>, Dustin Scott <sduustin@vmware.com>, Rich Lander <lander2k2@protonmail.com>
+    maintainer: Jeff Davis <mr.jefedavis@gmail.com>, Dustin Scott <dustin.scott18@gmail.com>, Rich Lander <lander2k2@protonmail.com>
     license: MIT
-    vendor: VMware Tanzu Labs
+    vendor: Nukleros
     contents:
       - src: ./completions/operator-builder.bash
         dst: /etc/bash_completion.d/operator-builder
@@ -135,8 +134,11 @@ nfpms:
       - kubectl
       - golang
       - make
-# TODO: readdress this task as it prevented a successful release
-# See action https://github.com/vmware-tanzu-labs/operator-builder/runs/4861431396?check_suite_focus=true
+
+# NOTE: removing support for snapcraft as their CLI has become increasingly unstable and errors have become
+# common place.  See https://github.com/snapcore/action-publish/issues/28 for an example of some of the issues
+# that the community has run into.
+#
 # snapcrafts:
 #   - name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
 #     name: operator-builder
