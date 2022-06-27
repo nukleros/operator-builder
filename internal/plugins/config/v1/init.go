@@ -16,12 +16,14 @@ import (
 
 type initSubcommand struct {
 	workloadConfigPath string
+	controllerImage    string
 }
 
 var _ plugin.InitSubcommand = &initSubcommand{}
 
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
+	fs.StringVar(&p.controllerImage, "controller-image", "controller:latest", "controller image")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
@@ -33,6 +35,7 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 	pluginConfig := workloadconfig.Plugin{
 		WorkloadConfigPath: p.workloadConfigPath,
 		CliRootCommandName: processor.Workload.GetRootCommand().Name,
+		ControllerImg:      p.controllerImage,
 	}
 
 	if err := c.EncodePluginConfig(workloadconfig.PluginKey, pluginConfig); err != nil {

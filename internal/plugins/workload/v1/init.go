@@ -22,6 +22,7 @@ type initSubcommand struct {
 
 	workloadConfigPath string
 	cliRootCommandName string
+	controllerImg      string
 
 	workload kinds.WorkloadBuilder
 }
@@ -53,6 +54,7 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 
 	p.workloadConfigPath = pluginConfig.WorkloadConfigPath
 	p.cliRootCommandName = pluginConfig.CliRootCommandName
+	p.controllerImg = pluginConfig.ControllerImg
 
 	return nil
 }
@@ -77,6 +79,7 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 		p.config,
 		p.workload,
 		p.cliRootCommandName,
+		p.controllerImg,
 	)
 	scaffolder.InjectFS(fs)
 
