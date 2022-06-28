@@ -124,4 +124,3 @@ func (roleRule *RoleRule) nonResourceRules() *Rules {
 		},
 	}
 }
-

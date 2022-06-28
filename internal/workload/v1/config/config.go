@@ -13,4 +13,3 @@ type Plugin struct {
 	CliRootCommandName string `json:"cliRootCommandName" yaml:"cliRootCommandName"`
 	ControllerImg      string `json:"controllerImg" yaml:"controllerImg"`
 }
-

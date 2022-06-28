@@ -122,4 +122,3 @@ func (m *Definition) loadFields() error {
 
 	return nil
 }
-

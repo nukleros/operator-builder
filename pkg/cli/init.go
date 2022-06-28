@@ -57,4 +57,3 @@ func NewKubebuilderCLI() (*kbcli.CLI, error) {
 
 	return c, nil
 }
-

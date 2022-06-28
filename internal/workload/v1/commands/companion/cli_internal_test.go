@@ -580,4 +580,3 @@ func TestCLI_GetSubCmdRelativeFileName(t *testing.T) {
 		})
 	}
 }
-

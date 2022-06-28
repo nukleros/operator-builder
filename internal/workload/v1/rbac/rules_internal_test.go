@@ -292,4 +292,3 @@ func TestRules_addForManifest(t *testing.T) {
 		})
 	}
 }
-

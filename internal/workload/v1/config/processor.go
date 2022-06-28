@@ -68,4 +68,3 @@ func (processor *Processor) GetProcessors() []*Processor {
 
 	return processors
 }
-

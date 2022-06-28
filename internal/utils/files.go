@@ -103,4 +103,3 @@ func expand(g []string) ([]string, error) {
 
 	return matches, nil
 }
-

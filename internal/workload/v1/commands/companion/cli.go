@@ -106,4 +106,3 @@ func (cli *CLI) getDefaultDescription(workload companionCLIProcessor) string {
 
 	return fmt.Sprintf(defaultDescription, kind)
 }
-

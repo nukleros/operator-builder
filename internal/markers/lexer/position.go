@@ -69,4 +69,3 @@ func (l *Lexer) resetPosition() {
 func (l *Lexer) isEmpty() bool {
 	return l.peek() == eof
 }
-

@@ -9,4 +9,3 @@ func MustWrite(n int, err error) {
 		panic(err)
 	}
 }
-

@@ -269,4 +269,3 @@ func (c *{{ .RootCmd.VarName }}Command) addSubCommands() {
 	c.newVersionSubCommand()
 }
 `
-

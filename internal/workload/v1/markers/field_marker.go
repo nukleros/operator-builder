@@ -150,4 +150,3 @@ func (fm *FieldMarker) SetDescription(description string) {
 func (fm *FieldMarker) SetForCollection(forCollection bool) {
 	fm.forCollection = forCollection
 }
-

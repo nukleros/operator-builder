@@ -104,4 +104,3 @@ func TestMarker_loadFields(t *testing.T) {
 	}
 }
 */
-

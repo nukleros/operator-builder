@@ -119,4 +119,3 @@ func (apiProcessor *createAPIProcessor) process() error {
 
 	return nil
 }
-

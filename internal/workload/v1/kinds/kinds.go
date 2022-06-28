@@ -109,4 +109,3 @@ func decodeComponent(dc *yaml.Decoder) (*ComponentWorkload, error) {
 
 	return v, nil
 }
-

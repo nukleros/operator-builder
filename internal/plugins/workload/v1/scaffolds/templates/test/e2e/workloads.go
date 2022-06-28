@@ -209,4 +209,3 @@ func getTesterCollectionName(collection *kinds.WorkloadCollection) string {
 		strings.ToLower(collection.GetAPIVersion()) +
 		collection.Spec.API.Kind
 }
-

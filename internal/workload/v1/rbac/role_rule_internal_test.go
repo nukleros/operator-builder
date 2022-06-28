@@ -358,4 +358,3 @@ func TestRoleRule_toRules(t *testing.T) {
 		})
 	}
 }
-

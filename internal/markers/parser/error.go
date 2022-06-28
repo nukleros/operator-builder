@@ -21,4 +21,3 @@ func (p *Parser) error(err error) stateFn {
 
 	return nil
 }
-

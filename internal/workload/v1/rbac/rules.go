@@ -105,4 +105,3 @@ func (rules *Rules) hasResourceRule(rule *Rule) bool {
 
 	return false
 }
-

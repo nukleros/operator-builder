@@ -76,4 +76,3 @@ func (validator *inlineValidator) validateKind(group, kind string) error {
 
 	return nil
 }
-

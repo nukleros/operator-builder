@@ -26,4 +26,3 @@ func (l *Lexer) pop() stateFn {
 func (l *Lexer) emptyStack() bool {
 	return len(l.stack) == 0
 }
-

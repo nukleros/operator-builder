@@ -53,4 +53,3 @@ func ToTitle(in string) string {
 	// return cases.Title(language.Und, cases.NoLower, cases.NoLower).String(in)
 	return strings.Title(in)
 }
-

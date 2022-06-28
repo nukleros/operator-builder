@@ -1212,4 +1212,3 @@ func TestAPIFields_AddField(t *testing.T) {
 		})
 	}
 }
-

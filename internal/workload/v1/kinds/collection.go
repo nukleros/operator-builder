@@ -272,4 +272,3 @@ func (c *WorkloadCollection) LoadManifests(workloadPath string) error {
 
 	return nil
 }
-

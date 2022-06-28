@@ -164,4 +164,3 @@ func uniqueName(object unstructured.Unstructured) string {
 
 	return resourceName
 }
-

@@ -17,4 +17,3 @@ func Init(processor *config.Processor) error {
 
 	return nil
 }
-

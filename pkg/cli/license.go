@@ -50,4 +50,3 @@ func NewUpdateLicenseCmd() *cobra.Command {
 
 	return cmd
 }
-

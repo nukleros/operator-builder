@@ -24,4 +24,3 @@ func (s *Inspector) parse(input string) (results []*parser.Result) {
 
 	return p.Parse()
 }
-

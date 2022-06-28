@@ -215,4 +215,3 @@ func getDependency(name string, workloads []kinds.WorkloadBuilder) *kinds.Compon
 
 	return nil
 }
-

@@ -92,4 +92,3 @@ func (s *initScaffolder) Scaffold() error {
 
 	return nil
 }
-

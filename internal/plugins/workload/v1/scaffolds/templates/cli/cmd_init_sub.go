@@ -240,4 +240,3 @@ func Init{{ .Resource.Kind }}(i *cmdinit.InitSubCommand) error {
 }
 `
 )
-

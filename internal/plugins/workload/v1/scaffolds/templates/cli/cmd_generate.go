@@ -165,4 +165,3 @@ func (g *GenerateSubCommand) generate(cmd *cobra.Command, args []string) error {
 	return g.GenerateFunc(g)
 }
 `
-

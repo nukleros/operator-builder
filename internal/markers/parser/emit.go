@@ -28,4 +28,3 @@ type Result struct {
 	Object     interface{}
 	MarkerText string
 }
-

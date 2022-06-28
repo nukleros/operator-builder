@@ -101,4 +101,3 @@ func {{ .CreateFuncName }} (
 }
 {{ end }}
 `
-

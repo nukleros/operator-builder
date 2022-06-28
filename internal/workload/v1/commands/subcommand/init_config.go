@@ -151,4 +151,3 @@ func mutateResources(yamlData map[string]interface{}) error {
 
 	return nil
 }
-

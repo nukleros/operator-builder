@@ -65,4 +65,3 @@ func TemplateHelpers() template.FuncMap {
 
 	return funcMap
 }
-

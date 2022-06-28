@@ -281,4 +281,3 @@ func (s *apiScaffolder) scaffoldCLI(
 
 	return nil
 }
-

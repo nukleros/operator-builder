@@ -331,4 +331,3 @@ func Generate{{ .Resource.Kind }}(g *cmdgenerate.GenerateSubCommand) error {
 }
 `
 )
-

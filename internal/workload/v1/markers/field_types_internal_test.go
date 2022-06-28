@@ -136,4 +136,3 @@ func TestFieldType_String(t *testing.T) {
 		})
 	}
 }
-

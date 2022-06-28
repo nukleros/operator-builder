@@ -63,4 +63,3 @@ metadata:
 {{- end }}
 {{ .SpecFields.GenerateSampleSpec true -}}
 `
-

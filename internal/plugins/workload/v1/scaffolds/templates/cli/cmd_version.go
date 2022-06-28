@@ -147,4 +147,3 @@ func (v *VersionInfo) Display() error {
 	return nil
 }
 `
-

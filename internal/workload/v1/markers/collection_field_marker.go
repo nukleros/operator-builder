@@ -133,4 +133,3 @@ func (cfm *CollectionFieldMarker) SetDescription(description string) {
 func (cfm *CollectionFieldMarker) SetForCollection(forCollection bool) {
 	cfm.forCollection = forCollection
 }
-

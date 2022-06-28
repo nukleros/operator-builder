@@ -55,4 +55,3 @@ func {{ .Resource.Kind }}Mutate(
 	return []client.Object{object}, false, nil
 }
 `
-

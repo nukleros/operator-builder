@@ -173,4 +173,3 @@ func getSourceFilename(relativeFileName string) (name string) {
 
 	return name
 }
-

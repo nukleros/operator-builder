@@ -316,4 +316,3 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 
 	return nil
 }
-

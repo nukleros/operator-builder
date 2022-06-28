@@ -429,4 +429,3 @@ func (ws *WorkloadSpec) deduplicateFileNames() {
 func (ws *WorkloadSpec) needsCollectionRef() bool {
 	return ws.Collection != nil && !ws.ForCollection
 }
-

@@ -114,4 +114,3 @@ func (r *{{ .Resource.Kind }}Reconciler) InitializePhases() {
 	)
 }
 `
-

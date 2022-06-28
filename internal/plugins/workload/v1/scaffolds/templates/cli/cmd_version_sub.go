@@ -179,4 +179,3 @@ func Version{{ .Resource.Kind }}(v *cmdversion.VersionSubCommand) error {
 }
 `
 )
-

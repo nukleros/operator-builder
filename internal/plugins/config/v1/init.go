@@ -53,4 +53,3 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 	return nil
 }
-

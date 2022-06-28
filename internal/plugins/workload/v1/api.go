@@ -91,4 +91,3 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 
 	return nil
 }
-

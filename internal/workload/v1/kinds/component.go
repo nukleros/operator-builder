@@ -247,4 +247,3 @@ func (c *ComponentWorkload) LoadManifests(workloadPath string) error {
 
 	return nil
 }
-

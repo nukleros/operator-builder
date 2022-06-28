@@ -25,4 +25,3 @@ func (p *Parser) peek() lexer.Lexeme {
 func (p *Parser) peeked(lxt lexer.LexemeType) bool {
 	return p.peek().Type == lxt
 }
-

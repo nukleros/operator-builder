@@ -40,4 +40,3 @@ func (p Plugin) GetInitSubcommand() plugin.InitSubcommand { return &p.initSubcom
 
 //nolint:gocritic // needed to implement interface
 func (p Plugin) GetCreateAPISubcommand() plugin.CreateAPISubcommand { return &p.createAPISubcommand }
-

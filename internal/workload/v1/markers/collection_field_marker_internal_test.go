@@ -707,4 +707,3 @@ func TestCollectionFieldMarker_SetForCollection(t *testing.T) {
 		})
 	}
 }
-

@@ -27,4 +27,3 @@ func lowerCamelCase(in string) string {
 		in,
 	)
 }
-

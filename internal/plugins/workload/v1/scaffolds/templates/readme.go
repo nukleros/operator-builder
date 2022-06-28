@@ -83,4 +83,3 @@ message with:
     ./bin/{{ .RootCmdName }} help
 {{ end -}}
 `
-

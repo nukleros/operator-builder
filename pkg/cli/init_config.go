@@ -169,4 +169,3 @@ func newStandaloneConfigSample() *kinds.StandaloneWorkload {
 
 	return sample
 }
-

@@ -445,4 +445,3 @@ func TestLexer(t *testing.T) {
 		t.Fatalf("testcase(s) still focussed")
 	}
 }
-

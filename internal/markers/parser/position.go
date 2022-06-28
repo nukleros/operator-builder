@@ -35,4 +35,3 @@ func (p *Parser) flush() {
 	p.scopeBuffer = ""
 	p.currentDefinition = nil
 }
-

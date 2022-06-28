@@ -187,4 +187,3 @@ var {{ .Resource.Kind }}LatestGroupVersion = {{ .Resource.Version }}{{ .Resource
 var {{ .Resource.Kind }}LatestSample = {{ .Resource.Version }}{{ lower .Resource.Kind }}.Sample(false)
 `
 )
-

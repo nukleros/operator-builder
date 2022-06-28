@@ -52,4 +52,3 @@ func main() {
 	{{ .RootCmd.Name | removeString "-" }}.Run()
 }
 `
-

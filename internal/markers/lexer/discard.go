@@ -70,4 +70,3 @@ func (l *Lexer) flush() {
 	l.buffer = ""
 	l.start = l.pos
 }
-

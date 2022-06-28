@@ -234,4 +234,3 @@ func (s *StandaloneWorkload) LoadManifests(workloadPath string) error {
 
 	return nil
 }
-

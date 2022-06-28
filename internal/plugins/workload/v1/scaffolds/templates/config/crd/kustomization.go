@@ -115,4 +115,3 @@ patchesStrategicMerge:
 configurations:
 - kustomizeconfig.yaml
 `
-

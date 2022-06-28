@@ -195,4 +195,3 @@ func init() {
 	SchemeBuilder.Register(&{{ .Resource.Kind }}{}, &{{ .Resource.Kind }}List{})
 }
 `
-

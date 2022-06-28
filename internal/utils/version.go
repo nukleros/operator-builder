@@ -11,4 +11,3 @@ const (
 	// specifies the preferred version.
 	GeneratedGoVersionPreferred = "1.18"
 )
-

@@ -261,4 +261,3 @@ func Test_valueFromInterface(t *testing.T) {
 		})
 	}
 }
-

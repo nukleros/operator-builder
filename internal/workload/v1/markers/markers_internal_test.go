@@ -847,4 +847,3 @@ func Test_transformYAML(t *testing.T) {
 		})
 	}
 }
-

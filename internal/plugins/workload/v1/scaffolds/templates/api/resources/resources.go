@@ -224,4 +224,3 @@ func ConvertWorkload(component workload.Workload) (*{{ .Resource.ImportAlias }}.
 {{- end }}
 }
 `
-

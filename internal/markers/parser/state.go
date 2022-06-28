@@ -174,4 +174,3 @@ func stripQuotes(p *Parser) {
 		p.next()
 	}
 }
-

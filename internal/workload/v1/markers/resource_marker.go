@@ -298,4 +298,3 @@ func (rm *ResourceMarker) setSourceCode() error {
 
 	return nil
 }
-

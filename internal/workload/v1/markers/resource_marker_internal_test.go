@@ -987,4 +987,3 @@ func TestResourceMarker_setSourceCode(t *testing.T) {
 		})
 	}
 }
-

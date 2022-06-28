@@ -134,4 +134,3 @@ func (rule *Rule) hasURL(url string) bool {
 
 	return false
 }
-

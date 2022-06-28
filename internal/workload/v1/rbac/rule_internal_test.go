@@ -576,4 +576,3 @@ func TestRule_isResourceRule(t *testing.T) {
 		})
 	}
 }
-

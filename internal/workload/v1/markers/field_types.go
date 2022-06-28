@@ -58,4 +58,3 @@ func (f FieldType) String() string {
 
 	return types[f]
 }
-

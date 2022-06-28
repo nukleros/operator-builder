@@ -440,4 +440,3 @@ func (r *{{ .Resource.Kind }}Reconciler) SetupWithManager(mgr ctrl.Manager) erro
 	return nil
 }
 `
-

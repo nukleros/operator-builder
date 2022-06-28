@@ -157,4 +157,3 @@ func replaceLicenseHeader(file string, header []byte) error {
 
 	return nil
 }
-

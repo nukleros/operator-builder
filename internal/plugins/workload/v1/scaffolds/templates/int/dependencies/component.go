@@ -51,4 +51,3 @@ func {{ .Resource.Kind }}CheckReady(r workload.Reconciler, req *workload.Request
 	return true, nil
 }
 `
-

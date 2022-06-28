@@ -44,4 +44,3 @@ func (l *Lexer) warningf(format string, args ...interface{}) stateFn {
 
 	return lexComment
 }
-

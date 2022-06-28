@@ -874,4 +874,3 @@ func testControllerLogsNoErrors(s *E2ETestSuiteConfig, searchSyntax string) erro
 	return nil
 }
 `
-

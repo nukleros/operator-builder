@@ -106,4 +106,3 @@ func (s *Inspector) inspectYAMLComments(nodes ...*yaml.Node) (results []*YAMLRes
 
 	return results
 }
-
