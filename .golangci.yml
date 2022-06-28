@@ -95,7 +95,8 @@ linters:
     - godot
     - godox
     - goerr113
-    - gofmt
+    # disable due to false positives in detecting gofmt -s
+    #- gofmt
     - goheader
     - goimports
     - golint
