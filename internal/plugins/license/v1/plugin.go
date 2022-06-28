@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -33,3 +34,4 @@ func (Plugin) Name() string                               { return pluginName }
 func (Plugin) Version() plugin.Version                    { return pluginVersion }
 func (Plugin) SupportedProjectVersions() []config.Version { return supportedProjectVersions }
 func (p Plugin) GetInitSubcommand() plugin.InitSubcommand { return &p.initSubcommand }
+

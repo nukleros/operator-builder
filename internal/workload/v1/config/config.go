@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -12,3 +13,4 @@ type Plugin struct {
 	CliRootCommandName string `json:"cliRootCommandName" yaml:"cliRootCommandName"`
 	ControllerImg      string `json:"controllerImg" yaml:"controllerImg"`
 }
+

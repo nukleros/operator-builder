@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -132,3 +133,4 @@ func (cfm *CollectionFieldMarker) SetDescription(description string) {
 func (cfm *CollectionFieldMarker) SetForCollection(forCollection bool) {
 	cfm.forCollection = forCollection
 }
+

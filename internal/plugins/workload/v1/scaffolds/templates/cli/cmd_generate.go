@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -164,3 +165,4 @@ func (g *GenerateSubCommand) generate(cmd *cobra.Command, args []string) error {
 	return g.GenerateFunc(g)
 }
 `
+

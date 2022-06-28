@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -208,3 +209,4 @@ func getTesterCollectionName(collection *kinds.WorkloadCollection) string {
 		strings.ToLower(collection.GetAPIVersion()) +
 		collection.Spec.API.Kind
 }
+

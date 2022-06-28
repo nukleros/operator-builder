@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -8,3 +9,4 @@ func MustWrite(n int, err error) {
 		panic(err)
 	}
 }
+

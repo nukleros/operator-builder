@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -163,3 +164,4 @@ docs: manifests
 	go install fybrik.io/crdoc@v0.5.0; \
 	crdoc --resources config/crd/bases/ --output docs/apis.md
 `
+

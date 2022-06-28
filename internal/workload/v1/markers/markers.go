@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -315,3 +316,4 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 
 	return nil
 }
+

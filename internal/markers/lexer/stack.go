@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -25,3 +26,4 @@ func (l *Lexer) pop() stateFn {
 func (l *Lexer) emptyStack() bool {
 	return len(l.stack) == 0
 }
+

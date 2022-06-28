@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -51,3 +52,4 @@ func (l *Lexer) Run() {
 func (l *Lexer) NextLexeme() Lexeme {
 	return <-l.items
 }
+

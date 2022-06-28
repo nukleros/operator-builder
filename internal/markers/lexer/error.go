@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -43,3 +44,4 @@ func (l *Lexer) warningf(format string, args ...interface{}) stateFn {
 
 	return lexComment
 }
+

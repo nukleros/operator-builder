@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -52,3 +53,4 @@ func ToTitle(in string) string {
 	// return cases.Title(language.Und, cases.NoLower, cases.NoLower).String(in)
 	return strings.Title(in)
 }
+

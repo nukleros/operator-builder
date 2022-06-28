@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -105,3 +106,4 @@ func (cli *CLI) getDefaultDescription(workload companionCLIProcessor) string {
 
 	return fmt.Sprintf(defaultDescription, kind)
 }
+

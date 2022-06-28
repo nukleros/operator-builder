@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -64,3 +65,4 @@ USER 65532:65532
 
 ENTRYPOINT ["/manager"]
 `
+

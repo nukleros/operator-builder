@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -444,3 +445,4 @@ func TestLexer(t *testing.T) {
 		t.Fatalf("testcase(s) still focussed")
 	}
 }
+

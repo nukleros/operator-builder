@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -315,3 +316,4 @@ func lexMoreArgs(l *Lexer) stateFn {
 		return l.errorf("malformed argument: %s", l.buffer)
 	}
 }
+

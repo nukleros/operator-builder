@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -246,3 +247,4 @@ func (c *ComponentWorkload) LoadManifests(workloadPath string) error {
 
 	return nil
 }
+

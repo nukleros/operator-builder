@@ -1,3 +1,4 @@
+// Copyright 2022 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -40,3 +41,4 @@ func (r *Registry) GetDefinition(name string) parser.Definition {
 
 	return &marker
 }
+
