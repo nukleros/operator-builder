@@ -3,7 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/vmware-tanzu-labs/operator-builder)](https://goreportcard.com/report/github.com/vmware-tanzu-labs/operator-builder)
 [![GitHub](https://img.shields.io/github/license/vmware-tanzu-labs/operator-builder)](https://github.com/vmware-tanzu-labs/operator-builder/blob/main/LICENSE)[![GitHub release (latest by date)](https://img.shields.io/github/v/release/vmware-tanzu-labs/operator-builder)](https://github.com/vmware-tanzu-labs/operator-builder/releases)
 [![Hombrew](https://img.shields.io/badge/dynamic/json.svg?url=https://raw.githubusercontent.com/vmware-tanzu-labs/homebrew-tap/master/Info/operator-builder.json&query=$.versions.stable&label=homebrew)](https://github.com/vmware-tanzu-labs/operator-builder/releases)
-[![Get it from the Snap Store](https://badgen.net/snapcraft/v/operator-builder)](https://snapcraft.io/operator-builder)
+<!---[![Get it from the Snap Store](https://badgen.net/snapcraft/v/operator-builder)](https://snapcraft.io/operator-builder)-->
 ![Github Downloads (by Release)](https://img.shields.io/github/downloads/vmware-tanzu-labs/operator-builder/total.svg)
 
 # Operator Builder
