@@ -64,6 +64,7 @@ brews:
     tap:
       owner: nukleros
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 
     # Git author used to commit to the repository.
     # Defaults are shown.
