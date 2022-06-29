@@ -1,6 +1,5 @@
 {
     "**/*.go": [
-        "// Copyright 2021 VMware, Inc.",
-        "// SPDX-License-Identifier: MIT"
+        "// Copyright 2022 Nukleros"
     ]
 }
