@@ -222,7 +222,7 @@ func (s *apiScaffolder) scaffoldAPI(
 		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
 	}
 
-	// child resource definition files
+	// scaffolds the child resource definition files
 	// these are the resources defined in the static yaml manifests
 	for _, manifest := range *workload.GetManifests() {
 		if err := scaffold.Execute(
@@ -239,6 +239,13 @@ func (s *apiScaffolder) scaffoldAPI(
 				return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
 			}
 		}
+	}
+
+	// scaffold the child resource naming helpers
+	if err := scaffold.Execute(
+		&resources.Names{Builder: workload},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
 	}
 
 	return nil

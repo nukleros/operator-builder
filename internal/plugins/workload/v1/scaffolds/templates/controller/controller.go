@@ -395,7 +395,7 @@ func (r *{{ .Resource.Kind }}Reconciler) CheckReady(req *workload.Request) (bool
 }
 
 // Mutate will run the mutate function for the workload.
-// WARN: this will be deprecated in the future.  See apis/group/version/kind.Mutate*
+// WARN: this will be deprecated in the future.  See apis/group/version/kind/mutate*
 func (r *{{ .Resource.Kind }}Reconciler) Mutate(
 	req *workload.Request,
 	object client.Object,

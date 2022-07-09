@@ -118,12 +118,12 @@ func NewSampleAPISpec() *WorkloadAPISpec {
 }
 
 // GetWorkloadChildren returns all child resources relevant to a particular workload.
-func GetWorkloadChildren(workload WorkloadBuilder) []*manifests.ChildResource {
-	var children []*manifests.ChildResource
+func GetWorkloadChildren(workload WorkloadBuilder) []manifests.ChildResource {
+	var children []manifests.ChildResource
 
 	for _, manifest := range *workload.GetManifests() {
 		for _, child := range manifest.ChildResources {
-			children = append(children, &child)
+			children = append(children, child)
 		}
 	}
 

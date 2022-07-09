@@ -148,7 +148,9 @@ func (resource *ChildResource) MutateFileName() string {
 		}
 	}
 
-	return fmt.Sprintf("%s.go", fileName)
+	// we append resource here to avoid conflicts with names that may end with test, which
+	// go will interpret as a test file and not part of the compiled code
+	return fmt.Sprintf("%s_resource.go", fileName)
 }
 
 // NameConstant returns the constant which is generated in the code for re-use.  It

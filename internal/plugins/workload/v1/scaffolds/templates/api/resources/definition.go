@@ -78,8 +78,6 @@ import (
 {{ range .RBAC }}
 {{- .ToMarker }}
 {{ end }}
-{{ if ne .NameConstant "" }}const {{ .UniqueName }} = "{{ .NameConstant }}"{{ end }}
-
 // {{ .CreateFuncName }} creates the {{ .Kind }} resource with name {{ .NameComment }}.
 func {{ .CreateFuncName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
