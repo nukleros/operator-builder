@@ -101,7 +101,7 @@ func {{ .TesterName }}ChildrenFuncs(tester *E2ETest) error {
 		return fmt.Errorf("error in workload conversion; %w", err)
 	}
 
-	resourceObjects, err := {{ .Builder.GetPackageName }}.Generate(*workload{{ if .Builder.IsComponent }}, *collection){{ else }}){{ end }}
+	resourceObjects, err := {{ .Builder.GetPackageName }}.Generate(*workload{{ if .Builder.IsComponent }}, *collection, nil, nil){{ else }}, nil, nil){{ end }}
 	if err != nil {
 		return fmt.Errorf("unable to create objects in memory; %w", err)
 	}

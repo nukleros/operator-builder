@@ -230,6 +230,15 @@ func (s *apiScaffolder) scaffoldAPI(
 		); err != nil {
 			return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
 		}
+
+		// update the child resource mutation for each child resource
+		for _, child := range manifest.ChildResources {
+			if err := scaffold.Execute(
+				&resources.Mutate{Builder: workload, ChildResource: &child},
+			); err != nil {
+				return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
+			}
+		}
 	}
 
 	return nil

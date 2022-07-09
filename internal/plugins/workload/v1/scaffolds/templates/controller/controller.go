@@ -343,34 +343,12 @@ func (r *{{ .Resource.Kind }}Reconciler) EnqueueRequestOnCollectionChange(req *w
 // GetResources resources runs the methods to properly construct the resources in memory.
 func (r *{{ .Resource.Kind }}Reconciler) GetResources(req *workload.Request) ([]client.Object, error) {
 	{{- if .Builder.HasChildResources }}
-	resourceObjects := []client.Object{}
-
 	component, {{ if .Builder.IsComponent }}collection,{{ end }} err := {{ .Builder.GetPackageName }}.ConvertWorkload(req.Workload{{ if .Builder.IsComponent }}, req.Collection{{ end }})
 	if err != nil {
 		return nil, err
 	}
 
-	// create resources in memory
-	resources, err := {{ .Builder.GetPackageName }}.Generate(*component{{ if .Builder.IsComponent }}, *collection{{ end }})
-	if err != nil {
-		return nil, err
-	}
-
-	// run through the mutation functions to mutate the resources
-	for _, resource := range resources {
-		mutatedResources, skip, err := r.Mutate(req, resource)
-		if err != nil {
-			return []client.Object{}, err
-		}
-
-		if skip {
-			continue
-		}
-
-		resourceObjects = append(resourceObjects, mutatedResources...)
-	}
-
-	return resourceObjects, nil
+	return {{ .Builder.GetPackageName }}.Generate(*component{{ if .Builder.IsComponent }}, *collection{{ end }}, r, req)
 {{- else -}}
 	return []client.Object{}, nil
 {{ end -}}
@@ -417,6 +395,7 @@ func (r *{{ .Resource.Kind }}Reconciler) CheckReady(req *workload.Request) (bool
 }
 
 // Mutate will run the mutate function for the workload.
+// WARN: this will be deprecated in the future.  See apis/group/version/kind.Mutate*
 func (r *{{ .Resource.Kind }}Reconciler) Mutate(
 	req *workload.Request,
 	object client.Object,
