@@ -424,7 +424,7 @@ func (ws *WorkloadSpec) setSourceFileNames() {
 			// is always last in the list, so if we have reached this point, the manifest already
 			// has its near unique name.
 			fileNames := inputManifests[i].PreferredSourceFileNames
-			if (len(fileNames) - 1) >= (priority + 1) {
+			if priority >= len(fileNames) {
 				continue
 			} else {
 				fileName = fileNames[priority]
@@ -434,13 +434,13 @@ func (ws *WorkloadSpec) setSourceFileNames() {
 			// if we did not successfully complete a loop for this priority.  if we have already
 			// found this file name before, we will append the count to guarantee uniqueness.
 			if nameTracker[fileName] > 0 {
-				// if this is the last in the list, append the count
-				if len(fileNames) == (priority + 1) {
-					fields := strings.Split(fileName, ".go")
-					inputManifests[i].SourceFilename = fmt.Sprintf("%s_%v.go", fields[0], nameTracker[fileName])
-				} else {
+				// if this is not the last in the list, set the hasDuplicat value so we do not break.
+				if !(len(fileNames) == (priority + 1)) {
 					hasDuplicate = true
 				}
+
+				fields := strings.Split(fileName, ".go")
+				inputManifests[i].SourceFilename = fmt.Sprintf("%s_%v.go", fields[0], nameTracker[fileName])
 			} else {
 				inputManifests[i].SourceFilename = fileName
 			}
