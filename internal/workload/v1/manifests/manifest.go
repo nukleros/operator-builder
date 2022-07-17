@@ -166,7 +166,9 @@ func getFileNames(relativeFileName string) []string {
 
 	// prefer the flat file name, by itself, first working back to the full name
 	var priority int
+
 	var fileName string
+
 	for i := len(splitFilePath); i > 0; i-- {
 		// set the file path if unset, otherwise append
 		if fileName == "" {

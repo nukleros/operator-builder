@@ -25,7 +25,7 @@ type Mutate struct {
 
 	// input variables
 	Builder       kinds.WorkloadBuilder
-	ChildResource *manifests.ChildResource
+	ChildResource manifests.ChildResource
 }
 
 func (f *Mutate) SetTemplateDefaults() error {
@@ -49,6 +49,7 @@ func (*Mutate) GetIfExistsAction() machinery.IfExistsAction {
 	return machinery.SkipFile
 }
 
+//nolint:lll
 const MutateTemplate = `{{ .Boilerplate }}
 
 package mutate

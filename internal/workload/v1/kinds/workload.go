@@ -122,9 +122,7 @@ func GetWorkloadChildren(workload WorkloadBuilder) []manifests.ChildResource {
 	var children []manifests.ChildResource
 
 	for _, manifest := range *workload.GetManifests() {
-		for _, child := range manifest.ChildResources {
-			children = append(children, child)
-		}
+		children = append(children, manifest.ChildResources...)
 	}
 
 	return children
@@ -409,6 +407,7 @@ func (ws *WorkloadSpec) setSourceFileNames() {
 	inputManifests := *ws.Manifests
 
 	priority := 0
+
 	for {
 		// prepopulate the known conflict of 'resources.go' as we lay down common code
 		// in this file.
@@ -419,12 +418,12 @@ func (ws *WorkloadSpec) setSourceFileNames() {
 		var hasDuplicate bool
 
 		for i := range inputManifests {
-			fileNames := inputManifests[i].PreferredSourceFileNames
+			var fileName string
 
 			// continue if we are out of range otherwise set the file name.  the near unqiue name
 			// is always last in the list, so if we have reached this point, the manifest already
 			// has its near unique name.
-			var fileName string
+			fileNames := inputManifests[i].PreferredSourceFileNames
 			if (len(fileNames) - 1) >= (priority + 1) {
 				continue
 			} else {
@@ -446,7 +445,7 @@ func (ws *WorkloadSpec) setSourceFileNames() {
 				inputManifests[i].SourceFilename = fileName
 			}
 
-			nameTracker[fileName] += 1
+			nameTracker[fileName]++
 		}
 
 		// if we did not find a duplicate value in the set of manifests, break the loop, otherwise

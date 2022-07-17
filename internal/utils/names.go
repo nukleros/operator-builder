@@ -47,6 +47,7 @@ func ToPackageName(name string) string {
 // with an underscore.  It is needed by the ToSnakeCase function.
 func needsUnderscore(char rune) bool {
 	for _, s := range []string{"/", ".", "-", "~", `\`} {
+		//nolint:gocritic
 		if char == []rune(s)[0] {
 			return true
 		}
@@ -65,6 +66,7 @@ func ToSnakeCase(name string) string {
 
 	for i, char := range name {
 		if needsUnderscore(char) {
+			//nolint:gocritic
 			buff.WriteRune([]rune("_")[0])
 
 			continue
@@ -84,7 +86,7 @@ func ToSnakeCase(name string) string {
 		// add underscore when next letter is lowercase
 		if (i != 0 || i == nameSize-1) && (  // head and tail
 		(i > 0 && rune(name[i-1]) >= 'a') || // pre
-			(i < nameSize-1 && rune(name[i+1]) >= 'a')) { //next
+			(i < nameSize-1 && rune(name[i+1]) >= 'a')) { // next
 			buff.WriteRune('_')
 		}
 
