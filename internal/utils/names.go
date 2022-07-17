@@ -43,6 +43,57 @@ func ToPackageName(name string) string {
 	return strings.ToLower(strings.Replace(name, "-", "", -1))
 }
 
+// needsUnderscore has logic that determines when a character needs to be replaced
+// with an underscore.  It is needed by the ToSnakeCase function.
+func needsUnderscore(char rune) bool {
+	for _, s := range []string{"/", ".", "-", "~", `\`} {
+		if char == []rune(s)[0] {
+			return true
+		}
+	}
+
+	return false
+}
+
+// ToSnakeCase will convert a string to a snake case.
+func ToSnakeCase(name string) string {
+	var buff strings.Builder
+
+	diff := 'a' - 'A'
+
+	nameSize := len(name)
+
+	for i, char := range name {
+		if needsUnderscore(char) {
+			buff.WriteRune([]rune("_")[0])
+
+			continue
+		}
+
+		// A is 65, a is 97
+		if char >= 'a' {
+			buff.WriteRune(char)
+
+			continue
+		}
+
+		// v is capital letter here
+		// irregard first letter
+		// add underscore if last letter is capital letter
+		// add underscore when previous letter is lowercase
+		// add underscore when next letter is lowercase
+		if (i != 0 || i == nameSize-1) && (  // head and tail
+		(i > 0 && rune(name[i-1]) >= 'a') || // pre
+			(i < nameSize-1 && rune(name[i+1]) >= 'a')) { //next
+			buff.WriteRune('_')
+		}
+
+		buff.WriteRune(char + diff)
+	}
+
+	return buff.String()
+}
+
 // ToTitle replaces the strings.Title method, which is deprecated in go1.18.  This is a helper
 // method to make titling a string much more readable than the new methodology.
 //nolint:godox

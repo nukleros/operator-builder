@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"unicode"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
@@ -133,25 +132,15 @@ func (resource *ChildResource) MutateFuncName() string {
 // responsible for turning capital letters into lowercase letter prefixed
 // with an underscore.
 func (resource *ChildResource) MutateFileName() string {
-	var fileName string
-
-	for i, char := range resource.UniqueName {
-		if i == 0 {
-			fileName = strings.ToLower(string(char))
-
-			continue
-		}
-
-		if unicode.IsUpper(char) {
-			fileName = fmt.Sprintf("%s_%s", fileName, strings.ToLower(string(char)))
-		} else {
-			fileName = fmt.Sprintf("%s%s", fileName, strings.ToLower(string(char)))
-		}
-	}
+	fileName := utils.ToSnakeCase(resource.UniqueName)
 
 	// we append resource here to avoid conflicts with names that may end with test, which
 	// go will interpret as a test file and not part of the compiled code
-	return fmt.Sprintf("%s_resource.go", fileName)
+	if strings.HasSuffix(fileName, "test") {
+		return fmt.Sprintf("%s_resource.go", fileName)
+	}
+
+	return fmt.Sprintf("%s.go", fileName)
 }
 
 // NameConstant returns the constant which is generated in the code for re-use.  It
@@ -229,7 +218,22 @@ func uniqueName(object unstructured.Unstructured) string {
 	namespaceName = strings.ReplaceAll(namespaceName, " ", "")
 	resourceName = stripTags(resourceName)
 
-	resourceName = fmt.Sprintf("%s%s%s", object.GetKind(), namespaceName, resourceName)
+	kind := kindAliases(object.GetKind())
+	if kind == "" {
+		kind = object.GetKind()
+	}
+
+	resourceName = fmt.Sprintf("%s%s%s", kind, namespaceName, resourceName)
 
 	return resourceName
+}
+
+// kindsAliases returns the aliases for kinds that have long names to reduce the length of function names
+// and file names.
+func kindAliases(name string) string {
+	return map[string]string{
+		"CustomResourceDefinition": "CRD",
+		"Certificate":              "Cert",
+		"PodSecurityPolicy":        "PSP",
+	}[name]
 }
