@@ -37,6 +37,7 @@ type ChildResource struct {
 	StaticContent string
 	SourceCode    string
 	IncludeCode   string
+	MutateFile    string
 	UseStrConv    bool
 	RBAC          *rbac.Rules
 }
