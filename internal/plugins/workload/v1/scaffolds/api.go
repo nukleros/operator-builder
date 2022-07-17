@@ -232,9 +232,9 @@ func (s *apiScaffolder) scaffoldAPI(
 		}
 
 		// update the child resource mutation for each child resource
-		for _, child := range manifest.ChildResources {
+		for i := range manifest.ChildResources {
 			if err := scaffold.Execute(
-				&resources.Mutate{Builder: workload, ChildResource: &child},
+				&resources.Mutate{Builder: workload, ChildResource: manifest.ChildResources[i]},
 			); err != nil {
 				return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
 			}
@@ -243,7 +243,7 @@ func (s *apiScaffolder) scaffoldAPI(
 
 	// scaffold the child resource naming helpers
 	if err := scaffold.Execute(
-		&resources.Names{Builder: workload},
+		&resources.Constants{Builder: workload},
 	); err != nil {
 		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
 	}
