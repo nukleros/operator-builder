@@ -35,7 +35,7 @@ func (f *Constants) SetTemplateDefaults() error {
 		f.Resource.Version,
 		f.Builder.GetPackageName(),
 		"constants",
-		"constants.go",
+		"names.go",
 	)
 
 	children := kinds.GetWorkloadChildren(f.Builder)
