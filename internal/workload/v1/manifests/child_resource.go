@@ -235,5 +235,6 @@ func kindAliases(name string) string {
 		"CustomResourceDefinition": "CRD",
 		"Certificate":              "Cert",
 		"PodSecurityPolicy":        "PSP",
+		"PodDisruptionBudget":      "PDB",
 	}[name]
 }
