@@ -232,9 +232,11 @@ func uniqueName(object unstructured.Unstructured) string {
 // and file names.
 func kindAliases(name string) string {
 	return map[string]string{
-		"CustomResourceDefinition": "CRD",
-		"Certificate":              "Cert",
-		"PodSecurityPolicy":        "PSP",
-		"PodDisruptionBudget":      "PDB",
+		"CustomResourceDefinition":       "CRD",
+		"Certificate":                    "Cert",
+		"PodSecurityPolicy":              "PSP",
+		"PodDisruptionBudget":            "PDB",
+		"ValidatingWebhookConfiguration": "ValidatingWebhook",
+		"MutatingWebhookConfiguration":   "MutatingWebhook",
 	}[name]
 }
