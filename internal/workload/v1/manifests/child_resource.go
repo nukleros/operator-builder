@@ -36,6 +36,7 @@ type ChildResource struct {
 	StaticContent string
 	SourceCode    string
 	IncludeCode   string
+	MutateFile    string
 	UseStrConv    bool
 	RBAC          *rbac.Rules
 }
@@ -122,15 +123,74 @@ func (resource *ChildResource) InitFuncName() string {
 	return ""
 }
 
+// MutateFuncName returns the mutate func name for a child resource.
+func (resource *ChildResource) MutateFuncName() string {
+	return fmt.Sprintf("Mutate%s", resource.UniqueName)
+}
+
+// MutateFileName returns the file name relative to the mutate directory.  It is
+// responsible for turning capital letters into lowercase letter prefixed
+// with an underscore.
+func (resource *ChildResource) MutateFileName() string {
+	fileName := utils.ToSnakeCase(resource.UniqueName)
+
+	// we append resource here to avoid conflicts with names that may end with test, which
+	// go will interpret as a test file and not part of the compiled code
+	if strings.HasSuffix(fileName, "test") {
+		return fmt.Sprintf("%s_resource.go", fileName)
+	}
+
+	return fmt.Sprintf("%s.go", fileName)
+}
+
 // NameConstant returns the constant which is generated in the code for re-use.  It
 // is needed for instances that the metadata.name field is a field marker, in which
 // case we have no way to return the name constant.
 func (resource *ChildResource) NameConstant() string {
-	if strings.HasPrefix(strings.ToLower(resource.Name), "!!start") {
+	if strings.Contains(strings.ToLower(resource.Name), "!!start") {
 		return ""
 	}
 
 	return resource.Name
+}
+
+// NameComment returns the name of a child resource to be used in generated code for the
+// purposed of comments.  It takes into account tags and can return a more friendly value
+// that will strip the tags.
+func (resource *ChildResource) NameComment() string {
+	nameComment := strings.ToLower(resource.Name)
+
+	if !strings.Contains(nameComment, "!!start") && !strings.Contains(nameComment, "!!end") {
+		return resource.Name
+	}
+
+	// if the string has both a start prefix and end suffix, we can assume there is no
+	// replace requested
+	if strings.HasPrefix(nameComment, "!!start") && strings.HasSuffix(nameComment, "!!end") {
+		return strings.TrimSpace(stripTags(nameComment))
+	}
+
+	// if the string does not begin with a start tag, we are using the replace function.
+	if !strings.HasPrefix(nameComment, "!!start") {
+		nameComment = strings.ReplaceAll(nameComment, "!!start", " +")
+	}
+
+	// if the string does not end with an end tag, we are using the replace function.
+	if !strings.HasSuffix(nameComment, "!!end") {
+		nameComment = strings.ReplaceAll(nameComment, "!!end", "+ ")
+	}
+
+	return strings.TrimSpace(stripTags(nameComment))
+}
+
+// stripTags return a value with all tags stripped.
+func stripTags(value string) string {
+	value = strings.ReplaceAll(value, "!!Start", "")
+	value = strings.ReplaceAll(value, "!!End", "")
+	value = strings.ReplaceAll(value, "!!start", "")
+	value = strings.ReplaceAll(value, "!!end", "")
+
+	return value
 }
 
 // uniqueName returns the unique name of a resource.  This combines the name, namespace, and kind
@@ -144,23 +204,39 @@ func uniqueName(object unstructured.Unstructured) string {
 	resourceName := strings.ReplaceAll(utils.ToTitle(object.GetName()), "-", "")
 	resourceName = strings.ReplaceAll(resourceName, ".", "")
 	resourceName = strings.ReplaceAll(resourceName, ":", "")
-	resourceName = strings.ReplaceAll(resourceName, "!!Start", "")
-	resourceName = strings.ReplaceAll(resourceName, "!!End", "")
 	resourceName = strings.ReplaceAll(resourceName, "ParentSpec", "")
 	resourceName = strings.ReplaceAll(resourceName, "CollectionSpec", "")
 	resourceName = strings.ReplaceAll(resourceName, " ", "")
+	resourceName = stripTags(resourceName)
 
 	// get the namespace name taking into account appropriate yaml tags
 	namespaceName := strings.ReplaceAll(utils.ToTitle(object.GetNamespace()), "-", "")
 	namespaceName = strings.ReplaceAll(namespaceName, ".", "")
 	namespaceName = strings.ReplaceAll(namespaceName, ":", "")
-	namespaceName = strings.ReplaceAll(namespaceName, "!!Start", "")
-	namespaceName = strings.ReplaceAll(namespaceName, "!!End", "")
 	namespaceName = strings.ReplaceAll(namespaceName, "ParentSpec", "")
 	namespaceName = strings.ReplaceAll(namespaceName, "CollectionSpec", "")
 	namespaceName = strings.ReplaceAll(namespaceName, " ", "")
+	resourceName = stripTags(resourceName)
 
-	resourceName = fmt.Sprintf("%s%s%s", object.GetKind(), namespaceName, resourceName)
+	kind := kindAliases(object.GetKind())
+	if kind == "" {
+		kind = object.GetKind()
+	}
+
+	resourceName = fmt.Sprintf("%s%s%s", kind, namespaceName, resourceName)
 
 	return resourceName
+}
+
+// kindsAliases returns the aliases for kinds that have long names to reduce the length of function names
+// and file names.
+func kindAliases(name string) string {
+	return map[string]string{
+		"CustomResourceDefinition":       "CRD",
+		"Certificate":                    "Cert",
+		"PodSecurityPolicy":              "PSP",
+		"PodDisruptionBudget":            "PDB",
+		"ValidatingWebhookConfiguration": "ValidatingWebhook",
+		"MutatingWebhookConfiguration":   "MutatingWebhook",
+	}[name]
 }

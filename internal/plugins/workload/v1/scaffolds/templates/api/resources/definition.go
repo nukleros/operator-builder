@@ -65,7 +65,10 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
+
 	{{ .Resource.ImportAlias }} "{{ .Resource.Path }}"
+	"{{ .Resource.Path }}/{{ .Builder.GetPackageName }}/mutate"
 	{{- if .Builder.IsComponent }}
 	{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }} "{{ .Repo }}/apis/{{ .Builder.GetCollection.Spec.API.Group }}/{{ .Builder.GetCollection.Spec.API.Version }}"
 	{{ end -}}
@@ -75,19 +78,17 @@ import (
 {{ range .RBAC }}
 {{- .ToMarker }}
 {{ end }}
-{{ if ne .NameConstant "" }}const {{ .UniqueName }} = "{{ .NameConstant }}"{{ end }}
-
-// {{ .CreateFuncName }} creates the {{ .Name }} {{ .Kind }} resource.
+// {{ .CreateFuncName }} creates the {{ .Kind }} resource with name {{ .NameComment }}.
 func {{ .CreateFuncName }} (
 	parent *{{ $.Resource.ImportAlias }}.{{ $.Resource.Kind }},
 	{{ if $.Builder.IsComponent -}}
 	collection *{{ $.Builder.GetCollection.Spec.API.Group }}{{ $.Builder.GetCollection.Spec.API.Version }}.{{ $.Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
+	reconciler workload.Reconciler,
+	req *workload.Request,
 ) ([]client.Object, error) {
 
 	{{- if ne .IncludeCode "" }}{{ .IncludeCode }}{{ end }}
-
-	resourceObjs := []client.Object{}
 
 	{{- .SourceCode }}
 
@@ -95,9 +96,11 @@ func {{ .CreateFuncName }} (
 	resourceObj.SetNamespace(parent.Namespace)
 	{{ end }}
 
-	resourceObjs = append(resourceObjs, resourceObj)
-
-	return resourceObjs, nil
+	{{ if $.Builder.IsComponent -}}
+	return mutate.{{ .MutateFuncName }}(resourceObj, parent, collection, reconciler, req)
+	{{ else -}}
+	return mutate.{{ .MutateFuncName }}(resourceObj, parent, reconciler, req)
+	{{ end -}}
 }
 {{ end }}
 `

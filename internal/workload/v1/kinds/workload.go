@@ -117,6 +117,17 @@ func NewSampleAPISpec() *WorkloadAPISpec {
 	}
 }
 
+// GetWorkloadChildren returns all child resources relevant to a particular workload.
+func GetWorkloadChildren(workload WorkloadBuilder) []manifests.ChildResource {
+	var children []manifests.ChildResource
+
+	for _, manifest := range *workload.GetManifests() {
+		children = append(children, manifest.ChildResources...)
+	}
+
+	return children
+}
+
 // ProcessResourceMarkers processes a collection of field markers, associates them with
 // their respective resource markers, and generates the source code needed for that particular
 // resource marker.
@@ -291,8 +302,8 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) erro
 		manifestFile.ChildResources = childResources
 	}
 
-	// ensure no duplicate file names exist within the source files
-	ws.deduplicateFileNames()
+	// set the source file names, ensuring no duplicates exist
+	ws.setSourceFileNames()
 
 	return nil
 }
@@ -389,35 +400,61 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 	return nil
 }
 
-// deduplicateFileNames dedeplicates the names of the files.  This is because
-// we cannot guarantee that files exist in different directories and may have
-// naming collisions.
-func (ws *WorkloadSpec) deduplicateFileNames() {
-	// create a slice to track existing fileNames and preallocate an existing
-	// known conflict
-	fileNames := make([]string, len(*ws.Manifests)+1)
-	fileNames[len(fileNames)-1] = "resources.go"
+// setSourceFileNames sets unique source file names that are generated from each manifest.  They are
+// unique in order of priority from the PreferredSourceFileNames field.  If any duplicates are detected
+// after selecting the source file name, then an index is appended.
+func (ws *WorkloadSpec) setSourceFileNames() {
+	inputManifests := *ws.Manifests
 
-	for i, manifest := range *ws.Manifests {
-		var count int
+	priority := 0
 
-		// deduplicate the file names
-		for _, fileName := range fileNames {
-			if fileName == "" {
-				continue
-			}
-
-			if manifest.SourceFilename == fileName {
-				// increase the count which serves as an index to append
-				count++
-
-				// adjust the filename
-				fields := strings.Split(manifest.SourceFilename, ".go")
-				manifest.SourceFilename = fmt.Sprintf("%s_%v.go", fields[0], count)
-			}
+	for {
+		// prepopulate the known conflict of 'resources.go' as we lay down common code
+		// in this file.
+		nameTracker := map[string]int{
+			"resources.go": 1,
 		}
 
-		fileNames[i] = manifest.Filename
+		var hasDuplicate bool
+
+		for i := range inputManifests {
+			var fileName string
+
+			// continue if we are out of range otherwise set the file name.  the near unqiue name
+			// is always last in the list, so if we have reached this point, the manifest already
+			// has its near unique name.
+			fileNames := inputManifests[i].PreferredSourceFileNames
+			if priority >= len(fileNames) {
+				continue
+			} else {
+				fileName = fileNames[priority]
+			}
+
+			// set the file name to this current file name.  we will overwrite it
+			// if we did not successfully complete a loop for this priority.  if we have already
+			// found this file name before, we will append the count to guarantee uniqueness.
+			if nameTracker[fileName] > 0 {
+				// if this is not the last in the list, set the hasDuplicat value so we do not break.
+				if !(len(fileNames) == (priority + 1)) {
+					hasDuplicate = true
+				}
+
+				fields := strings.Split(fileName, ".go")
+				inputManifests[i].SourceFilename = fmt.Sprintf("%s_%v.go", fields[0], nameTracker[fileName])
+			} else {
+				inputManifests[i].SourceFilename = fileName
+			}
+
+			nameTracker[fileName]++
+		}
+
+		// if we did not find a duplicate value in the set of manifests, break the loop, otherwise
+		// increase the priority and continue
+		if !hasDuplicate {
+			break
+		}
+
+		priority++
 	}
 }
 

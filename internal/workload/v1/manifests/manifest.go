@@ -19,10 +19,11 @@ var ErrProcessManifest = errors.New("error processing manifest file")
 
 // Manifest represents a single input manifest for a given config.
 type Manifest struct {
-	Content        []byte          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	Filename       string          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	SourceFilename string          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
-	ChildResources []ChildResource `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	Content                  []byte          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	Filename                 string          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	SourceFilename           string          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	ChildResources           []ChildResource `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	PreferredSourceFileNames []string        `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 }
 
 // Manifests represents a collection of manifests.
@@ -45,7 +46,7 @@ func ExpandManifests(workloadPath string, manifestPaths []string) (*Manifests, e
 				return &Manifests{}, fmt.Errorf("unable to determine relative file path, %w", err)
 			}
 
-			manifest := &Manifest{Filename: files[f], SourceFilename: getSourceFilename(rf)}
+			manifest := &Manifest{Filename: files[f], PreferredSourceFileNames: getFileNames(rf)}
 			manifests = append(manifests, manifest)
 		}
 	}
@@ -153,23 +154,50 @@ func (manifests Manifests) FuncNames() (createFuncNames, initFuncNames []string)
 	return createFuncNames, initFuncNames
 }
 
-// getSourceFilename returns the unique file name for a source file.
-func getSourceFilename(relativeFileName string) (name string) {
-	name = filepath.Clean(relativeFileName)
-	name = strings.ReplaceAll(name, "/", "_")               // get filename from path
-	name = strings.ReplaceAll(name, filepath.Ext(name), "") // strip ".yaml"
-	name = strings.ReplaceAll(name, ".", "")                // strip "." e.g. hidden files
-	name += ".go"                                           // add correct file ext
-	name = utils.ToFileName(name)                           // kebab-case to snake_case
+// getFileNames returns all available file names.
+func getFileNames(relativeFileName string) []string {
+	// remove ./ and ../ from relative file name
+	relativeFileName = strings.ReplaceAll(relativeFileName, "../", "")
+	relativeFileName = strings.ReplaceAll(relativeFileName, "./", "")
 
-	// strip any prefix that begins with _ or even multiple _s because go does not recognize these files
-	for _, char := range name {
-		if string(char) == "_" {
-			name = strings.TrimPrefix(name, "_")
+	splitFilePath := strings.Split(filepath.Clean(relativeFileName), "/")
+
+	fileNames := make([]string, len(splitFilePath))
+
+	// prefer the flat file name, by itself, first working back to the full name
+	var priority int
+
+	var fileName string
+
+	for i := len(splitFilePath); i > 0; i-- {
+		// set the file path if unset, otherwise append
+		if fileName == "" {
+			fileName = splitFilePath[i-1]
 		} else {
-			break
+			fileName = fmt.Sprintf("%s/%s", splitFilePath[i-1], fileName)
 		}
+
+		fileName = strings.ReplaceAll(fileName, "/", "_")                   // get filename from path
+		fileName = strings.ReplaceAll(fileName, filepath.Ext(fileName), "") // strip ".yaml"
+		fileName = strings.ReplaceAll(fileName, ".", "")                    // strip "." e.g. hidden files
+		fileName += ".go"                                                   // add correct file ext
+		fileName = utils.ToFileName(fileName)                               // kebab-case to snake_case
+		fileName = strings.ReplaceAll(fileName, "_internal_test.go", ".go") // ensure we do not end up with an internal test file
+		fileName = strings.ReplaceAll(fileName, "_test.go", ".go")          // ensure we do not end up with a test file
+
+		// strip any prefix that begins with _ or even multiple _s because go does not recognize these files
+		for _, char := range fileName {
+			if string(char) == "_" {
+				fileName = strings.TrimPrefix(fileName, "_")
+			} else {
+				break
+			}
+		}
+
+		// insert the file name at as specific priority and increase the cound
+		fileNames[priority] = fileName
+		priority++
 	}
 
-	return name
+	return fileNames
 }

@@ -222,7 +222,7 @@ func (s *apiScaffolder) scaffoldAPI(
 		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
 	}
 
-	// child resource definition files
+	// scaffolds the child resource definition files
 	// these are the resources defined in the static yaml manifests
 	for _, manifest := range *workload.GetManifests() {
 		if err := scaffold.Execute(
@@ -230,6 +230,22 @@ func (s *apiScaffolder) scaffoldAPI(
 		); err != nil {
 			return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
 		}
+
+		// update the child resource mutation for each child resource
+		for i := range manifest.ChildResources {
+			if err := scaffold.Execute(
+				&resources.Mutate{Builder: workload, ChildResource: manifest.ChildResources[i]},
+			); err != nil {
+				return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
+			}
+		}
+	}
+
+	// scaffold the child resource naming helpers
+	if err := scaffold.Execute(
+		&resources.Constants{Builder: workload},
+	); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
 	}
 
 	return nil

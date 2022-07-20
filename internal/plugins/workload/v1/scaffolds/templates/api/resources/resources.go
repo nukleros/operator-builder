@@ -97,21 +97,25 @@ func Sample(requiredOnly bool) string {
 func Generate(
 	workloadObj {{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
 	collectionObj {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
-) ([]client.Object, error) {
 {{ else if .Builder.IsCollection -}}
-func Generate(collectionObj {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }}) ([]client.Object, error) {
+func Generate(
+	collectionObj {{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 {{ else -}}
-func Generate(workloadObj {{ .Resource.ImportAlias }}.{{ .Resource.Kind }}) ([]client.Object, error) {
+func Generate(
+	workloadObj {{ .Resource.ImportAlias }}.{{ .Resource.Kind }},
 {{ end -}}
+	reconciler workload.Reconciler,
+	req *workload.Request,
+) ([]client.Object, error) {
 	resourceObjects := []client.Object{}
 
 	for _, f := range CreateFuncs {
 		{{ if .Builder.IsComponent -}}
-		resources, err := f(&workloadObj, &collectionObj)
+		resources, err := f(&workloadObj, &collectionObj, reconciler, req)
 		{{ else if .Builder.IsCollection -}}
-		resources, err := f(&collectionObj)
+		resources, err := f(&collectionObj, reconciler, req)
 		{{ else -}}
-		resources, err := f(&workloadObj)
+		resources, err := f(&workloadObj, reconciler, req)
 		{{ end }}
 		if err != nil {
 			return nil, err
@@ -153,11 +157,11 @@ func GenerateForCLI(
 	{{ end }}
 
 	{{ if .Builder.IsComponent }}
-	return Generate(workloadObj, collectionObj)
+	return Generate(workloadObj, collectionObj, nil, nil)
 	{{ else if .Builder.IsCollection }}
-	return Generate(collectionObj)
+	return Generate(collectionObj, nil, nil)
 	{{ else }}
-	return Generate(workloadObj)
+	return Generate(workloadObj, nil, nil)
 	{{ end -}}
 }
 {{ end }}
@@ -170,6 +174,8 @@ var CreateFuncs = []func(
 	{{ if $.Builder.IsComponent -}}
 	*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
+	workload.Reconciler,
+	*workload.Request,
 ) ([]client.Object, error) {
 	{{ range .CreateFuncNames }}
 		{{- . -}},
@@ -189,6 +195,8 @@ var InitFuncs = []func(
 	{{ if $.Builder.IsComponent -}}
 	*{{ .Builder.GetCollection.Spec.API.Group }}{{ .Builder.GetCollection.Spec.API.Version }}.{{ .Builder.GetCollection.Spec.API.Kind }},
 	{{ end -}}
+	workload.Reconciler,
+	*workload.Request,
 ) ([]client.Object, error) {
 	{{ range .InitFuncNames }}
 		{{- . -}},
