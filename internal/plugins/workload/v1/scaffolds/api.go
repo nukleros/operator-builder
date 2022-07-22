@@ -111,6 +111,12 @@ func (s *apiScaffolder) scaffoldWorkload(
 	scaffold *machinery.Scaffold,
 	workload kinds.WorkloadBuilder,
 ) error {
+	componentResource := workload.GetComponentResource(
+		s.config.GetDomain(),
+		s.config.GetRepository(),
+		workload.IsClusterScoped(),
+	)
+
 	// override the scaffold if we have a component.  this will allow the Resource
 	// attribute of the scaffolder to be set appropriately so that things like Group,
 	// Version, and Kind are passed from the child component and not the parent
@@ -119,12 +125,14 @@ func (s *apiScaffolder) scaffoldWorkload(
 		scaffold = machinery.NewScaffold(s.fs,
 			machinery.WithConfig(s.config),
 			machinery.WithBoilerplate(s.boilerplate),
-			machinery.WithResource(workload.GetComponentResource(
-				s.config.GetDomain(),
-				s.config.GetRepository(),
-				workload.IsClusterScoped(),
-			)),
+			machinery.WithResource(componentResource),
 		)
+	}
+
+	// inject the resource as this resource so that our PROJECT file is up to date for each
+	// resource that we loop through
+	if err := s.config.UpdateResource(*componentResource); err != nil {
+		return fmt.Errorf("%w; error updating resource", err)
 	}
 
 	// scaffold the workload api.  this generates files within the apis/ folder to include
