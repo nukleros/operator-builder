@@ -106,8 +106,8 @@ func initializeMarkerInspector(markerTypes ...MarkerType) (*inspect.Inspector, e
 
 	var err error
 
-	for _, markerType := range markerTypes {
-		switch markerType {
+	for i := range markerTypes {
+		switch markerTypes[i] {
 		case FieldMarkerType:
 			err = defineFieldMarker(registry)
 		case CollectionMarkerType:

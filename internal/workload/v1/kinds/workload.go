@@ -347,7 +347,7 @@ func (ws *WorkloadSpec) processMarkers(manifestFile *manifests.Manifest, markerT
 }
 
 func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult) error {
-	for _, markerResult := range markerResults {
+	for i := range markerResults {
 		var defaultFound bool
 
 		var sampleVal interface{}
@@ -355,7 +355,7 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 		// convert to interface
 		var marker markers.FieldMarkerProcessor
 
-		switch t := markerResult.Object.(type) {
+		switch t := markerResults[i].Object.(type) {
 		case *markers.FieldMarker:
 			marker = t
 			ws.FieldMarkers = append(ws.FieldMarkers, t)

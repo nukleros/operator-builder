@@ -29,7 +29,6 @@ type APIFields struct {
 	Children     []*APIFields
 	Default      string
 	Sample       string
-	Last         bool
 }
 
 func (api *APIFields) AddField(path string, fieldType markers.FieldType, comments []string, sample interface{}, hasDefault bool) error {
@@ -70,7 +69,6 @@ func (api *APIFields) AddField(path string, fieldType markers.FieldType, comment
 	}
 
 	newChild := obj.newChild(last, fieldType, sample)
-	newChild.Last = true
 
 	newChild.setCommentsAndDefault(comments, sample, hasDefault)
 
@@ -265,22 +263,25 @@ func (api *APIFields) setSample(sampleVal interface{}) {
 
 func (api *APIFields) setDefault(sampleVal interface{}) {
 	api.Default = api.getSampleValue(sampleVal)
-
-	if len(api.Markers) == 0 {
-		api.Markers = append(
-			api.Markers,
-			fmt.Sprintf("+kubebuilder:default=%s", api.Default),
-			"+kubebuilder:validation:Optional",
-			fmt.Sprintf("(Default: %s)", api.Default),
-		)
-	}
-
+	api.appendMarkers(
+		fmt.Sprintf("+kubebuilder:default=%s", api.Default),
+		"+kubebuilder:validation:Optional",
+		fmt.Sprintf("(Default: %s)", api.Default),
+	)
 	api.setSample(sampleVal)
+}
+
+func (api *APIFields) appendMarkers(apiMarkers ...string) {
+	if len(api.Markers) == 0 {
+		api.Markers = append(api.Markers, apiMarkers...)
+	}
 }
 
 func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interface{}, hasDefault bool) {
 	if hasDefault {
 		api.setDefault(sampleVal)
+	} else {
+		api.appendMarkers("+kubebuilder:validation:Required")
 	}
 
 	if comments != nil {

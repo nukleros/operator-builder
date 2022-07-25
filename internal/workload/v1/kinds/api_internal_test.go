@@ -440,7 +440,6 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 				Children:     tt.fields.Children,
 				Default:      tt.fields.Default,
 				Sample:       tt.fields.Sample,
-				Last:         tt.fields.Last,
 			}
 			if got := api.getSampleValue(tt.args.sampleVal); got != tt.want {
 				t.Errorf("APIFields.getSampleValue() = %v, want %v", got, tt.want)
@@ -683,6 +682,9 @@ func TestAPIFields_setCommentsAndDefault(t *testing.T) {
 			},
 			expect: &APIFields{
 				manifestName: "other",
+				Markers: []string{
+					"+kubebuilder:validation:Required",
+				},
 			},
 		},
 	}
