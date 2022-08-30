@@ -14,7 +14,6 @@ in the accompanying `.operator-builder` directory.
 
 * golang
 * operator-builder
-* wget
 
 ## Setup
 
@@ -120,7 +119,12 @@ manifests for the resources that we want our operator to manage.  They will
 contain operator-builder markers to indicate which fields need to be
 configurable through custom resources.
 
-TODO: add wget command to grab resources
+Clone the operator-builder repo so as to access the manifests for this tutorial.
+
+```bash
+mkdir /tmp/operator-builder
+git clone git@github.com:nukleros/operator-builder.git /tmp/operator-builder
+```
 
 ### Supporting Services Workload Collection
 
@@ -130,6 +134,12 @@ resource manifest will be used to create some fields for the SupportingServices
 custom resource - these will be global configurations that can be used by
 multiple component workloads.  And the values configured will be added to the
 namespace as labels for easy reference to what those global configs are.
+
+Copy the collection resource manifest for this tutorial.
+
+```
+cp /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/namespace.yaml .
+```
 
 #### `.operator-builder/namespace.yaml`
 
@@ -183,6 +193,12 @@ spec:
 
 The resources for this component will deploy Cert Manager for TLS asset
 management.
+
+Copy the resource manifests for the TLS component for this tutorial.
+
+```
+cp -R /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/addons.nukleros.io_tls .
+```
 
 #### `.operator-builder/addons.nukleros.io_tls/config.yaml`
 
@@ -281,6 +297,12 @@ The resources for this component will install the Nginx Ingress Controller so
 that tenant workloads can use Ingress resources to expose it to traffic from
 outside the cluster.
 
+Copy the resource manifests for the Ingress component for this tutorial.
+
+```
+cp -R /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/addons.nukleros.io_ingress .
+```
+
 #### `.operator-builder/addons.nukleros.io_ingress/cert.yaml`
 
 The namespace name on the Certificate resource is set using a namespace field as
@@ -354,15 +376,17 @@ spec:
     - service.yaml
 ```
 
-## Makefile
+## Code Generation
 
 You'll often find you want re-generate the codebase when you find mistakes or
 adjustments you want to make in the project.  For this reason it's helpful to
-have a Makefile in your `.operator-builder` directory.  Use
-`.operator-builder/Makefile` as a base.  Just alter the values for the `--repo`
-and `--controller-image` flags on lines 3 and 4.
+have a Makefile in your `.operator-builder` directory.
 
-## Code Generation
+Copy the Makefile for this tutorial.
+
+```
+cp /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/Makefile .
+```
 
 Now it's time to generate the code.
 
