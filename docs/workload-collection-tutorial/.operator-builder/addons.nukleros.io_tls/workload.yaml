@@ -1,0 +1,20 @@
+kind: ComponentWorkload
+name: tls-component
+spec:
+  api:
+    clusterScoped: true
+    domain: nukleros.io
+    group: addons
+    kind: TLSComponent
+    version: v1alpha1
+  companionCliSubcmd:
+    description: Manage the TLS management service component
+    name: tls
+  resources:
+    - config.yaml
+    - crd.yaml
+    - deployment.yaml
+    - issuers.yaml
+    - rbac.yaml
+    - service.yaml
+    - webhook.yaml

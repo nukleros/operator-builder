@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: default-server-secret
+  namespace: nginx-ingress  # +operator-builder:field:name=namespace,default="ingress-system",type=string
+spec:
+  secretName: default-server-secret
+  dnsNames:
+    - nukleros.io  # +operator-builder:field:name=domainName,type=string
+  issuerRef:
+    name: letsencrypt-staging  # +operator-builder:collectionField:name=certProvider,default="letsencrypt-staging",type=string
+    kind: ClusterIssuer
+

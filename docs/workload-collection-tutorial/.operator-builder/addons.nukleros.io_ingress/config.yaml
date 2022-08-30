@@ -1,0 +1,6 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-config
+  namespace: nginx-ingress  # +operator-builder:field:name=namespace,default="ingress-system",type=string
+data:

@@ -1,0 +1,58 @@
+---
+# +operator-builder:resource:collectionField=certProvider,value="letsencrypt-staging",include
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  annotations:
+    # +operator-builder:collectionField:name=certProvider,default="letsencrypt-staging",type=string,description=`
+    # +kubebuilder:validation:Enum=letsencrypt-staging;letsencrypt-production
+    # Certificate provider to use.  Use one of: letsencrypt-staging or letsencrypt-production.`
+    cert-provider: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Contact e-mail address for receiving updates about certificates from LetsEncrypt.`
+    email: admin@nukleros.io  # +operator-builder:resource:field=contactEmail,type=string
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+      - http01:
+          ingress:
+            podTemplate:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  app.kubernetes.io/name: cluster-issuer
+              spec: {}
+            class: nginx
+---
+# +operator-builder:resource:collectionField=certProvider,value="letsencrypt-production",include
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  # This issuer has low thresholds for rate limits,
+  # so only use once bugs have been worked out for ingress stanzas
+  name: letsencrypt-production
+  annotations:
+    # +operator-builder:collectionField:name=certProvider,default="letsencrypt-staging",type=string,description=`
+    # +kubebuilder:validation:Enum=letsencrypt-staging;letsencrypt-production
+    # Certificate provider to use.  Use one of: letsencrypt-staging or letsencrypt-production.`
+    cert-provider: letsencrypt-production
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Contact e-mail address for receiving updates about certificates from LetsEncrypt.`
+    email: admin@nukleros.io  # +operator-builder:resource:field=contactEmail,type=string
+    privateKeySecretRef:
+      name: letsencrypt-production
+    solvers:
+      - http01:
+          ingress:
+            podTemplate:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  app.kubernetes.io/name: cluster-issuer
+              spec: {}
+            class: nginx

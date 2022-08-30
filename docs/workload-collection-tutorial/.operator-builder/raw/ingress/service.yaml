@@ -1,0 +1,66 @@
+---
+# +operator-builder:resource:field:collection=cloudProvider,value="aws",include,type=string
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-aws
+  namespace: nginx-ingress  # +operator-builder:field:name=namespace,default="ingress-system",type=string
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+    service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: nginx-ingress
+---
+# +operator-builder:resource:field:collection=cloudProvider,value="gcp",include,type=string
+# +operator-builder:resource:field:collection=cloudProvider,value="azure",include,type=string
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-gcp-azure
+  namespace: nginx-ingress  # +operator-builder:field:name=namespace,default="ingress-system",type=string
+spec:
+  externalTrafficPolicy: Local
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: nginx-ingress
+---
+# +operator-builder:resource:field:collection=cloudProvider,value="none",include,type=string
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-no-provider
+  namespace: nginx-ingress  # +operator-builder:field:name=namespace,default="ingress-system",type=string
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: nginx-ingress
+

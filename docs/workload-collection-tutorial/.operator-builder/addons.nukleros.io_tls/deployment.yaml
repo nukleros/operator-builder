@@ -1,0 +1,192 @@
+# Source: cert-manager/templates/cainjector-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-cainjector
+  namespace: cert-manager  # +operator-builder:field:name=namespace,default="tls-system",type=string
+  labels:
+    app: cainjector
+    app.kubernetes.io/name: cainjector
+    app.kubernetes.io/instance: cert-manager
+    app.kubernetes.io/component: "cainjector"
+    # +operator-builder:field:name=caInjector.version,default="v1.9.1",type=string
+    app.kubernetes.io/version: "v1.9.1"
+spec:
+  # +operator-builder:field:name=caInjector.replicas,default=1,type=int
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cainjector
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/component: "cainjector"
+  template:
+    metadata:
+      labels:
+        app: cainjector
+        app.kubernetes.io/name: cainjector
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/component: "cainjector"
+        # +operator-builder:field:name=caInjector.version,default="v1.9.1",type=string
+        app.kubernetes.io/version: "v1.9.1"
+    spec:
+      serviceAccountName: cert-manager-cainjector
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: cert-manager
+          # +operator-builder:field:name=caInjector.version,default="v1.9.1",type=string,replace="caInjectorVersion"
+          image: "quay.io/jetstack/cert-manager-cainjector:caInjectorVersion"
+          imagePullPolicy: IfNotPresent
+          args:
+          - --v=2
+          - --leader-election-namespace=$(POD_NAMESPACE)
+          env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          securityContext:
+            allowPrivilegeEscalation: false
+      nodeSelector:
+        kubernetes.io/os: linux
+---
+# Source: cert-manager/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager
+  namespace: cert-manager  # +operator-builder:field:name=namespace,default="tls-system",type=string
+  labels:
+    app: cert-manager
+    app.kubernetes.io/name: cert-manager
+    app.kubernetes.io/instance: cert-manager
+    app.kubernetes.io/component: "controller"
+    # +operator-builder:field:name=controller.version,default="v1.9.1",type=string
+    app.kubernetes.io/version: "v1.9.1"
+spec:
+  # +operator-builder:field:name=controller.replicas,default=1,type=int
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cert-manager
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/component: "controller"
+  template:
+    metadata:
+      labels:
+        app: cert-manager
+        app.kubernetes.io/name: cert-manager
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/component: "controller"
+        # +operator-builder:field:name=controller.version,default="v1.9.1",type=string
+        app.kubernetes.io/version: "v1.9.1"
+      annotations:
+        prometheus.io/path: "/metrics"
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9402'
+    spec:
+      serviceAccountName: cert-manager
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: cert-manager
+          # +operator-builder:field:name=controller.version,default="v1.9.1",type=string,replace="controllerVersion"
+          image: "quay.io/jetstack/cert-manager-controller:controllerVersion"
+          imagePullPolicy: IfNotPresent
+          args:
+          - --v=2
+          - --cluster-resource-namespace=$(POD_NAMESPACE)
+          - --leader-election-namespace=$(POD_NAMESPACE)
+          ports:
+          - containerPort: 9402
+            name: http-metrics
+            protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+      nodeSelector:
+        kubernetes.io/os: linux
+---
+# Source: cert-manager/templates/webhook-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-webhook
+  namespace: cert-manager  # +operator-builder:field:name=namespace,default="tls-system",type=string
+  labels:
+    app: webhook
+    app.kubernetes.io/name: webhook
+    app.kubernetes.io/instance: cert-manager
+    app.kubernetes.io/component: "webhook"
+    # +operator-builder:field:name=webhook.version,default="v1.9.1",type=string
+    app.kubernetes.io/version: "v1.9.1"
+spec:
+  # +operator-builder:field:name=webhook.replicas,default=1,type=int
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: webhook
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/component: "webhook"
+  template:
+    metadata:
+      labels:
+        app: webhook
+        app.kubernetes.io/name: webhook
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/component: "webhook"
+        # +operator-builder:field:name=webhook.version,default="v1.9.1",type=string
+        app.kubernetes.io/version: "v1.9.1"
+    spec:
+      serviceAccountName: cert-manager-webhook
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: cert-manager
+          # +operator-builder:field:name=webhook.version,default="v1.9.1",type=string,replace="webhookVersion"
+          image: "quay.io/jetstack/cert-manager-webhook:webhookVersion"
+          imagePullPolicy: IfNotPresent
+          args:
+          - --v=2
+          - --secure-port=10250
+          - --dynamic-serving-ca-secret-namespace=$(POD_NAMESPACE)
+          - --dynamic-serving-ca-secret-name=cert-manager-webhook-ca
+          - --dynamic-serving-dns-names=cert-manager-webhook,cert-manager-webhook.$(POD_NAMESPACE),cert-manager-webhook.$(POD_NAMESPACE).svc
+          ports:
+          - name: https
+            protocol: TCP
+            containerPort: 10250
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 6080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 6080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+      nodeSelector:
+        kubernetes.io/os: linux
+

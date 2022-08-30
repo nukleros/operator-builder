@@ -1,0 +1,20 @@
+kind: WorkloadCollection
+name: supporting-services-collection
+spec:
+  api:
+    clusterScoped: true
+    domain: nukleros.io
+    group: addons
+    kind: SupportingServices
+    version: v1alpha1
+  companionCliRootcmd:
+    description: Manage a cluster's supporting service installations
+    name: ssctl
+  companionCliSubcmd:
+    description: Manage the collection of services
+    name: collection
+  componentFiles:
+    - addons.nukleros.io_tls/workload.yaml
+    - addons.nukleros.io_ingress/workload.yaml
+  resources:
+    - namespace.yaml
