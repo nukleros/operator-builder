@@ -1,5 +1,5 @@
 ---
-# +operator-builder:resource:field:collection=cloudProvider,value="aws",include,type=string
+# +operator-builder:resource:collectionField=cloudProvider,value="aws",include
 apiVersion: v1
 kind: Service
 metadata:
@@ -22,12 +22,11 @@ spec:
   selector:
     app: nginx-ingress
 ---
-# +operator-builder:resource:field:collection=cloudProvider,value="gcp",include,type=string
-# +operator-builder:resource:field:collection=cloudProvider,value="azure",include,type=string
+# +operator-builder:resource:collectionField=cloudProvider,value="gcp",include
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-ingress-gcp-azure
+  name: nginx-ingress-gcp
   namespace: nginx-ingress  # +operator-builder:field:name=namespace,default="ingress-system",type=string
 spec:
   externalTrafficPolicy: Local
@@ -44,7 +43,28 @@ spec:
   selector:
     app: nginx-ingress
 ---
-# +operator-builder:resource:field:collection=cloudProvider,value="none",include,type=string
+# +operator-builder:resource:collectionField=cloudProvider,value="azure",include
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-azure
+  namespace: nginx-ingress  # +operator-builder:field:name=namespace,default="ingress-system",type=string
+spec:
+  externalTrafficPolicy: Local
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: nginx-ingress
+---
+# +operator-builder:resource:collectionField=cloudProvider,value="none",include
 apiVersion: v1
 kind: Service
 metadata:

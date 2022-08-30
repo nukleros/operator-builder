@@ -5,9 +5,8 @@ kind: ClusterIssuer
 metadata:
   name: letsencrypt-staging
   annotations:
-    # +operator-builder:collectionField:name=certProvider,default="letsencrypt-staging",type=string,description=`
-    # +kubebuilder:validation:Enum=letsencrypt-staging;letsencrypt-production
-    # Certificate provider to use.  Use one of: letsencrypt-staging or letsencrypt-production.`
+    # +operator-builder:collectionField:name=certProvider,default="letsencrypt-staging",type=string
+    # Certificate provider to use.  Use one of: letsencrypt-staging or letsencrypt-production.
     cert-provider: letsencrypt-staging
 spec:
   acme:
@@ -35,9 +34,8 @@ metadata:
   # so only use once bugs have been worked out for ingress stanzas
   name: letsencrypt-production
   annotations:
-    # +operator-builder:collectionField:name=certProvider,default="letsencrypt-staging",type=string,description=`
-    # +kubebuilder:validation:Enum=letsencrypt-staging;letsencrypt-production
-    # Certificate provider to use.  Use one of: letsencrypt-staging or letsencrypt-production.`
+    # +operator-builder:collectionField:name=certProvider,default="letsencrypt-staging",type=string
+    # Certificate provider to use.  Use one of: letsencrypt-staging or letsencrypt-production.
     cert-provider: letsencrypt-production
 spec:
   acme:
