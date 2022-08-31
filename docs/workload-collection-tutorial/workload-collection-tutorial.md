@@ -12,8 +12,9 @@ in the accompanying `.operator-builder` directory.
 
 ## Prerequisites
 
-* golang
-* operator-builder
+* [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [golang](https://go.dev/doc/install)
+* [operator-builder](https://github.com/nukleros/operator-builder/blob/main/docs/installation.md)
 
 ## Setup
 
@@ -28,7 +29,7 @@ cd supporting-services-operator
 git init
 ```
 
-Create a config directory and add the WorkloadCollcetion config.
+Create a config directory and add the WorkloadCollection config.
 
 ```bash
 mkdir .operator-builder
@@ -122,7 +123,6 @@ configurable through custom resources.
 Clone the operator-builder repo so as to access the manifests for this tutorial.
 
 ```bash
-mkdir /tmp/operator-builder
 git clone git@github.com:nukleros/operator-builder.git /tmp/operator-builder
 ```
 
