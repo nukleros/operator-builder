@@ -7,7 +7,7 @@ The operator that you'll build in this tutorial installs supporting services for
 a cluster.  Specifically, it will install Cert Manager and the Nginx Ingress
 Controller.
 
-Note: all of the manifests and configurations in these instructions can be found
+**Note**: all of the manifests and configurations in these instructions can be found
 in the accompanying `.operator-builder` directory.
 
 ## Prerequisites
@@ -202,7 +202,7 @@ cp -R /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/
 
 #### `.operator-builder/addons.nukleros.io_tls/config.yaml`
 
-This manifest has just a single marker on line 6.  This makre uses the namespace
+This manifest has just a single marker on line 6.  This marker uses the namespace
 field from the TLSComponent custom resource to set the namespace for this
 ConfigMap.  The same will be done for all namespaced resources for this
 component.  This field has a default value included which makes it an optional
@@ -210,7 +210,7 @@ field in the TLSComponent resource.
 
 #### `.operator-builder/addons.nukleros.io_tls/crd.yaml`
 
-This manifest has no opertor-builder markers.  The CustomResourceDefinitions are
+This manifest has no operator-builder markers.  The CustomResourceDefinitions are
 not configurable in any way.
 
 #### `.operator-builder/addons.nukleros.io_tls/deployment.yaml`
@@ -222,7 +222,7 @@ This manifest also includes markers to set versions and replica counts for each
 Deployment.  For example, on line 12 a field is defined with
 `field:name=caInjector.version` that uses dot notation to indicate a nested
 field.  This field will be used to specify the version for the CA Injector
-image.  Here it sets a label value, as it does on line 29.  On line= 37 the same
+image.  Here it sets a label value, as it does on line 29.  On line 37 the same
 field is used to add the version to the Deployment's image.  In this case
 `replace="caInjectorVersion"` indicates the matching string in the image field's
 value should be replaced with the value from the TLSComponents custom resource.
@@ -332,7 +332,7 @@ not configurable.
 The Deployment's namespace is configured as the others are.
 
 The replicas and container image are configured with markers on lines 7 and 23
-in the same way the cert-manager Deployments were configure.  These markers
+in the same way the cert-manager Deployments were configured.  These markers
 create new fields on the IngressComponent custom resource.
 
 #### `.operator-builder/addons.nukleros.io_ingress/rbac.yaml`
@@ -433,7 +433,7 @@ Manager and the Nginx Ingress Controller installed.
 
 Congratulations!  You just built a multi-workload operator.
 
-Note: The Nginx Ingress Controller will require a valid DNS record that points
+**Note**: The Nginx Ingress Controller will require a valid DNS record that points
 to your ingress public IP so as to validate your ownership of the domain and for
 Let's Encrypt to issue a publicly trustable certificate.  Without this,
 everything will spin up but the Nginx instance will fail to start due to the
