@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: supporting-services-system  # +operator-builder:field:parent=metadata.name,type=string
+  labels:
+    # +operator-builder:field:name=cloudProvider,type=string,description=`
+    # +kubebuilder:validation:Enum=aws;gcp;azure;none`
+    cloudProvider:  none
+    # +operator-builder:field:name=certProvider,default="letsencrypt-staging",type=string,description=`
+    # +kubebuilder:validation:Enum=letsencrypt-staging;letsencrypt-production`
+    certProvider: letsencrypt-staging

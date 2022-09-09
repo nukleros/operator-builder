@@ -1,0 +1,22 @@
+kind: ComponentWorkload
+name: ingress-component
+spec:
+  api:
+    clusterScoped: true
+    domain: nukleros.io
+    group: addons
+    kind: IngressComponent
+    version: v1alpha1
+  companionCliSubcmd:
+    description: Manage the ingress service component
+    name: ingress
+  dependencies:
+    - tls-component
+  resources:
+    - cert.yaml
+    - class.yaml
+    - config.yaml
+    - crd.yaml
+    - deployment.yaml
+    - rbac.yaml
+    - service.yaml

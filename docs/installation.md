@@ -12,11 +12,11 @@ You have the following options to install the operator-builder CLI:
 Use wget to download the pre-compiled binaries:
 
 ```bash
-VERSION=v0.6.0
+VERSION=v0.7.0
 OS=Linux
 ARCH=x86_64
-wget https://github.com/nukleros/operator-builder/releases/download/${VERSION}/operator-builder_${VERSION}_${OS}_${ARCH}.gz -O - |\
-    gzip -d && sudo mv operator-builder_${VERSION}_${OS}_${ARCH} /usr/local/bin/operator-builder
+wget https://github.com/nukleros/operator-builder/releases/download/${VERSION}/operator-builder_${VERSION}_${OS}_${ARCH}.tar.gz -O - |\
+    tar -xz && sudo mv operator-builder /usr/local/bin/operator-builder
 ```
 
 ### Homebrew
@@ -26,8 +26,8 @@ Available for Mac and Linux.
 Using [Homebrew](https://brew.sh/)
 
 ```bash
-brew tap vmware-tanzu-labs/tap
-brew install operator-builder
+brew tap nukleros/tap
+brew install nukleros/tap/operator-builder
 ```
 
 ### Docker Image
@@ -39,7 +39,7 @@ docker pull ghcr.io/nukleros/operator-builder
 #### One-shot container use
 
 ```bash
-docker run --rm -v "${PWD}":/workdir ghcr.io/vmware-tanzu-labs/operator-builder [flags]
+docker run --rm -v "${PWD}":/workdir ghcr.io/nukleros/operator-builder [flags]
 ```
 
 #### Run container commands interactively
@@ -52,14 +52,14 @@ It can be useful to have a bash function to avoid typing the whole docker comman
 
 ```bash
 operator-builder() {
-  docker run --rm -i -v "${PWD}":/workdir ghcr.io/vmware-tanzu-labs/operator-builder "$@"
+  docker run --rm -i -v "${PWD}":/workdir ghcr.io/nukleros/operator-builder "$@"
 }
 ```
 
 ### Go Install
 
 ```bash
-GO111MODULE=on go get github.com/vmware-tanzu-labs/operator-builder/cmd/operator-builder
+go install github.com/nukleros/operator-builder/cmd/operator-builder@latest
 ```
 
 ### Snap
