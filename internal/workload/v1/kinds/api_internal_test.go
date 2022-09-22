@@ -665,8 +665,6 @@ func TestAPIFields_setCommentsAndDefault(t *testing.T) {
 					"(Default: \"string\")",
 				},
 				Comments: []string{
-					"comment1",
-					"comment2",
 					"comment3",
 					"comment4",
 				},

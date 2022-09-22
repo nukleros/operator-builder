@@ -32,6 +32,7 @@ type APIFields struct {
 }
 
 func (api *APIFields) AddField(path string, fieldType markers.FieldType, comments []string, sample interface{}, hasDefault bool) error {
+
 	obj := api
 
 	parts := strings.Split(path, ".")
@@ -285,7 +286,7 @@ func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interfa
 	}
 
 	if comments != nil {
-		api.Comments = append(api.Comments, comments...)
+		api.Comments = comments
 	}
 }
 
