@@ -284,8 +284,8 @@ func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interfa
 		api.appendMarkers("+kubebuilder:validation:Required")
 	}
 
-	if comments != nil {
-		api.Comments = append(api.Comments, comments...)
+	if len(comments) > 0 {
+		api.Comments = comments
 	}
 }
 
