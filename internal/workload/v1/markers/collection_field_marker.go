@@ -116,6 +116,13 @@ func (cfm *CollectionFieldMarker) IsForCollection() bool {
 	return cfm.forCollection
 }
 
+func (cfm *CollectionFieldMarker) IsArbitrary() bool {
+	if cfm.Arbitrary == nil {
+		return false
+	}
+	return *cfm.Arbitrary
+}
+
 func (cfm *CollectionFieldMarker) SetOriginalValue(value string) {
 	if cfm.GetReplaceText() != "" {
 		cfm.originalValue = cfm.GetReplaceText()
