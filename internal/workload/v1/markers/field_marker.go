@@ -145,6 +145,7 @@ func (fm *FieldMarker) IsArbitrary() bool {
 	if fm.Arbitrary == nil {
 		return false
 	}
+
 	return *fm.Arbitrary
 }
 

@@ -120,6 +120,7 @@ func (cfm *CollectionFieldMarker) IsArbitrary() bool {
 	if cfm.Arbitrary == nil {
 		return false
 	}
+
 	return *cfm.Arbitrary
 }
 
