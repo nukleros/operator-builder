@@ -6,7 +6,7 @@ linters-settings:
     lines: 100
     statements: 50
   gci:
-    local-prefixes: github.com/vmware-tanzu-labs/operator-builder
+    local-prefixes: github.com/nukleros/operator-builder
   goconst:
     min-len: 2
     min-occurrences: 2
@@ -26,7 +26,7 @@ linters-settings:
   gocyclo:
     min-complexity: 15
   goimports:
-    local-prefixes: github.com/vmware-tanzu-labs/operator-builder
+    local-prefixes: github.com/nukleros/operator-builder
   golint:
     min-confidence: 0
   gomnd:
@@ -43,10 +43,10 @@ linters-settings:
     settings:
       printf:
         funcs:
-          - (github.com/vmware-tanzu-labs/operator-builder/pkg/logutils.Log).Infof
-          - (github.com/vmware-tanzu-labs/operator-builder/logutils.Log).Warnf
-          - (github.com/vmware-tanzu-labs/operator-builder/pkg/logutils.Log).Errorf
-          - (github.com/vmware-tanzu-labs/operator-builder/pkg/logutils.Log).Fatalf
+          - (github.com/nukleros/operator-builder/pkg/logutils.Log).Infof
+          - (github.com/nukleros/operator-builder/logutils.Log).Warnf
+          - (github.com/nukleros/operator-builder/pkg/logutils.Log).Errorf
+          - (github.com/nukleros/operator-builder/pkg/logutils.Log).Fatalf
   lll:
     line-length: 140
   maligned:
