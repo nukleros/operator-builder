@@ -10,8 +10,8 @@ import (
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	"github.com/nukleros/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
 
 var _ machinery.Template = &Controller{}
@@ -186,7 +186,7 @@ func (r *{{ .Resource.Kind }}Reconciler) Reconcile(ctx context.Context, request 
 		if !apierrs.IsNotFound(err) {
 			return ctrl.Result{}, err
 		}
-		
+
 		return ctrl.Result{}, nil
 	}
 

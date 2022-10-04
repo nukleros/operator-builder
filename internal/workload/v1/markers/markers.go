@@ -12,9 +12,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
-	markerparser "github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/markers/inspect"
+	markerparser "github.com/nukleros/operator-builder/internal/markers/marker"
+	"github.com/nukleros/operator-builder/internal/utils"
 )
 
 var (

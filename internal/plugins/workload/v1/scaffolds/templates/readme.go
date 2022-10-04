@@ -30,7 +30,7 @@ func (f *Readme) SetTemplateDefaults() error {
 }
 
 const readmefileTemplate = `A Kubernetes operator built with
-[operator-builder](https://github.com/vmware-tanzu-labs/operator-builder).
+[operator-builder](https://github.com/nukleros/operator-builder).
 
 ## Local Development & Testing
 

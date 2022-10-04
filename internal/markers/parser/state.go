@@ -8,7 +8,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/lexer"
+	"github.com/nukleros/operator-builder/internal/markers/lexer"
 )
 
 func startParse(p *Parser) stateFn {

@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
+	"github.com/nukleros/operator-builder/internal/markers/inspect"
+	"github.com/nukleros/operator-builder/internal/markers/parser"
 )
 
 func TestContainsMarkerType(t *testing.T) {

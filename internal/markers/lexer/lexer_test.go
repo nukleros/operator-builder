@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/lexer"
+	"github.com/nukleros/operator-builder/internal/markers/lexer"
 )
 
 func GetTestLexer(buf string) *lexer.Lexer {

@@ -12,8 +12,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
+	"github.com/nukleros/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
 )
 
 var ErrOverwriteExistingValue = errors.New("an attempt to overwrite existing value was made")

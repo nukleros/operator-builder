@@ -12,7 +12,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
+	"github.com/nukleros/operator-builder/internal/markers/parser"
 )
 
 type YAMLResult struct {

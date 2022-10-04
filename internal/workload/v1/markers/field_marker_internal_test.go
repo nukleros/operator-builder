@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+	"github.com/nukleros/operator-builder/internal/markers/marker"
 )
 
 func TestFieldMarker_String(t *testing.T) {

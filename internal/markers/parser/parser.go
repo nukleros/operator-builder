@@ -7,7 +7,7 @@ package parser
 import (
 	"bytes"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/lexer"
+	"github.com/nukleros/operator-builder/internal/markers/lexer"
 )
 
 type stateFn func(*Parser) stateFn

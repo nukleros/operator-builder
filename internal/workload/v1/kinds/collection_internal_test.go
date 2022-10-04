@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/companion"
+	"github.com/nukleros/operator-builder/internal/workload/v1/commands/companion"
 )
 
 func Test_CollectionSetNames(t *testing.T) {

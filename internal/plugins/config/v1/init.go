@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
-	workloadconfig "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/config"
+	workloadconfig "github.com/nukleros/operator-builder/internal/workload/v1/config"
 )
 
 type initSubcommand struct {

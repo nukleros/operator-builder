@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
+	"github.com/nukleros/operator-builder/internal/markers/parser"
 )
 
 var (

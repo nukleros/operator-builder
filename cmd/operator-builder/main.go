@@ -7,7 +7,7 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/vmware-tanzu-labs/operator-builder/pkg/cli"
+	"github.com/nukleros/operator-builder/pkg/cli"
 )
 
 func main() {

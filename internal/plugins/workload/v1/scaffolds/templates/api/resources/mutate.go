@@ -8,8 +8,8 @@ import (
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/manifests"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
+	"github.com/nukleros/operator-builder/internal/workload/v1/manifests"
 )
 
 var (

@@ -11,9 +11,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
+	"github.com/nukleros/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
+	"github.com/nukleros/operator-builder/internal/workload/v1/rbac"
 )
 
 var (

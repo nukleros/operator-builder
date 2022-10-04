@@ -7,7 +7,7 @@ package markers
 import (
 	"fmt"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+	"github.com/nukleros/operator-builder/internal/markers/marker"
 )
 
 const (

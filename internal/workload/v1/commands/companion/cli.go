@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/utils"
 )
 
 const (

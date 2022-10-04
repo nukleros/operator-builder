@@ -5,8 +5,8 @@
 package inspect
 
 import (
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
+	"github.com/nukleros/operator-builder/internal/markers/marker"
+	"github.com/nukleros/operator-builder/internal/markers/parser"
 )
 
 type Inspector struct {

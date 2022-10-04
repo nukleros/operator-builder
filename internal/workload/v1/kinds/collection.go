@@ -10,11 +10,11 @@ import (
 
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/companion"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/manifests"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
+	"github.com/nukleros/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/workload/v1/commands/companion"
+	"github.com/nukleros/operator-builder/internal/workload/v1/manifests"
+	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
+	"github.com/nukleros/operator-builder/internal/workload/v1/rbac"
 )
 
 var ErrMissingRequiredFields = errors.New("missing required fields")

@@ -12,10 +12,10 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/subcommand"
-	workloadconfig "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/config"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds"
+	"github.com/nukleros/operator-builder/internal/workload/v1/commands/subcommand"
+	workloadconfig "github.com/nukleros/operator-builder/internal/workload/v1/config"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
 
 type initSubcommand struct {

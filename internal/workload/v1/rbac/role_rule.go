@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/utils"
 )
 
 var (

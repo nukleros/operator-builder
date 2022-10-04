@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/license"
+	"github.com/nukleros/operator-builder/internal/license"
 )
 
 var _ plugin.InitSubcommand = &initSubcommand{}

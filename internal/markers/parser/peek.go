@@ -4,7 +4,7 @@
 
 package parser
 
-import "github.com/vmware-tanzu-labs/operator-builder/internal/markers/lexer"
+import "github.com/nukleros/operator-builder/internal/markers/lexer"
 
 func (p *Parser) peek() lexer.Lexeme {
 	if p.peekCount > 0 {

@@ -13,10 +13,10 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
+	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
+	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
 
 var _ plugins.Scaffolder = &initScaffolder{}

@@ -12,8 +12,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	"github.com/nukleros/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
 
 var (
