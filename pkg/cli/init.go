@@ -17,9 +17,9 @@ import (
 	golangv2 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v2"
 	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 
-	configv1 "github.com/vmware-tanzu-labs/operator-builder/internal/plugins/config/v1"
-	licensev1 "github.com/vmware-tanzu-labs/operator-builder/internal/plugins/license/v1"
-	workloadv1 "github.com/vmware-tanzu-labs/operator-builder/internal/plugins/workload/v1"
+	configv1 "github.com/nukleros/operator-builder/internal/plugins/config/v1"
+	licensev1 "github.com/nukleros/operator-builder/internal/plugins/license/v1"
+	workloadv1 "github.com/nukleros/operator-builder/internal/plugins/workload/v1"
 )
 
 var version = "unstable"

@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/license"
+	"github.com/nukleros/operator-builder/internal/license"
 )
 
 func NewUpdateLicenseCmd() *cobra.Command {

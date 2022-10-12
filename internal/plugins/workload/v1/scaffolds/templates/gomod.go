@@ -7,7 +7,7 @@ package templates
 import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/utils"
 )
 
 var _ machinery.Template = &GoMod{}

@@ -12,9 +12,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
-	markerparser "github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/markers/inspect"
+	markerparser "github.com/nukleros/operator-builder/internal/markers/marker"
+	"github.com/nukleros/operator-builder/internal/utils"
 )
 
 var (
@@ -49,6 +49,7 @@ type FieldMarkerProcessor interface {
 	IsCollectionFieldMarker() bool
 	IsFieldMarker() bool
 	IsForCollection() bool
+	IsArbitrary() bool
 
 	SetDescription(string)
 	SetOriginalValue(string)
@@ -284,9 +285,14 @@ func setComments(marker FieldMarkerProcessor, result *inspect.YAMLResult, key, v
 	value.LineComment = strings.ReplaceAll(value.LineComment, replaceText, appendText)
 }
 
-// setValue will set the value appropriately.  This is based on whether the marker has
-// requested replacement text.
+// setValue will set the value appropriately.  If the marker is arbitrary, no
+// value need be set - return immediately.  If the marker has requested
+// replacement text this is set.
 func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
+	if marker.IsArbitrary() {
+		return nil
+	}
+
 	const varTag = "!!var"
 
 	const strTag = "!!str"

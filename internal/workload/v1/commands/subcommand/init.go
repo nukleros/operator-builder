@@ -5,7 +5,7 @@
 package subcommand
 
 import (
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/config"
+	"github.com/nukleros/operator-builder/internal/workload/v1/config"
 )
 
 // Init runs the process logic for a config processor when running the `init`

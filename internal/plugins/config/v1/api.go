@@ -13,8 +13,8 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
-	workloadconfig "github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/config"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	workloadconfig "github.com/nukleros/operator-builder/internal/workload/v1/config"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
 
 type createAPISubcommand struct {

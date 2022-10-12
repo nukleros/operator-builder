@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
+	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
 )
 
 func TestAPIFields_GenerateSampleSpec(t *testing.T) {

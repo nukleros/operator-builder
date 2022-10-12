@@ -10,7 +10,7 @@ import (
 
 	structvalidator "github.com/go-playground/validator"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
 
 var (

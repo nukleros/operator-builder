@@ -34,6 +34,7 @@ field for your workload.
 | [type](#type-required)               | string{string, int, bool}      | true     |
 | [default](#default-optional)         | [type](#supported-field-types) | false    |
 | [replace](#replace-optional)         | string                         | false    |
+| [arbitrary](#arbitrary-optional)     | bool                           | false    |
 | [description](#description-optional) | string                         | false    |
 
 ### Name (required if Parent is unspecified)
@@ -46,15 +47,15 @@ ex. +operator-builder:field:name=myName
 
 ### Parent (required if Name is unspecified)
 
-The parent field in which you wish to substitute.  Currently, only `metadata.name` is supported.  This 
-will allow you to use the parent name as a value in the child resource.
+The parent field in which you wish to substitute.  Currently, only `metadata.name` is supported.
+This will allow you to use the parent name as a value in the child resource.
 
 ex. +operator-builder:field:parent=metadata.name
 
 ### Type (required)
 
 The other required field is the `type` field which specifies the data type for
-the value.  
+the value.
 
 [#supported-field-types]() The supported data types are:
 
@@ -127,6 +128,69 @@ data:
     anotheroption: configuration1
     justtesting: myoption
 ```
+
+### Arbitrary (optional)
+
+If you wish to create a field for a custom resource that does not directly map
+to a value in a child resource, mark a field as arbitrary.
+
+Here is an example of how to mark a field as arbitrary:
+
+```yaml
+---
+# +operator-builder:field:name=nginx.installType,arbitrary,default="deployment",type=string,description=`
+# +kubebuilder:validation:Enum=deployment;daemonset
+# Method of install nginx ingress controller.  One of: deployment | daemonset.`
+apiVersion: v1
+kind: Namespace
+metadata:
+  # +operator-builder:field:name=namespace,default="nukleros-ingress-system",type=string,description=`
+  # Namespace to use for ingress support services.`
+  name: nukleros-ingress-system
+```
+
+On the first line you can see the `nginx.installType` custom resource field is
+marked as arbitrary with the `arbitrary` marker field.  Where you place this
+marker is unimportant but it is recommended you put all arbitrary fields at the
+beginning of one chosen manifest for ease of maintenance.
+
+This will result in a custom resource sample that looks as follows:
+
+```yaml
+apiVersion: platform.addons.nukleros.io/v1alpha1
+kind: IngressComponent
+metadata:
+  name: ingresscomponent-sample
+spec:
+  #collection:
+    #name: "supportservices-sample"
+    #namespace: ""
+  nginx:
+    installType: "deployment"            # <---- arbitary field
+    image: "nginx/nginx-ingress"
+    version: "2.3.0"
+    replicas: 2
+  namespace: "nukleros-ingress-system"
+```
+
+This arbitrary field will not map to any child resource value.  However it can
+be leveraged by some custom mutation code or by a resource marker such as this:
+
+```yaml
+---
+# +operator-builder:resource:field=nginx.installType,value="deployment",include
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress
+  namespace: nukleros-ingress-system # +operator-builder:field:name=namespace,default="nukleros-ingress-system",type=string
+...
+```
+
+The marker on line one indicates the deployment resource only be created if
+`nginx.installType` has a value of `deployment` (as shown in the custom resource
+sample above).  In this example, we are providing an option to install the Nginx
+Ingress Controller as a deployment _or_ a daemonset.
 
 ### Description (optional)
 
@@ -212,6 +276,12 @@ resource.
 
 Defined as `+operator-builder:resource` this marker can be used to control a specific
 resource with arguments in the marker.
+
+Note: a resource marker must reference a field defined by a field marker.  If
+you include a resource marker with a unique field name that is not also defined
+by a field marker you will get an error.  You may use an [arbitrary field](#arbitrary-optional)
+on a field marker if you don't wish to associate the field with a value in a
+child resource.
 
 | Field                                               | Type                           | Required |
 | --------------------------------------------------- | ------------------------------ | -------- |

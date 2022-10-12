@@ -7,7 +7,7 @@ package markers
 import (
 	"fmt"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+	"github.com/nukleros/operator-builder/internal/markers/marker"
 )
 
 const (
@@ -114,6 +114,14 @@ func (cfm *CollectionFieldMarker) IsFieldMarker() bool {
 
 func (cfm *CollectionFieldMarker) IsForCollection() bool {
 	return cfm.forCollection
+}
+
+func (cfm *CollectionFieldMarker) IsArbitrary() bool {
+	if cfm.Arbitrary == nil {
+		return false
+	}
+
+	return *cfm.Arbitrary
 }
 
 func (cfm *CollectionFieldMarker) SetOriginalValue(value string) {

@@ -4,7 +4,7 @@
 
 package marker
 
-import "github.com/vmware-tanzu-labs/operator-builder/internal/markers/parser"
+import "github.com/nukleros/operator-builder/internal/markers/parser"
 
 type Registry struct {
 	registry map[string]*Definition

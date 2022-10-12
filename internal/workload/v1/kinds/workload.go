@@ -18,11 +18,11 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/inspect"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/companion"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/manifests"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/markers"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/rbac"
+	"github.com/nukleros/operator-builder/internal/markers/inspect"
+	"github.com/nukleros/operator-builder/internal/workload/v1/commands/companion"
+	"github.com/nukleros/operator-builder/internal/workload/v1/manifests"
+	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
+	"github.com/nukleros/operator-builder/internal/workload/v1/rbac"
 )
 
 // WorkloadAPISpec sample fields which may be used in things like testing or

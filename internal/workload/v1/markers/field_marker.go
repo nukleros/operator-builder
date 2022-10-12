@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/markers/marker"
+	"github.com/nukleros/operator-builder/internal/markers/marker"
 )
 
 var (
@@ -33,6 +33,7 @@ type FieldMarker struct {
 	Default     interface{} `marker:",optional"`
 	Replace     *string
 	Parent      *string
+	Arbitrary   *bool
 
 	// other values which we use to pass information
 	forCollection bool
@@ -42,11 +43,18 @@ type FieldMarker struct {
 
 //nolint:gocritic //needed to implement string interface
 func (fm FieldMarker) String() string {
-	return fmt.Sprintf("FieldMarker{Name: %s Type: %v Description: %q Default: %v}",
+	var arbitraryBool bool
+
+	if fm.Arbitrary != nil {
+		arbitraryBool = *fm.Arbitrary
+	}
+
+	return fmt.Sprintf("FieldMarker{Name: %s Type: %v Description: %q Default: %v Arbitrary: %v}",
 		fm.GetName(),
 		fm.Type,
 		fm.GetDescription(),
 		fm.Default,
+		arbitraryBool,
 	)
 }
 
@@ -131,6 +139,14 @@ func (fm *FieldMarker) IsFieldMarker() bool {
 
 func (fm *FieldMarker) IsForCollection() bool {
 	return fm.forCollection
+}
+
+func (fm *FieldMarker) IsArbitrary() bool {
+	if fm.Arbitrary == nil {
+		return false
+	}
+
+	return *fm.Arbitrary
 }
 
 func (fm *FieldMarker) SetOriginalValue(value string) {

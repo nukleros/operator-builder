@@ -7,7 +7,7 @@ package config
 import (
 	"errors"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
 
 var ErrConfigMustExist = errors.New("no workload config provided - workload config required")

@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/commands/subcommand"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/kinds"
-	"github.com/vmware-tanzu-labs/operator-builder/internal/workload/v1/manifests"
+	"github.com/nukleros/operator-builder/internal/workload/v1/commands/subcommand"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
+	"github.com/nukleros/operator-builder/internal/workload/v1/manifests"
 )
 
 var (

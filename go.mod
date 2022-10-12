@@ -1,4 +1,4 @@
-module github.com/vmware-tanzu-labs/operator-builder
+module github.com/nukleros/operator-builder
 
 go 1.17
 
