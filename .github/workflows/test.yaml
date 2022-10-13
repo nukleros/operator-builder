@@ -17,6 +17,7 @@ jobs:
         include:
           - go-version: 1.17
           - go-version: 1.18
+          - go-version: 1.19
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -44,6 +45,7 @@ jobs:
         include:
           - go-version: 1.17
           - go-version: 1.18
+          - go-version: 1.19
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -82,11 +84,11 @@ jobs:
           - name: Standalone Edge Cases Operator
             artifact: standalone-edge-codebase
             test-workload-path: test/cases/edge-standalone
-            go-version: 1.18
+            go-version: 1.19
           - name: Workload Collection Operator
             artifact: collection-codebase
             test-workload-path: test/cases/collection
-            go-version: 1.18
+            go-version: 1.19
           - name: Workload Collection Edge Cases Operator
             artifact: collection-edge-codebase
             test-workload-path: test/cases/edge-collection
@@ -145,22 +147,22 @@ jobs:
             artifact: standalone-codebase
             test-build: "true"
             test-deploy: "true"
-            go-version: 1.17
+            go-version: 1.19
           - name: Standalone Edge Cases Operator
             artifact: standalone-edge-codebase
             test-build: "false"
             test-deploy: "false"
-            go-version: 1.18
+            go-version: 1.19
           - name: Workload Collection Operator
             artifact: collection-codebase
             test-build: "true"
             test-deploy: "false"
-            go-version: 1.18
+            go-version: 1.19
           - name: Workload Collection Edge Cases Operator
             artifact: collection-edge-codebase
             test-build: "true"
             test-deploy: "false"
-            go-version: 1.17
+            go-version: 1.19
     services:
       registry:
         image: registry:2
