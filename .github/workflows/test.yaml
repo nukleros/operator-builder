@@ -15,7 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - go-version: 1.17
           - go-version: 1.18
           - go-version: 1.19
     steps:
@@ -43,7 +42,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - go-version: 1.17
           - go-version: 1.18
           - go-version: 1.19
     steps:
@@ -77,10 +75,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Standalone Operator (Current Go Version - 2)
-            artifact: standalone-codebase
-            test-workload-path: test/cases/standalone
-            go-version: 1.17
           - name: Standalone Operator (Current Go Version)
             artifact: standalone-codebase
             test-workload-path: test/cases/standalone
@@ -147,11 +141,6 @@ jobs:
         include:
           # NOTE: at this time we should only test the standalone CLI as the
           # inputs to the collection CLI become much more complicated to test.
-          - name: Standalone Operator (Current Go Version - 2)
-            artifact: standalone-codebase
-            test-build: "true"
-            test-deploy: "true"
-            go-version: 1.17
           - name: Standalone Operator (Current Go Version)
             artifact: standalone-codebase
             test-build: "true"
