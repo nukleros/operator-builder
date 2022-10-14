@@ -14,7 +14,7 @@ builds:
     main: ./cmd/operator-builder
     binary: operator-builder
     ldflags:
-      - -s -w -X github.com/nukleros/operator-builder/pkg/cli.version={{.Version}} -extldflags '-static'
+      - -s -w -X github.com/nukleros/operator-builder/pkg/cli.version={{ .Version }} -extldflags '-static'
 
 archives:
   - replacements:
@@ -34,7 +34,7 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Version }}-snapshot-{{.ShortCommit}}"
+  name_template: "{{ .Version }}-snapshot-{{ .ShortCommit }}"
 changelog:
   sort: asc
   use: github
@@ -51,13 +51,13 @@ dockers:
       - 'ghcr.io/nukleros/operator-builder:latest'
     dockerfile: Dockerfile
     build_flag_templates:
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
       - "--label=org.opencontainers.image.licenses=MIT"
-      - "--label=VERSION={{.Version}}"
+      - "--label=VERSION={{ .Version }}"
       - "--platform=linux/amd64"
 brews:
   - name: operator-builder
