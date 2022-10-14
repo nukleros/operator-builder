@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - go-version: 1.17
           - go-version: 1.18
+          - go-version: 1.19
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -42,8 +42,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - go-version: 1.17
           - go-version: 1.18
+          - go-version: 1.19
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -75,22 +75,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Standalone Operator
+          - name: Standalone Operator (Current Go Version)
             artifact: standalone-codebase
             test-workload-path: test/cases/standalone
-            go-version: 1.17
-          - name: Standalone Edge Cases Operator
+            go-version: 1.19
+          - name: Standalone Edge Cases Operator (Current Go Version - 1)
             artifact: standalone-edge-codebase
             test-workload-path: test/cases/edge-standalone
             go-version: 1.18
-          - name: Workload Collection Operator
+          - name: Workload Collection Operator (Current Go Version)
             artifact: collection-codebase
             test-workload-path: test/cases/collection
-            go-version: 1.18
-          - name: Workload Collection Edge Cases Operator
+            go-version: 1.19
+          - name: Workload Collection Edge Cases Operator (Current Go Version - 1)
             artifact: collection-edge-codebase
             test-workload-path: test/cases/edge-collection
-            go-version: 1.17
+            go-version: 1.18
     env:
       TEST_WORKLOAD_PATH: "${{ matrix.test-workload-path }}"
       TEST_PATH: "/tmp/operator-builder-func-test"
@@ -141,26 +141,26 @@ jobs:
         include:
           # NOTE: at this time we should only test the standalone CLI as the
           # inputs to the collection CLI become much more complicated to test.
-          - name: Standalone Operator
+          - name: Standalone Operator (Current Go Version)
             artifact: standalone-codebase
             test-build: "true"
             test-deploy: "true"
-            go-version: 1.17
-          - name: Standalone Edge Cases Operator
+            go-version: 1.19
+          - name: Standalone Edge Cases Operator (Current Go Version - 1)
             artifact: standalone-edge-codebase
             test-build: "false"
             test-deploy: "false"
             go-version: 1.18
-          - name: Workload Collection Operator
+          - name: Workload Collection Operator (Current Go Version)
             artifact: collection-codebase
             test-build: "true"
             test-deploy: "false"
-            go-version: 1.18
-          - name: Workload Collection Edge Cases Operator
+            go-version: 1.19
+          - name: Workload Collection Edge Cases Operator (Current Go Version - 1)
             artifact: collection-edge-codebase
             test-build: "true"
             test-deploy: "false"
-            go-version: 1.17
+            go-version: 1.18
     services:
       registry:
         image: registry:2
@@ -174,7 +174,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          
+
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
