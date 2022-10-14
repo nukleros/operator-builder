@@ -1,6 +1,6 @@
 module github.com/nukleros/operator-builder
 
-go 1.19
+go 1.18
 
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
