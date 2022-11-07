@@ -31,23 +31,24 @@ func goModDependencyMap() map[string]string {
 		"github.com/go-logr/logr":                    "v1.2.3",
 		"github.com/nukleros/operator-builder-tools": "v0.3.0",
 		"github.com/onsi/ginkgo":                     "v1.16.5",
-		"github.com/onsi/gomega":                     "v1.19.0",
-		"github.com/spf13/cobra":                     "v1.4.0",
-		"github.com/stretchr/testify":                "v1.7.3",
-		"google.golang.org/api":                      "v0.84.0",
+		"github.com/onsi/gomega":                     "v1.24.0",
+		"github.com/spf13/cobra":                     "v1.6.1",
+		"github.com/stretchr/testify":                "v1.8.1",
+		"google.golang.org/api":                      "v0.102.0",
 		"gopkg.in/yaml.v2":                           "v2.4.0",
-		"k8s.io/api":                                 "v0.24.2",
-		"k8s.io/apimachinery":                        "v0.24.2",
-		"k8s.io/client-go":                           "v0.24.2",
-		"sigs.k8s.io/controller-runtime":             "v0.12.1",
-		"sigs.k8s.io/kubebuilder/v3":                 "v3.4.1",
+		"k8s.io/api":                                 "v0.25.3",
+		"k8s.io/apimachinery":                        "v0.25.3",
+		"k8s.io/client-go":                           "v0.25.3",
+		"sigs.k8s.io/controller-runtime":             "v0.13.1",
+		"sigs.k8s.io/kubebuilder/v3":                 "v3.7.0",
 		"sigs.k8s.io/yaml":                           "v1.3.0",
 	}
 }
 
 func goModIndirectDependencyMap() map[string]string {
 	return map[string]string{
-		"gopkg.in/check.v1": "v1.0.0-20201130134442-10cb98267c6c",
+		"gopkg.in/check.v1":                    "v1.0.0-20201130134442-10cb98267c6c",
+		"cloud.google.com/go/compute/metadata": "v0.2.1",
 	}
 }
 

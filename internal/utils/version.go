@@ -6,8 +6,8 @@ package utils
 
 const (
 	// specifies the minimum version required to build the generated project.
-	GeneratedGoVersionMinimum = "1.17"
+	GeneratedGoVersionMinimum = "1.18"
 
 	// specifies the preferred version.
-	GeneratedGoVersionPreferred = "1.18"
+	GeneratedGoVersionPreferred = "1.19"
 )
