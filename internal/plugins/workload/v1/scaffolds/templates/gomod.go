@@ -47,7 +47,8 @@ func goModDependencyMap() map[string]string {
 
 func goModIndirectDependencyMap() map[string]string {
 	return map[string]string{
-		"gopkg.in/check.v1": "v1.0.0-20201130134442-10cb98267c6c",
+		"gopkg.in/check.v1":                    "v1.0.0-20201130134442-10cb98267c6c",
+		"cloud.google.com/go/compute/metadata": "v0.2.1",
 	}
 }
 
