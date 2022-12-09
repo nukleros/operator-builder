@@ -458,3 +458,71 @@ spec:
   provider: "azure"
 ```
 
+### Stacking Resource Markers
+
+You can include multiple resource markers on a particular resource.  For example:
+```yaml
+---
+# +operator-builder:resource:field=nginx.include,value=true,include
+# +operator-builder:resource:field=nginx.installType,value="deployment",include
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress
+...
+```
+
+The purpose of the first marker is to include *all* nginx ingress contoller
+resource when `spec.nginx.include: true`.  The second gives users a choice
+to install nginx ingress controller as a deployment or daemonset.  When
+`spec.nginx.installType: deployment` the deployment resource is included.
+Therefore the custom resource will need to look as follows for this deployment
+resource to be created:
+
+```yaml
+apiVersion: platform.addons.nukleros.io/v1alpha1
+kind: IngressComponent
+metadata:
+  name: ingresscomponent-sample
+spec:
+  nginx:
+    installType: "deployment"  # if not "deployment" deployment resource excluded
+    include: true  # if false, no nginx resources are created
+    image: "nginx/nginx-ingress"
+    version: "2.3.0"
+    replicas: 2
+```
+
+The resulting source code looks as follows.  If either if-statement is evaluated
+as true, the function will return without any object - hence the deployment will
+not be included.
+
+```go
+// CreateDeploymentNamespaceNginxIngress creates the Deployment resource with name nginx-ingress.
+func CreateDeploymentNamespaceNginxIngress(
+	parent *platformv1alpha1.IngressComponent,
+	collection *setupv1alpha1.SupportServices,
+	reconciler workload.Reconciler,
+	req *workload.Request,
+) ([]client.Object, error) {
+
+	if parent.Spec.Nginx.Include != true {
+		return []client.Object{}, nil
+	}
+
+	if parent.Spec.Nginx.InstallType != "deployment" {
+		return []client.Object{}, nil
+	}
+
+	var resourceObj = &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			// +operator-builder:resource:field=nginx.include,value=true,include
+			// +operator-builder:resource:field=nginx.installType,value="deployment",include
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+      ...
+			}
+
+	return mutate.MutateDeploymentNamespaceNginxIngress(resourceObj, parent, collection, reconciler, req)
+}
+```
