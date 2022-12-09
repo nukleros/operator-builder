@@ -35,7 +35,7 @@ type ChildResource struct {
 	Kind          string
 	StaticContent string
 	SourceCode    string
-	IncludeCode   string
+	IncludeCode   []string
 	MutateFile    string
 	UseStrConv    bool
 	RBAC          *rbac.Rules
@@ -77,33 +77,25 @@ func (resource *ChildResource) ProcessResourceMarkers(markerCollection *markers.
 		return fmt.Errorf("%w; %s for child resource %s", err, ErrChildResourceResourceMarkerInspect, resource)
 	}
 
-	// ensure we have the expected number of resource markers
-	//   - 0: return immediately as resource markers are not required
-	//   - 1: continue processing normally
-	//   - 2: return an error notifying the user that we only expect 1
-	//        resource marker
+	// return immediately if no resource markers are present
 	if len(markerResults) == 0 {
 		return nil
 	}
 
-	//nolint: godox // depends on https://github.com/vmware-tanzu-labs/operator-builder/issues/271
-	// TODO: we need to ensure only one marker is found and return an error if we find more than one.
-	// this becomes difficult as the results are returned as yaml nodes.  for now, we just focus on the
-	// first result and all others are ignored but we should notify the user.
-	result := markerResults[0]
+	// process the markers
+	for _, m := range markerResults {
+		marker, ok := m.Object.(markers.ResourceMarker)
+		if !ok {
+			return ErrChildResourceResourceMarkerProcess
+		}
 
-	// process the marker
-	marker, ok := result.Object.(markers.ResourceMarker)
-	if !ok {
-		return ErrChildResourceResourceMarkerProcess
-	}
+		if err := marker.Process(markerCollection); err != nil {
+			return fmt.Errorf("%w; %s for child resource %s", err, ErrChildResourceResourceMarkerProcess, resource)
+		}
 
-	if err := marker.Process(markerCollection); err != nil {
-		return fmt.Errorf("%w; %s for child resource %s", err, ErrChildResourceResourceMarkerProcess, resource)
-	}
-
-	if marker.GetIncludeCode() != "" {
-		resource.IncludeCode = marker.GetIncludeCode()
+		if marker.GetIncludeCode() != "" {
+			resource.IncludeCode = append(resource.IncludeCode, marker.GetIncludeCode())
+		}
 	}
 
 	return nil

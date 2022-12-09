@@ -88,7 +88,9 @@ func {{ .CreateFuncName }} (
 	req *workload.Request,
 ) ([]client.Object, error) {
 
-	{{- if ne .IncludeCode "" }}{{ .IncludeCode }}{{ end }}
+	{{ range .IncludeCode }}
+	{{ . }}
+	{{ end }}
 
 	{{- .SourceCode }}
 
