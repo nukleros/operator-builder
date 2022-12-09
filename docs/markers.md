@@ -473,7 +473,7 @@ metadata:
 ```
 
 The purpose of the first marker is to include *all* nginx ingress contoller
-resource when `spec.nginx.include: true`.  The second gives users a choice
+resources when `spec.nginx.include: true`.  The second gives users a choice
 to install nginx ingress controller as a deployment or daemonset.  When
 `spec.nginx.installType: deployment` the deployment resource is included.
 Therefore the custom resource will need to look as follows for this deployment
