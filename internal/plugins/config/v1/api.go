@@ -20,12 +20,14 @@ import (
 type createAPISubcommand struct {
 	workloadConfigPath string
 	workload           kinds.WorkloadBuilder
+	enableOlm          bool
 }
 
 var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
 
 func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
+	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for OpenShift Lifecycle Manager")
 }
 
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {

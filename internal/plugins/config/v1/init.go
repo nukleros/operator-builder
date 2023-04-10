@@ -18,6 +18,7 @@ import (
 type initSubcommand struct {
 	workloadConfigPath string
 	controllerImage    string
+	enableOlm          bool
 }
 
 var _ plugin.InitSubcommand = &initSubcommand{}
@@ -25,6 +26,7 @@ var _ plugin.InitSubcommand = &initSubcommand{}
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
 	fs.StringVar(&p.controllerImage, "controller-image", "controller:latest", "controller image")
+	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for OpenShift Lifecycle Manager")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
