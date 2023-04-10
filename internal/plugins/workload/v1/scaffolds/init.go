@@ -17,9 +17,14 @@ import (
 
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
+	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/config/manifests"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/config/scorecard"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
 	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
+)
+
+const (
+	operatorSDKVersion = "v1.28.0"
 )
 
 var _ plugins.Scaffolder = &initScaffolder{}
@@ -98,6 +103,7 @@ func (s *initScaffolder) Scaffold() error {
 			KustomizeVersion:         kustomizecommonv1.KustomizeVersion,
 			ControllerToolsVersion:   scaffoldsv4.ControllerToolsVersion,
 			ControllerRuntimeVersion: scaffoldsv4.ControllerRuntimeVersion,
+			OperatorSDKVersion:       operatorSDKVersion,
 		},
 	); err != nil {
 		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
@@ -111,6 +117,15 @@ func (s *initScaffolder) Scaffold() error {
 			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypePatchesOLM},
 		); err != nil {
 			return fmt.Errorf("unable to scaffold OLM scorecard configuration, %w", err)
+		}
+
+		if err := scaffold.Execute(
+			&manifests.Kustomization{
+				SupportsKustomizeV4: false,
+				SupportsWebhooks:    false,
+			},
+		); err != nil {
+			return fmt.Errorf("unable to scaffold manifests, %w", err)
 		}
 	}
 

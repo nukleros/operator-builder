@@ -29,6 +29,7 @@ type Makefile struct {
 	ControllerToolsVersion   string
 	KustomizeVersion         string
 	ControllerRuntimeVersion string
+	OperatorSDKVersion       string
 }
 
 func (f *Makefile) SetTemplateDefaults() error {
@@ -229,6 +230,23 @@ OPM = $(shell which opm)
 endif
 endif
 
+# operator-sdk
+.PHONY: operator-sdk
+OPERATOR_SDK = ./bin/operator-sdk
+operator-sdk: ## Download opm locally if necessary.
+ifeq (,$(wildcard $(OPERATOR_SDK)))
+ifeq (,$(shell which opm 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(OPERATOR_SDK)) ;\
+	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
+	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/{{ .OperatorSDKVersion }}/operator-sdk_$${OS}_$${ARCH} ;\
+	chmod +x $(OPERATOR_SDK) ;\
+	}
+else
+OPM = $(shell which opm)
+endif
+endif
 
 # bundle
 
