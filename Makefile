@@ -8,11 +8,13 @@ INIT_OPTS=init \
 	--workload-config .workloadConfig/workload.yaml \
    	--repo github.com/acme/acme-cnp-mgr \
     --skip-go-version-check \
-    --controller-image controller:latest
+    --controller-image controller:latest \
+	--enable-olm=true
 CREATE_OPTS=create api \
 	--workload-config .workloadConfig/workload.yaml \
 	--controller \
-	--resource
+	--resource \
+	--enable-olm=true
 
 define create_path
 	if [ ! -d $(1)/.workloadConfig ]; then\
