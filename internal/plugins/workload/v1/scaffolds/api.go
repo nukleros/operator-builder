@@ -59,6 +59,7 @@ type apiScaffolder struct {
 	boilerplate        string
 	workload           kinds.WorkloadBuilder
 	cliRootCommandName string
+	enableOlm          bool
 }
 
 // NewAPIScaffolder returns a new Scaffolder for project initialization operations.
@@ -67,12 +68,14 @@ func NewAPIScaffolder(
 	res *resource.Resource,
 	workload kinds.WorkloadBuilder,
 	cliRootCommandName string,
+	enableOlm bool,
 ) plugins.Scaffolder {
 	return &apiScaffolder{
 		config:             cfg,
 		resource:           res,
 		workload:           workload,
 		cliRootCommandName: cliRootCommandName,
+		enableOlm:          enableOlm,
 	}
 }
 
@@ -171,7 +174,12 @@ func (s *apiScaffolder) scaffoldWorkload(
 			IsClusterScoped: workload.IsClusterScoped(),
 		},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldController)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldCRDSample)
+	}
+
+	// scaffold the kustomization sample if OLM is enabled.
+	if err := scaffold.Execute(&samples.Kustomization{}); err != nil {
+		return fmt.Errorf("%w; %s", err, ErrScaffoldKustomization)
 	}
 
 	// scaffold the end-to-end tests.  this will generate some common end-to-end tests for

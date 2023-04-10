@@ -27,6 +27,7 @@ type createAPISubcommand struct {
 	workloadConfigPath string
 	cliRootCommandName string
 	workload           kinds.WorkloadBuilder
+	enableOlm          bool
 }
 
 var ErrScaffoldCreateAPI = errors.New("unable to scaffold api")
@@ -51,6 +52,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 
 	p.workloadConfigPath = pluginConfig.WorkloadConfigPath
 	p.cliRootCommandName = pluginConfig.CliRootCommandName
+	p.enableOlm = pluginConfig.EnableOLM
 
 	return nil
 }
@@ -82,6 +84,7 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 		p.resource,
 		p.workload,
 		p.cliRootCommandName,
+		p.enableOlm,
 	)
 	scaffolder.InjectFS(fs)
 
