@@ -12,4 +12,5 @@ type Plugin struct {
 	WorkloadConfigPath string `json:"workloadConfigPath" yaml:"workloadConfigPath"`
 	CliRootCommandName string `json:"cliRootCommandName" yaml:"cliRootCommandName"`
 	ControllerImg      string `json:"controllerImg" yaml:"controllerImg"`
+	EnableOLM          bool   `json:"enableOlm" yaml:"enableOlm"`
 }

@@ -15,6 +15,7 @@ import (
 
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
+	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/config/scorecard"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
 	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
@@ -27,6 +28,7 @@ type initScaffolder struct {
 	workload           kinds.WorkloadBuilder
 	cliRootCommandName string
 	controllerImg      string
+	enableOlm          bool
 
 	fs machinery.Filesystem
 }
@@ -37,6 +39,7 @@ func NewInitScaffolder(
 	workload kinds.WorkloadBuilder,
 	cliRootCommandName string,
 	controllerImg string,
+	enableOlm bool,
 ) plugins.Scaffolder {
 	return &initScaffolder{
 		config:             cfg,
@@ -44,6 +47,7 @@ func NewInitScaffolder(
 		workload:           workload,
 		cliRootCommandName: cliRootCommandName,
 		controllerImg:      controllerImg,
+		enableOlm:          enableOlm,
 	}
 }
 
@@ -88,6 +92,17 @@ func (s *initScaffolder) Scaffold() error {
 		&e2e.Test{},
 	); err != nil {
 		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
+	}
+
+	if s.enableOlm {
+		if err := scaffold.Execute(
+			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypeBase},
+			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypeKustomize},
+			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypePatchesBasic},
+			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypePatchesOLM},
+		); err != nil {
+			return fmt.Errorf("unable to scaffold OLM scorecard configuration, %w", err)
+		}
 	}
 
 	return nil

@@ -26,7 +26,7 @@ var _ plugin.InitSubcommand = &initSubcommand{}
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
 	fs.StringVar(&p.controllerImage, "controller-image", "controller:latest", "controller image")
-	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for OpenShift Lifecycle Manager")
+	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for Operator Lifecycle Manager (OLM)")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
@@ -39,6 +39,7 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 		WorkloadConfigPath: p.workloadConfigPath,
 		CliRootCommandName: processor.Workload.GetRootCommand().Name,
 		ControllerImg:      p.controllerImage,
+		EnableOLM:          p.enableOlm,
 	}
 
 	if err := c.EncodePluginConfig(workloadconfig.PluginKey, pluginConfig); err != nil {

@@ -24,6 +24,7 @@ type initSubcommand struct {
 	workloadConfigPath string
 	cliRootCommandName string
 	controllerImg      string
+	enableOlm          bool
 
 	workload kinds.WorkloadBuilder
 }
@@ -56,6 +57,7 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 	p.workloadConfigPath = pluginConfig.WorkloadConfigPath
 	p.cliRootCommandName = pluginConfig.CliRootCommandName
 	p.controllerImg = pluginConfig.ControllerImg
+	p.enableOlm = pluginConfig.EnableOLM
 
 	return nil
 }
@@ -81,6 +83,7 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 		p.workload,
 		p.cliRootCommandName,
 		p.controllerImg,
+		p.enableOlm,
 	)
 	scaffolder.InjectFS(fs)
 
