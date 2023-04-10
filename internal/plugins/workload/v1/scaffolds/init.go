@@ -12,6 +12,8 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
+	kustomizecommonv1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/common/kustomize/v1"
+	scaffoldsv4 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v4/scaffolds"
 
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
@@ -87,9 +89,16 @@ func (s *initScaffolder) Scaffold() error {
 		&templates.Main{},
 		&templates.GoMod{},
 		&templates.Dockerfile{},
-		&templates.Makefile{RootCmdName: s.cliRootCommandName, ControllerImg: s.controllerImg},
 		&templates.Readme{RootCmdName: s.cliRootCommandName},
 		&e2e.Test{},
+		&templates.Makefile{
+			RootCmdName:              s.cliRootCommandName,
+			ControllerImg:            s.controllerImg,
+			EnableOLM:                s.enableOlm,
+			KustomizeVersion:         kustomizecommonv1.KustomizeVersion,
+			ControllerToolsVersion:   scaffoldsv4.ControllerToolsVersion,
+			ControllerRuntimeVersion: scaffoldsv4.ControllerRuntimeVersion,
+		},
 	); err != nil {
 		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
 	}
