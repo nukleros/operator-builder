@@ -94,8 +94,11 @@ func (s *initScaffolder) Scaffold() error {
 		&templates.Main{},
 		&templates.GoMod{},
 		&templates.Dockerfile{},
-		&templates.Readme{RootCmdName: s.cliRootCommandName},
-		&e2e.Test{},
+		&templates.Readme{
+			RootCmdName:   s.cliRootCommandName,
+			EnableOLM:     s.enableOlm,
+			ControllerImg: s.controllerImg,
+		},
 		&templates.Makefile{
 			RootCmdName:              s.cliRootCommandName,
 			ControllerImg:            s.controllerImg,
@@ -105,6 +108,7 @@ func (s *initScaffolder) Scaffold() error {
 			ControllerRuntimeVersion: scaffoldsv4.ControllerRuntimeVersion,
 			OperatorSDKVersion:       operatorSDKVersion,
 		},
+		&e2e.Test{},
 	); err != nil {
 		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
 	}

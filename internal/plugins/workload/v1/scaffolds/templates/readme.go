@@ -5,7 +5,14 @@
 package templates
 
 import (
+	"fmt"
+	"strings"
+
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+)
+
+const (
+	missingVersionTag = "latest"
 )
 
 var _ machinery.Template = &Readme{}
@@ -14,13 +21,28 @@ var _ machinery.Template = &Readme{}
 type Readme struct {
 	machinery.TemplateMixin
 
-	RootCmdName string
+	RootCmdName         string
+	EnableOLM           bool
+	ControllerImg       string
+	ControllerBundleImg string
 }
 
 // SetTemplateDefaults implements file.Template.
 func (f *Readme) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = "README.md"
+	}
+
+	controllerImgParts := strings.Split(f.ControllerImg, ":")
+	switch len(controllerImgParts) {
+	case 1:
+		f.ControllerImg = fmt.Sprintf("%s:%s", controllerImgParts[0], missingVersionTag)
+		f.ControllerBundleImg = fmt.Sprintf("%s-bundle:%s", controllerImgParts[0], missingVersionTag)
+	case 2:
+		f.ControllerImg = fmt.Sprintf("%s:%s", controllerImgParts[0], controllerImgParts[1])
+		f.ControllerBundleImg = fmt.Sprintf("%s-bundle:%s", controllerImgParts[0], controllerImgParts[1])
+	default:
+		return fmt.Errorf("invalid image: %s", f.ControllerImg)
 	}
 
 	f.IfExistsAction = machinery.OverwriteFile
@@ -55,7 +77,7 @@ To clean up:
 
 First, set the image:
 
-    export IMG=myrepo/myproject:v0.1.0
+    export IMG={{ .ControllerImg }}
 
 Now you can build and push the image:
 
@@ -81,5 +103,35 @@ The CLI binary will get saved to the bin directory.  You can see the help
 message with:
 
     ./bin/{{ .RootCmdName }} help
+{{- end }}
+
+{{ if .EnableOLM -}}
+## Deploy the Operator Lifecycle Manager Bundle
+
+First, build the bundle.  The bundle contains metadata that makes it 
+compatible with Operator Lifecycle Manager and also makes the operator 
+importable into OpenShift OperatorHub:
+
+    make bundle
+
+Next, set the bundle image.  This is the image that contains the packaged 
+bundle:
+
+    export BUNDLE_IMG={{ .ControllerBundleImg }}
+
+Now you can build and push the bundle image:
+
+    make bundle-build
+    make bundle-push
+
+To deploy the bundle (requires OLM to be running in the cluster):
+
+    make operator-sdk
+    bin/operator-sdk bundle validate $BUNDLE_IMG
+    bin/operator-sdk run bundle $BUNDLE_IMG
+
+To clean up:
+
+    bin/operator-sdk cleanup --delete-all $BUNDLE_IMG
 {{ end -}}
 `
