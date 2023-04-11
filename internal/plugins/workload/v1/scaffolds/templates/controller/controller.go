@@ -114,7 +114,7 @@ func (f *Controller) getAPITypesPath(builder kinds.WorkloadBuilder) string {
 	)
 }
 
-//nolint: lll
+// nolint: lll
 const controllerTemplate = `{{ .Boilerplate }}
 
 package {{ .Resource.Group }}
@@ -160,12 +160,6 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 {{ range .Builder.GetRBACRules -}}
 {{ .ToMarker }}
 {{ end }}
-
-// Until Webhooks are implemented we need to list and watch namespaces to ensure
-// they are available before deploying resources,
-// See:
-//   - https://github.com/vmware-tanzu-labs/operator-builder/issues/141
-//   - https://github.com/vmware-tanzu-labs/operator-builder/issues/162
 
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=list;watch
 
