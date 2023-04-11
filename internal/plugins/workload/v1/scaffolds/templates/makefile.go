@@ -51,6 +51,8 @@ func (f *Makefile) SetTemplateDefaults() error {
 const makefileTemplate = `
 # Image URL to use all building/pushing image targets
 IMG ?= "{{ .ControllerImg }}"
+# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
+CRD_OPTIONS ?= "crd:crdVersions=v1"
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.26.1
 
@@ -89,7 +91,7 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -108,7 +110,7 @@ test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
 .PHONY: test-e2e
-test-e2e:
+test-e2e: ## Run E2E tests against a running Kubernetes cluster.
 	go test {{ .Repo }}/test/e2e -tags=e2e_test -count=1
 
 ##@ Build
@@ -233,7 +235,7 @@ endif
 # operator-sdk
 .PHONY: operator-sdk
 OPERATOR_SDK = ./bin/operator-sdk
-operator-sdk: ## Download opm locally if necessary.
+operator-sdk: ## Download operator-sdk locally if necessary.
 ifeq (,$(wildcard $(OPERATOR_SDK)))
 ifeq (,$(shell which opm 2>/dev/null))
 	@{ \
@@ -344,14 +346,13 @@ catalog-push: ## Push a catalog image.
 ##@ Miscellaneous
 
 {{ if ne .RootCmdName "" -}}
-# Build the companion CLI
-build-cli:
+.PHONY: build-cli
+build-cli: ## Build the companion CLI.
 	go build -o bin/{{ .RootCmdName }} cmd/{{ .RootCmdName }}/main.go
 {{- end }}
 
-# Build the API Documentation
 # NOTE: requires go version 1.16 or later
-docs: manifests
+docs: manifests ## Build the API documentation.
 	@if ! command -v go &> /dev/null; then echo "error: go not installed"; exit 1; fi; \
 	GOCMD=$$(which go); \
 	if [[ -z $$($$GOCMD version | grep '1.16') ]]; then echo "error: requires go version >= 1.16"; exit 1; fi; \
