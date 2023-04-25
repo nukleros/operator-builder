@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // SPDX-License-Identifier: MIT
 
 package manifests
