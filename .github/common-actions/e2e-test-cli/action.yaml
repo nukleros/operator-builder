@@ -27,9 +27,9 @@ runs:
       run: |
         if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
           COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
-          MANIFEST=`find ${PWD}/config/samples -name "*.yaml" | head -1`
-          echo "CLI_COMMAND=${COMMAND}" >> "$GITHUB_OUTPUT"
-          echo "CLI_MANIFEST=${MANIFEST}" >> "$GITHUB_OUTPUT"
+          MANIFEST=`find ${PWD}/config/samples ! -name kustomization.yaml -name "*.yaml" | head -1`
+          echo "CLI_COMMAND=$COMMAND" >> "$GITHUB_OUTPUT"
+          echo "CLI_MANIFEST=$MANIFEST" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Generate and Apply Child Resources
