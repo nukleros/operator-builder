@@ -115,7 +115,7 @@ linters:
     - nestif
     - nilerr
     - nlreturn
-    #- nolintlint
+    - nolintlint
     - paralleltest
     - prealloc
     - predeclared

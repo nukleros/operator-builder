@@ -68,7 +68,7 @@ func (f *WorkloadTest) SetTemplateDefaults() error {
 	return nil
 }
 
-// nolint: lll
+//nolint:lll
 const e2eWorkloadsTemplate = `// +build e2e_test
 
 {{ .Boilerplate }}

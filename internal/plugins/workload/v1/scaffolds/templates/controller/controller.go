@@ -114,7 +114,7 @@ func (f *Controller) getAPITypesPath(builder kinds.WorkloadBuilder) string {
 	)
 }
 
-// nolint: lll
+//nolint:lll
 const controllerTemplate = `{{ .Boilerplate }}
 
 package {{ .Resource.Group }}

@@ -203,7 +203,6 @@ func (f *CmdGenerateSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 }
 
 const (
-	//nolint: lll
 	cmdGenerateSub = `{{ .Boilerplate }}
 
 package {{ .Resource.Group }}
