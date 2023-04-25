@@ -15,16 +15,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - go-version: 1.19
-          - go-version: 1.20
+          - go-version: "1.19"
+          - go-version: "1.20"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -42,16 +42,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - go-version: 1.19
-          - go-version: 1.20
+          - go-version: "1.19"
+          - go-version: "1.20"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -59,7 +59,7 @@ jobs:
         run: make build
 
       - name: Store Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: operator-builder
           path: bin/operator-builder
@@ -78,36 +78,36 @@ jobs:
           - name: Standalone Operator (Current Go Version)
             artifact: standalone-codebase
             test-workload-path: test/cases/standalone
-            go-version: 1.20
+            go-version: "1.20"
           - name: Standalone Edge Cases Operator (Current Go Version - 1)
             artifact: standalone-edge-codebase
             test-workload-path: test/cases/edge-standalone
-            go-version: 1.19
+            go-version: "1.19"
           - name: Workload Collection Operator (Current Go Version)
             artifact: collection-codebase
             test-workload-path: test/cases/collection
-            go-version: 1.20
+            go-version: "1.20"
           - name: Workload Collection Edge Cases Operator (Current Go Version - 1)
             artifact: collection-edge-codebase
             test-workload-path: test/cases/edge-collection
-            go-version: 1.19
+            go-version: "1.19"
     env:
       TEST_WORKLOAD_PATH: "${{ matrix.test-workload-path }}"
       TEST_PATH: "/tmp/operator-builder-func-test"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Download operator-builder Binary
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: operator-builder
           path: bin
 
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -122,7 +122,7 @@ jobs:
 
       - name: Store ${{ matrix.name }} Codebase
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
           path: ${{ env.TEST_PATH }}
@@ -145,22 +145,22 @@ jobs:
             artifact: standalone-codebase
             test-build: "true"
             test-deploy: "true"
-            go-version: 1.20
+            go-version: "1.20"
           - name: Standalone Edge Cases Operator (Current Go Version - 1)
             artifact: standalone-edge-codebase
             test-build: "false"
             test-deploy: "false"
-            go-version: 1.19
+            go-version: "1.19"
           - name: Workload Collection Operator (Current Go Version)
             artifact: collection-codebase
             test-build: "true"
             test-deploy: "false"
-            go-version: 1.20
+            go-version: "1.20"
           - name: Workload Collection Edge Cases Operator (Current Go Version - 1)
             artifact: collection-edge-codebase
             test-build: "true"
             test-deploy: "false"
-            go-version: 1.19
+            go-version: "1.19"
     services:
       registry:
         image: registry:2
@@ -171,17 +171,17 @@ jobs:
         working-directory: /tmp/operator-builder-test
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Download ${{ matrix.name }} Codebase
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.artifact }}
           path: /tmp/operator-builder-test
