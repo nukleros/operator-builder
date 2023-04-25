@@ -33,18 +33,18 @@ func CreateAPI(processor *config.Processor) error {
 	// run through pre-processing to gather the collection and the components
 	apiProcessor := &createAPIProcessor{configProcessors: processor.GetProcessors()}
 	if err := apiProcessor.preProcess(); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrCreateAPIPreProcess)
+		return fmt.Errorf("%w; %s", err, ErrCreateAPIPreProcess.Error())
 	}
 
 	if len(apiProcessor.components) > 0 {
 		if err := processor.Workload.SetComponents(apiProcessor.components); err != nil {
-			return fmt.Errorf("%w; %s", err, ErrCreateAPISetComponents)
+			return fmt.Errorf("%w; %s", err, ErrCreateAPISetComponents.Error())
 		}
 	}
 
 	// run through processing
 	if err := apiProcessor.process(); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrCreateAPIProcess)
+		return fmt.Errorf("%w; %s", err, ErrCreateAPIProcess.Error())
 	}
 
 	return nil

@@ -45,9 +45,7 @@ func defineCollectionFieldMarker(registry *marker.Registry) error {
 	return nil
 }
 
-//
 // FieldMarkerProcessor interface methods.
-//
 func (cfm *CollectionFieldMarker) GetName() string {
 	if cfm.Name == nil {
 		return ""

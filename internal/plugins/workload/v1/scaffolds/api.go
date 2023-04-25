@@ -103,7 +103,7 @@ func (s *apiScaffolder) Scaffold() error {
 
 	// scaffold the workload
 	if err := s.scaffoldWorkload(scaffold, s.workload); err != nil {
-		return fmt.Errorf("%w; %s for workload type %T", err, ErrScaffoldWorkload, s.workload)
+		return fmt.Errorf("%w; %s for workload type %T", err, ErrScaffoldWorkload.Error(), s.workload)
 	}
 
 	return nil
@@ -142,7 +142,7 @@ func (s *apiScaffolder) scaffoldWorkload(
 	// items such as common resource methods, api type definitions and child resource typed
 	// object definitions.
 	if err := s.scaffoldAPI(scaffold, workload); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources.Error())
 	}
 
 	// scaffold the controller.  this generates the main controller logic.
@@ -153,7 +153,7 @@ func (s *apiScaffolder) scaffoldWorkload(
 		&mutate.Component{},
 		&crd.Kustomization{},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldController)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldController.Error())
 	}
 
 	// update controller main entrypoint.  this updates the main.go file with logic related to
@@ -164,7 +164,7 @@ func (s *apiScaffolder) scaffoldWorkload(
 			WireController: true,
 		},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldMainUpdater)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldMainUpdater.Error())
 	}
 
 	// scaffold the custom resource sample files.  this will generate sample manifest files.
@@ -174,25 +174,25 @@ func (s *apiScaffolder) scaffoldWorkload(
 			IsClusterScoped: workload.IsClusterScoped(),
 		},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldCRDSample)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldCRDSample.Error())
 	}
 
 	// scaffold the kustomization sample if OLM is enabled.
 	if err := scaffold.Execute(&samples.Kustomization{}); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldKustomization)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldKustomization.Error())
 	}
 
 	// scaffold the end-to-end tests.  this will generate some common end-to-end tests for
 	// the controller.
 	if err := scaffold.Execute(&e2e.WorkloadTest{Builder: workload}); err != nil {
-		return fmt.Errorf("%w; %s - error updating test/e2e/%s_%s_%s_test.go", err, ErrScaffoldController,
+		return fmt.Errorf("%w; %s - error updating test/e2e/%s_%s_%s_test.go", err, ErrScaffoldController.Error(),
 			workload.GetAPIGroup(), workload.GetAPIVersion(), strings.ToLower(workload.GetAPIKind()))
 	}
 
 	// scaffold the companion CLI only if we have a root command name
 	if s.cliRootCommandName != "" {
 		if err := s.scaffoldCLI(scaffold, workload); err != nil {
-			return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLI)
+			return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLI.Error())
 		}
 	}
 
@@ -201,7 +201,7 @@ func (s *apiScaffolder) scaffoldWorkload(
 	if workload.IsCollection() {
 		for _, component := range workload.GetComponents() {
 			if err := s.scaffoldWorkload(scaffold, component); err != nil {
-				return fmt.Errorf("%w; %s for workload type %T", err, ErrScaffoldWorkload, component)
+				return fmt.Errorf("%w; %s for workload type %T", err, ErrScaffoldWorkload.Error(), component)
 			}
 		}
 	}
@@ -219,7 +219,7 @@ func (s *apiScaffolder) scaffoldAPI(
 		&api.Types{Builder: workload},
 		&api.Group{},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldAPITypes)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPITypes.Error())
 	}
 
 	// scaffold the specific kind files
@@ -228,14 +228,14 @@ func (s *apiScaffolder) scaffoldAPI(
 		&api.KindLatest{PackageName: workload.GetPackageName()},
 		&api.KindUpdater{},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIKindInfo)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIKindInfo.Error())
 	}
 
 	// scaffold the resources
 	if err := scaffold.Execute(
 		&resources.Resources{Builder: workload},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources.Error())
 	}
 
 	// scaffolds the child resource definition files
@@ -244,7 +244,7 @@ func (s *apiScaffolder) scaffoldAPI(
 		if err := scaffold.Execute(
 			&resources.Definition{Builder: workload, Manifest: manifest},
 		); err != nil {
-			return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
+			return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources.Error())
 		}
 
 		// update the child resource mutation for each child resource
@@ -252,7 +252,7 @@ func (s *apiScaffolder) scaffoldAPI(
 			if err := scaffold.Execute(
 				&resources.Mutate{Builder: workload, ChildResource: manifest.ChildResources[i]},
 			); err != nil {
-				return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources)
+				return fmt.Errorf("%w; %s", err, ErrScaffoldAPIChildResources.Error())
 			}
 		}
 	}
@@ -261,7 +261,7 @@ func (s *apiScaffolder) scaffoldAPI(
 	if err := scaffold.Execute(
 		&resources.Constants{Builder: workload},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources.Error())
 	}
 
 	return nil
@@ -278,7 +278,7 @@ func (s *apiScaffolder) scaffoldCLI(
 		&cli.CmdInitSub{Builder: workload},
 		&cli.CmdInitSubUpdater{Builder: workload},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIInit)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIInit.Error())
 	}
 
 	// scaffold the generate command unless we have a collection without resources
@@ -287,7 +287,7 @@ func (s *apiScaffolder) scaffoldCLI(
 			&cli.CmdGenerateSub{Builder: workload},
 			&cli.CmdGenerateSubUpdater{Builder: workload},
 		); err != nil {
-			return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIGenerate)
+			return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIGenerate.Error())
 		}
 	}
 
@@ -296,7 +296,7 @@ func (s *apiScaffolder) scaffoldCLI(
 		&cli.CmdVersionSub{Builder: workload},
 		&cli.CmdVersionSubUpdater{Builder: workload},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIVersion)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIVersion.Error())
 	}
 
 	// scaffold the root command
@@ -308,7 +308,7 @@ func (s *apiScaffolder) scaffoldCLI(
 			Builder:         workload,
 		},
 	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIRoot)
+		return fmt.Errorf("%w; %s", err, ErrScaffoldCompanionCLIRoot.Error())
 	}
 
 	return nil

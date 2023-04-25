@@ -51,7 +51,7 @@ func (roleRule *RoleRule) processRaw(rule interface{}) error {
 
 	for objectField, fieldKey := range fields {
 		if err := objectField.setValues(rule, fieldKey); err != nil {
-			return fmt.Errorf("%w; %s: %v", err, ErrorProcessRoleRule, rule)
+			return fmt.Errorf("%w; %s: %v", err, ErrorProcessRoleRule.Error(), rule)
 		}
 	}
 
@@ -67,7 +67,7 @@ func (field *RoleRuleField) setValues(rule interface{}, fieldKey string) error {
 
 	fieldValues, err := utils.ToArrayString(fieldValue)
 	if err != nil {
-		return fmt.Errorf("%w; %s: [%s]", err, ErrorProcessRoleRuleField, fieldKey)
+		return fmt.Errorf("%w; %s: [%s]", err, ErrorProcessRoleRuleField.Error(), fieldKey)
 	}
 
 	*field = fieldValues

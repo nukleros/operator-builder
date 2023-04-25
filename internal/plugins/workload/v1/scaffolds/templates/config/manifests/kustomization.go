@@ -45,7 +45,7 @@ type Kustomization struct {
 	SupportsWebhooks bool
 }
 
-// SetTemplateDefaults implements machinery.Template
+// SetTemplateDefaults implements machinery.Template.
 func (f *Kustomization) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = filepath.Join("config", "manifests", "kustomization.yaml")

@@ -65,11 +65,11 @@ func (p *initSubcommand) InjectConfig(c config.Config) error {
 func (p *initSubcommand) PreScaffold(machinery.Filesystem) error {
 	processor, err := workloadconfig.Parse(p.workloadConfigPath)
 	if err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit.Error(), p.workloadConfigPath, err)
 	}
 
 	if err := subcommand.Init(processor); err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit.Error(), p.workloadConfigPath, err)
 	}
 
 	p.workload = processor.Workload
@@ -88,7 +88,7 @@ func (p *initSubcommand) Scaffold(fs machinery.Filesystem) error {
 	scaffolder.InjectFS(fs)
 
 	if err := scaffolder.Scaffold(); err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit.Error(), p.workloadConfigPath, err)
 	}
 
 	return nil

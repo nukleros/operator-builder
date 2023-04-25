@@ -24,6 +24,7 @@
 package scorecard
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -32,6 +33,11 @@ import (
 
 var _ machinery.Template = &Scorecard{}
 
+var (
+	ErrUnknwonScorecardType = errors.New("unknown scorecard type")
+)
+
+//nolint:golint
 type ScorecardType int
 
 const (
@@ -57,7 +63,7 @@ type Scorecard struct {
 
 func (f *Scorecard) SetTemplateDefaults() error {
 	if f.ScorecardType == ScorecardTypeUnknown {
-		return fmt.Errorf("unknown scorecard type")
+		return ErrUnknwonScorecardType
 	}
 
 	f.Path = filepath.Join(append([]string{"config", "scorecard"}, getScorecardSubPath(f.ScorecardType)...)...)

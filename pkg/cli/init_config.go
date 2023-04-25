@@ -110,7 +110,7 @@ func (i *initConfigSubCommand) addInitSubCommand(parentCommand *cobra.Command) e
 
 	subCommand.RunE = func(cmd *cobra.Command, args []string) error {
 		if err := subcommand.InitConfig(i.options); err != nil {
-			return fmt.Errorf("%w; %s", err, returnErr)
+			return fmt.Errorf("%w; %s", err, returnErr.Error())
 		}
 
 		return nil

@@ -4,9 +4,7 @@
 
 package utils
 
-import (
-	"strings"
-)
+import "strings"
 
 // ToPascalCase will convert a kebab-case string to a PascalCase name appropriate to
 // use as a go variable name.
@@ -98,9 +96,10 @@ func ToSnakeCase(name string) string {
 
 // ToTitle replaces the strings.Title method, which is deprecated in go1.18.  This is a helper
 // method to make titling a string much more readable than the new methodology.
-//nolint:godox
 // TODO: use commented code below eventually.  It returns different at this time but will
 // eventually be deprecated.
+//
+//nolint:godox
 func ToTitle(in string) string {
 	//nolint:gocritic
 	// return cases.Title(language.Und, cases.NoLower, cases.NoLower).String(in)

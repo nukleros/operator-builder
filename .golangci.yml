@@ -85,6 +85,7 @@ linters:
     - forbidigo
     - forcetypeassert
     - funlen
+    # disable due to false positives
     #- gci
     - gochecknoglobals
     - gochecknoinits
@@ -118,7 +119,7 @@ linters:
     - nestif
     - nilerr
     - nlreturn
-    - nolintlint
+    #- nolintlint
     - paralleltest
     - prealloc
     - predeclared
@@ -152,7 +153,9 @@ issues:
     - path: internal/commands/*\.go
       linters:
         - gochecknoglobals
-
+    - path: internal/plugins/workload/v1/scaffolds/templates/readme.go
+      linters:
+        - gomnd
     # https://github.com/go-critic/go-critic/issues/926
     - linters:
         - gocritic

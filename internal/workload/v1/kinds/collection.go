@@ -260,13 +260,13 @@ func (c *WorkloadCollection) GetSubCommand() *companion.CLI {
 func (c *WorkloadCollection) LoadManifests(workloadPath string) error {
 	expanded, err := manifests.ExpandManifests(workloadPath, c.Spec.Resources)
 	if err != nil {
-		return fmt.Errorf("%w; %s for collection %s", err, ErrLoadManifests, c.Name)
+		return fmt.Errorf("%w; %s for collection %s", err, ErrLoadManifests.Error(), c.Name)
 	}
 
 	c.Spec.Manifests = expanded
 	for _, manifest := range *c.Spec.Manifests {
 		if err := manifest.LoadContent(c.IsCollection()); err != nil {
-			return fmt.Errorf("%w; %s for collection %s", err, ErrLoadManifests, c.Name)
+			return fmt.Errorf("%w; %s for collection %s", err, ErrLoadManifests.Error(), c.Name)
 		}
 	}
 

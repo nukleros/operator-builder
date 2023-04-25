@@ -5,6 +5,7 @@
 package templates
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -16,6 +17,8 @@ const (
 )
 
 var _ machinery.Template = &Readme{}
+
+var ErrInvalidImage = errors.New("invalid image")
 
 // Readme scaffolds a file that defines the templated README.md instructions for a custom workload.
 type Readme struct {
@@ -42,7 +45,7 @@ func (f *Readme) SetTemplateDefaults() error {
 		f.ControllerImg = fmt.Sprintf("%s:%s", controllerImgParts[0], controllerImgParts[1])
 		f.ControllerBundleImg = fmt.Sprintf("%s-bundle:%s", controllerImgParts[0], controllerImgParts[1])
 	default:
-		return fmt.Errorf("invalid image: %s", f.ControllerImg)
+		return fmt.Errorf("%s; %w", f.ControllerImg, ErrInvalidImage)
 	}
 
 	f.IfExistsAction = machinery.OverwriteFile

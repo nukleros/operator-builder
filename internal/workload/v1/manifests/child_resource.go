@@ -74,7 +74,7 @@ func (resource *ChildResource) ProcessResourceMarkers(markerCollection *markers.
 	// obtain the marker results from the child resource input yaml
 	_, markerResults, err := markers.InspectForYAML([]byte(resource.StaticContent), markers.ResourceMarkerType)
 	if err != nil {
-		return fmt.Errorf("%w; %s for child resource %s", err, ErrChildResourceResourceMarkerInspect, resource)
+		return fmt.Errorf("%w; %s for child resource %s", err, ErrChildResourceResourceMarkerInspect.Error(), resource)
 	}
 
 	// return immediately if no resource markers are present
@@ -90,7 +90,7 @@ func (resource *ChildResource) ProcessResourceMarkers(markerCollection *markers.
 		}
 
 		if err := marker.Process(markerCollection); err != nil {
-			return fmt.Errorf("%w; %s for child resource %s", err, ErrChildResourceResourceMarkerProcess, resource)
+			return fmt.Errorf("%w; %s for child resource %s", err, ErrChildResourceResourceMarkerProcess.Error(), resource)
 		}
 
 		if marker.GetIncludeCode() != "" {

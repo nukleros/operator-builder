@@ -66,11 +66,11 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 	processor, err := workloadconfig.Parse(p.workloadConfigPath)
 	if err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI.Error(), p.workloadConfigPath, err)
 	}
 
 	if err := subcommand.CreateAPI(processor); err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI.Error(), p.workloadConfigPath, err)
 	}
 
 	p.workload = processor.Workload
@@ -89,7 +89,7 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 	scaffolder.InjectFS(fs)
 
 	if err := scaffolder.Scaffold(); err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit.Error(), p.workloadConfigPath, err)
 	}
 
 	return nil

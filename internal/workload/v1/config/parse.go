@@ -33,7 +33,7 @@ var (
 func Parse(configPath string) (*Processor, error) {
 	processor, err := NewProcessor(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("%s - error creating new processor - %w", ErrParseConfig, err)
+		return nil, fmt.Errorf("%s - error creating new processor - %w", ErrParseConfig.Error(), err)
 	}
 
 	// create the validator we need to track workloads as they are parsed and fail fast
@@ -44,7 +44,7 @@ func Parse(configPath string) (*Processor, error) {
 
 	// parse the workload configuration from the newly created object
 	if err := processor.parse(validator); err != nil {
-		return nil, fmt.Errorf("%s at config path %s - %w", ErrParseConfig, configPath, err)
+		return nil, fmt.Errorf("%s at config path %s - %w", ErrParseConfig.Error(), configPath, err)
 	}
 
 	// we must ensure the top-level workload that we created is not a component, as the top-level
@@ -52,7 +52,7 @@ func Parse(configPath string) (*Processor, error) {
 	if processor.Workload.IsComponent() {
 		return nil, fmt.Errorf(
 			"%s - no %s found at config path %s - %w",
-			ErrParseConfig,
+			ErrParseConfig.Error(),
 			kinds.WorkloadKindCollection,
 			configPath,
 			ErrCollectionRequired,
@@ -157,7 +157,7 @@ func (processor *Processor) parseComponents(
 			processor.Children = append(processor.Children, componentProcessor)
 
 			if err := componentProcessor.parse(validator); err != nil {
-				return fmt.Errorf("%w; %s at path %s", err, ErrParseComponentConfig, componentPath)
+				return fmt.Errorf("%w; %s at path %s", err, ErrParseComponentConfig.Error(), componentPath)
 			}
 
 			// set the config path

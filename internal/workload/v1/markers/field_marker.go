@@ -70,9 +70,7 @@ func defineFieldMarker(registry *marker.Registry) error {
 	return nil
 }
 
-//
 // FieldMarker Processor interface methods.
-//
 func (fm *FieldMarker) GetName() string {
 	if fm.Name == nil {
 		return ""

@@ -160,7 +160,7 @@ func (rm *ResourceMarker) GetParent() string {
 func (rm *ResourceMarker) Process(markers *MarkerCollection) error {
 	// ensure we have a valid field marker before continuing to process
 	if err := rm.validate(); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrResourceMarkerInvalid)
+		return fmt.Errorf("%w; %s", err, ErrResourceMarkerInvalid.Error())
 	}
 
 	// associate field markers from a collection of markers to this resource marker
