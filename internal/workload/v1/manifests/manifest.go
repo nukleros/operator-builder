@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -85,7 +85,7 @@ func (manifest *Manifest) ExtractManifests() []string {
 func (manifest *Manifest) LoadContent(isCollection bool) error {
 	manifestContent, err := os.ReadFile(manifest.Filename)
 	if err != nil {
-		return fmt.Errorf("%w; %s for manifest file %s", err, ErrProcessManifest, manifest.Filename)
+		return fmt.Errorf("%w; %s for manifest file %s", err, ErrProcessManifest.Error(), manifest.Filename)
 	}
 
 	if isCollection {

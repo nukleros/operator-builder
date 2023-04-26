@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -110,7 +110,7 @@ func (i *initConfigSubCommand) addInitSubCommand(parentCommand *cobra.Command) e
 
 	subCommand.RunE = func(cmd *cobra.Command, args []string) error {
 		if err := subcommand.InitConfig(i.options); err != nil {
-			return fmt.Errorf("%w; %s", err, returnErr)
+			return fmt.Errorf("%w; %s", err, returnErr.Error())
 		}
 
 		return nil

@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -12,11 +12,19 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/config"
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
+	kustomizecommonv1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/common/kustomize/v1"
+	scaffoldsv4 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v4/scaffolds"
 
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
+	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/config/manifests"
+	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/config/scorecard"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/test/e2e"
 	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
+)
+
+const (
+	operatorSDKVersion = "v1.28.0"
 )
 
 var _ plugins.Scaffolder = &initScaffolder{}
@@ -27,6 +35,7 @@ type initScaffolder struct {
 	workload           kinds.WorkloadBuilder
 	cliRootCommandName string
 	controllerImg      string
+	enableOlm          bool
 
 	fs machinery.Filesystem
 }
@@ -37,6 +46,7 @@ func NewInitScaffolder(
 	workload kinds.WorkloadBuilder,
 	cliRootCommandName string,
 	controllerImg string,
+	enableOlm bool,
 ) plugins.Scaffolder {
 	return &initScaffolder{
 		config:             cfg,
@@ -44,6 +54,7 @@ func NewInitScaffolder(
 		workload:           workload,
 		cliRootCommandName: cliRootCommandName,
 		controllerImg:      controllerImg,
+		enableOlm:          enableOlm,
 	}
 }
 
@@ -83,11 +94,43 @@ func (s *initScaffolder) Scaffold() error {
 		&templates.Main{},
 		&templates.GoMod{},
 		&templates.Dockerfile{},
-		&templates.Makefile{RootCmdName: s.cliRootCommandName, ControllerImg: s.controllerImg},
-		&templates.Readme{RootCmdName: s.cliRootCommandName},
+		&templates.Readme{
+			RootCmdName:   s.cliRootCommandName,
+			EnableOLM:     s.enableOlm,
+			ControllerImg: s.controllerImg,
+		},
+		&templates.Makefile{
+			RootCmdName:              s.cliRootCommandName,
+			ControllerImg:            s.controllerImg,
+			EnableOLM:                s.enableOlm,
+			KustomizeVersion:         kustomizecommonv1.KustomizeVersion,
+			ControllerToolsVersion:   scaffoldsv4.ControllerToolsVersion,
+			ControllerRuntimeVersion: scaffoldsv4.ControllerRuntimeVersion,
+			OperatorSDKVersion:       operatorSDKVersion,
+		},
 		&e2e.Test{},
 	); err != nil {
 		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
+	}
+
+	if s.enableOlm {
+		if err := scaffold.Execute(
+			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypeBase},
+			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypeKustomize},
+			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypePatchesBasic},
+			&scorecard.Scorecard{ScorecardType: scorecard.ScorecardTypePatchesOLM},
+		); err != nil {
+			return fmt.Errorf("unable to scaffold OLM scorecard configuration, %w", err)
+		}
+
+		if err := scaffold.Execute(
+			&manifests.Kustomization{
+				SupportsKustomizeV4: false,
+				SupportsWebhooks:    false,
+			},
+		); err != nil {
+			return fmt.Errorf("unable to scaffold manifests, %w", err)
+		}
 	}
 
 	return nil

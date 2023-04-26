@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -203,7 +203,6 @@ func (f *CmdGenerateSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 }
 
 const (
-	//nolint: lll
 	cmdGenerateSub = `{{ .Boilerplate }}
 
 package {{ .Resource.Group }}

@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -68,7 +68,7 @@ func (f *WorkloadTest) SetTemplateDefaults() error {
 	return nil
 }
 
-//nolint: lll
+//nolint:lll
 const e2eWorkloadsTemplate = `// +build e2e_test
 
 {{ .Boilerplate }}
@@ -142,11 +142,11 @@ func (tester *E2ETest) {{ .TesterName }}Test(testSuite *E2EComponentTestSuite) {
 
 	// test the update of a child object
 	// TODO: need immutable fields so that we can predict which managed fields we can modify to test reconciliation
-	// see https://github.com/vmware-tanzu-labs/operator-builder/issues/67
+	// see https://github.com/nukleros/operator-builder/issues/24
 
 	// test the update of a parent object
 	// TODO: need immutable fields so that we can predict which managed fields we can modify to test reconciliation
-	// see https://github.com/vmware-tanzu-labs/operator-builder/issues/67
+	// see https://github.com/nukleros/operator-builder/issues/24
 
 	// test that controller logs do not contain errors
 	if os.Getenv("DEPLOY_IN_CLUSTER") == "true" {

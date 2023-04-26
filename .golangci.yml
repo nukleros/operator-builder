@@ -72,7 +72,6 @@ linters:
     - asciicheck
     - bodyclose
     #- cyclop
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -85,7 +84,8 @@ linters:
     - forbidigo
     - forcetypeassert
     - funlen
-    - gci
+    # disable due to false positives
+    #- gci
     - gochecknoglobals
     - gochecknoinits
     - gocognit
@@ -99,7 +99,6 @@ linters:
     #- gofmt
     - goheader
     - goimports
-    - golint
     - gomnd
     - gomoddirectives
     - gomodguard
@@ -107,10 +106,8 @@ linters:
     - gosec
     - gosimple
     - govet
-    - ifshort
     - importas
     - ineffassign
-    - interfacer
     - lll
     - makezero
     - misspell
@@ -126,7 +123,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
     - testpackage
     - thelper
@@ -135,7 +131,6 @@ linters:
     - unconvert
     - unparam
     - unused
-    - varcheck
     - wastedassign
     - whitespace
     - wrapcheck
@@ -152,7 +147,9 @@ issues:
     - path: internal/commands/*\.go
       linters:
         - gochecknoglobals
-
+    - path: internal/plugins/workload/v1/scaffolds/templates/readme.go
+      linters:
+        - gomnd
     # https://github.com/go-critic/go-critic/issues/926
     - linters:
         - gocritic

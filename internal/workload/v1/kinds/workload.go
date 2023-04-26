@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -224,7 +224,7 @@ func (ws *WorkloadSpec) appendCollectionRef() {
 }
 
 func processManifestError(err error, manifest *manifests.Manifest) error {
-	return fmt.Errorf("%w; %s [%s]", err, ErrProcessManifest, manifest.Filename)
+	return fmt.Errorf("%w; %s [%s]", err, ErrProcessManifest.Error(), manifest.Filename)
 }
 
 func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) error {
@@ -251,7 +251,7 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) erro
 				return fmt.Errorf(
 					"%w; %s - unable to decode object in manifest file %s",
 					err,
-					ErrProcessManifest,
+					ErrProcessManifest.Error(),
 					manifestFile.Filename,
 				)
 			}

@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -222,13 +222,13 @@ func (s *StandaloneWorkload) GetSubCommand() *companion.CLI {
 func (s *StandaloneWorkload) LoadManifests(workloadPath string) error {
 	expanded, err := manifests.ExpandManifests(workloadPath, s.Spec.Resources)
 	if err != nil {
-		return fmt.Errorf("%w; %s for standalone workload %s", err, ErrLoadManifests, s.Name)
+		return fmt.Errorf("%w; %s for standalone workload %s", err, ErrLoadManifests.Error(), s.Name)
 	}
 
 	s.Spec.Manifests = expanded
 	for _, manifest := range *s.Spec.Manifests {
 		if err := manifest.LoadContent(s.IsCollection()); err != nil {
-			return fmt.Errorf("%w; %s for standalone workload %s", err, ErrLoadManifests, s.Name)
+			return fmt.Errorf("%w; %s for standalone workload %s", err, ErrLoadManifests.Error(), s.Name)
 		}
 	}
 

@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -70,9 +70,7 @@ func defineFieldMarker(registry *marker.Registry) error {
 	return nil
 }
 
-//
 // FieldMarker Processor interface methods.
-//
 func (fm *FieldMarker) GetName() string {
 	if fm.Name == nil {
 		return ""

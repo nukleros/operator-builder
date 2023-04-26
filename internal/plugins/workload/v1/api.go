@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -27,6 +27,7 @@ type createAPISubcommand struct {
 	workloadConfigPath string
 	cliRootCommandName string
 	workload           kinds.WorkloadBuilder
+	enableOlm          bool
 }
 
 var ErrScaffoldCreateAPI = errors.New("unable to scaffold api")
@@ -51,6 +52,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 
 	p.workloadConfigPath = pluginConfig.WorkloadConfigPath
 	p.cliRootCommandName = pluginConfig.CliRootCommandName
+	p.enableOlm = pluginConfig.EnableOLM
 
 	return nil
 }
@@ -64,11 +66,11 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
 	processor, err := workloadconfig.Parse(p.workloadConfigPath)
 	if err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI.Error(), p.workloadConfigPath, err)
 	}
 
 	if err := subcommand.CreateAPI(processor); err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldCreateAPI.Error(), p.workloadConfigPath, err)
 	}
 
 	p.workload = processor.Workload
@@ -82,11 +84,12 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 		p.resource,
 		p.workload,
 		p.cliRootCommandName,
+		p.enableOlm,
 	)
 	scaffolder.InjectFS(fs)
 
 	if err := scaffolder.Scaffold(); err != nil {
-		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit, p.workloadConfigPath, err)
+		return fmt.Errorf("%s for %s, %w", ErrScaffoldInit.Error(), p.workloadConfigPath, err)
 	}
 
 	return nil

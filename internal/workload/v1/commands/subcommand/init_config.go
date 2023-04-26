@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -68,7 +68,7 @@ func outputFile(options *InitConfigOptions, data []byte) error {
 		outputStream := os.Stdout
 
 		if _, err := outputStream.WriteString(string(data)); err != nil {
-			return fmt.Errorf("%w; %s", err, ErrWriteStdout)
+			return fmt.Errorf("%w; %s", err, ErrWriteStdout.Error())
 		}
 
 		return nil
@@ -82,7 +82,7 @@ func outputFile(options *InitConfigOptions, data []byte) error {
 	}
 
 	if err := os.WriteFile(options.Path, data, permissions); err != nil {
-		return fmt.Errorf("%w; %s at location %s", err, ErrWriteFile, options.Path)
+		return fmt.Errorf("%w; %s at location %s", err, ErrWriteFile.Error(), options.Path)
 	}
 
 	return nil

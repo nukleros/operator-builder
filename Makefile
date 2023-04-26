@@ -8,11 +8,13 @@ INIT_OPTS=init \
 	--workload-config .workloadConfig/workload.yaml \
    	--repo github.com/acme/acme-cnp-mgr \
     --skip-go-version-check \
-    --controller-image controller:latest
+    --controller-image controller:latest \
+	--enable-olm=true
 CREATE_OPTS=create api \
 	--workload-config .workloadConfig/workload.yaml \
 	--controller \
-	--resource
+	--resource \
+	--enable-olm=true
 
 define create_path
 	if [ ! -d $(1)/.workloadConfig ]; then\
@@ -34,7 +36,7 @@ install: build
 #
 # traditional testing
 #
-GOLANGCI_LINT_VERSION ?= v1.46.2
+GOLANGCI_LINT_VERSION ?= v1.52.2
 install-linter:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 

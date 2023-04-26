@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -15,7 +15,8 @@ var _ machinery.Template = &SuiteTest{}
 var _ machinery.Inserter = &SuiteTest{}
 
 // SuiteTest scaffolds the file that sets up the controller tests
-// nolint:maligned
+//
+//nolint:maligned
 type SuiteTest struct {
 	machinery.TemplateMixin
 	machinery.MultiGroupMixin

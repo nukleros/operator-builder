@@ -26,18 +26,20 @@ runs:
       working-directory: /tmp/operator-builder-test
       run: |
         if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
-          COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder -type f`
-          MANIFEST=`find ${PWD}/config/samples -name "*.yaml" | head -1`
-          echo "::set-output name=command::${COMMAND}"
-          echo "::set-output name=manifest::${MANIFEST}"
+          COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder ! -name kube-apiserver ! -name etcd ! -name kubectl ! -name setup-envtest -type f`
+          echo $COMMAND
+          MANIFEST=`find ${PWD}/config/samples ! -name kustomization.yaml -name "*.yaml" | head -1`
+          echo $MANIFEST
+          echo "CLI_COMMAND=$COMMAND" >> "$GITHUB_OUTPUT"
+          echo "CLI_MANIFEST=$MANIFEST" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Generate and Apply Child Resources
       shell: bash
       run: |
         if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
-          ${{ steps.get-cli-inputs.outputs.command }} generate \
-            -w ${{ steps.get-cli-inputs.outputs.manifest }} \
+          ${{ steps.get-cli-inputs.outputs.CLI_COMMAND }} generate \
+            -w ${{ steps.get-cli-inputs.outputs.CLI_MANIFEST }} \
             | kubectl apply -f -
         fi
 
@@ -45,8 +47,8 @@ runs:
       shell: bash
       run: |
         if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
-          ${{ steps.get-cli-inputs.outputs.command }} generate \
-            -w ${{ steps.get-cli-inputs.outputs.manifest }} \
+          ${{ steps.get-cli-inputs.outputs.CLI_COMMAND }} generate \
+            -w ${{ steps.get-cli-inputs.outputs.CLI_MANIFEST }} \
             | kubectl delete -f -
         fi
 
@@ -56,7 +58,7 @@ runs:
       run: |
         if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
           make install
-          ${{ steps.get-cli-inputs.outputs.command }} init | kubectl apply -f -
+          ${{ steps.get-cli-inputs.outputs.CLI_COMMAND }} init | kubectl apply -f -
         fi
 
     - name: Uninstall Parent Custom Resources

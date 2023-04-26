@@ -1,4 +1,4 @@
-// Copyright 2022 Nukleros
+// Copyright 2023 Nukleros
 // Copyright 2021 VMware, Inc.
 // SPDX-License-Identifier: MIT
 
@@ -12,4 +12,5 @@ type Plugin struct {
 	WorkloadConfigPath string `json:"workloadConfigPath" yaml:"workloadConfigPath"`
 	CliRootCommandName string `json:"cliRootCommandName" yaml:"cliRootCommandName"`
 	ControllerImg      string `json:"controllerImg" yaml:"controllerImg"`
+	EnableOLM          bool   `json:"enableOlm" yaml:"enableOlm"`
 }
