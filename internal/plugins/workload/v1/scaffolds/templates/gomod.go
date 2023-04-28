@@ -29,7 +29,7 @@ type GoMod struct {
 func goModDependencyMap() map[string]string {
 	return map[string]string{
 		"github.com/go-logr/logr":                    "v1.2.3",
-		"github.com/nukleros/operator-builder-tools": "v0.3.0",
+		"github.com/nukleros/operator-builder-tools": "v0.3.1",
 		"github.com/onsi/ginkgo":                     "v1.16.5",
 		"github.com/onsi/gomega":                     "v1.24.0",
 		"github.com/spf13/cobra":                     "v1.6.1",
