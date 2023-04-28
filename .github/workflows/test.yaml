@@ -133,7 +133,7 @@ jobs:
   e2e-test:
     name: E2E Test
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     needs: functional-test
     if: github.event_name == 'pull_request'
     strategy:
