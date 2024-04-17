@@ -69,8 +69,6 @@ module {{ .Repo }}
 
 go {{ .GoVersionMinimum }}
 
-replace github.com/nukleros/operator-builder-tools => /Users/dscott/VSCode/github/scottd018/operator-builder-tools
-
 require (
 	{{ range $package, $version := $.Dependencies }}
 	"{{ $package }}" {{ $version }}
