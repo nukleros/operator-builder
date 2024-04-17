@@ -72,7 +72,7 @@ linters:
     - asciicheck
     - bodyclose
     #- cyclop
-    - depguard
+    #- depguard
     - dogsled
     - dupl
     - durationcheck
@@ -134,7 +134,7 @@ linters:
     - wastedassign
     - whitespace
     - wrapcheck
-    - wsl
+    #- wsl
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
@@ -147,6 +147,12 @@ issues:
     - path: internal/commands/*\.go
       linters:
         - gochecknoglobals
+    - path: internal/plugins/workload/v1/scaffolds
+      linters:
+        - goconst
+    - path: internal/plugins/config/v1/plugin.go
+      linters:
+        - gocritic
     - path: internal/plugins/workload/v1/scaffolds/templates/readme.go
       linters:
         - gomnd

@@ -65,6 +65,7 @@ func (f *Controller) setOtherImports() {
 		`ctrl "sigs.k8s.io/controller-runtime"`,
 		`"sigs.k8s.io/controller-runtime/pkg/client"`,
 		`"sigs.k8s.io/controller-runtime/pkg/controller"`,
+		`"sigs.k8s.io/controller-runtime/pkg/manager"`,
 		`"github.com/nukleros/operator-builder-tools/pkg/controller/phases"`,
 		`"github.com/nukleros/operator-builder-tools/pkg/controller/predicates"`,
 		`"github.com/nukleros/operator-builder-tools/pkg/controller/workload"`,
@@ -143,6 +144,7 @@ type {{ .Resource.Kind }}Reconciler struct {
 	FieldManager string
 	Watches      []client.Object
 	Phases       *phases.Registry
+	Manager      manager.Manager
 }
 
 func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Reconciler {
@@ -154,6 +156,7 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 		Log:          ctrl.Log.WithName("controllers").WithName("{{ .Resource.Group }}").WithName("{{ .Resource.Kind }}"),
 		Watches:      []client.Object{},
 		Phases:       &phases.Registry{},
+		Manager:      mgr,
 	}
 }
 
@@ -371,6 +374,11 @@ func (r *{{ .Resource.Kind }}Reconciler) GetName() string {
 // GetController returns the controller object associated with the reconciler.
 func (r *{{ .Resource.Kind }}Reconciler) GetController() controller.Controller {
 	return r.Controller
+}
+
+// GetManager returns the manager object assocated with the reconciler.
+func (r *{{ .Resource.Kind }}Reconciler) GetManager() manager.Manager {
+	return r.Manager
 }
 
 // GetWatches returns the objects which are current being watched by the reconciler.

@@ -28,28 +28,26 @@ type GoMod struct {
 // See https://github.com/vmware-tanzu-labs/operator-builder/issues/250
 func goModDependencyMap() map[string]string {
 	return map[string]string{
-		"github.com/go-logr/logr":                    "v1.2.3",
-		"github.com/nukleros/operator-builder-tools": "v0.3.0",
-		"github.com/onsi/ginkgo":                     "v1.16.5",
-		"github.com/onsi/gomega":                     "v1.24.0",
-		"github.com/spf13/cobra":                     "v1.6.1",
-		"github.com/stretchr/testify":                "v1.8.1",
-		"google.golang.org/api":                      "v0.102.0",
+		"github.com/go-logr/logr":                    "v1.4.1",
+		"github.com/nukleros/operator-builder-tools": "v0.4.0",
+		"github.com/onsi/ginkgo/v2":                  "v2.17.1",
+		"github.com/onsi/gomega":                     "v1.32.0",
+		"github.com/spf13/cobra":                     "v1.8.0",
+		"github.com/stretchr/testify":                "v1.9.0",
 		"gopkg.in/yaml.v2":                           "v2.4.0",
-		"k8s.io/api":                                 "v0.25.3",
-		"k8s.io/apimachinery":                        "v0.25.3",
-		"k8s.io/client-go":                           "v0.25.3",
-		"sigs.k8s.io/controller-runtime":             "v0.13.1",
+		"k8s.io/api":                                 "v0.29.4",
+		"k8s.io/apimachinery":                        "v0.29.4",
+		"k8s.io/client-go":                           "v0.29.4",
+		"sigs.k8s.io/controller-runtime":             "v0.17.3",
 		"sigs.k8s.io/kubebuilder/v3":                 "v3.7.0",
-		"sigs.k8s.io/yaml":                           "v1.3.0",
+		"sigs.k8s.io/yaml":                           "v1.4.0",
 	}
 }
 
+// NOTE: there are no indirect dependencies to manage at this time, but we will leave
+// it in place when the time comes to use it.
 func goModIndirectDependencyMap() map[string]string {
-	return map[string]string{
-		"gopkg.in/check.v1":                    "v1.0.0-20201130134442-10cb98267c6c",
-		"cloud.google.com/go/compute/metadata": "v0.2.1",
-	}
+	return map[string]string{}
 }
 
 func (f *GoMod) SetTemplateDefaults() error {
@@ -71,15 +69,19 @@ module {{ .Repo }}
 
 go {{ .GoVersionMinimum }}
 
+replace github.com/nukleros/operator-builder-tools => /Users/dscott/VSCode/github/scottd018/operator-builder-tools
+
 require (
 	{{ range $package, $version := $.Dependencies }}
 	"{{ $package }}" {{ $version }}
 	{{- end }}
 )
 
+{{ if gt (len $.IndirectDependencies) 0 }}
 require (
 	{{ range $package, $version := $.IndirectDependencies }}
 	"{{ $package }}" {{ $version }}
 	{{- end }}
 )
+{{- end }}
 `

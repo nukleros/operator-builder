@@ -62,7 +62,6 @@ func NewChildResource(object unstructured.Unstructured) (*ChildResource, error) 
 	}, nil
 }
 
-//nolint:gocritic // needed to satisfy the stringer interface
 func (resource ChildResource) String() string {
 	return fmt.Sprintf(
 		"{Group: %s, Version: %s, Kind: %s, Name: %s}",

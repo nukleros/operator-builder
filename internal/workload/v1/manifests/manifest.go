@@ -65,7 +65,7 @@ func (manifest *Manifest) ExtractManifests() []string {
 
 	for _, line := range lines {
 		if strings.TrimRight(line, " ") == "---" {
-			if len(content) > 0 {
+			if content != "" {
 				manifests = append(manifests, content)
 				content = ""
 			}
@@ -74,7 +74,7 @@ func (manifest *Manifest) ExtractManifests() []string {
 		}
 	}
 
-	if len(content) > 0 {
+	if content != "" {
 		manifests = append(manifests, content)
 	}
 
