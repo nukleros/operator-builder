@@ -6,6 +6,8 @@
 <!---[![Get it from the Snap Store](https://badgen.net/snapcraft/v/operator-builder)](https://snapcraft.io/operator-builder)-->
 ![GitHub Downloads (by Release)](https://img.shields.io/github/downloads/nukleros/operator-builder/total.svg)
 
+<img src="docs/images/operator-builder-logo.png" alt="Operator Builder Logo" style="width:370px;"/>
+
 # Operator Builder
 
 **Accelerate the development of Kubernetes operators.**
