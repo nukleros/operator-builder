@@ -113,7 +113,6 @@ jobs:
 
       - name: Initialize ${{ matrix.name }} Codebase
         run: |
-          mv bin/operator-builder-${{ matrix.go-version }} bin/operator-builder
           chmod +x bin/operator-builder
           make func-test-clean
           make func-test-init
