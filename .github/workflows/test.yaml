@@ -61,7 +61,7 @@ jobs:
       - name: Store Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: operator-builder
+          name: operator-builder-${{ matrix.go-version }}
           path: bin/operator-builder
 
   #
@@ -103,7 +103,7 @@ jobs:
       - name: Download operator-builder Binary
         uses: actions/download-artifact@v4
         with:
-          name: operator-builder
+          name: operator-builder-${{ matrix.go-version }}
           path: bin
 
       - name: Setup Go
@@ -113,6 +113,7 @@ jobs:
 
       - name: Initialize ${{ matrix.name }} Codebase
         run: |
+          mv bin/operator-builder-${{ matrix.go-version }} bin/operator-builder
           chmod +x bin/operator-builder
           make func-test-clean
           make func-test-init
