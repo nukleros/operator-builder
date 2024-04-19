@@ -13,7 +13,6 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
 	kustomizecommonv1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/common/kustomize/v1"
-	scaffoldsv4 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v4/scaffolds"
 
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/cli"
@@ -24,7 +23,8 @@ import (
 )
 
 const (
-	operatorSDKVersion = "v1.28.0"
+	operatorSDKVersion     = "v1.28.0"
+	controllerToolsVersion = "v0.14.0"
 )
 
 var _ plugins.Scaffolder = &initScaffolder{}
@@ -100,13 +100,12 @@ func (s *initScaffolder) Scaffold() error {
 			ControllerImg: s.controllerImg,
 		},
 		&templates.Makefile{
-			RootCmdName:              s.cliRootCommandName,
-			ControllerImg:            s.controllerImg,
-			EnableOLM:                s.enableOlm,
-			KustomizeVersion:         kustomizecommonv1.KustomizeVersion,
-			ControllerToolsVersion:   scaffoldsv4.ControllerToolsVersion,
-			ControllerRuntimeVersion: scaffoldsv4.ControllerRuntimeVersion,
-			OperatorSDKVersion:       operatorSDKVersion,
+			RootCmdName:            s.cliRootCommandName,
+			ControllerImg:          s.controllerImg,
+			EnableOLM:              s.enableOlm,
+			KustomizeVersion:       kustomizecommonv1.KustomizeVersion,
+			ControllerToolsVersion: controllerToolsVersion,
+			OperatorSDKVersion:     operatorSDKVersion,
 		},
 		&e2e.Test{},
 	); err != nil {

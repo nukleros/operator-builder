@@ -26,10 +26,9 @@ type Makefile struct {
 	ControllerImg string
 	EnableOLM     bool
 
-	ControllerToolsVersion   string
-	KustomizeVersion         string
-	ControllerRuntimeVersion string
-	OperatorSDKVersion       string
+	ControllerToolsVersion string
+	KustomizeVersion       string
+	OperatorSDKVersion     string
 }
 
 func (f *Makefile) SetTemplateDefaults() error {

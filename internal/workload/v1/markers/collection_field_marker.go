@@ -23,7 +23,6 @@ const (
 // is discovered different via a different prefix.
 type CollectionFieldMarker FieldMarker
 
-//nolint:gocritic //needed to implement string interface
 func (cfm CollectionFieldMarker) String() string {
 	return fmt.Sprintf("CollectionFieldMarker{Name: %s Type: %v Description: %q Default: %v}",
 		cfm.GetName(),

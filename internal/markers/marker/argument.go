@@ -35,7 +35,6 @@ type Argument struct {
 	isSet bool
 }
 
-//nolint:gocritic //needed to implement string interface
 func (a Argument) String() string {
 	if a.Optional {
 		return fmt.Sprintf("<optional arg %s>", a.Type)

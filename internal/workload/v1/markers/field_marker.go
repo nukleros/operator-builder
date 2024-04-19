@@ -41,7 +41,6 @@ type FieldMarker struct {
 	originalValue interface{}
 }
 
-//nolint:gocritic //needed to implement string interface
 func (fm FieldMarker) String() string {
 	var arbitraryBool bool
 
