@@ -294,7 +294,7 @@ func (r *{{ .Resource.Kind }}Reconciler) EnqueueRequestOnCollectionChange(req *w
 	}
 
 	// create a function which maps this specific reconcile request
-	mapFn := func(collection client.Object) []reconcile.Request {
+	mapFn := func(_ context.Context, collection client.Object) []reconcile.Request {
 		return []reconcile.Request{
 			{
 				NamespacedName: types.NamespacedName{
@@ -307,7 +307,7 @@ func (r *{{ .Resource.Kind }}Reconciler) EnqueueRequestOnCollectionChange(req *w
 
 	// watch the collection and use our map function to enqueue the request
 	if err := r.Controller.Watch(
-		&source.Kind{Type: req.Collection},
+		source.Kind(r.Manager.GetCache(), req.Collection),
 		handler.EnqueueRequestsFromMapFunc(mapFn),
 		predicate.Funcs{
 			UpdateFunc: func(e event.UpdateEvent) bool {
