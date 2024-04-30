@@ -81,18 +81,22 @@ jobs:
             artifact: standalone-codebase
             test-workload-path: test/cases/standalone
             go-version: "1.22"
+            binary-go-version: "1.22"
           - name: Standalone Edge Cases Operator (Current Go Version - 1)
             artifact: standalone-edge-codebase
             test-workload-path: test/cases/edge-standalone
             go-version: "1.21"
+            binary-go-version: "1.22"
           - name: Workload Collection Operator (Current Go Version)
             artifact: collection-codebase
             test-workload-path: test/cases/collection
             go-version: "1.22"
+            binary-go-version: "1.22"
           - name: Workload Collection Edge Cases Operator (Current Go Version - 1)
             artifact: collection-edge-codebase
             test-workload-path: test/cases/edge-collection
             go-version: "1.21"
+            binary-go-version: "1.22"
     env:
       TEST_WORKLOAD_PATH: "${{ matrix.test-workload-path }}"
       TEST_PATH: "/tmp/operator-builder-func-test"
@@ -105,7 +109,7 @@ jobs:
       - name: Download operator-builder Binary
         uses: actions/download-artifact@v4
         with:
-          name: operator-builder-${{ matrix.go-version }}
+          name: operator-builder-${{ matrix.binary-go-version }}
           path: bin
 
       - name: Setup Go
