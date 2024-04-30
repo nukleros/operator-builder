@@ -15,7 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - go-version: "1.21"
+          # NOTE: we may test on multiple versions here when a future version of go releases, but
+          #       for now we can leave this as a single array.
           - go-version: "1.22"
     steps:
       - name: Checkout Code
@@ -42,7 +43,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - go-version: "1.21"
+          # NOTE: we may test on multiple versions here when a future version of go releases, but
+          #       for now we can leave this as a single array.
           - go-version: "1.22"
     steps:
       - name: Checkout Code
