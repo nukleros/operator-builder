@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/vmware-tanzu-labs/object-code-generator-for-k8s/pkg/generate"
+	"github.com/nukleros/gener8s/pkg/generate/code"
 	"gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -275,7 +275,7 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) erro
 			uniqueNames[childResource.UniqueName] = true
 
 			// generate the object source code
-			resourceDefinition, err := generate.Generate([]byte(manifest), "resourceObj")
+			resourceDefinition, err := code.Generate([]byte(manifest), "resourceObj")
 			if err != nil {
 				return processManifestError(
 					fmt.Errorf(
