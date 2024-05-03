@@ -2,6 +2,8 @@ module github.com/nukleros/operator-builder
 
 go 1.22
 
+toolchain go1.22.1
+
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/nukleros/gener8s v0.1.0
