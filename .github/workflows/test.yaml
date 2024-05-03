@@ -121,7 +121,8 @@ jobs:
         run: |
           chmod +x bin/operator-builder
           make func-test-clean
-          make func-test-init
+          # NOTE: do not rebuild the binary here since we just downloaded above
+          INIT_BUILD=false make func-test-init
 
       - name: Create ${{ matrix.name }} Codebase
         run: make func-test-create

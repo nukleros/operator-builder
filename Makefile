@@ -27,8 +27,9 @@ export OPERATOR_BUILDER_PATH := $(BASE_DIR)/bin
 
 .PHONY: build install test debug
 
+build_command = go build -o bin/operator-builder cmd/operator-builder/main.go
 build:
-	go build -o bin/operator-builder cmd/operator-builder/main.go
+	$(call build_command)
 
 install: build
 	sudo cp bin/operator-builder /usr/local/bin/operator-builder
@@ -76,7 +77,9 @@ FUNC_TEST_PATH ?= /tmp/operator-builder-func-test
 func-test-clean:
 	if [ -d $(FUNC_TEST_PATH) ]; then rm -rf $(FUNC_TEST_PATH)/*; fi
 
-func-test-init: build func-test-clean
+INIT_BUILD ?= true
+func-test-init: func-test-clean
+	if [ "$(INIT_BUILD)" == "true" ]; then $(call build_command); fi
 	$(call create_path,$(FUNC_TEST_PATH))
 	cp -r $(BASE_DIR)/$(TEST_WORKLOAD_PATH)/.workloadConfig/* $(FUNC_TEST_PATH)/.workloadConfig ;
 	cd $(FUNC_TEST_PATH) && $(OPERATOR_BUILDER_PATH)/operator-builder $(INIT_OPTS)
