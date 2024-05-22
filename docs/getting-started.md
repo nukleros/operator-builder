@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Make
-- Go version 1.16 or later
+- Go version 1.22 or later
 - Docker (for building/pushing controller images)
 - An available test cluster. A local kind or minikube cluster will work just
   fine in many cases.
