@@ -17,13 +17,7 @@ builds:
       - -s -w -X github.com/nukleros/operator-builder/pkg/cli.version={{ .Version }} -extldflags '-static'
 
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
-    name_template: "operator-builder_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - name_template: '{{ .Binary }}_v{{ .Version }}_{{ tolower .Os }}_{{ if (eq .Arch "amd64") }}x86_64{{ else if (eq .Arch "386") }}i386{{ else }}{{ .Arch }}{{ end }}'
     format_overrides:
       - goos: windows
         format: zip
@@ -61,7 +55,7 @@ dockers:
       - "--platform=linux/amd64"
 brews:
   - name: operator-builder
-    tap:
+    repository:
       owner: nukleros
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
@@ -74,7 +68,7 @@ brews:
 
     # Folder inside the repository to put the formula.
     # Default is the root folder.
-    folder: Formula
+    directory: Formula
 
     # Your app's homepage.
     # Default is empty.
