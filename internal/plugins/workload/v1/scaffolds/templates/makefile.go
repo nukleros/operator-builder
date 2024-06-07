@@ -45,6 +45,7 @@ func (f *Makefile) SetTemplateDefaults() error {
 
 	f.IfExistsAction = machinery.OverwriteFile
 
+	//nolint:godox
 	// TODO: Current workaround for setup-envtest compatibility
 	// Due to past instances where controller-runtime maintainers released
 	// versions without corresponding branches, directly relying on branches

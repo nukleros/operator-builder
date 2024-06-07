@@ -11,7 +11,7 @@ const (
 	// specifies the preferred version.
 	GeneratedGoVersionPreferred = "1.22"
 
-	// makefile and go.mod versions
+	// makefile and go.mod versions.
 	ControllerToolsVersion   = "v0.15.0"
 	ControllerRuntimeVersion = "v0.17.3"
 	KustomizeVersion         = "v5.4.1"
