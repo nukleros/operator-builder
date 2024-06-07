@@ -258,7 +258,7 @@ our workload config.
 
 ```bash
 operator-builder init \
-    --workload-config .source-manfiests/workload.yaml
+    --workload-config .source-manifests/workload.yaml
 ```
 
 With the basic project now set up, we can now run the `create api` command to
@@ -266,7 +266,7 @@ create a new custom API for our workload.
 
 ```bash
 operator-builder create api \
-    --workload-config .source-manfiests/workload.yaml \
+    --workload-config .source-manifests/workload.yaml \
     --controller \
     --resource
 ```
