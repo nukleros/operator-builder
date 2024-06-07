@@ -26,7 +26,7 @@ runs:
       working-directory: /tmp/operator-builder-test
       run: |
         if [[ "${{ inputs.test-deploy }}" == "true" ]]; then
-          COMMAND=`find ${PWD}/bin ! -name kustomize ! -name controller-gen ! -name operator-builder ! -name kube-apiserver ! -name etcd ! -name kubectl ! -name setup-envtest -type f`
+          COMMAND=`find ${PWD}/bin ! -name "*kustomize*" ! -name "*controller-gen*" ! -name operator-builder ! -name kube-apiserver ! -name etcd ! -name kubectl ! -name "*setup-envtest*" -type f`
           echo $COMMAND
           MANIFEST=`find ${PWD}/config/samples ! -name kustomization.yaml -name "*.yaml" | head -1`
           echo $MANIFEST
