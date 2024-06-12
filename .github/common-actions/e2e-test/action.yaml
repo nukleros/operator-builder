@@ -42,7 +42,7 @@ runs:
       working-directory: /tmp/operator-builder-test
       run: |
         make controller-gen && make kustomize
-        chmod +x bin/controller-gen && chmod +x bin/kustomize
+        chmod +x bin/*
         make install
 
     - name: Build Container
