@@ -8,15 +8,11 @@ import (
 	"fmt"
 
 	kbcli "sigs.k8s.io/kubebuilder/v3/pkg/cli"
-	cfgv2 "sigs.k8s.io/kubebuilder/v3/pkg/config/v2"
 	cfgv3 "sigs.k8s.io/kubebuilder/v3/pkg/config/v3"
-	"sigs.k8s.io/kubebuilder/v3/pkg/model/stage"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 	kustomizecommonv1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/common/kustomize/v1"
-	kustomizecommonv2alpha "sigs.k8s.io/kubebuilder/v3/pkg/plugins/common/kustomize/v2-alpha"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang"
 	declarativev1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/declarative/v1"
-	golangv2 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v2"
 	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 
 	configv1 "github.com/nukleros/operator-builder/internal/plugins/config/v1"
@@ -27,17 +23,11 @@ import (
 var version = "unstable"
 
 func NewKubebuilderCLI() (*kbcli.CLI, error) {
-	gov3Bundle, _ := plugin.NewBundle(golang.DefaultNameQualifier, plugin.Version{Number: 3},
+	// we cannot upgrade to the latest v4 bundle in kubebuilder as it breaks several dependencies and
+	// disallows flexibilities that we currently use such as the apis/ directory versus the api/ directory.
+	base, _ := plugin.NewBundle(golang.DefaultNameQualifier, plugin.Version{Number: 3},
 		licensev1.Plugin{},
 		kustomizecommonv1.Plugin{},
-		configv1.Plugin{},
-		golangv3.Plugin{},
-		workloadv1.Plugin{},
-	)
-
-	gov4Bundle, _ := plugin.NewBundle(golang.DefaultNameQualifier, plugin.Version{Number: 4, Stage: stage.Alpha},
-		licensev1.Plugin{},
-		kustomizecommonv2alpha.Plugin{},
 		configv1.Plugin{},
 		golangv3.Plugin{},
 		workloadv1.Plugin{},
@@ -47,16 +37,13 @@ func NewKubebuilderCLI() (*kbcli.CLI, error) {
 		kbcli.WithCommandName("operator-builder"),
 		kbcli.WithVersion(version),
 		kbcli.WithPlugins(
-			golangv2.Plugin{},
-			gov3Bundle,
-			gov4Bundle,
+			base,
 			&licensev1.Plugin{},
 			&kustomizecommonv1.Plugin{},
 			&declarativev1.Plugin{},
 			&workloadv1.Plugin{},
 		),
-		kbcli.WithDefaultPlugins(cfgv2.Version, golangv2.Plugin{}),
-		kbcli.WithDefaultPlugins(cfgv3.Version, gov3Bundle),
+		kbcli.WithDefaultPlugins(cfgv3.Version, base),
 		kbcli.WithDefaultProjectVersion(cfgv3.Version),
 		kbcli.WithExtraCommands(NewUpdateCmd()),
 		kbcli.WithExtraCommands(NewInitConfigCmd()),
