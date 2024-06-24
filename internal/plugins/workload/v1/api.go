@@ -94,3 +94,23 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 
 	return nil
 }
+
+// func (p *createAPISubcommand) PostScaffold() error {
+// 	fmt.Printf("THIS IS A TEST\n\n\n")
+// 	err := util.RunCmd("Update dependencies", "go", "mod", "tidy")
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	fmt.Printf("THIS IS A TEST\n\n\n")
+// 	if p.resource.HasAPI() {
+// 		err = util.RunCmd("Running make", "make", "generate")
+// 		if err != nil {
+// 			return err
+// 		}
+// 		fmt.Print("Next: implement your new API and generate the manifests (e.g. CRDs,CRs) with:\n$ make manifests\n")
+// 	}
+// 	fmt.Printf("THIS IS A TEST\n\n\n")
+
+// 	return nil
+// }
