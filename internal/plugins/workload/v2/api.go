@@ -7,6 +7,7 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path"
 
@@ -18,24 +19,22 @@ import (
 	"sigs.k8s.io/kubebuilder/v4/pkg/plugin/util"
 	goplugin "sigs.k8s.io/kubebuilder/v4/pkg/plugins/golang"
 
+	"github.com/nukleros/operator-builder/internal/controllergen"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v2/scaffolds"
+	"github.com/nukleros/operator-builder/internal/utils"
 	"github.com/nukleros/operator-builder/internal/workload/v1/commands/subcommand"
 	workloadconfig "github.com/nukleros/operator-builder/internal/workload/v1/config"
 	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
-
-// DefaultMainPath is default file path of main.go
-const DefaultMainPath = "main.go"
 
 type createAPISubcommand struct {
 	config   config.Config
 	options  *goplugin.Options
 	resource *resource.Resource
 
-	// resourceFlag   *pflag.Flag
-	// controllerFlag *pflag.Flag
-	force   bool
-	runMake bool
+	force             bool
+	generateDeepCopy  bool
+	generateManifests bool
 
 	workloadConfigPath string
 	cliRootCommandName string
@@ -63,8 +62,10 @@ func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
 	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for OpenShift Lifecycle Manager")
 
-	fs.BoolVar(&p.runMake, "make", true, "if true, run `make generate` after generating files")
-
+	fs.BoolVar(&p.generateDeepCopy, "generate-deep-copy", true,
+		"if true, generate deep copy methods after scaffolding (equivalent of 'make generate')")
+	fs.BoolVar(&p.generateManifests, "generate-manifests", true,
+		"if true, generate manifests and crds after scaffolding (equivalent of 'make manifests')")
 	fs.BoolVar(&p.force, "force", false,
 		"attempt to create resource even if it already exists")
 
@@ -73,16 +74,9 @@ func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
 		DoAPI:        true,
 		DoController: true,
 	}
-	// fs.BoolVar(&p.options.DoAPI, "resource", true,
-	// 	"if set, generate the resource without prompting the user")
-	// fs.BoolVar(&p.options.DoController, "controller", true,
-	// 	"if set, generate the controller without prompting the user")
-	// p.resourceFlag = fs.Lookup("resource")
 
 	fs.StringVar(&p.options.Plural, "plural", "", "resource irregular plural form")
 	fs.BoolVar(&p.options.Namespaced, "namespaced", true, "resource is namespaced")
-
-	// p.controllerFlag = fs.Lookup("controller")
 }
 
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
@@ -123,19 +117,6 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 		res.Kind = p.workload.GetAPIKind()
 		res.Plural = resource.RegularPlural(p.workload.GetAPIKind())
 	}
-
-	// TODO: re-evaluate whether y/n input still makes sense. We should probably always
-	//       scaffold the resource and controller.
-	// Ask for API and Controller if not specified
-	// reader := bufio.NewReader(os.Stdin)
-	// if !p.resourceFlag.Changed {
-	// 	log.Println("Create Resource [y/n]")
-	// 	p.options.DoAPI = util.YesNo(reader)
-	// }
-	// if !p.controllerFlag.Changed {
-	// 	log.Println("Create Controller [y/n]")
-	// 	p.options.DoController = util.YesNo(reader)
-	// }
 
 	p.options.UpdateResource(res, p.config)
 	res.Path = path.Join(p.config.GetRepository(), "apis", res.Group, res.Version)
@@ -206,12 +187,36 @@ func (p *createAPISubcommand) PostScaffold() error {
 		return err
 	}
 
-	if p.runMake && p.resource.HasAPI() {
-		err = util.RunCmd("Running make", "make", "generate")
+	// generate deep copy functions
+	if p.generateDeepCopy && p.resource.HasAPI() {
+		log.Println("generating DeepCopy and other required functions")
+
+		generator, err := controllergen.NewObjectGenerator(controllergen.WithObjectGeneratorOptions("."))
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to create object generator, %w", err)
 		}
-		fmt.Print("Next: implement your new API and generate the manifests (e.g. CRDs,CRs) with:\n$ make manifests\n")
+
+		if err := generator.Execute(); err != nil {
+			return fmt.Errorf("error in object generation, %w", err)
+		}
+	} else {
+		log.Print("Next: generate DeepCopy and other required functions with:\n$ make generate\n")
+	}
+
+	// generate manifests
+	if p.generateManifests && p.resource.HasAPI() {
+		log.Println("generating manifests")
+
+		generator, err := controllergen.NewObjectGenerator(controllergen.WithManifestGeneratorOptions("."))
+		if err != nil {
+			return fmt.Errorf("unable to create manifest generator, %w", err)
+		}
+
+		if err := generator.Execute(); err != nil {
+			return fmt.Errorf("error in manifest generation, %w", err)
+		}
+	} else {
+		log.Print("Next: implement your new API and generate the manifests (e.g. CRDs,CRs) with:\n$ make manifests\n")
 	}
 
 	return nil
