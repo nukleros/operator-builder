@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v4/pkg/plugin"
 	"sigs.k8s.io/kubebuilder/v4/pkg/plugins/golang"
 
+	"github.com/nukleros/operator-builder/internal/plugins/workload"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v2/scaffolds"
 	"github.com/nukleros/operator-builder/internal/utils"
 	"github.com/nukleros/operator-builder/internal/workload/v1/commands/subcommand"
@@ -67,9 +68,8 @@ func (p *initSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *
 }
 
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
+	workload.AddFlags(fs, &p.workloadConfigPath, &p.enableOlm)
 	fs.StringVar(&p.controllerImage, "controller-image", "controller:latest", "controller image")
-	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
-	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for OpenShift Lifecycle Manager")
 
 	fs.BoolVar(&p.skipGoVersionCheck, "skip-go-version-check",
 		false, "if specified, skip checking the Go version")

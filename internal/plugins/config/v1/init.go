@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
+	"github.com/nukleros/operator-builder/internal/plugins/workload"
 	workloadconfig "github.com/nukleros/operator-builder/internal/workload/v1/config"
 )
 
@@ -24,9 +25,9 @@ type initSubcommand struct {
 var _ plugin.InitSubcommand = &initSubcommand{}
 
 func (p *initSubcommand) BindFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
+	workload.AddFlags(fs, &p.workloadConfigPath, &p.enableOlm)
+
 	fs.StringVar(&p.controllerImage, "controller-image", "controller:latest", "controller image")
-	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for Operator Lifecycle Manager (OLM)")
 }
 
 func (p *initSubcommand) InjectConfig(c config.Config) error {
