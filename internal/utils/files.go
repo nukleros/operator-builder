@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+const (
+	DefaultMainPath = "main.go"
+)
+
 func ReadStream(fileName string) (io.ReadCloser, error) {
 	file, err := os.Open(fileName)
 	if err != nil {

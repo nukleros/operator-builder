@@ -8,10 +8,12 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
+
+	"github.com/nukleros/operator-builder/internal/utils"
 )
 
 const (
-	defaultMainPath = "main.go"
+	defaultMainPath = utils.DefaultMainPath
 	importMarker    = "imports"
 	addSchemeMarker = "scheme"
 	setupMarker     = "reconcilers"
