@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v4/pkg/plugin"
 
 	"github.com/nukleros/operator-builder/internal/license"
+	licenseplugin "github.com/nukleros/operator-builder/internal/plugins/license"
 )
 
 var _ plugin.EditSubcommand = &editSubcommand{}
@@ -38,8 +39,7 @@ Features supported:
 }
 
 func (p *editSubcommand) BindFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&p.projectLicensePath, "project-license", "", "path to project license file")
-	fs.StringVar(&p.sourceHeaderPath, "source-header-license", "", "path to file with source code header license text")
+	licenseplugin.AddFlags(fs, &p.projectLicensePath, &p.sourceHeaderPath)
 }
 
 func (p *editSubcommand) InjectConfig(c config.Config) error {

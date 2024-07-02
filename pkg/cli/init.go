@@ -16,12 +16,21 @@ import (
 	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
 	kbcliv4 "sigs.k8s.io/kubebuilder/v4/pkg/cli"
 	cfgv3 "sigs.k8s.io/kubebuilder/v4/pkg/config/v3"
+	pluginv4 "sigs.k8s.io/kubebuilder/v4/pkg/plugin"
 	kustomizecommonv2 "sigs.k8s.io/kubebuilder/v4/pkg/plugins/common/kustomize/v2"
 
 	"github.com/nukleros/operator-builder/internal/plugins"
+	configv1 "github.com/nukleros/operator-builder/internal/plugins/config/v1"
+	licensev1 "github.com/nukleros/operator-builder/internal/plugins/license/v1"
 	licensev2 "github.com/nukleros/operator-builder/internal/plugins/license/v2"
+	"github.com/nukleros/operator-builder/internal/plugins/workload"
+	workloadv1 "github.com/nukleros/operator-builder/internal/plugins/workload/v1"
 	workloadv2 "github.com/nukleros/operator-builder/internal/plugins/workload/v2"
 )
+
+type command interface {
+	Run() error
+}
 
 var version = "unstable"
 
@@ -39,13 +48,17 @@ func NewKubebuilderCLI(version workload.PluginVersion) (command, error) {
 func NewWithV1() (*kbcliv3.CLI, error) {
 	// we cannot upgrade to the latest v4 bundle in kubebuilder as it breaks several dependencies and
 	// disallows flexibilities that we currently use such as the apis/ directory versus the api/ directory.
-	base, _ := pluginv3.NewBundle(golang.DefaultNameQualifier, pluginv3.Version{Number: 3},
+	base, err := pluginv3.NewBundle(golang.DefaultNameQualifier, pluginv3.Version{Number: 3},
 		licensev1.Plugin{},
 		kustomizecommonv1.Plugin{},
 		configv1.Plugin{},
 		golangv3.Plugin{},
 		workloadv1.Plugin{},
 	)
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize kubebuilder plugin bundle with version 1 plugin, %w", err)
+	}
 
 	c, err := kbcliv3.New(
 		kbcliv3.WithCommandName("operator-builder"),
@@ -64,7 +77,7 @@ func NewWithV1() (*kbcliv3.CLI, error) {
 		kbcliv3.WithCompletion(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create kcli command, %w", err)
+		return nil, fmt.Errorf("unable to create command with version 1 plugin, %w", err)
 	}
 
 	return c, nil
@@ -82,26 +95,26 @@ func NewWithV2() (*kbcliv4.CLI, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("unable to initialize kubebuilder plugin bundle - %w", err)
+		return nil, fmt.Errorf("unable to initialize kubebuilder plugin bundle with version 2 plugin, %w", err)
 	}
 
-	c, err := kbcli.New(
-		kbcli.WithCommandName("operator-builder"),
-		kbcli.WithVersion(version),
-		kbcli.WithPlugins(
+	c, err := kbcliv4.New(
+		kbcliv4.WithCommandName("operator-builder"),
+		kbcliv4.WithVersion(version),
+		kbcliv4.WithPlugins(
 			base,
 			&licensev2.Plugin{},
 			kustomizecommonv2.Plugin{},
 			workloadv2.Plugin{},
 		),
-		kbcli.WithDefaultPlugins(cfgv3.Version, base),
-		kbcli.WithDefaultProjectVersion(cfgv3.Version),
-		kbcli.WithExtraCommands(NewUpdateCmd()),
-		kbcli.WithExtraCommands(NewInitConfigCmd()),
-		kbcli.WithCompletion(),
+		kbcliv4.WithDefaultPlugins(cfgv3.Version, base),
+		kbcliv4.WithDefaultProjectVersion(cfgv3.Version),
+		kbcliv4.WithExtraCommands(NewUpdateCmd()),
+		kbcliv4.WithExtraCommands(NewInitConfigCmd()),
+		kbcliv4.WithCompletion(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create kcli command, %w", err)
+		return nil, fmt.Errorf("unable to create command with version 2 plugin, %w", err)
 	}
 
 	return c, nil

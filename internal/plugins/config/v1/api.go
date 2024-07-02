@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
 
+	"github.com/nukleros/operator-builder/internal/plugins/workload"
 	workloadconfig "github.com/nukleros/operator-builder/internal/workload/v1/config"
 	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
@@ -26,8 +27,7 @@ type createAPISubcommand struct {
 var _ plugin.CreateAPISubcommand = &createAPISubcommand{}
 
 func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
-	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for OpenShift Lifecycle Manager")
+	workload.AddFlags(fs, &p.workloadConfigPath, &p.enableOlm)
 }
 
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {

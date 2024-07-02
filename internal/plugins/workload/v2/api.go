@@ -20,6 +20,7 @@ import (
 	goplugin "sigs.k8s.io/kubebuilder/v4/pkg/plugins/golang"
 
 	"github.com/nukleros/operator-builder/internal/controllergen"
+	"github.com/nukleros/operator-builder/internal/plugins/workload"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v2/scaffolds"
 	"github.com/nukleros/operator-builder/internal/utils"
 	"github.com/nukleros/operator-builder/internal/workload/v1/commands/subcommand"
@@ -59,8 +60,7 @@ func (p *createAPISubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdM
 }
 
 func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&p.workloadConfigPath, "workload-config", "", "path to workload config file")
-	fs.BoolVar(&p.enableOlm, "enable-olm", false, "enable support for OpenShift Lifecycle Manager")
+	workload.AddFlags(fs, &p.workloadConfigPath, &p.enableOlm)
 
 	fs.BoolVar(&p.generateDeepCopy, "generate-deep-copy", true,
 		"if true, generate deep copy methods after scaffolding (equivalent of 'make generate')")
