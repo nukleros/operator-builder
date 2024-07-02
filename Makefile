@@ -12,8 +12,6 @@ INIT_OPTS=init \
 	--enable-olm=true
 CREATE_OPTS=create api \
 	--workload-config .workloadConfig/workload.yaml \
-	--controller \
-	--resource \
 	--enable-olm=true
 
 define create_path

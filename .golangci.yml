@@ -71,21 +71,21 @@ linters:
   enable:
     - asciicheck
     - bodyclose
-    #- cyclop
-    #- depguard
+    # - cyclop
+    # - depguard
     - dogsled
     - dupl
     - durationcheck
     - errcheck
     - errorlint
-    #- exhaustive
-    #- exhaustivestruct
+    # - exhaustive
+    # - exhaustivestruct
     - exportloopref
     - forbidigo
     - forcetypeassert
     - funlen
     # disable due to false positives
-    #- gci
+    # - gci
     - gochecknoglobals
     - gochecknoinits
     - gocognit
@@ -96,7 +96,7 @@ linters:
     - godox
     - goerr113
     # disable due to false positives in detecting gofmt -s
-    #- gofmt
+    # - gofmt
     - goheader
     - goimports
     - gomnd
@@ -119,7 +119,7 @@ linters:
     - paralleltest
     - prealloc
     - predeclared
-    #- revive
+    # - revive
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
@@ -133,8 +133,8 @@ linters:
     - unused
     - wastedassign
     - whitespace
-    - wrapcheck
-    #- wsl
+    # - wrapcheck
+    # - wsl
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
@@ -150,10 +150,16 @@ issues:
     - path: internal/plugins/workload/v1/scaffolds
       linters:
         - goconst
+    - path: internal/plugins/workload/v2/scaffolds
+      linters:
+        - goconst
     - path: internal/plugins/config/v1/plugin.go
       linters:
         - gocritic
     - path: internal/plugins/workload/v1/scaffolds/templates/readme.go
+      linters:
+        - gomnd
+    - path: internal/plugins/workload/v2/scaffolds/templates/readme.go
       linters:
         - gomnd
     # https://github.com/go-critic/go-critic/issues/926
