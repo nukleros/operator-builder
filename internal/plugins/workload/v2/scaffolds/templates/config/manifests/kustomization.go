@@ -1,4 +1,4 @@
-// Copyright 2023 Nukleros
+// Copyright 2024 Nukleros
 // SPDX-License-Identifier: MIT
 
 // NOTE: this was copied from operator-sdk in order to
