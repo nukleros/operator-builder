@@ -28,11 +28,15 @@ import (
 	workloadv2 "github.com/nukleros/operator-builder/internal/plugins/workload/v2"
 )
 
+var version = "unstable"
+
+const (
+	commandName = "operator-builder"
+)
+
 type command interface {
 	Run() error
 }
-
-var version = "unstable"
 
 func NewKubebuilderCLI(version workload.PluginVersion) (command, error) {
 	switch version {
@@ -55,13 +59,12 @@ func NewWithV1() (*kbcliv3.CLI, error) {
 		golangv3.Plugin{},
 		workloadv1.Plugin{},
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize kubebuilder plugin bundle with version 1 plugin, %w", err)
 	}
 
 	c, err := kbcliv3.New(
-		kbcliv3.WithCommandName("operator-builder"),
+		kbcliv3.WithCommandName(commandName),
 		kbcliv3.WithVersion(version),
 		kbcliv3.WithPlugins(
 			base,
@@ -93,13 +96,12 @@ func NewWithV2() (*kbcliv4.CLI, error) {
 			workloadv2.Plugin{},
 		),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize kubebuilder plugin bundle with version 2 plugin, %w", err)
 	}
 
 	c, err := kbcliv4.New(
-		kbcliv4.WithCommandName("operator-builder"),
+		kbcliv4.WithCommandName(commandName),
 		kbcliv4.WithVersion(version),
 		kbcliv4.WithPlugins(
 			base,
@@ -109,7 +111,6 @@ func NewWithV2() (*kbcliv4.CLI, error) {
 		),
 		kbcliv4.WithDefaultPlugins(cfgv3.Version, base),
 		kbcliv4.WithDefaultProjectVersion(cfgv3.Version),
-		kbcliv4.WithExtraCommands(NewUpdateCmd()),
 		kbcliv4.WithExtraCommands(NewInitConfigCmd()),
 		kbcliv4.WithCompletion(),
 	)
