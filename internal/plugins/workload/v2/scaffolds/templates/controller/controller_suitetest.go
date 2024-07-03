@@ -1,3 +1,7 @@
+// Copyright 2024 Nukleros
+// Copyright 2021 VMware, Inc.
+// SPDX-License-Identifier: MIT
+
 /*
 Copyright 2022 The Kubernetes Authors.
 
@@ -13,10 +17,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-// Copyright 2024 Nukleros
-// Copyright 2021 VMware, Inc.
-// SPDX-License-Identifier: MIT
 
 package controller
 
