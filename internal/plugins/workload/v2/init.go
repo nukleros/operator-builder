@@ -30,8 +30,8 @@ import (
 //
 //nolint:gochecknoglobals
 var (
-	goVerMin = golang.MustParse(utils.GeneratedGoVersionMinimum)
-	goVerMax = golang.MustParse(utils.GeneratedGoVersionPreferred)
+	goVerMin = golang.MustParse(fmt.Sprintf("go%s", utils.GeneratedGoVersionMinimum))
+	goVerMax = golang.MustParse(fmt.Sprintf("go%s", utils.GeneratedGoVersionPreferred))
 )
 
 var (
