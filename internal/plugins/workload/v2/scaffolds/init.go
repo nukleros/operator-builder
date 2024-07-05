@@ -6,8 +6,8 @@ package scaffolds
 
 import (
 	"fmt"
-	"log"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"sigs.k8s.io/kubebuilder/v4/pkg/config"
 	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"

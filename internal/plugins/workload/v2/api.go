@@ -7,10 +7,10 @@ package v2
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/kubebuilder/v4/pkg/config"
 	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
@@ -189,7 +189,7 @@ func (p *createAPISubcommand) PostScaffold() error {
 
 	// generate deep copy functions
 	if p.generateDeepCopy && p.resource.HasAPI() {
-		log.Println("generating DeepCopy and other required functions")
+		log.Println("Generating DeepCopy methods and other required functions...")
 
 		generator, err := controllergen.NewObjectGenerator(controllergen.WithObjectGeneratorOptions("."))
 		if err != nil {
@@ -205,7 +205,7 @@ func (p *createAPISubcommand) PostScaffold() error {
 
 	// generate manifests
 	if p.generateManifests && p.resource.HasAPI() {
-		log.Println("generating manifests")
+		log.Println("Generating CRDs, RBAC, and controller manifests...")
 
 		generator, err := controllergen.NewObjectGenerator(controllergen.WithManifestGeneratorOptions("."))
 		if err != nil {
