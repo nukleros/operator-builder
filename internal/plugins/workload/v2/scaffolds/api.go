@@ -111,7 +111,7 @@ func (s *apiScaffolder) Scaffold() error {
 
 // scaffoldWorkload performs the execution of the scaffold for an individual workload.
 //
-//nolint:funlen
+//nolint:funlen,gocyclo
 func (s *apiScaffolder) scaffoldWorkload(
 	scaffold *machinery.Scaffold,
 	workload kinds.WorkloadBuilder,
