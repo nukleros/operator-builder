@@ -150,31 +150,38 @@ func (s *apiScaffolder) scaffoldWorkload(
 		return fmt.Errorf("%w; error updating resource", err)
 	}
 
+	doAPI := s.resource.HasAPI()
+	doController := s.resource.HasController()
+
 	// scaffold the workload api.  this generates files within the apis/ folder to include
 	// items such as common resource methods, api type definitions and child resource typed
 	// object definitions.
-	if err := s.scaffoldAPI(scaffold, workload); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources.Error())
+	if doAPI {
+		if err := s.scaffoldAPI(scaffold, workload); err != nil {
+			return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources.Error())
+		}
 	}
 
 	// scaffold the controller.  this generates the main controller logic.
-	if err := scaffold.Execute(
-		&controller.Controller{Builder: workload},
-		&controller.Phases{PackageName: workload.GetPackageName()},
-		&controller.SuiteTest{},
-		&dependencies.Component{},
-		&mutate.Component{},
-		&crd.Kustomization{},
-	); err != nil {
-		return fmt.Errorf("%w; %s", err, ErrScaffoldController.Error())
+	if doController {
+		if err := scaffold.Execute(
+			&controller.Controller{Builder: workload},
+			&controller.Phases{PackageName: workload.GetPackageName()},
+			&controller.SuiteTest{},
+			&dependencies.Component{},
+			&mutate.Component{},
+			&crd.Kustomization{},
+		); err != nil {
+			return fmt.Errorf("%w; %s", err, ErrScaffoldController.Error())
+		}
 	}
 
 	// update controller main entrypoint.  this updates the main.go file with logic related to
 	// creating the new controllers.
 	if err := scaffold.Execute(
 		&templates.MainUpdater{
-			WireResource:   true,
-			WireController: true,
+			WireResource:   doAPI,
+			WireController: doController,
 		},
 	); err != nil {
 		return fmt.Errorf("%w; %s", err, ErrScaffoldMainUpdater.Error())
@@ -245,9 +252,7 @@ func (s *apiScaffolder) scaffoldAPI(
 	}
 
 	// scaffold the resources
-	if err := scaffold.Execute(
-		&resources.Resources{Builder: workload},
-	); err != nil {
+	if err := scaffold.Execute(&resources.Resources{Builder: workload}); err != nil {
 		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources.Error())
 	}
 
@@ -271,9 +276,7 @@ func (s *apiScaffolder) scaffoldAPI(
 	}
 
 	// scaffold the child resource naming helpers
-	if err := scaffold.Execute(
-		&resources.Constants{Builder: workload},
-	); err != nil {
+	if err := scaffold.Execute(&resources.Constants{Builder: workload}); err != nil {
 		return fmt.Errorf("%w; %s", err, ErrScaffoldAPIResources.Error())
 	}
 

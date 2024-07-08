@@ -273,7 +273,9 @@ operator-builder create api \
 
 We again provide the same workload config file.  Here we also added the
 `--controller` and `--resource` arguments.  These indicate that we want both a
-new controller and new custom resource created.
+new controller and new custom resource created.  Please 
+note that in the above example both flags are not necessary and are 
+only provided in the example for verbosity.  These options are set by default.
 
 You now have a new working Kubernetes Operator!  Next, we will test it out.
 

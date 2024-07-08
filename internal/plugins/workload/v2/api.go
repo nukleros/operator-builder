@@ -5,6 +5,7 @@
 package v2
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -36,6 +37,10 @@ type createAPISubcommand struct {
 	force             bool
 	generateDeepCopy  bool
 	generateManifests bool
+
+	// Check if we have to scaffold resource and/or controller
+	resourceFlag   *pflag.Flag
+	controllerFlag *pflag.Flag
 
 	workloadConfigPath string
 	cliRootCommandName string
@@ -69,14 +74,16 @@ func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&p.force, "force", false,
 		"attempt to create resource even if it already exists")
 
-	// always scaffold a controller and an api
-	p.options = &goplugin.Options{
-		DoAPI:        true,
-		DoController: true,
-	}
+	p.options = &goplugin.Options{}
 
 	fs.StringVar(&p.options.Plural, "plural", "", "resource irregular plural form")
+	fs.BoolVar(&p.options.DoAPI, "resource", true,
+		"if set, generate the resource without prompting the user")
+	p.resourceFlag = fs.Lookup("resource")
 	fs.BoolVar(&p.options.Namespaced, "namespaced", true, "resource is namespaced")
+	fs.BoolVar(&p.options.DoController, "controller", true,
+		"if set, generate the controller without prompting the user")
+	p.controllerFlag = fs.Lookup("controller")
 }
 
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
@@ -116,6 +123,19 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 	if res.Kind == "" {
 		res.Kind = p.workload.GetAPIKind()
 		res.Plural = resource.RegularPlural(p.workload.GetAPIKind())
+	}
+
+	// TODO: re-evaluate whether y/n input still makes sense. We should probably always
+	//       scaffold the resource and controller.
+	// Ask for API and Controller if not specified
+	reader := bufio.NewReader(os.Stdin)
+	if !p.resourceFlag.Changed {
+		log.Println("Create Resource [y/n]")
+		p.options.DoAPI = util.YesNo(reader)
+	}
+	if !p.controllerFlag.Changed {
+		log.Println("Create Controller [y/n]")
+		p.options.DoController = util.YesNo(reader)
 	}
 
 	p.options.UpdateResource(res, p.config)
