@@ -14,7 +14,9 @@ For example, you have begun development on a brand new operator.  You have
 generated the source code from a set of YAML manifests with markers.  While
 testing, you discover that a field is misspelled, or that a default value should
 be changed, or that a new field should be added.  The following instructions
-describe how to overwrite an existing API to update the existing spec.
+describe how to overwrite an existing API to update the existing spec.  Please 
+note that in the below example the `--resource=true` is not necessary and is 
+only provided in the example for verbosity.  This option is set by default.
 
 After making the necessary changes to your manifests run the following:
 
@@ -22,7 +24,7 @@ After making the necessary changes to your manifests run the following:
 operator-builder create api \
     --workload-config [path/to/workload/config] \
     --controller=false \
-    --resource \
+    --resource=true \
     --force
 ```
 
