@@ -15,16 +15,16 @@ const (
 
 const (
 	DefaultPluginVersion = PluginVersionV2
+
+	EnvPluginVersionVariable = "OPERATOR_BUILDER_PLUGIN_VERSION"
+	EnvPluginVersionV1       = "v1"
+	EnvPluginVersionV2       = "v2"
 )
 
 func FromEnv() PluginVersion {
-	fromEnv := os.Getenv("OPERATOR_BUILDER_PLUGIN_VERSION")
-	if fromEnv == "" {
-		return DefaultPluginVersion
-	}
-
 	return map[string]PluginVersion{
-		"v1": PluginVersionV1,
-		"v2": PluginVersionV2,
-	}[fromEnv]
+		"":                 DefaultPluginVersion,
+		EnvPluginVersionV1: PluginVersionV1,
+		EnvPluginVersionV2: PluginVersionV2,
+	}[os.Getenv(EnvPluginVersionVariable)]
 }
