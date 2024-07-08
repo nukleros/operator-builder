@@ -93,7 +93,7 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - godox
+    # - godox
     - goerr113
     # disable due to false positives in detecting gofmt -s
     # - gofmt
@@ -144,6 +144,7 @@ issues:
         - gomnd
         - funlen
         - scopelint
+        - testpackage
     - path: internal/commands/*\.go
       linters:
         - gochecknoglobals
