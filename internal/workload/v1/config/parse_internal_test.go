@@ -1,6 +1,5 @@
 // Copyright 2024 Nukleros
-// Copyright 2021 VMware, Inc.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 package config
 

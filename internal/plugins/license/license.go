@@ -1,5 +1,5 @@
 // Copyright 2024 Nukleros
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 package license
 
