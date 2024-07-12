@@ -132,3 +132,8 @@ and running in short order.
 
 * [Testing](docs/testing.md)
 
+### License
+
+Copyright 2024 [Nukleros](https://github.com/nukleros) and [Third-party Authors](THIRD-PARTY.md).
+
+The software is available under the MIT License.
