@@ -1,7 +1,7 @@
 # Third-party authors
 
-Operator-builder relies heavily on open source libraries and project. Some of them are public domain, others 
-use free permissive licenses. Operator-builder does not use code distributed under copyleft or non-free licenses.
+Operator-builder relies heavily on open source libraries and projects. Some of them are public domain, others 
+use free permissive licenses. Operator-builder does not use code distributed under non-free licenses.
 
 | Project                                                                           | Author                 | License                                                                             |
 | --------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------- |
