@@ -10,3 +10,9 @@ test/cases/collection/*
 !test/cases/edge-standalone/.workloadConfig/
 !test/cases/collection/.workloadConfig/
 **/*.log
+
+# ignore all but the launch.json file in the .vscode directory
+# NOTE: we do this to make our debug tests easily accessible to those using
+# vscode
+.vscode/*
+!.vscode/launch.json
