@@ -50,7 +50,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.source={{ .GitURL }}"
-      - "--label=org.opencontainers.image.licenses=MIT"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
       - "--label=VERSION={{ .Version }}"
       - "--platform=linux/amd64"
 brews:
@@ -80,7 +80,7 @@ brews:
 
     # SPDX identifier of your app's license.
     # Default is empty.
-    license: "MIT"
+    license: "Apache2.0"
 
     # Setting this will prevent goreleaser to actually try to commit the updated
     # formula - instead, the formula file will be stored on the dist folder only,
@@ -112,7 +112,7 @@ nfpms:
     homepage:  https://github.com/nukleros/operator-builder
     description: "A Kubebuilder plugin to accelerate the development of Kubernetes operators."
     maintainer: Jeff Davis <mr.jefedavis@gmail.com>, Dustin Scott <dustin.scott18@gmail.com>, Rich Lander <lander2k2@protonmail.com>
-    license: MIT
+    license: Apache2.0
     vendor: Nukleros
     contents:
       - src: ./completions/operator-builder.bash

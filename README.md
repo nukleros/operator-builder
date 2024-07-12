@@ -136,4 +136,4 @@ and running in short order.
 
 Copyright 2024 [Nukleros](https://github.com/nukleros) and [Third-party Authors](THIRD-PARTY.md).
 
-The software is available under the MIT License.
+The software is available under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).

@@ -41,7 +41,7 @@ EOF
 cat > /tmp/updated-source-header.txt <<EOF
 // !! UPDATED !!
 // Copyright 2006-2021 Acme Inc.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 EOF
 
 operator-builder update license \
