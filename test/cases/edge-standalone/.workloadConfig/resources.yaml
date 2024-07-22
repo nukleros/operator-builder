@@ -157,3 +157,6 @@ spec:
     requests.memory: 4Gi
     limits.cpu: "4"
     limits.memory: 4Gi
+# test the trailing yaml separator
+# see https://github.com/nukleros/operator-builder/issues/53
+---
