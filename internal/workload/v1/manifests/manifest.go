@@ -62,18 +62,19 @@ func (manifest *Manifest) ExtractManifests() []string {
 
 	var content string
 
-	for _, line := range lines {
-		if strings.TrimRight(line, " ") == "---" {
+	for i := range lines {
+		if strings.TrimRight(lines[i], " ") == "---" {
 			if content != "" {
 				manifests = append(manifests, content)
 				content = ""
 			}
 		} else {
-			content = content + "\n" + line
+			content = content + "\n" + lines[i]
 		}
 	}
 
-	if content != "" {
+	// ensure content is not empty before appending it to the manifests slice
+	if strings.TrimSpace(content) != "" {
 		manifests = append(manifests, content)
 	}
 
