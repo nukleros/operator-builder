@@ -134,6 +134,7 @@ and running in short order.
 
 ### License
 
-Copyright 2024 [Nukleros](https://github.com/nukleros) and [Third-party Authors](THIRD-PARTY.md).
+Copyright 2024 [Nukleros](https://github.com/nukleros) and [Third-party Authors](THIRD-PARTY.md) and maintained 
+by a [core group of maintainers](MAINTAINERS.md).
 
 The software is available under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
