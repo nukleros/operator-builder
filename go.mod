@@ -7,6 +7,7 @@ toolchain go1.22.4
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/nukleros/gener8s v0.1.0
+	github.com/nukleros/markers v0.1.3
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0

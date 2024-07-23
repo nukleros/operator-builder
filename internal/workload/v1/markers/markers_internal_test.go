@@ -8,11 +8,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/nukleros/markers/inspect"
+	"github.com/nukleros/markers/parser"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
-
-	"github.com/nukleros/operator-builder/internal/markers/inspect"
-	"github.com/nukleros/operator-builder/internal/markers/parser"
 )
 
 func TestContainsMarkerType(t *testing.T) {
