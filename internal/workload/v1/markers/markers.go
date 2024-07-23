@@ -17,6 +17,7 @@ import (
 )
 
 var (
+	ErrMissingReplaceText            = errors.New("marker is missing the requested replace text")
 	ErrMissingParentOrName           = errors.New("missing either parent=value or name=value marker")
 	ErrInvalidReplaceMarkerFieldType = errors.New("invalid marker type using replace")
 	ErrInvalidParentField            = errors.New("invalid parent field")
@@ -311,6 +312,10 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 		fieldVar, err := getSourceCodeFieldVariable(marker)
 		if err != nil {
 			return fmt.Errorf("unable to get source code field variable for marker %s, %w", marker, err)
+		}
+
+		if !strings.Contains(value.Value, markerReplaceText) {
+			return fmt.Errorf("replace text=[%s] value=[%s], %w", markerReplaceText, value.Value, ErrMissingReplaceText)
 		}
 
 		value.Value = re.ReplaceAllString(value.Value, fieldVar)
