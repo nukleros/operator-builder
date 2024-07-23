@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nukleros/operator-builder/internal/markers/marker"
+	"github.com/nukleros/markers/marker"
 )
 
 var (

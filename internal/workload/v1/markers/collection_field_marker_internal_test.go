@@ -6,9 +6,8 @@ package markers
 import (
 	"testing"
 
+	"github.com/nukleros/markers/marker"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/nukleros/operator-builder/internal/markers/marker"
 )
 
 func TestCollectionFieldMarker_String(t *testing.T) {

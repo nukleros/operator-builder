@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/nukleros/gener8s/pkg/generate/code"
+	"github.com/nukleros/markers/inspect"
 	"gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -17,7 +18,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 
-	"github.com/nukleros/operator-builder/internal/markers/inspect"
 	"github.com/nukleros/operator-builder/internal/workload/v1/commands/companion"
 	"github.com/nukleros/operator-builder/internal/workload/v1/manifests"
 	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
