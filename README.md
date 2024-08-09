@@ -132,6 +132,12 @@ and running in short order.
 
 * [Testing](docs/testing.md)
 
+### Roadmap Docs
+
+Please view our [roadmap documentation](ROADMAP.md) to learn more about where we are headed and please open 
+a new [issue](https://github.com/nukleros/operator-builder/issues) on GitHub if you have an idea or want to see 
+something added to the roadmap.
+
 ### License
 
 Copyright 2024 [Nukleros](https://github.com/nukleros) and [Third-party Authors](THIRD-PARTY.md) and maintained 
