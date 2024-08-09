@@ -13,7 +13,7 @@ data:
     ---
     someoption: configuration2
     anotheroption: configuration1
-    justtesting: multistringyaml
+    justtesting: multi.*yaml
 ---
 apiVersion: v1
 kind: Secret
