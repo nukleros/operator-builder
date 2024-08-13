@@ -14,7 +14,7 @@ in the accompanying `.operator-builder` directory.
 
 * [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [golang](https://go.dev/doc/install)
-* [operator-builder](https://github.com/nukleros/operator-builder/blob/main/docs/installation.md)
+* [operator-builder](../installation.md)
 
 ## Setup
 

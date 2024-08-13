@@ -15,7 +15,7 @@
 ## Documentation
 
 User documentation can be found at
-[operator-builder.io](https://operator-builder.io).
+[operatorbuilder.io](https://operatorbuilder.io).
 
 Developer documentation can be found [here](https://github.com/nukleros/operator-builder/tree/main/docs/dev).
 
@@ -80,8 +80,8 @@ building an app stack management operator with Operator Builder:
   test them in a Kubernetes cluster.  You can also use Helm and the `helm template`
   command to create these resources if a helm chart exists.
 * Determine which fields in the manifests need to be mutable and managed by the
-  operator, then add [markers](https://operator-builder.io/markers) to the manifests.
-* Create a [workload configuration](https://operator-builder.io/workloads) to give it some details,
+  operator, then add [markers](https://operatorbuilder.io/markers) to the manifests.
+* Create a [workload configuration](https://operatorbuilder.io/workloads) to give it some details,
   such as what you would like to call your custom resource.
 * Run the Operator Builder CLI in a new repository and provide to it the marked
   up manifests and workload config.
@@ -92,16 +92,16 @@ updating or deleting a custom resource instance.
 
 An operator built with Operator Builder has the following features:
 
-* A defined API for a custom resource based on [markers](https://operator-builder.io/markers) in
+* A defined API for a custom resource based on [markers](https://operatorbuilder.io/markers) in
   static Kubernetes manifests.
 * A functioning controller that will create, update and delete child resources
   to reconcile the state for the custom resource/s.
-* A [companion CLI](https://operator-builder.io/companion-cli) that helps end users with common
+* A [companion CLI](https://operatorbuilder.io/companion-cli) that helps end users with common
   operations.
 
 The custom resource defined in the source code can be cluster-scoped or
 namespace-scoped based on the requirements of the project.  More info
-[here](https://operator-builder.io/resource-scope).
+[here](https://operatorbuilder.io/resource-scope).
 
 ## Advanced Functionality
 

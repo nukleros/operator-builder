@@ -7,7 +7,7 @@
 - Docker (for building/pushing controller images)
 - An available test cluster. A local kind or minikube cluster will work just
   fine in many cases.
-- Operator Builder [installed](#installation).
+- Operator Builder [installed](installation.md).
 - [kubectl installed](https://kubernetes.io/docs/tasks/tools/#kubectl).
 - A set of static Kubernetes manifests that can be used to deploy
   your workload.  It is highly recommended that you apply these manifests to a
@@ -24,15 +24,17 @@ the [prerequisites](#prerequisites) prior to attempting to follow this guide.
 
 This guide consists of the following steps:
 
-1. [Create a repository](#step-1).
+1. [Create a repository](#step-1-create-a-repo).
 1. Determine what fields in your static manifests will need to be configurable for
    deployment into different environments. [Add commented markers to the
-   manifests](#step-2). These will serve as instructions to Operator Builder.
-1. [Create a workload configuration for your project](#step-3).
-1. [Use the Operator Builder CLI to generate the source code for your operator](#step-4).
-1. [Test the operator against your test cluster](#step-5).
-1. [Build and install your operator's controller manager in your test cluster](#step-6).
-1. [Build and test the operator's companion CLI](#step-7).
+   manifests](#step-2-add-manifest-markers). These will serve as instructions to Operator Builder.
+1. [Create a workload configuration for your
+   project](#step-3-create-a-workload-config).
+1. [Use the Operator Builder CLI to generate the source code for your operator](#step-4-generate-operator-source-code).
+1. [Test the operator against your test cluster](#step-5-run-test-the-operator).
+1. [Build and install your operator's controller manager in your test cluster](#step-6-build-deploy-the-controller-manager).
+1. [Build and test the operator's companion
+   CLI](#step-7-build-test-companion-cli).
 
 ### Step 1: Create a Repo
 
@@ -164,15 +166,15 @@ spec:
 
 These markers should always be provided as an in-line comment or as a head
 comment.  The marker always begins with `+operator-builder:field:` or
-`+operator-builder:collection:field:` See [Markers](docs/markers.md) to learn
+`+operator-builder:collection:field:` See [Markers](markers.md) to learn
 more.
 
 ### Step 3: Create a Workload Config
 
 Operator Builder uses a workload configuration to provide important details for
 your operator project.  This guide uses a [standalone
-workload](docs/standalone-workloads.md). Save a workload config to your
-`.source-manifests` directory by using one of the following commands (or 
+workload](standalone-workloads.md). Save a workload config to your
+`.source-manifests` directory by using one of the following commands (or
 simply copy/pasting the YAML below the commands):
 
 ```bash
@@ -443,6 +445,7 @@ resources as follows.
 make undeploy
 ```
 
-For more information, checkout the [Operator Builder docs](docs/) as
-well as the [Kubebuilder docs](https://kubebuilder.io/).
+## Next Step
+
+Learn about [Workloads](workloads.md).
 
