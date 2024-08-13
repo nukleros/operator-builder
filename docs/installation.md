@@ -1,18 +1,18 @@
 # Installation
 
 You have the following options to install the operator-builder CLI:
-* [Download the latest binary with your browser](https://github.com/nukleros/operator-builder/releases/latest)
-* [Download with wget](#wget)
-* [Homebrew](#homebrew)
-* [Docker Image](#docker-image)
-* [Go Install](#go-install)
-* [Snap](#snap)
+
+- [Download the latest binary with your browser](https://github.com/nukleros/operator-builder/releases/latest)
+- [Download with wget](#wget)
+- [Homebrew](#homebrew)
+- [Docker Image](#docker-image)
+- [Go Install](#go-install)
 
 ### wget
 Use wget to download the pre-compiled binaries:
 
 ```bash
-VERSION=v0.7.0
+VERSION=v0.11.0
 OS=Linux
 ARCH=x86_64
 wget https://github.com/nukleros/operator-builder/releases/download/${VERSION}/operator-builder_${VERSION}_${OS}_${ARCH}.tar.gz -O - |\
@@ -61,16 +61,3 @@ operator-builder() {
 ```bash
 go install github.com/nukleros/operator-builder/cmd/operator-builder@latest
 ```
-
-### Snap
-
-**NOTE:** support for Snaps has been removed due to, what we feel, is increasingly unstable developer experience in publishing snaps.  We can readdress 
-this at such a time where stability to the project has returned.  As of now, the latest available snap for operator-builder is v0.5.0.
-
-Available for Linux only.
-
-```bash
-snap install operator-builder
-```
-
->**NOTE**: `operator-builder` installs with [_strict confinement_](https://docs.snapcraft.io/snap-confinement/6233) in snap, this means it doesn't have direct access to root files.

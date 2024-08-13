@@ -1,0 +1,64 @@
+site_name: Operator Builder
+site_author: Operator Builder developers
+site_description: Documentation for Operator Builder
+repo_url: https://github.com/nukleros/operator-builder
+repo_name: nukleros/operator-builder
+edit_uri: blob/main/docs/
+
+nav:
+  - Home: 'index.md'
+  - Install: 'installation.md'
+  - Getting Started: 'getting-started.md'
+  - Workloads:
+    - Workloads: 'workloads.md'
+    - Standalone Workloads: 'standalone-workloads.md'
+    - Workload Collections: 'workload-collections.md'
+    - Workload Collection Tutorial: 'workload-collection-tutorial/workload-collection-tutorial.md'
+  - Markers: 'markers.md'
+  - Resource Scope: 'resource-scope.md'
+  - Companion CLI: 'companion-cli.md'
+  - License Management: 'license.md'
+  - API Updates & Upgrades: 'api-updates-upgrades.md'
+  - Contact: 'contact.md'
+
+theme:
+  name: material
+  favicon: images/operator-builder-logo.ico
+  logo: images/operator-builder-logo.png
+  features:
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+    - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/threeport/threeport
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.highlight:
+      linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - toc:
+      permalink: true
+
+copyright: Copyright &copy; 2022-2024 Operator Builder
+

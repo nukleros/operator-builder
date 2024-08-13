@@ -12,6 +12,13 @@
 
 **Accelerate the development of Kubernetes operators.**
 
+## Documentation
+
+User documentation can be found at
+[operator-builder.io](https://operator-builder.io).
+
+Developer documentation can be found [here](https://github.com/nukleros/operator-builder/tree/main/docs/dev).
+
 ## What is a Kubernetes Operator?
 
 A Kubernetes operator takes human operational knowledge for managing workloads
@@ -73,8 +80,8 @@ building an app stack management operator with Operator Builder:
   test them in a Kubernetes cluster.  You can also use Helm and the `helm template`
   command to create these resources if a helm chart exists.
 * Determine which fields in the manifests need to be mutable and managed by the
-  operator, then add [markers](docs/markers.md) to the manifests.
-* Create a [workload configuration](docs/workloads.md) to give it some details,
+  operator, then add [markers](https://operator-builder.io/markers) to the manifests.
+* Create a [workload configuration](https://operator-builder.io/workloads) to give it some details,
   such as what you would like to call your custom resource.
 * Run the Operator Builder CLI in a new repository and provide to it the marked
   up manifests and workload config.
@@ -85,16 +92,16 @@ updating or deleting a custom resource instance.
 
 An operator built with Operator Builder has the following features:
 
-* A defined API for a custom resource based on [markers](docs/markers.md) in
+* A defined API for a custom resource based on [markers](https://operator-builder.io/markers) in
   static Kubernetes manifests.
 * A functioning controller that will create, update and delete child resources
   to reconcile the state for the custom resource/s.
-* A [companion CLI](docs/companion-cli.md) that helps end users with common
+* A [companion CLI](https://operator-builder.io/companion-cli) that helps end users with common
   operations.
 
 The custom resource defined in the source code can be cluster-scoped or
 namespace-scoped based on the requirements of the project.  More info
-[here](docs/resource-scope.md).
+[here](https://operator-builder.io/resource-scope).
 
 ## Advanced Functionality
 
@@ -113,34 +120,18 @@ in Go, not to mention the logic for creating, updating and deleting those resour
 Operator Builder adds those resource definitions and other code to get you up
 and running in short order.
 
-## Documentation
+## Roadmap
 
-### User Docs
+Please view our [roadmap documentation](https://github.com/nukleros/operator-builder/blob/main/ROADMAP.md)
+to learn more about where we are headed and please open a new [issue](
+https://github.com/nukleros/operator-builder/issues) on GitHub if you have an
+idea or want to see something added to the roadmap.
 
-* [Installation](docs/installation.md)
-* [Getting Started](docs/getting-started.md)
-* [Workloads](docs/workloads.md)
-    * [Standalone Workloads](docs/standalone-workloads.md)
-    * [Workload Collections](docs/workload-collections.md)
-* [Markers](docs/markers.md)
-* [Resource Scope](docs/resource-scope.md)
-* [Companion CLI](docs/companion-cli.md)
-* [API Updates & Upgrades](docs/api-updates-upgrades.md)
-* [License Management](docs/license.md)
+## License
 
-### Developer Docs
-
-* [Testing](docs/testing.md)
-
-### Roadmap Docs
-
-Please view our [roadmap documentation](ROADMAP.md) to learn more about where we are headed and please open 
-a new [issue](https://github.com/nukleros/operator-builder/issues) on GitHub if you have an idea or want to see 
-something added to the roadmap.
-
-### License
-
-Copyright 2024 [Nukleros](https://github.com/nukleros) and [Third-party Authors](THIRD-PARTY.md) and maintained 
-by a [core group of maintainers](MAINTAINERS.md).
+Copyright 2024 [Nukleros](https://github.com/nukleros) and [Third-party Authors](
+https://github.com/nukleros/operator-builder/tree/main/THIRD-PARTY.md) and maintained
+by a [core group of maintainers](https://github.com/nukleros/operator-builder/tree/main/MAINTAINERS.md).
 
 The software is available under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
+
