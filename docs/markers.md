@@ -71,7 +71,7 @@ The `metadata.name` field from the collection workload is also supported:
 The other required field is the `type` field which specifies the data type for
 the value.
 
-[#supported-field-types]() The supported data types are:
+The supported data types are:
 
 - bool
 - string

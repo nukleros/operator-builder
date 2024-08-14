@@ -135,3 +135,8 @@ spec:
     app: frontend
 ```
 
+## Next Step
+
+Follow the [workload collection
+tutorial](workload-collection-tutorial/workload-collection-tutorial.md).
+
