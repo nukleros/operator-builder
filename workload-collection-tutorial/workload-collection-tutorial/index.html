@@ -1,0 +1,1608 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for Operator Builder">
+      
+      
+        <meta name="author" content="Operator Builder developers">
+      
+      
+      
+        <link rel="prev" href="../../workload-collections/">
+      
+      
+        <link rel="next" href="../../markers/">
+      
+      
+      <link rel="icon" href="../../images/operator-builder-logo.ico">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.31">
+    
+    
+      
+        <title>Workload Collection Tutorial - Operator Builder</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.3cba04c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workload-collection-tutorial" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Operator Builder" class="md-header__button md-logo" aria-label="Operator Builder" data-md-component="logo">
+      
+  <img src="../../images/operator-builder-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Operator Builder
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Workload Collection Tutorial
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/nukleros/operator-builder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    nukleros/operator-builder
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Operator Builder" class="md-nav__button md-logo" aria-label="Operator Builder" data-md-component="logo">
+      
+  <img src="../../images/operator-builder-logo.png" alt="logo">
+
+    </a>
+    Operator Builder
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/nukleros/operator-builder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    nukleros/operator-builder
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Workloads
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Workloads
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workloads/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workloads
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standalone-workloads/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Standalone Workloads
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workload-collections/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workload Collections
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Workload Collection Tutorial
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Workload Collection Tutorial
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-manifests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resource Manifests
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Manifests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supporting-services-workload-collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supporting Services Workload Collection
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supporting Services Workload Collection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operator-buildernamespaceyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/namespace.yaml
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tls-component-workload" class="md-nav__link">
+    <span class="md-ellipsis">
+      TLS Component Workload
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TLS Component Workload">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsconfigyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/config.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlscrdyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/crd.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsdeploymentyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/deployment.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsissuersyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/issuers.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsrbacyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/rbac.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsserviceyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/service.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlswebhookyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/webhook.yaml
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ingress-component-workload" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ingress Component Workload
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ingress Component Workload">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingresscertyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/cert.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressclassyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/class.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressconfigyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/config.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingresscrdyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/crd.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressdeploymentyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/deployment.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressrbacyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/rbac.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressserviceyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/service.yaml
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Code Generation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operator-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operator Testing
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../markers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Markers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-scope/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Resource Scope
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../companion-cli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Companion CLI
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../license/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    License Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-updates-upgrades/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    API Updates & Upgrades
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contact/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contact
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-manifests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resource Manifests
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Manifests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supporting-services-workload-collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supporting Services Workload Collection
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supporting Services Workload Collection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operator-buildernamespaceyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/namespace.yaml
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tls-component-workload" class="md-nav__link">
+    <span class="md-ellipsis">
+      TLS Component Workload
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TLS Component Workload">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsconfigyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/config.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlscrdyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/crd.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsdeploymentyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/deployment.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsissuersyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/issuers.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsrbacyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/rbac.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlsserviceyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/service.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_tlswebhookyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_tls/webhook.yaml
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ingress-component-workload" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ingress Component Workload
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ingress Component Workload">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingresscertyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/cert.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressclassyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/class.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressconfigyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/config.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingresscrdyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/crd.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressdeploymentyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/deployment.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressrbacyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/rbac.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-builderaddonsnuklerosio_ingressserviceyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      .operator-builder/addons.nukleros.io_ingress/service.yaml
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Code Generation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operator-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operator Testing
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="workload-collection-tutorial">Workload Collection Tutorial<a class="headerlink" href="#workload-collection-tutorial" title="Permanent link">&para;</a></h1>
+<p>This tutorial walks through all the steps to create an operator that manages
+multiple distinct workloads using Operator Builder.</p>
+<p>The operator that you'll build in this tutorial installs supporting services for
+a cluster.  Specifically, it will install Cert Manager and the Nginx Ingress
+Controller.</p>
+<p><strong>Note</strong>: all of the manifests and configurations in these instructions can be found
+in the accompanying <code>.operator-builder</code> directory.</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">git</a></li>
+<li><a href="https://go.dev/doc/install">golang</a></li>
+<li><a href="../../installation/">operator-builder</a></li>
+</ul>
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<p>In this section we will create a new project and add the workload
+configurations for operator-builder.</p>
+<p>Make a new directory for the project and initialize git.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>mkdir<span class="w"> </span>supporting-services-operator
+<span class="nb">cd</span><span class="w"> </span>supporting-services-operator
+git<span class="w"> </span>init
+</code></pre></div></td></tr></table></div>
+<p>Create a config directory and add the WorkloadCollection config.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>mkdir<span class="w"> </span>.operator-builder
+<span class="nb">cd</span><span class="w"> </span>.operator-builder
+operator-builder<span class="w"> </span>init-config<span class="w"> </span>collection<span class="w"> </span>&gt;<span class="w"> </span>workload.yaml
+</code></pre></div></td></tr></table></div>
+<p>Edit the sample config so that it looks as follows.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">WorkloadCollection</span>
+<span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">supporting-services-collection</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">clusterScoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nukleros.io</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SupportingServices</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1alpha1</span>
+<span class="w">  </span><span class="nt">companionCliRootcmd</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Manage</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">cluster&#39;s</span><span class="nv"> </span><span class="s">supporting</span><span class="nv"> </span><span class="s">service</span><span class="nv"> </span><span class="s">installations&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ssctl</span>
+<span class="w">  </span><span class="nt">companionCliSubcmd</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Manage the collection of services</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">collection</span>
+<span class="w">  </span><span class="nt">componentFiles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons.nukleros.io_tls/workload.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons.nukleros.io_ingress/workload.yaml</span>
+<span class="w">  </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div></td></tr></table></div>
+<p>Add the ComponentWorkload configs:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>mkdir<span class="w"> </span>addons.nukleros.io_tls
+operator-builder<span class="w"> </span>init-config<span class="w"> </span>component<span class="w"> </span>&gt;<span class="w"> </span>addons.nukleros.io_tls/workload.yaml
+mkdir<span class="w"> </span>addons.nukleros.io_ingress
+operator-builder<span class="w"> </span>init-config<span class="w"> </span>component<span class="w"> </span>&gt;<span class="w"> </span>addons.nukleros.io_ingress/workload.yaml
+</code></pre></div></td></tr></table></div>
+<p>Edit the TLS component workload config so that it looks as follows.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ComponentWorkload</span>
+<span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tls-component</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">clusterScoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nukleros.io</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TLSComponent</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1alpha1</span>
+<span class="w">  </span><span class="nt">companionCliSubcmd</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Manage the TLS management service component</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tls</span>
+<span class="w">  </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div></td></tr></table></div>
+<p>Edit the ingress component workload config so that it looks as follows.  Note
+that we have specified the name of the tls-component workload in the
+<code>dependencies</code> section.  This indicates that the TLS component must be deployed
+and ready before the Ingress component can be installed.  In this case, this is
+because the Ingress component uses a Certificate resource which will not be
+recognized by the cluster until the relevant CRD is created during installation
+of the TLS component.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ComponentWorkload</span>
+<span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ingress-component</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">clusterScoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nukleros.io</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressComponent</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1alpha1</span>
+<span class="w">  </span><span class="nt">companionCliSubcmd</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Manage the ingress service component</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ingress</span>
+<span class="w">  </span><span class="nt">dependencies</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tls-component</span>
+<span class="w">  </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="resource-manifests">Resource Manifests<a class="headerlink" href="#resource-manifests" title="Permanent link">&para;</a></h2>
+<p>In this section we'll download the resource manifests.  These are Kubernetes
+manifests for the resources that we want our operator to manage.  They will
+contain operator-builder markers to indicate which fields need to be
+configurable through custom resources.</p>
+<p>Clone the operator-builder repo so as to access the manifests for this tutorial.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:nukleros/operator-builder.git<span class="w"> </span>/tmp/operator-builder
+</code></pre></div></td></tr></table></div>
+<h3 id="supporting-services-workload-collection">Supporting Services Workload Collection<a class="headerlink" href="#supporting-services-workload-collection" title="Permanent link">&para;</a></h3>
+<p>The only resource associated with the workload collection is a namespace.  No
+other resources will be created in this namespace at this time.  The namespace
+resource manifest will be used to create some fields for the SupportingServices
+custom resource - these will be global configurations that can be used by
+multiple component workloads.  And the values configured will be added to the
+namespace as labels for easy reference to what those global configs are.</p>
+<p>Copy the collection resource manifest for this tutorial.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>cp /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/namespace.yaml .
+</code></pre></div></td></tr></table></div>
+<h4 id="operator-buildernamespaceyaml"><code>.operator-builder/namespace.yaml</code><a class="headerlink" href="#operator-buildernamespaceyaml" title="Permanent link">&para;</a></h4>
+<p>The marker on line 4 makes the name of the namespace name configurable with the
+name of the SupportServices custom resource.</p>
+<p>The marker on line 6 creates a new field for the SupportingServices custom
+resource called <code>cloudProvider</code>.  The Ingress Component will use this
+field to determine the configuration for that component's Service resource.
+Normally, we would use global configs for attributes that are shared by multiple
+components.  However, in this case only the Ingress component uses it.  That is
+because there is a reasonable expectation that other components will use it in
+future.  This marker uses the description field to add a kubebuilder marker on
+the following line that is used to inform the valid values for this field.  You
+can learn more about kubebuilders validation markers in the <a href="https://book.kubebuilder.io/reference/generating-crd.html?highlight=validation,marker#validation">kubebuilder
+docs</a>.</p>
+<p>The marker on line 9 adds a <code>certProvider</code> field to the SupportingServices
+custom resource.  It also includes a kubebuilder validation marker to inform the
+valid values.  This field will configure the issuer name on the ingress default
+servier Certificate resource as well as on the ClusterIssuer resources created
+with the TLS component.</p>
+<p>Update the WorkloadCollection config to include this file under <code>resources</code>.  It
+should look as follows.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">WorkloadCollection</span>
+<span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">supporting-services-collection</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">clusterScoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nukleros.io</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SupportingServices</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1alpha1</span>
+<span class="w">  </span><span class="nt">companionCliRootcmd</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Manage</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">cluster&#39;s</span><span class="nv"> </span><span class="s">supporting</span><span class="nv"> </span><span class="s">service</span><span class="nv"> </span><span class="s">installations&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ssctl</span>
+<span class="w">  </span><span class="nt">companionCliSubcmd</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Manage the collection of services</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">collection</span>
+<span class="w">  </span><span class="nt">componentFiles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons.nukleros.io_tls/workload.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons.nukleros.io_ingress/workload.yaml</span>
+<span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">namespace.yaml</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="tls-component-workload">TLS Component Workload<a class="headerlink" href="#tls-component-workload" title="Permanent link">&para;</a></h3>
+<p>The resources for this component will deploy Cert Manager for TLS asset
+management.</p>
+<p>Copy the resource manifests for the TLS component for this tutorial.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>cp -R /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/addons.nukleros.io_tls .
+</code></pre></div></td></tr></table></div>
+<h4 id="operator-builderaddonsnuklerosio_tlsconfigyaml"><code>.operator-builder/addons.nukleros.io_tls/config.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_tlsconfigyaml" title="Permanent link">&para;</a></h4>
+<p>This manifest has just a single marker on line 6.  This marker uses the namespace
+field from the TLSComponent custom resource to set the namespace for this
+ConfigMap.  The same will be done for all namespaced resources for this
+component.  This field has a default value included which makes it an optional
+field in the TLSComponent resource.</p>
+<h4 id="operator-builderaddonsnuklerosio_tlscrdyaml"><code>.operator-builder/addons.nukleros.io_tls/crd.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_tlscrdyaml" title="Permanent link">&para;</a></h4>
+<p>This manifest has no operator-builder markers.  The CustomResourceDefinitions are
+not configurable in any way.</p>
+<h4 id="operator-builderaddonsnuklerosio_tlsdeploymentyaml"><code>.operator-builder/addons.nukleros.io_tls/deployment.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_tlsdeploymentyaml" title="Permanent link">&para;</a></h4>
+<p>This manifest contains 3 deployment manifests.  The namespace for each is
+defined in the same way as the ConfigMap.</p>
+<p>This manifest also includes markers to set versions and replica counts for each
+Deployment.  For example, on line 12 a field is defined with
+<code>field:name=caInjector.version</code> that uses dot notation to indicate a nested
+field.  This field will be used to specify the version for the CA Injector
+image.  Here it sets a label value, as it does on line 29.  On line 37 the same
+field is used to add the version to the Deployment's image.  In this case
+<code>replace="caInjectorVersion"</code> indicates the matching string in the image field's
+value should be replaced with the value from the TLSComponents custom resource.</p>
+<p>The number of replicas is similarly configured with a <code>caInjector.replicas</code>
+field from the TLSComponent resource with the marker on line 15.</p>
+<p>Separate corresponding markers are set on the other two Deployments in the same
+file.</p>
+<h4 id="operator-builderaddonsnuklerosio_tlsissuersyaml"><code>.operator-builder/addons.nukleros.io_tls/issuers.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_tlsissuersyaml" title="Permanent link">&para;</a></h4>
+<p>This file contains two ClusterIssuer resources.  The markers on lines 2 and 29
+indicate which of the two resources will be used depending up on the value given
+in the <code>certProvider</code> field of the collection SupportServices custom resource.
+The <code>value="letsencrypt-staging",include</code> maker fields indicate that when the
+value of <code>certProvider</code> matches this value, include this resource.  Otherwise it
+is ommitted.  Therefore if the SupportingService resource includes
+<code>certProvider: letsencrypt-staging</code> the first resource will be used (see the the
+value of the <code>server</code> field on line 13.  If <code>certProvider:
+letsencrypt-production</code> is in the SupportingServices resource, the second
+ClusterIssuer resource will be used.  The value from this field is also used to
+populate the value for the <code>cert-provider</code> as indicated by the marker on line 8.</p>
+<p>Finally, the marker on line 15 allows the contact email for the cert provider
+with a required <code>contactEmail</code> field.</p>
+<h4 id="operator-builderaddonsnuklerosio_tlsrbacyaml"><code>.operator-builder/addons.nukleros.io_tls/rbac.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_tlsrbacyaml" title="Permanent link">&para;</a></h4>
+<p>The Namespace resource has its name field set by the name field in the spec of
+the TLSComponent resource.  This field also informs the namespace field in all
+other fields for the RBAC resources as required.</p>
+<h4 id="operator-builderaddonsnuklerosio_tlsserviceyaml"><code>.operator-builder/addons.nukleros.io_tls/service.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_tlsserviceyaml" title="Permanent link">&para;</a></h4>
+<p>The namespace fields for the two Service resources are set as before.</p>
+<h4 id="operator-builderaddonsnuklerosio_tlswebhookyaml"><code>.operator-builder/addons.nukleros.io_tls/webhook.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_tlswebhookyaml" title="Permanent link">&para;</a></h4>
+<p>Namespaces are again set using the same field.  However in this case we have to
+use the <code>replace</code> marker field to set a part of a value, e.g. line 13.</p>
+<p>Finally, update the tls-component ComponentWorkload config to include the
+filenames of the manifests we added under <code>resources</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ComponentWorkload</span>
+<span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tls-component</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">clusterScoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nukleros.io</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TLSComponent</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1alpha1</span>
+<span class="w">  </span><span class="nt">companionCliSubcmd</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Manage the TLS management service component</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tls</span>
+<span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">crd.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deployment.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">issuers.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rbac.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">webhook.yaml</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="ingress-component-workload">Ingress Component Workload<a class="headerlink" href="#ingress-component-workload" title="Permanent link">&para;</a></h3>
+<p>The resources for this component will install the Nginx Ingress Controller so
+that tenant workloads can use Ingress resources to expose it to traffic from
+outside the cluster.</p>
+<p>Copy the resource manifests for the Ingress component for this tutorial.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>cp -R /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/addons.nukleros.io_ingress .
+</code></pre></div></td></tr></table></div>
+<h4 id="operator-builderaddonsnuklerosio_ingresscertyaml"><code>.operator-builder/addons.nukleros.io_ingress/cert.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_ingresscertyaml" title="Permanent link">&para;</a></h4>
+<p>The namespace name on the Certificate resource is set using a namespace field as
+before, this time using the IngressComponent custom resource.</p>
+<p>The DNS name is set using a new field <code>domainName</code> that is created for the
+IngressComponent resource.</p>
+<p>The <code>certProvider</code> field from the SupportingServices resource is again used here
+on the Certificate.</p>
+<h4 id="operator-builderaddonsnuklerosio_ingressclassyaml"><code>.operator-builder/addons.nukleros.io_ingress/class.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_ingressclassyaml" title="Permanent link">&para;</a></h4>
+<p>The IngressClass resource has no markers and so is not configurable in any way.</p>
+<h4 id="operator-builderaddonsnuklerosio_ingressconfigyaml"><code>.operator-builder/addons.nukleros.io_ingress/config.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_ingressconfigyaml" title="Permanent link">&para;</a></h4>
+<p>The ConfigMap's namespace is configured as the others are.</p>
+<h4 id="operator-builderaddonsnuklerosio_ingresscrdyaml"><code>.operator-builder/addons.nukleros.io_ingress/crd.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_ingresscrdyaml" title="Permanent link">&para;</a></h4>
+<p>As with the TLSComponent, the CustomResourceDefinitions have no markers and are
+not configurable.</p>
+<h4 id="operator-builderaddonsnuklerosio_ingressdeploymentyaml"><code>.operator-builder/addons.nukleros.io_ingress/deployment.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_ingressdeploymentyaml" title="Permanent link">&para;</a></h4>
+<p>The Deployment's namespace is configured as the others are.</p>
+<p>The replicas and container image are configured with markers on lines 7 and 23
+in the same way the cert-manager Deployments were configured.  These markers
+create new fields on the IngressComponent custom resource.</p>
+<h4 id="operator-builderaddonsnuklerosio_ingressrbacyaml"><code>.operator-builder/addons.nukleros.io_ingress/rbac.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_ingressrbacyaml" title="Permanent link">&para;</a></h4>
+<p>The Namespace and RBAC resources for the Ingress component have their namespaces
+configured the same way the TLS component did.</p>
+<h4 id="operator-builderaddonsnuklerosio_ingressserviceyaml"><code>.operator-builder/addons.nukleros.io_ingress/service.yaml</code><a class="headerlink" href="#operator-builderaddonsnuklerosio_ingressserviceyaml" title="Permanent link">&para;</a></h4>
+<p>There are four Services defined but only one is used in any given case.  The
+marker at the beginning of each Service manifest determines which one is used
+based on the SupportingService's <code>cloudProvider</code> field.</p>
+<p>Again the namespace for the Service is defined as with the others.</p>
+<p>Finally, update the ingress-component ComponentWorkload config to include the
+filenames of the manifests we added under <code>resources</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ComponentWorkload</span>
+<span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ingress-component</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">clusterScoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nukleros.io</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addons</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressComponent</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1alpha1</span>
+<span class="w">  </span><span class="nt">companionCliSubcmd</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Manage the ingress service component</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ingress</span>
+<span class="w">  </span><span class="nt">dependencies</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">../addons.nukleros.io_tls/workload.yaml</span>
+<span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cert.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">class.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">crd.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deployment.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rbac.yaml</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service.yaml</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="code-generation">Code Generation<a class="headerlink" href="#code-generation" title="Permanent link">&para;</a></h2>
+<p>You'll often find you want re-generate the codebase when you find mistakes or
+adjustments you want to make in the project.  For this reason it's helpful to
+have a Makefile in your <code>.operator-builder</code> directory.</p>
+<p>Copy the Makefile for this tutorial.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>cp /tmp/operator-builder/docs/workload-collection-tutorial/.operator-builder/Makefile .
+</code></pre></div></td></tr></table></div>
+<p>Now it's time to generate the code.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>make operator-init
+make operator-create
+</code></pre></div></td></tr></table></div>
+<p>That's it.</p>
+<h2 id="operator-testing">Operator Testing<a class="headerlink" href="#operator-testing" title="Permanent link">&para;</a></h2>
+<p>Now it's time to test your operator.  For this you'll need a working Kubernetes
+cluster.</p>
+<p>Navigate up into the root of your operator project's codebase.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>cd ..
+</code></pre></div></td></tr></table></div>
+<p>Your new operator has a Makefile of it's own that has some handy make targets.</p>
+<p>Install the CRDs into your cluster.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>make install
+</code></pre></div></td></tr></table></div>
+<p>Run the controller locally against your test cluster.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>make run
+</code></pre></div></td></tr></table></div>
+<p>In another terminal, install the custom resource samples.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>kubectl apply -f config/samples
+</code></pre></div></td></tr></table></div>
+<p>If everything has gone according to plan, your cluster will soon have Cert
+Manager and the Nginx Ingress Controller installed.</p>
+<p>Congratulations!  You just built a multi-workload operator.</p>
+<p><strong>Note</strong>: The Nginx Ingress Controller will require a valid DNS record that points
+to your ingress public IP so as to validate your ownership of the domain and for
+Let's Encrypt to issue a publicly trustable certificate.  Without this,
+everything will spin up but the Nginx instance will fail to start due to the
+inability to mount the secret with it's default server certificate.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2022-2024 Operator Builder
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/threeport/threeport" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>
