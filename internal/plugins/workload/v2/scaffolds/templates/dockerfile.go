@@ -36,7 +36,7 @@ func (f *Dockerfile) SetTemplateDefaults() error {
 }
 
 const dockerfileTemplate = `# Build the manager binary
-FROM golang:{{ .GoVersion }} as builder
+FROM golang:{{ .GoVersion }} AS builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
