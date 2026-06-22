@@ -5,15 +5,15 @@ package utils
 
 const (
 	// specifies the minimum version required to build the generated project.
-	GeneratedGoVersionMinimum = "1.21"
+	GeneratedGoVersionMinimum = "1.25.11"
 
 	// specifies the preferred version.
-	GeneratedGoVersionPreferred = "1.22"
+	GeneratedGoVersionPreferred = "1.26.4"
 
 	// makefile and go.mod versions.
 	// NOTE: please ensure the ControllerToolsVersion matches the go.mod file as we
 	// use this both in code generation as well as the generated project code.
-	ControllerToolsVersion = "v0.15.0"
+	ControllerToolsVersion = "v0.21.0"
 
 	// NOTE: ControllerRuntimeVersion will need to match operator-builder-tools version
 	// otherwise their could be inconsistencies in method calls which cause
