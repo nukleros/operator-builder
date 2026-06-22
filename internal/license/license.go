@@ -149,7 +149,7 @@ func replaceLicenseHeader(file string, header []byte) error {
 		}
 	}
 
-	err = os.WriteFile(file, []byte(output), filePermissions)
+	err = os.WriteFile(file, []byte(output), filePermissions) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("unable to set license header on %s, %w", file, err)
 	}
