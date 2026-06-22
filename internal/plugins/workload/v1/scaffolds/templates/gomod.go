@@ -27,20 +27,21 @@ type GoMod struct {
 // See https://github.com/vmware-tanzu-labs/operator-builder/issues/250
 func goModDependencyMap() map[string]string {
 	return map[string]string{
-		"github.com/go-logr/logr":                    "v1.4.1",
-		"github.com/nukleros/operator-builder-tools": "v0.6.1",
-		"github.com/onsi/ginkgo/v2":                  "v2.17.1",
-		"github.com/onsi/gomega":                     "v1.32.0",
-		"github.com/spf13/cobra":                     "v1.8.0",
-		"github.com/stretchr/testify":                "v1.9.0",
-		"gopkg.in/yaml.v2":                           "v2.4.0",
-		"k8s.io/api":                                 "v0.29.4",
-		"k8s.io/apimachinery":                        "v0.29.4",
-		"k8s.io/client-go":                           "v0.29.4",
-		"sigs.k8s.io/kubebuilder/v3":                 "v3.7.0",
-		"sigs.k8s.io/yaml":                           "v1.4.0",
+		"github.com/go-logr/logr":     utils.GoLogrVersion,
+		"github.com/onsi/ginkgo/v2":   utils.GinkgoVersion,
+		"github.com/onsi/gomega":      utils.GomegaVersion,
+		"github.com/spf13/cobra":      utils.CobraVersion,
+		"github.com/stretchr/testify": utils.TestifyVersion,
+		"gopkg.in/yaml.v2":            utils.YAMLVersionV2,
+		"sigs.k8s.io/kubebuilder/v3":  utils.KubebuilderVersionV3,
+		"sigs.k8s.io/yaml":            utils.KubernetesYAMLVersion,
 
-		// externally versioned packages via the utils package
+		// operator-builder-tools controls the runtime version which also affects things like
+		// the upstream kuberentes versions that we can use.
+		"github.com/nukleros/operator-builder-tools": utils.OperatorBuilderToolsVersion,
+		"k8s.io/api":                     utils.KubernetesLibraryVersion,
+		"k8s.io/apimachinery":            utils.KubernetesLibraryVersion,
+		"k8s.io/client-go":               utils.KubernetesLibraryVersion,
 		"sigs.k8s.io/controller-runtime": utils.ControllerRuntimeVersion,
 	}
 }

@@ -22,10 +22,10 @@ require (
 	sigs.k8s.io/controller-tools v0.21.0
 
 	// NOTE: v3.10.0+ requires changing of the underlying resources types.
-	sigs.k8s.io/kubebuilder/v3 v3.9.1
+	sigs.k8s.io/kubebuilder/v3 v3.15.1
 
-	// NOTE: v4.4.0+ requires changing of the underlying resources types.
-	sigs.k8s.io/kubebuilder/v4 v4.3.1
+	// NOTE: v4.14.0 throws an error where kind/resource are not set and require further investigation.
+	sigs.k8s.io/kubebuilder/v4 v4.13.1
 )
 
 require (
@@ -55,6 +55,7 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.56.0 // indirect

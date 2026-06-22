@@ -20,8 +20,28 @@ const (
 	// ambiguous errors.
 	ControllerRuntimeVersion = "v0.17.3"
 	KustomizeVersion         = "v5.4.1"
-	GolangCILintVersion      = "v1.57.2"
+	GolangCILintVersion      = "v2.12.2"
 	EnvtestVersion           = "release-0.17"
 	EnvtestK8SVersion        = "1.30.0"
 	OperatorSDKVersion       = "v1.28.0"
+
+	// the following are dependency versions that are shared across both v1 and v2 plugins.
+	// any updates to these versions will affect both plugins and should be tested accordingly.
+	GoLogrVersion               = "v1.4.3"
+	OperatorBuilderToolsVersion = "v0.6.1"
+	GinkgoVersion               = "v2.31.0"
+	GomegaVersion               = "v1.42.0"
+	CobraVersion                = "v1.10.2"
+	TestifyVersion              = "v1.11.1"
+	YAMLVersionV2               = "v2.4.0"
+	KubernetesYAMLVersion       = "v1.6.0"
+
+	// the following is the kubernetes libary version.  it affects the api/machinery/client-go
+	// packages.
+	KubernetesLibraryVersion = "v0.29.4"
+
+	// the following are kubebuilder dependency versions.  they will affect on the plugins
+	// which are associated with the approriate kubebuilder version.
+	KubebuilderVersionV3 = "v3.7.0"
+	KubebuilderVersionV4 = "v4.9.0"
 )
