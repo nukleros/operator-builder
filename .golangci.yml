@@ -1,116 +1,37 @@
----
-linters-settings:
-  dupl:
-    threshold: 200
-  funlen:
-    lines: 100
-    statements: 50
-  gci:
-    local-prefixes: github.com/nukleros/operator-builder
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - dupImport  # https://github.com/go-critic/go-critic/issues/845
-      - ifElseChain
-      - octalLiteral
-      - whyNoLint
-      - wrapperFunc
-  gocyclo:
-    min-complexity: 15
-  goimports:
-    local-prefixes: github.com/nukleros/operator-builder
-  golint:
-    min-confidence: 0
-  gomnd:
-    settings:
-      mnd:
-        # don't include the "operation" and "assign"
-        checks:
-          - argument
-          - case
-          - condition
-          - return
-  govet:
-    check-shadowing: true
-    settings:
-      printf:
-        funcs:
-          - (github.com/nukleros/operator-builder/pkg/logutils.Log).Infof
-          - (github.com/nukleros/operator-builder/logutils.Log).Warnf
-          - (github.com/nukleros/operator-builder/pkg/logutils.Log).Errorf
-          - (github.com/nukleros/operator-builder/pkg/logutils.Log).Fatalf
-  lll:
-    line-length: 140
-  maligned:
-    suggest-new: true
-  misspell:
-    locale: US
-  nolintlint:
-    allow-leading-space: true
-    allow-unused: false
-    require-explanation: false
-    require-specific: false
-  staticcheck:
-    checks:
-      - all
-      - '-SA1019' # disable strings.Title check
-
+version: "2"
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable
-  ##  during updates of golangci-lint
-  disable-all: true
+  default: none
   enable:
     - asciicheck
     - bodyclose
-    # - cyclop
-    # - depguard
     - dogsled
     - dupl
     - durationcheck
+    - err113
     - errcheck
     - errorlint
-    # - exhaustive
-    # - exhaustivestruct
-    - exportloopref
     - forbidigo
     - forcetypeassert
     - funlen
-    # disable due to false positives
-    # - gci
     - gochecknoglobals
     - gochecknoinits
     - gocognit
-    - goconst
+    # - goconst
     - gocritic
     - gocyclo
     - godot
-    # - godox
-    - goerr113
-    # disable due to false positives in detecting gofmt -s
-    # - gofmt
     - goheader
-    - goimports
-    - gomnd
     - gomoddirectives
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - importas
     - ineffassign
     - lll
     - makezero
     - misspell
+    # - mnd
     - nakedret
     - nestif
     - nilerr
@@ -119,60 +40,113 @@ linters:
     - paralleltest
     - prealloc
     - predeclared
-    # - revive
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - stylecheck
     - testpackage
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
     - wastedassign
     - whitespace
-    # - wrapcheck
-    # - wsl
-
-issues:
-  # Excluding configuration per-path, per-linter, per-text and per-source
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
-        - funlen
-        - scopelint
-        - testpackage
-    - path: internal/commands/*\.go
-      linters:
-        - gochecknoglobals
-    - path: internal/plugins/workload/v1/scaffolds
-      linters:
-        - goconst
-    - path: internal/plugins/workload/v2/scaffolds
-      linters:
-        - goconst
-    - path: internal/plugins/config/v1/plugin.go
-      linters:
-        - gocritic
-    - path: internal/plugins/workload/v1/scaffolds/templates/readme.go
-      linters:
-        - gomnd
-    - path: internal/plugins/workload/v2/scaffolds/templates/readme.go
-      linters:
-        - gomnd
-    # https://github.com/go-critic/go-critic/issues/926
-    - linters:
-        - gocritic
-      text: "unnecessaryDefer:"
-  exclude:
-    - 'declaration of "(err|ctx)" shadows declaration at'
-
-run:
-  skip-dirs:
-    - test/testdata_etc
-    - internal/cache
-    - internal/renameio
-    - internal/robustio
+  settings:
+    dupl:
+      threshold: 200
+    funlen:
+      lines: 100
+      statements: 50
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    gocritic:
+      disabled-checks:
+        - dupImport
+        - ifElseChain
+        - octalLiteral
+        - whyNoLint
+        - wrapperFunc
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    gocyclo:
+      min-complexity: 15
+    govet:
+      settings:
+        printf:
+          funcs:
+            - (github.com/nukleros/operator-builder/pkg/logutils.Log).Infof
+            - (github.com/nukleros/operator-builder/logutils.Log).Warnf
+            - (github.com/nukleros/operator-builder/pkg/logutils.Log).Errorf
+            - (github.com/nukleros/operator-builder/pkg/logutils.Log).Fatalf
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+    nolintlint:
+      require-explanation: false
+      require-specific: false
+      allow-unused: false
+    staticcheck:
+      checks:
+        - all
+        - -SA1019
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - funlen
+          - mnd
+          - scopelint
+          - testpackage
+          - goconst
+        path: _test\.go
+      - linters:
+          - gochecknoglobals
+        path: internal/commands/*\.go
+      - linters:
+          - goconst
+        path: internal/plugins/workload/v1/scaffolds
+      - linters:
+          - goconst
+        path: internal/plugins/workload/v2/scaffolds
+      - linters:
+          - gocritic
+        path: internal/plugins/config/v1/plugin.go
+      - linters:
+          - mnd
+        path: internal/plugins/workload/v1/scaffolds/templates/readme.go
+      - linters:
+          - mnd
+        path: internal/plugins/workload/v2/scaffolds/templates/readme.go
+      - linters:
+          - gocritic
+        text: 'unnecessaryDefer:'
+      - path: (.+)\.go$
+        text: declaration of "(err|ctx)" shadows declaration at
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/nukleros/operator-builder
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

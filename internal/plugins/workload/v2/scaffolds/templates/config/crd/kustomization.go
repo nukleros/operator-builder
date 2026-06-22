@@ -68,15 +68,15 @@ func (f *Kustomization) GetCodeFragments() machinery.CodeFragmentsMap {
 	fragments := make(machinery.CodeFragmentsMap, codeFragmentsLen)
 
 	// Generate resource code fragments
-	res := make([]string, 0)
+	res := make([]string, 0, 1)
 	res = append(res, fmt.Sprintf(resourceCodeFragment, f.Resource.QualifiedGroup(), f.Resource.Plural))
 
 	// Generate resource code fragments
-	webhookPatch := make([]string, 0)
+	webhookPatch := make([]string, 0, 1)
 	webhookPatch = append(webhookPatch, fmt.Sprintf(webhookPatchCodeFragment, f.Resource.Plural))
 
 	// Generate resource code fragments
-	caInjectionPatch := make([]string, 0)
+	caInjectionPatch := make([]string, 0, 1)
 	caInjectionPatch = append(caInjectionPatch, fmt.Sprintf(caInjectionPatchCodeFragment, f.Resource.Plural))
 
 	// Only store code fragments in the map if the slices are non-empty

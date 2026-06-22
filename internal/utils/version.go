@@ -36,7 +36,7 @@ const (
 	YAMLVersionV2               = "v2.4.0"
 	KubernetesYAMLVersion       = "v1.6.0"
 
-	// the following is the kubernetes libary version.  it affects the api/machinery/client-go
+	// the following is the kubernetes library version.  it affects the api/machinery/client-go
 	// packages.
 	KubernetesLibraryVersion = "v0.29.4"
 

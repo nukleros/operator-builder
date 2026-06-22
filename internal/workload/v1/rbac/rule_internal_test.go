@@ -27,7 +27,7 @@ func NewTestNonResourceRule() *Rule {
 func NewTestRules() *Rules {
 	testRule := NewTestRule()
 	testNonResourceRule := NewTestNonResourceRule()
-	testRules := Rules{}
+	testRules := make(Rules, 0, 2)
 	testRules = append(testRules, *testRule, *testNonResourceRule)
 
 	return &testRules

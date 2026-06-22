@@ -125,7 +125,7 @@ func (f *CmdVersionSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	f.SubCmd = *f.Builder.GetSubCommand()
 
 	// Generate subCommands code fragments
-	apiVersions := make([]string, 0)
+	apiVersions := make([]string, 0, 1)
 	apiVersions = append(apiVersions, fmt.Sprintf(versionCodeFragment, f.Resource.Version))
 
 	// Only store code fragments in the map if the slices are non-empty

@@ -110,7 +110,7 @@ func (s *apiScaffolder) Scaffold() error {
 
 // scaffoldWorkload performs the execution of the scaffold for an individual workload.
 //
-//nolint:funlen,gocyclo
+//nolint:gocyclo
 func (s *apiScaffolder) scaffoldWorkload(
 	scaffold *machinery.Scaffold,
 	workload kinds.WorkloadBuilder,
@@ -123,12 +123,12 @@ func (s *apiScaffolder) scaffoldWorkload(
 
 	// convert the component resource to a v4 resource
 	v4ComponentResource := &resource.Resource{
-		GVK:        resource.GVK(componentResource.GVK),
+		GVK:        componentResource.GVK,
 		Plural:     componentResource.Plural,
 		Path:       componentResource.Path,
-		API:        (*resource.API)(componentResource.API),
+		API:        componentResource.API,
 		Controller: componentResource.Controller,
-		Webhooks:   (*resource.Webhooks)(componentResource.Webhooks),
+		Webhooks:   componentResource.Webhooks,
 	}
 
 	// override the scaffold if we have a component.  this will allow the Resource

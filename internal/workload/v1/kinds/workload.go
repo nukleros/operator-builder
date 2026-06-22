@@ -434,7 +434,7 @@ func (ws *WorkloadSpec) setSourceFileNames() {
 			// found this file name before, we will append the count to guarantee uniqueness.
 			if nameTracker[fileName] > 0 {
 				// if this is not the last in the list, set the hasDuplicat value so we do not break.
-				if !(len(fileNames) == (priority + 1)) {
+				if len(fileNames) != priority+1 {
 					hasDuplicate = true
 				}
 

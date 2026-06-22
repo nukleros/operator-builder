@@ -175,8 +175,8 @@ func (f *CmdGenerateSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	}
 
 	// Generate subCommands code fragments
-	imports := make([]string, 0)
-	switches := make([]string, 0)
+	imports := make([]string, 0, 1)
+	switches := make([]string, 0, 1)
 
 	// add the imports
 	imports = append(imports, fmt.Sprintf(generateImportFragment,

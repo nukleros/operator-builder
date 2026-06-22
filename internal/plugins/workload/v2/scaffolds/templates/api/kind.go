@@ -124,7 +124,7 @@ func (f *KindUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	versionGroup := fmt.Sprintf("%s%s", f.Resource.Version, f.Resource.Group)
 
 	// Generate imports code fragments
-	imports := make([]string, 0)
+	imports := make([]string, 0, 1)
 	imports = append(imports, fmt.Sprintf(kindImportsFragment,
 		versionGroup,
 		f.Repo,
@@ -133,7 +133,7 @@ func (f *KindUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	))
 
 	// Generate groupVersions code fragments
-	groupVersions := make([]string, 0)
+	groupVersions := make([]string, 0, 1)
 	groupVersions = append(groupVersions, fmt.Sprintf(kindGroupVersionsFragment, versionGroup))
 
 	// Only store code fragments in the map if the slices are non-empty

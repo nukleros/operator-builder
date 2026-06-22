@@ -320,26 +320,26 @@ func (s *apiScaffolder) scaffoldCLI(
 
 // toV3Resource converts a v4 resource to a v3 resource.
 func toV3Resource(v4res *v4resource.Resource, repo string) *resource.Resource {
-	api := resource.API{
+	resourceAPI := resource.API{
 		CRDVersion: v4res.API.CRDVersion,
 		Namespaced: v4res.API.Namespaced,
 	}
 
 	return &resource.Resource{
 		GVK: resource.GVK{
-			Domain:  v4res.GVK.Domain,
-			Group:   v4res.GVK.Group,
-			Version: v4res.GVK.Version,
-			Kind:    v4res.GVK.Kind,
+			Domain:  v4res.Domain,
+			Group:   v4res.Group,
+			Version: v4res.Version,
+			Kind:    v4res.Kind,
 		},
-		Plural: resource.RegularPlural(v4res.GVK.Kind),
+		Plural: resource.RegularPlural(v4res.Kind),
 		Path: fmt.Sprintf(
 			"%s/apis/%s/%s",
 			repo,
-			v4res.GVK.Group,
-			v4res.GVK.Version,
+			v4res.Group,
+			v4res.Version,
 		),
-		API:        &api,
+		API:        &resourceAPI,
 		Controller: true,
 	}
 }
