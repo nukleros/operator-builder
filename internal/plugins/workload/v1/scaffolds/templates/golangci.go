@@ -27,13 +27,13 @@ import (
 
 var _ machinery.Template = &Golangci{}
 
-// Golangci scaffolds a file which define Golangci rules
+// Golangci scaffolds a file which define Golangci rules.
 type Golangci struct {
 	machinery.TemplateMixin
 	machinery.ProjectNameMixin
 }
 
-// SetTemplateDefaults implements machinery.Template
+// SetTemplateDefaults implements machinery.Template.
 func (f *Golangci) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = ".golangci.yml"
