@@ -61,6 +61,17 @@ linters:
           - modernize
           - revive
         path: apis/*
+      # NOTE: this ignores a deprecates scheme builder.  when we upgrade the kubebuilder package to something
+      #       later than v4.14.0, we will need to fix this as well.
+      - linters:
+          - staticcheck
+        path: apis/.*groupversion_info\.go$
+      # NOTE: this ignores a deprecates event recorder.  when we upgrade the kubebuilder package to something
+      #       later than v4.14.0, we will need to fix this as well.  this also requires an operator-builder-tools
+      #       package fix.
+      - linters:
+          - staticcheck
+        path: controllers/.*_controller\.go$
       - linters:
           - dupl
           - lll
