@@ -136,6 +136,7 @@ func (s *initScaffolder) Scaffold() error {
 			EnvtestK8SVersion:        utils.EnvtestK8SVersion,
 			GolangCILintVersion:      utils.GolangCILintVersion,
 		},
+		&templates.Golangci{},
 		&e2e.Test{},
 	); err != nil {
 		return fmt.Errorf("unable to scaffold initial configuration, %w", err)
