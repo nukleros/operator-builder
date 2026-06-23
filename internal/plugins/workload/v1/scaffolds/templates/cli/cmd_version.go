@@ -139,7 +139,7 @@ func (v *VersionInfo) Display() error {
 
 	outputStream := os.Stdout
 
-	if _, err := outputStream.WriteString(fmt.Sprintln(string(output))); err != nil {
+	if _, err := fmt.Fprintln(outputStream, string(output)); err != nil {
 		return fmt.Errorf("failed to write to stdout, %s", err)
 	}
 
