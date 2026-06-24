@@ -58,6 +58,7 @@ import (
 	"github.com/nukleros/operator-builder-tools/pkg/controller/workload"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	{{- $Repo := .Repo }}{{- $Added := "" }}{{- range .Builder.GetDependencies }}
 	{{- if ne .Spec.API.Group $.Resource.Group }}
@@ -191,6 +192,9 @@ func (*{{ .Resource.Kind }}) GetWorkloadGVK() schema.GroupVersionKind {
 }
 
 func init() {
-	SchemeBuilder.Register(&{{ .Resource.Kind }}{}, &{{ .Resource.Kind }}List{})
+	SchemeBuilder.Register(func(s *runtime.Scheme) error {
+		s.AddKnownTypes(SchemeGroupVersion, &{{ .Resource.Kind }}{}, &{{ .Resource.Kind }}List{})
+		return nil
+	})
 }
 `

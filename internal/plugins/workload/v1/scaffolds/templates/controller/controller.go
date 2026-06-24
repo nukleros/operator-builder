@@ -60,7 +60,7 @@ func (f *Controller) setOtherImports() {
 	f.OtherImports = []string{
 		`"github.com/go-logr/logr"`,
 		`apierrs "k8s.io/apimachinery/pkg/api/errors"`,
-		`"k8s.io/client-go/tools/record"`,
+		`"k8s.io/client-go/tools/events"`,
 		`ctrl "sigs.k8s.io/controller-runtime"`,
 		`"sigs.k8s.io/controller-runtime/pkg/client"`,
 		`"sigs.k8s.io/controller-runtime/pkg/controller"`,
@@ -139,7 +139,7 @@ type {{ .Resource.Kind }}Reconciler struct {
 	Name         string
 	Log          logr.Logger
 	Controller   controller.Controller
-	Events       record.EventRecorder
+	Events       events.EventRecorder
 	FieldManager string
 	Watches      []client.Object
 	Phases       *phases.Registry
@@ -150,7 +150,7 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 	return &{{ .Resource.Kind }}Reconciler{
 		Name:         "{{ .Resource.Kind }}",
 		Client:       mgr.GetClient(),
-		Events:       mgr.GetEventRecorderFor("{{ .Resource.Kind }}-Controller"),
+		Events:       mgr.GetEventRecorder("{{ .Resource.Kind }}-Controller"),
 		FieldManager: "{{ .Resource.Kind }}-reconciler",
 		Log:          ctrl.Log.WithName("controllers").WithName("{{ .Resource.Group }}").WithName("{{ .Resource.Kind }}"),
 		Watches:      []client.Object{},
@@ -352,7 +352,7 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(req *workload.Request) ([]
 }
 
 // GetEventRecorder returns the event recorder for writing kubernetes events.
-func (r *{{ .Resource.Kind }}Reconciler) GetEventRecorder() record.EventRecorder {
+func (r *{{ .Resource.Kind }}Reconciler) GetEventRecorder() events.EventRecorder {
 	return r.Events
 }
 
