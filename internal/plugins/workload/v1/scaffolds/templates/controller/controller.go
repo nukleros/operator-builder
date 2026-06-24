@@ -305,28 +305,35 @@ func (r *{{ .Resource.Kind }}Reconciler) EnqueueRequestOnCollectionChange(req *w
 		}
 	}
 
+	// source.Kind infers its type parameter from the object argument; using client.Object
+	// keeps the handler and predicate types consistent (workload.Workload embeds client.Object).
+	var collection client.Object = req.Collection
+
 	// watch the collection and use our map function to enqueue the request
 	if err := r.Controller.Watch(
-		source.Kind(r.Manager.GetCache(), req.Collection),
-		handler.EnqueueRequestsFromMapFunc(mapFn),
-		predicate.Funcs{
-			UpdateFunc: func(e event.UpdateEvent) bool {
-				if !resources.EqualNamespaceName(e.ObjectNew, req.Collection) {
-					return false
-				}
+		source.Kind(
+			r.Manager.GetCache(),
+			collection,
+			handler.EnqueueRequestsFromMapFunc(mapFn),
+			predicate.Funcs{
+				UpdateFunc: func(e event.UpdateEvent) bool {
+					if !resources.EqualNamespaceName(e.ObjectNew, req.Collection) {
+						return false
+					}
 
-				return e.ObjectNew != e.ObjectOld
+					return e.ObjectNew != e.ObjectOld
+				},
+				CreateFunc: func(e event.CreateEvent) bool {
+					return false
+				},
+				GenericFunc: func(e event.GenericEvent) bool {
+					return false
+				},
+				DeleteFunc: func(e event.DeleteEvent) bool {
+					return false
+				},
 			},
-			CreateFunc: func(e event.CreateEvent) bool {
-				return false
-			},
-			GenericFunc: func(e event.GenericEvent) bool {
-				return false
-			},
-			DeleteFunc: func(e event.DeleteEvent) bool {
-				return false
-			},
-		},
+		),
 	); err != nil {
 		return err
 	}
