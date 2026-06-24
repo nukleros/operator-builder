@@ -165,6 +165,7 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=list;watch
 // +kubebuilder:rbac:groups=core,resources=events,verbs=get;create;update;patch
+// +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=get;create;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
