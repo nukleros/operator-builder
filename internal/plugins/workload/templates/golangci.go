@@ -1,3 +1,6 @@
+// Copyright 2024 Nukleros
+// SPDX-License-Identifier: Apache-2.0
+
 package templates
 
 const Linter = `version: "2"
