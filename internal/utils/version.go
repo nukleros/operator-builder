@@ -28,7 +28,7 @@ const (
 	// the following are dependency versions that are shared across both v1 and v2 plugins.
 	// any updates to these versions will affect both plugins and should be tested accordingly.
 	GoLogrVersion               = "v1.4.3"
-	OperatorBuilderToolsVersion = "v0.7.0"
+	OperatorBuilderToolsVersion = "v0.8.0"
 	GinkgoVersion               = "v2.32.0"
 	GomegaVersion               = "v1.42.0"
 	CobraVersion                = "v1.10.2"
