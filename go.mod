@@ -25,6 +25,8 @@ require (
 	sigs.k8s.io/kubebuilder/v3 v3.15.1
 
 	// NOTE: v4.14.0 throws an error where kind/resource are not set and require further investigation.
+	// this is because v4.14.0 has now marked the underlying flags as required.  the only fix here
+	// is to decouple from kubebuilder entirely.
 	sigs.k8s.io/kubebuilder/v4 v4.13.1
 )
 
