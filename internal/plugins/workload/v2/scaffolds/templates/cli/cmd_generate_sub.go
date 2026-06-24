@@ -175,8 +175,8 @@ func (f *CmdGenerateSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	}
 
 	// Generate subCommands code fragments
-	imports := make([]string, 0)
-	switches := make([]string, 0)
+	imports := make([]string, 0, 1)
+	switches := make([]string, 0, 1)
 
 	// add the imports
 	imports = append(imports, fmt.Sprintf(generateImportFragment,
@@ -264,7 +264,7 @@ func Generate{{ .Resource.Kind }}(g *cmdgenerate.GenerateSubCommand) error {
 		return fmt.Errorf("failed to open workload file %%s, %%w", workloadFile, err)
 	}
 
-	var workload map[string]interface{}
+	var workload map[string]any
 
 	if err := yaml.Unmarshal(workloadFile, &workload); err != nil {
 		return fmt.Errorf("failed to unmarshal yaml into workload, %%w", err)
@@ -283,7 +283,7 @@ func Generate{{ .Resource.Kind }}(g *cmdgenerate.GenerateSubCommand) error {
 		return fmt.Errorf("failed to open collection file %%s, %%w", collectionFile, err)
 	}
 
-	var collection map[string]interface{}
+	var collection map[string]any
 
 	if err := yaml.Unmarshal(collectionFile, &collection); err != nil {
 		return fmt.Errorf("failed to unmarshal yaml into collection, %%w", err)

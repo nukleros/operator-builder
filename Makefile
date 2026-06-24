@@ -37,9 +37,9 @@ install: build
 #
 # traditional testing
 #
-GOLANGCI_LINT_VERSION ?= v1.57.1
+GOLANGCI_LINT_VERSION ?= v2.12.2
 install-linter:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 lint:
 	golangci-lint run

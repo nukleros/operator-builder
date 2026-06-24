@@ -16,7 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+	"sigs.k8s.io/kubebuilder/v4/pkg/model/resource"
 
 	"github.com/nukleros/operator-builder/internal/workload/v1/commands/companion"
 	"github.com/nukleros/operator-builder/internal/workload/v1/manifests"
@@ -434,7 +434,7 @@ func (ws *WorkloadSpec) setSourceFileNames() {
 			// found this file name before, we will append the count to guarantee uniqueness.
 			if nameTracker[fileName] > 0 {
 				// if this is not the last in the list, set the hasDuplicat value so we do not break.
-				if !(len(fileNames) == (priority + 1)) {
+				if len(fileNames) != priority+1 {
 					hasDuplicate = true
 				}
 

@@ -91,13 +91,13 @@ func (api *APIFields) AddField(path string, fieldType markers.FieldType, comment
 func (api *APIFields) GenerateAPISpec(kind string) string {
 	var buf bytes.Buffer
 
-	mustWrite(buf.WriteString(fmt.Sprintf(`
+	mustWrite(fmt.Fprintf(&buf, `
 // %[1]sSpec defines the desired state of %[1]s.
 type %[1]sSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-`, kind)))
+`, kind))
 
 	for _, child := range api.Children {
 		child.generateAPISpecField(&buf, kind)

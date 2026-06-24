@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+	"sigs.k8s.io/kubebuilder/v4/pkg/model/resource"
 
 	"github.com/nukleros/operator-builder/internal/utils"
 	"github.com/nukleros/operator-builder/internal/workload/v1/commands/companion"

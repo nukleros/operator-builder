@@ -60,7 +60,7 @@ func (f *Controller) setOtherImports() {
 	f.OtherImports = []string{
 		`"github.com/go-logr/logr"`,
 		`apierrs "k8s.io/apimachinery/pkg/api/errors"`,
-		`"k8s.io/client-go/tools/record"`,
+		`"k8s.io/client-go/tools/events"`,
 		`ctrl "sigs.k8s.io/controller-runtime"`,
 		`"sigs.k8s.io/controller-runtime/pkg/client"`,
 		`"sigs.k8s.io/controller-runtime/pkg/controller"`,
@@ -139,7 +139,7 @@ type {{ .Resource.Kind }}Reconciler struct {
 	Name         string
 	Log          logr.Logger
 	Controller   controller.Controller
-	Events       record.EventRecorder
+	Events       events.EventRecorder
 	FieldManager string
 	Watches      []client.Object
 	Phases       *phases.Registry
@@ -150,7 +150,7 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 	return &{{ .Resource.Kind }}Reconciler{
 		Name:         "{{ .Resource.Kind }}",
 		Client:       mgr.GetClient(),
-		Events:       mgr.GetEventRecorderFor("{{ .Resource.Kind }}-Controller"),
+		Events:       mgr.GetEventRecorder("{{ .Resource.Kind }}-Controller"),
 		FieldManager: "{{ .Resource.Kind }}-reconciler",
 		Log:          ctrl.Log.WithName("controllers").WithName("{{ .Resource.Group }}").WithName("{{ .Resource.Kind }}"),
 		Watches:      []client.Object{},
@@ -165,6 +165,7 @@ func New{{ .Resource.Kind }}Reconciler(mgr ctrl.Manager) *{{ .Resource.Kind }}Re
 
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=list;watch
 // +kubebuilder:rbac:groups=core,resources=events,verbs=get;create;update;patch
+// +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=get;create;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -305,28 +306,35 @@ func (r *{{ .Resource.Kind }}Reconciler) EnqueueRequestOnCollectionChange(req *w
 		}
 	}
 
+	// source.Kind infers its type parameter from the object argument; using client.Object
+	// keeps the handler and predicate types consistent (workload.Workload embeds client.Object).
+	var collection client.Object = req.Collection
+
 	// watch the collection and use our map function to enqueue the request
 	if err := r.Controller.Watch(
-		source.Kind(r.Manager.GetCache(), req.Collection),
-		handler.EnqueueRequestsFromMapFunc(mapFn),
-		predicate.Funcs{
-			UpdateFunc: func(e event.UpdateEvent) bool {
-				if !resources.EqualNamespaceName(e.ObjectNew, req.Collection) {
-					return false
-				}
+		source.Kind(
+			r.Manager.GetCache(),
+			collection,
+			handler.EnqueueRequestsFromMapFunc(mapFn),
+			predicate.Funcs{
+				UpdateFunc: func(e event.UpdateEvent) bool {
+					if !resources.EqualNamespaceName(e.ObjectNew, req.Collection) {
+						return false
+					}
 
-				return e.ObjectNew != e.ObjectOld
+					return e.ObjectNew != e.ObjectOld
+				},
+				CreateFunc: func(e event.CreateEvent) bool {
+					return false
+				},
+				GenericFunc: func(e event.GenericEvent) bool {
+					return false
+				},
+				DeleteFunc: func(e event.DeleteEvent) bool {
+					return false
+				},
 			},
-			CreateFunc: func(e event.CreateEvent) bool {
-				return false
-			},
-			GenericFunc: func(e event.GenericEvent) bool {
-				return false
-			},
-			DeleteFunc: func(e event.DeleteEvent) bool {
-				return false
-			},
-		},
+		),
 	); err != nil {
 		return err
 	}
@@ -352,7 +360,7 @@ func (r *{{ .Resource.Kind }}Reconciler) GetResources(req *workload.Request) ([]
 }
 
 // GetEventRecorder returns the event recorder for writing kubernetes events.
-func (r *{{ .Resource.Kind }}Reconciler) GetEventRecorder() record.EventRecorder {
+func (r *{{ .Resource.Kind }}Reconciler) GetEventRecorder() events.EventRecorder {
 	return r.Events
 }
 

@@ -233,7 +233,7 @@ GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 KUSTOMIZE_VERSION ?= {{ .KustomizeVersion }}
 CONTROLLER_TOOLS_VERSION ?= {{ .ControllerToolsVersion }}
 ENVTEST_VERSION ?= {{ .EnvtestVersion }}
-GOLANGCI_LINT_VERSION ?= v1.57.2
+GOLANGCI_LINT_VERSION ?= {{ .GolangCILintVersion }}
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -253,7 +253,7 @@ $(ENVTEST): $(LOCALBIN)
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
@@ -413,8 +413,7 @@ build-cli: ## Build the companion CLI.
 docs: manifests ## Build the API documentation.
 	@if ! command -v go &> /dev/null; then echo "error: go not installed"; exit 1; fi; \
 	GOCMD=$$(which go); \
-	if [[ -z $$($$GOCMD version | grep '1.16') ]]; then echo "error: requires go version >= 1.16"; exit 1; fi; \
-	go get fybrik.io/crdoc@v0.5.0; \
-	go install fybrik.io/crdoc@v0.5.0; \
+	go get fybrik.io/crdoc@v0.6.4; \
+	go install fybrik.io/crdoc@v0.6.4; \
 	crdoc --resources config/crd/bases/ --output docs/apis.md
 `

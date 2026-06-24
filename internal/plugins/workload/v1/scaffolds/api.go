@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
 	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
+	v4resource "sigs.k8s.io/kubebuilder/v4/pkg/model/resource"
 
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v1/scaffolds/templates/api"
@@ -119,6 +120,10 @@ func (s *apiScaffolder) scaffoldWorkload(
 		workload.IsClusterScoped(),
 	)
 
+	// we need to downgrade our v4 resource to a v3 resource.  this is acceptable here
+	// as we will eventually be deprecating support for v3.
+	v3resource := toV3Resource(componentResource, s.config.GetRepository())
+
 	// override the scaffold if we have a component.  this will allow the Resource
 	// attribute of the scaffolder to be set appropriately so that things like Group,
 	// Version, and Kind are passed from the child component and not the parent
@@ -127,13 +132,13 @@ func (s *apiScaffolder) scaffoldWorkload(
 		scaffold = machinery.NewScaffold(s.fs,
 			machinery.WithConfig(s.config),
 			machinery.WithBoilerplate(s.boilerplate),
-			machinery.WithResource(componentResource),
+			machinery.WithResource(v3resource),
 		)
 	}
 
 	// inject the resource as this resource so that our PROJECT file is up to date for each
 	// resource that we loop through
-	if err := s.config.UpdateResource(*componentResource); err != nil {
+	if err := s.config.UpdateResource(*v3resource); err != nil {
 		return fmt.Errorf("%w; error updating resource", err)
 	}
 
@@ -311,4 +316,30 @@ func (s *apiScaffolder) scaffoldCLI(
 	}
 
 	return nil
+}
+
+// toV3Resource converts a v4 resource to a v3 resource.
+func toV3Resource(v4res *v4resource.Resource, repo string) *resource.Resource {
+	resourceAPI := resource.API{
+		CRDVersion: v4res.API.CRDVersion,
+		Namespaced: v4res.API.Namespaced,
+	}
+
+	return &resource.Resource{
+		GVK: resource.GVK{
+			Domain:  v4res.Domain,
+			Group:   v4res.Group,
+			Version: v4res.Version,
+			Kind:    v4res.Kind,
+		},
+		Plural: resource.RegularPlural(v4res.Kind),
+		Path: fmt.Sprintf(
+			"%s/apis/%s/%s",
+			repo,
+			v4res.Group,
+			v4res.Version,
+		),
+		API:        &resourceAPI,
+		Controller: true,
+	}
 }

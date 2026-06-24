@@ -138,8 +138,8 @@ func (f *CmdInitSubUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	}
 
 	// Generate subCommands code fragments
-	imports := make([]string, 0)
-	switches := make([]string, 0)
+	imports := make([]string, 0, 1)
+	switches := make([]string, 0, 1)
 
 	// add the imports
 	imports = append(imports, fmt.Sprintf(initImportsFragment,
@@ -207,7 +207,7 @@ func get{{ .Resource.Kind }}Manifest(i *cmdinit.InitSubCommand) (string, error) 
 	}
 
 	// return an error if we did not find a manifest for an api version
-	return "", fmt.Errorf("unsupported API Version: " + apiVersion)
+	return "", fmt.Errorf("unsupported API Version: %%s", apiVersion)
 }
 
 // New{{ .Resource.Kind }}SubCommand creates a new command and adds it to its 

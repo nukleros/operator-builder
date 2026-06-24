@@ -506,7 +506,6 @@ func Test_getKeyValue(t *testing.T) {
 func Test_setValue(t *testing.T) {
 	t.Parallel()
 
-	//nolint: goconst
 	testInvalidReplaceText := "*&^%"
 	testReplaceText := "<replace me>"
 	testField := "test.field.set"

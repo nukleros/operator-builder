@@ -31,13 +31,13 @@ func ToPascalCase(name string) string {
 // ToFileName will convert a kebab-case string to a snake_case name appropriate to
 // use in a go filename.
 func ToFileName(name string) string {
-	return strings.ToLower(strings.Replace(name, "-", "_", -1))
+	return strings.ToLower(strings.ReplaceAll(name, "-", "_"))
 }
 
 // ToPackageName will convert a kebab-case string to an all lower name
 // appropriate for directory and package names.
 func ToPackageName(name string) string {
-	return strings.ToLower(strings.Replace(name, "-", "", -1))
+	return strings.ToLower(strings.ReplaceAll(name, "-", ""))
 }
 
 // needsUnderscore has logic that determines when a character needs to be replaced

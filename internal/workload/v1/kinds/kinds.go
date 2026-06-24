@@ -20,6 +20,10 @@ const (
 	WorkloadKindStandalone
 	WorkloadKindCollection
 	WorkloadKindComponent
+
+	WorkloadKindStandalongString = "StandaloneWorkload"
+	WorkloadKindCollectionString = "WorkloadCollection"
+	WorkloadKindComponentString  = "ComponentWorkload"
 )
 
 func Decode(wk WorkloadKind, dc *yaml.Decoder) (WorkloadBuilder, error) {
@@ -43,9 +47,9 @@ func Decode(wk WorkloadKind, dc *yaml.Decoder) (WorkloadBuilder, error) {
 
 func (wk WorkloadKind) String() string {
 	kinds := map[WorkloadKind]string{
-		WorkloadKindStandalone: "StandaloneWorkload",
-		WorkloadKindCollection: "WorkloadCollection",
-		WorkloadKindComponent:  "ComponentWorkload",
+		WorkloadKindStandalone: WorkloadKindStandalongString,
+		WorkloadKindCollection: WorkloadKindCollectionString,
+		WorkloadKindComponent:  WorkloadKindComponentString,
 		WorkloadKindUnknown:    "Unknown Workload Type",
 	}
 
@@ -76,9 +80,9 @@ func (wk *WorkloadKind) UnmarshalYAML(node *yaml.Node) error {
 
 func workloadKindsMap() map[string]WorkloadKind {
 	return map[string]WorkloadKind{
-		"StandaloneWorkload": WorkloadKindStandalone,
-		"WorkloadCollection": WorkloadKindCollection,
-		"ComponentWorkload":  WorkloadKindComponent,
+		WorkloadKindStandalongString: WorkloadKindStandalone,
+		WorkloadKindCollectionString: WorkloadKindCollection,
+		WorkloadKindComponentString:  WorkloadKindComponent,
 	}
 }
 
