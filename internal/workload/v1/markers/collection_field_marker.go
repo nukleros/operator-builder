@@ -137,3 +137,7 @@ func (cfm *CollectionFieldMarker) SetDescription(description string) {
 func (cfm *CollectionFieldMarker) SetForCollection(forCollection bool) {
 	cfm.forCollection = forCollection
 }
+
+func (cfm *CollectionFieldMarker) GetComments(exceptions ...string) []string {
+	return commentsFromMarker(cfm.GetDescription(), exceptions...)
+}

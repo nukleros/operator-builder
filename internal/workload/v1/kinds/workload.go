@@ -365,12 +365,7 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 			continue
 		}
 
-		// set the comments based on the description field of a field marker
-		comments := []string{}
-
-		if marker.GetDescription() != "" {
-			comments = append(comments, strings.Split(marker.GetDescription(), "\n")...)
-		}
+		comments := marker.GetComments("+kubebuilder:")
 
 		// set the sample value based on if a default was specified in the marker or not
 		if marker.GetDefault() != nil {
