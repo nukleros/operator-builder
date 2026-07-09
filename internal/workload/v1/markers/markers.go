@@ -241,15 +241,31 @@ func commentsFromMarker(description string, exceptions ...string) []string {
 	// (e.g. +kubebuilder:default=X or (Default: X)) that precede it.
 	comments := []string{""}
 
-	rawLines := strings.Split(description, "\n")
+	for i, block := range buildDescriptionBlocks(strings.Split(description, "\n")) {
+		blockLines := wrapCommentBlock(block, exceptions)
+		if len(blockLines) == 0 {
+			continue
+		}
 
+		if i > 0 {
+			comments = append(comments, "")
+		}
+
+		comments = append(comments, blockLines...)
+	}
+
+	return normalizeCommentLines(comments)
+}
+
+// buildDescriptionBlocks splits trimmed non-blank lines into paragraph blocks,
+// separated by blank (or whitespace-only) lines.
+func buildDescriptionBlocks(rawLines []string) [][]string {
 	var blocks [][]string
 
 	var current []string
 
 	for _, line := range rawLines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
+		if trimmed := strings.TrimSpace(line); trimmed == "" {
 			if len(current) > 0 {
 				blocks = append(blocks, current)
 				current = nil
@@ -263,21 +279,12 @@ func commentsFromMarker(description string, exceptions ...string) []string {
 		blocks = append(blocks, current)
 	}
 
-	for i, block := range blocks {
-		blockLines := wrapCommentBlock(block, exceptions)
-		if len(blockLines) == 0 {
-			continue
-		}
+	return blocks
+}
 
-		if i > 0 {
-			comments = append(comments, "")
-		}
-
-		comments = append(comments, blockLines...)
-	}
-
-	// Collapse any consecutive blank lines into one (defensive: handles user
-	// descriptions with multiple blank lines or edge cases in block processing).
+// normalizeCommentLines collapses consecutive blank entries into one and removes
+// any trailing blank entry.  Returns nil when nothing remains.
+func normalizeCommentLines(comments []string) []string {
 	normalized := comments[:0:0]
 
 	for i, c := range comments {
@@ -288,7 +295,6 @@ func commentsFromMarker(description string, exceptions ...string) []string {
 		normalized = append(normalized, c)
 	}
 
-	// Trim any trailing blank line.
 	for len(normalized) > 0 && normalized[len(normalized)-1] == "" {
 		normalized = normalized[:len(normalized)-1]
 	}
@@ -303,7 +309,7 @@ func commentsFromMarker(description string, exceptions ...string) []string {
 // wrapCommentBlock emits the lines of a description block as wrapped comment strings.
 // Lines beginning with an exception prefix are passed through verbatim on their
 // own line; all other lines are joined and word-wrapped at commentWrapWidth.
-func wrapCommentBlock(lines []string, exceptions []string) []string {
+func wrapCommentBlock(lines, exceptions []string) []string {
 	var result []string
 
 	var pending []string
