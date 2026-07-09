@@ -337,6 +337,8 @@ func wrapCommentBlock(lines, exceptions []string) []string {
 	return result
 }
 
+var wordRe = regexp.MustCompile(`\S+`)
+
 // wrapCommentLine wraps text at commentWrapWidth characters, breaking only at word
 // boundaries.  Whitespace runs between words (e.g. double-spaces after a
 // sentence-ending period) are preserved in the output.
@@ -344,8 +346,6 @@ func wrapCommentLine(text string) []string {
 	if text == "" {
 		return nil
 	}
-
-	wordRe := regexp.MustCompile(`\S+`)
 	locs := wordRe.FindAllStringIndex(text, -1)
 
 	if len(locs) == 0 {
