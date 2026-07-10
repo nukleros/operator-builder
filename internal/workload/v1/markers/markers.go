@@ -193,7 +193,8 @@ func reservedMarkers() []string {
 // which are currently supported.
 func supportedParents() map[string]string {
 	return map[string]string{
-		"metadata.name": "Name",
+		"metadata.name":      "Name",
+		"metadata.namespace": "Namespace",
 	}
 }
 

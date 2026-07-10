@@ -318,11 +318,16 @@ func Test_getSourceCodeVariable(t *testing.T) {
 		Name: &flat,
 	}
 
-	validParent := "metadata.name"
-	invalidParent := "metadata.namespace"
+	validParentName := "metadata.name"
+	validParentNamespace := "metadata.namespace"
+	invalidParent := "metadata.labels"
 
 	fieldMarkerParentTest := &FieldMarker{
-		Parent: &validParent,
+		Parent: &validParentName,
+	}
+
+	fieldMarkerParentNamespaceTest := &FieldMarker{
+		Parent: &validParentNamespace,
 	}
 
 	fieldMarkerInvalidParentTest := &FieldMarker{
@@ -330,7 +335,11 @@ func Test_getSourceCodeVariable(t *testing.T) {
 	}
 
 	collectionFieldMarkerParentTest := &CollectionFieldMarker{
-		Parent: &validParent,
+		Parent: &validParentName,
+	}
+
+	collectionFieldMarkerParentNamespaceTest := &CollectionFieldMarker{
+		Parent: &validParentNamespace,
 	}
 
 	collectionFieldMarkerInvalidParentTest := &CollectionFieldMarker{
@@ -399,6 +408,14 @@ func Test_getSourceCodeVariable(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "ensure field marker with metadata.namespace parent returns a correct source code variable",
+			args: args{
+				marker: fieldMarkerParentNamespaceTest,
+			},
+			want:    "parent.Namespace",
+			wantErr: false,
+		},
+		{
 			name: "ensure field marker with invalid parent returns an error",
 			args: args{
 				marker: fieldMarkerInvalidParentTest,
@@ -412,6 +429,14 @@ func Test_getSourceCodeVariable(t *testing.T) {
 				marker: collectionFieldMarkerParentTest,
 			},
 			want:    "collection.Name",
+			wantErr: false,
+		},
+		{
+			name: "ensure collection field marker with metadata.namespace parent returns a correct source code variable",
+			args: args{
+				marker: collectionFieldMarkerParentNamespaceTest,
+			},
+			want:    "collection.Namespace",
 			wantErr: false,
 		},
 		{

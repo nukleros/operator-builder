@@ -51,8 +51,8 @@ Example:
 
 ### Parent (required if Name is unspecified)
 
-The parent field in which you wish to substitute.  Currently, only `metadata.name` is supported.
-This will allow you to use the parent name as a value in the child resource.
+The parent field in which you wish to substitute.  Currently, only `metadata.name` and `metadata.namespace` are supported.
+This will allow you to use the parent name or namespace as a value in the child resource.
 
 Example:
 
@@ -60,7 +60,7 @@ Example:
 +operator-builder:field:parent=metadata.name,type=string
 ```
 
-The `metadata.name` field from the collection workload is also supported:
+The `metadata.name` and `metadata.namespace` fields from the collection workload is also supported:
 
 ```
 +operator-builder:collection:field:parent=metadata.name,type=string
