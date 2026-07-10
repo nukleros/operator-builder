@@ -162,3 +162,7 @@ func (fm *FieldMarker) SetDescription(description string) {
 func (fm *FieldMarker) SetForCollection(forCollection bool) {
 	fm.forCollection = forCollection
 }
+
+func (fm *FieldMarker) GetComments(exceptions ...string) []string {
+	return commentsFromMarker(fm.GetDescription(), exceptions...)
+}

@@ -45,6 +45,7 @@ type FieldMarkerProcessor interface {
 	GetReplaceText() string
 	GetSpecPrefix() string
 	GetSourceCodeVariable() string
+	GetComments(exceptions ...string) []string
 
 	IsCollectionFieldMarker() bool
 	IsFieldMarker() bool
@@ -212,6 +213,169 @@ func isSupported(parentField string) bool {
 func validField(field string, validFields []string) bool {
 	for _, valid := range validFields {
 		if utils.ToTitle(valid) == utils.ToTitle(field) {
+			return true
+		}
+	}
+
+	return false
+}
+
+const commentWrapWidth = 80
+
+// commentsFromMarker builds the formatted comment slice for a field marker.
+// It splits the description into word-wrapped blocks (at commentWrapWidth) and
+// prepends a blank line so the description is visually separated from any
+// preceding marker annotations (e.g. the "(Default: X)" that setDefault writes
+// into api.Markers).  Any block line that begins with an exception prefix is
+// emitted verbatim without word-wrapping.
+//
+// Note: the default annotation itself is intentionally NOT included here — it
+// is already written to api.Markers by setDefault/setCommentsAndDefault.
+func commentsFromMarker(description string, exceptions ...string) []string {
+	description = strings.Trim(description, "\n")
+	if description == "" {
+		return nil
+	}
+
+	// Leading blank line separates the description from marker annotations
+	// (e.g. +kubebuilder:default=X or (Default: X)) that precede it.
+	comments := []string{""}
+
+	for i, block := range buildDescriptionBlocks(strings.Split(description, "\n")) {
+		blockLines := wrapCommentBlock(block, exceptions)
+		if len(blockLines) == 0 {
+			continue
+		}
+
+		if i > 0 {
+			comments = append(comments, "")
+		}
+
+		comments = append(comments, blockLines...)
+	}
+
+	return normalizeCommentLines(comments)
+}
+
+// buildDescriptionBlocks splits trimmed non-blank lines into paragraph blocks,
+// separated by blank (or whitespace-only) lines.
+func buildDescriptionBlocks(rawLines []string) [][]string {
+	var blocks [][]string
+
+	var current []string
+
+	for _, line := range rawLines {
+		if trimmed := strings.TrimSpace(line); trimmed == "" {
+			if len(current) > 0 {
+				blocks = append(blocks, current)
+				current = nil
+			}
+		} else {
+			current = append(current, trimmed)
+		}
+	}
+
+	if len(current) > 0 {
+		blocks = append(blocks, current)
+	}
+
+	return blocks
+}
+
+// normalizeCommentLines collapses consecutive blank entries into one and removes
+// any trailing blank entry.  Returns nil when nothing remains.
+func normalizeCommentLines(comments []string) []string {
+	normalized := comments[:0:0]
+
+	for i, c := range comments {
+		if c == "" && i > 0 && comments[i-1] == "" {
+			continue
+		}
+
+		normalized = append(normalized, c)
+	}
+
+	for len(normalized) > 0 && normalized[len(normalized)-1] == "" {
+		normalized = normalized[:len(normalized)-1]
+	}
+
+	if len(normalized) == 0 {
+		return nil
+	}
+
+	return normalized
+}
+
+// wrapCommentBlock emits the lines of a description block as wrapped comment strings.
+// Lines beginning with an exception prefix are passed through verbatim on their
+// own line; all other lines are joined and word-wrapped at commentWrapWidth.
+func wrapCommentBlock(lines, exceptions []string) []string {
+	var result []string
+
+	var pending []string
+
+	flush := func() {
+		if len(pending) == 0 {
+			return
+		}
+
+		result = append(result, wrapCommentLine(strings.Join(pending, " "))...)
+		pending = nil
+	}
+
+	for _, line := range lines {
+		if isCommentLineException(line, exceptions) {
+			flush()
+			result = append(result, line)
+		} else {
+			pending = append(pending, line)
+		}
+	}
+
+	flush()
+
+	return result
+}
+
+var wordRe = regexp.MustCompile(`\S+`)
+
+// wrapCommentLine wraps text at commentWrapWidth characters, breaking only at word
+// boundaries.  Whitespace runs between words (e.g. double-spaces after a
+// sentence-ending period) are preserved in the output.
+func wrapCommentLine(text string) []string {
+	if text == "" {
+		return nil
+	}
+	locs := wordRe.FindAllStringIndex(text, -1)
+
+	if len(locs) == 0 {
+		return nil
+	}
+
+	var lines []string
+
+	lineStart := locs[0][0]
+	lineEnd := locs[0][1]
+
+	for _, loc := range locs[1:] {
+		wordEnd := loc[1]
+		if wordEnd-lineStart > commentWrapWidth {
+			lines = append(lines, text[lineStart:lineEnd])
+			lineStart = loc[0]
+		}
+
+		lineEnd = wordEnd
+	}
+
+	lines = append(lines, text[lineStart:lineEnd])
+
+	return lines
+}
+
+// isCommentLineException returns true when line begins with any of the exception prefixes.
+func isCommentLineException(line string, exceptions []string) bool {
+	for _, exc := range exceptions {
+		if strings.HasPrefix(line, exc) {
 			return true
 		}
 	}

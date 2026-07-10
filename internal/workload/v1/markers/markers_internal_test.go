@@ -844,3 +844,348 @@ func Test_transformYAML(t *testing.T) {
 		})
 	}
 }
+
+func Test_isCommentLineException(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		line       string
+		exceptions []string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "ensure line matching exception prefix returns true",
+			args: args{
+				line:       "+kubebuilder:validation:Optional",
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: true,
+		},
+		{
+			name: "ensure line not matching any exception returns false",
+			args: args{
+				line:       "this is a normal description line",
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: false,
+		},
+		{
+			name: "ensure empty exceptions list always returns false",
+			args: args{
+				line:       "+kubebuilder:validation:Optional",
+				exceptions: []string{},
+			},
+			want: false,
+		},
+		{
+			name: "ensure empty line with no exceptions returns false",
+			args: args{
+				line:       "",
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: false,
+		},
+		{
+			name: "ensure line matching one of multiple exceptions returns true",
+			args: args{
+				line:       "+operator-builder:field",
+				exceptions: []string{"+kubebuilder:", "+operator-builder:"},
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := isCommentLineException(tt.args.line, tt.args.exceptions); got != tt.want {
+				t.Errorf("isCommentLineException() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_wrapCommentLine(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		text string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "ensure empty string returns nil",
+			args: args{text: ""},
+			want: nil,
+		},
+		{
+			name: "ensure whitespace-only string returns nil",
+			args: args{text: "   "},
+			want: nil,
+		},
+		{
+			name: "ensure short line is returned as a single element",
+			args: args{text: "short description"},
+			want: []string{"short description"},
+		},
+		{
+			name: "ensure line exactly at wrap width is not split",
+			args: args{
+				// 80 characters exactly
+				text: "aaaaaaaaaa bbbbbbbbbb cccccccccc dddddddddd eeeeeeeeee ffffffffff gggggggggg h",
+			},
+			want: []string{"aaaaaaaaaa bbbbbbbbbb cccccccccc dddddddddd eeeeeeeeee ffffffffff gggggggggg h"},
+		},
+		{
+			name: "ensure line exceeding wrap width is split at word boundary",
+			args: args{
+				text: "This is a description that is long enough to exceed the eighty character wrap width limit.",
+			},
+			want: []string{
+				"This is a description that is long enough to exceed the eighty character wrap",
+				"width limit.",
+			},
+		},
+		{
+			name: "ensure single word longer than wrap width is returned on one line",
+			args: args{
+				text: "us-central1-docker.pkg.dev/wanaware-core-dev/function-integrator/function-integrator:latest",
+			},
+			want: []string{
+				"us-central1-docker.pkg.dev/wanaware-core-dev/function-integrator/function-integrator:latest",
+			},
+		},
+		{
+			name: "ensure double-space between words is preserved in output",
+			args: args{
+				text: "End of sentence.  Start of next sentence.",
+			},
+			want: []string{"End of sentence.  Start of next sentence."},
+		},
+		{
+			name: "ensure long text is split into multiple lines",
+			args: args{
+				// "fourteen" ends at exactly column 80, so it stays on the first line;
+				// the split happens before "fifteen".
+				text: "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen",
+			},
+			want: []string{
+				"one two three four five six seven eight nine ten eleven twelve thirteen fourteen",
+				"fifteen sixteen",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := wrapCommentLine(tt.args.text)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("wrapCommentLine() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_wrapCommentBlock(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		lines      []string
+		exceptions []string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "ensure empty block returns nil",
+			args: args{
+				lines:      []string{},
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: nil,
+		},
+		{
+			name: "ensure block with single short line is returned as-is",
+			args: args{
+				lines:      []string{"a short description"},
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: []string{"a short description"},
+		},
+		{
+			name: "ensure multiple lines are joined and word-wrapped together",
+			args: args{
+				lines:      []string{"first line", "second line", "third line"},
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: []string{"first line second line third line"},
+		},
+		{
+			name: "ensure exception line is emitted verbatim without joining",
+			args: args{
+				lines:      []string{"+kubebuilder:validation:Optional"},
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: []string{"+kubebuilder:validation:Optional"},
+		},
+		{
+			name: "ensure exception lines are flushed between non-exception lines",
+			args: args{
+				lines:      []string{"before exception", "+kubebuilder:validation:Optional", "after exception"},
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: []string{"before exception", "+kubebuilder:validation:Optional", "after exception"},
+		},
+		{
+			name: "ensure all-exception block emits each line verbatim",
+			args: args{
+				lines:      []string{"+kubebuilder:default=true", "+kubebuilder:validation:Optional"},
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: []string{"+kubebuilder:default=true", "+kubebuilder:validation:Optional"},
+		},
+		{
+			name: "ensure long joined line is word-wrapped at wrap width",
+			args: args{
+				lines: []string{
+					"This is the first part of a description",
+					"that when joined together exceeds the eighty character wrap width boundary.",
+				},
+				exceptions: []string{"+kubebuilder:"},
+			},
+			want: []string{
+				"This is the first part of a description that when joined together exceeds the",
+				"eighty character wrap width boundary.",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := wrapCommentBlock(tt.args.lines, tt.args.exceptions)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("wrapCommentBlock() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_commentsFromMarker(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		description string
+		exceptions  []string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "ensure empty description returns nil",
+			args: args{
+				description: "",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: nil,
+		},
+		{
+			name: "ensure newline-only description returns nil",
+			args: args{
+				description: "\n\n\n",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: nil,
+		},
+		{
+			name: "ensure single-paragraph description has leading blank separator",
+			args: args{
+				description: "\n a short description",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: []string{"", "a short description"},
+		},
+		{
+			name: "ensure two paragraphs are separated by exactly one blank line",
+			args: args{
+				description: "\n first paragraph\n\n second paragraph",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: []string{"", "first paragraph", "", "second paragraph"},
+		},
+		{
+			name: "ensure double blank line between paragraphs is normalized to one blank",
+			args: args{
+				description: "\n first paragraph\n\n\n second paragraph",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: []string{"", "first paragraph", "", "second paragraph"},
+		},
+		{
+			name: "ensure description with leading and trailing newlines is trimmed",
+			args: args{
+				description: "\n\n description text \n\n",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: []string{"", "description text"},
+		},
+		{
+			name: "ensure exception lines in description are passed through verbatim",
+			args: args{
+				description: "\n description text\n +kubebuilder:validation:Optional",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: []string{"", "description text", "+kubebuilder:validation:Optional"},
+		},
+		{
+			name: "ensure three-paragraph description produces correct structure",
+			args: args{
+				description: "\n first paragraph\n\n second paragraph\n\n third paragraph",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: []string{"", "first paragraph", "", "second paragraph", "", "third paragraph"},
+		},
+		{
+			name: "ensure long description line is word-wrapped",
+			args: args{
+				description: "\n This is a description that is long enough to exceed the eighty character wrap width limit set by commentWrapWidth.",
+				exceptions:  []string{"+kubebuilder:"},
+			},
+			want: []string{
+				"",
+				"This is a description that is long enough to exceed the eighty character wrap",
+				"width limit set by commentWrapWidth.",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := commentsFromMarker(tt.args.description, tt.args.exceptions...)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("commentsFromMarker() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
