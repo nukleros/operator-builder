@@ -235,6 +235,10 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 			return fmt.Sprintf(`%q`, *t)
 		}
 
+		if api.Type == markers.FieldStringSlice {
+			return api.formatStringSliceDefault(*t)
+		}
+
 		return *t
 	case *int:
 		return fmt.Sprintf(`%v`, *t)
@@ -245,16 +249,43 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 			return fmt.Sprintf(`%q`, t)
 		}
 
+		if api.Type == markers.FieldStringSlice {
+			return api.formatStringSliceDefault(t)
+		}
+
 		return t
+	case []string:
+		if len(t) == 0 {
+			return "[]"
+		}
+
+		return `["` + strings.Join(t, `", "`) + `"]`
 	default:
 		return fmt.Sprintf(`%v`, t)
 	}
+}
+
+// formatStringSliceDefault converts a raw semicolon-separated string (e.g. "foo;bar")
+// to JSON-array display form (e.g. ["foo", "bar"]).  An empty string returns "[]".
+func (api *APIFields) formatStringSliceDefault(s string) string {
+	if s == "" {
+		return "[]"
+	}
+
+	parts := strings.Split(s, ";")
+	for i := range parts {
+		parts[i] = strings.TrimSpace(parts[i])
+	}
+
+	return `["` + strings.Join(parts, `", "`) + `"]`
 }
 
 func (api *APIFields) setSample(sampleVal interface{}) {
 	switch api.Type {
 	case markers.FieldStruct:
 		api.Sample = fmt.Sprintf("%s:", api.manifestName)
+	case markers.FieldStringSlice:
+		api.Sample = fmt.Sprintf("%s: %s", api.manifestName, api.getSampleValue(sampleVal))
 	default:
 		api.Sample = fmt.Sprintf("%s: %v", api.manifestName, api.getSampleValue(sampleVal))
 	}
@@ -263,11 +294,26 @@ func (api *APIFields) setSample(sampleVal interface{}) {
 func (api *APIFields) setDefault(sampleVal interface{}) {
 	api.Default = api.getSampleValue(sampleVal)
 	api.appendMarkers(
-		fmt.Sprintf("+kubebuilder:default=%s", api.Default),
+		fmt.Sprintf("+kubebuilder:default=%s", api.kubebuilderDefault()),
 		"+kubebuilder:validation:Optional",
 		fmt.Sprintf("(Default: %s)", api.Default),
 	)
 	api.setSample(sampleVal)
+}
+
+// kubebuilderDefault returns the default value formatted for a
+// +kubebuilder:default= marker annotation.  Array types require curly-brace
+// notation ({​"a","b"}) while scalars are used verbatim.
+func (api *APIFields) kubebuilderDefault() string {
+	if api.Type != markers.FieldStringSlice {
+		return api.Default
+	}
+
+	// api.Default is already in JSON-array form: ["a", "b"]
+	// Convert to kubebuilder brace notation: {"a","b"}
+	inner := strings.TrimPrefix(strings.TrimSuffix(api.Default, `]`), `[`)
+
+	return `{` + strings.ReplaceAll(inner, `, `, `,`) + `}`
 }
 
 func (api *APIFields) appendMarkers(apiMarkers ...string) {

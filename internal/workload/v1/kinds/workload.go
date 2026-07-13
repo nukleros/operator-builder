@@ -371,6 +371,19 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 		if marker.GetDefault() != nil {
 			defaultFound = true
 			sampleVal = marker.GetDefault()
+
+			// []string defaults arrive as a plain string ("foo;bar") because the marker
+			// parser doesn't know the field type.  Split on ; so downstream formatting
+			// receives the expected []string value.
+			if marker.GetFieldType() == markers.FieldStringSlice {
+				if strVal, ok := sampleVal.(string); ok {
+					parts := strings.Split(strVal, ";")
+					for i := range parts {
+						parts[i] = strings.TrimSpace(parts[i])
+					}
+					sampleVal = parts
+				}
+			}
 		} else {
 			sampleVal = marker.GetOriginalValue()
 		}

@@ -30,8 +30,8 @@ field for your workload.
 
 | Field                                | Type                           | Required |
 | ------------------------------------ | ------------------------------ | -------- |
-| [name](#name-required)               | string                         | true     |
-| [type](#type-required)               | string{string, int, bool}      | true     |
+| [name](#name-required)               | string                              | true     |
+| [type](#type-required)               | string{string, int, bool, []string} | true     |
 | [default](#default-optional)         | [type](#supported-field-types) | false    |
 | [replace](#replace-optional)         | string                         | false    |
 | [arbitrary](#arbitrary-optional)     | bool                           | false    |
@@ -73,15 +73,36 @@ the value.
 
 The supported data types are:
 
-- bool
-- string
-- int
-- int32
-- int64
-- float32
-- float64
+- `bool`
+- `string`
+- `int`
+- `[]string`
 
 ex. `+operator-builder:field:name=myName,type=string`
+
+#### `[]string` fields
+
+Use `type=[]string` to define a CRD field that holds a list of strings.  Place
+the marker as a head comment above a YAML sequence:
+
+```yaml
+# +operator-builder:field:name=allowedHosts,type=[]string
+allowedHosts:
+  - host1.example.com
+  - host2.example.com
+```
+
+The generated Go spec field will be `[]string` and can carry an optional default
+using semicolon-separated syntax (aligning with kubebuilder's enum convention):
+
+```yaml
+# +operator-builder:field:name=dnsServers,default=8.8.8.8;1.1.1.1,type=[]string
+dnsServers:
+  - 8.8.8.8
+  - 1.1.1.1
+```
+
+> **Note:** The `replace=` argument is not supported for `[]string` fields.
 
 ### Default (optional)
 

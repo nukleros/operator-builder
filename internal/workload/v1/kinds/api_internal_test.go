@@ -413,14 +413,64 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 			want: fmt.Sprintf("%v", testBool),
 		},
 		{
+			name: "test []string value with FieldStringSlice type",
+			args: args{
+				sampleVal: []string{"foo", "bar"},
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: `["foo", "bar"]`,
+		},
+		{
+			name: "test empty []string value with FieldStringSlice type",
+			args: args{
+				sampleVal: []string{},
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: "[]",
+		},
+		{
+			name: "test semicolon-separated string with FieldStringSlice type",
+			args: args{
+				sampleVal: "foo;bar",
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: `["foo", "bar"]`,
+		},
+		{
+			name: "test semicolon-separated string pointer with FieldStringSlice type",
+			args: args{
+				sampleVal: func() interface{} { s := "foo;bar"; return &s }(),
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: `["foo", "bar"]`,
+		},
+		{
+			name: "test empty string with FieldStringSlice type",
+			args: args{
+				sampleVal: "",
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: "[]",
+		},
+		{
 			name: "test other value",
 			args: args{
-				sampleVal: []string{"test", "get", "sample"},
+				sampleVal: 3.14,
 			},
 			fields: fields{
 				Type: markers.FieldUnknownType,
 			},
-			want: "[test get sample]",
+			want: "3.14",
 		},
 	}
 
@@ -443,6 +493,52 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 			if got := api.getSampleValue(tt.args.sampleVal); got != tt.want {
 				t.Errorf("APIFields.getSampleValue() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestAPIFields_formatStringSliceDefault(t *testing.T) {
+	t.Parallel()
+
+	api := &APIFields{Type: markers.FieldStringSlice}
+
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "empty string returns empty array",
+			input: "",
+			want:  "[]",
+		},
+		{
+			name:  "single element",
+			input: "foo",
+			want:  `["foo"]`,
+		},
+		{
+			name:  "two elements",
+			input: "foo;bar",
+			want:  `["foo", "bar"]`,
+		},
+		{
+			name:  "trims spaces around semicolons",
+			input: "foo ; bar",
+			want:  `["foo", "bar"]`,
+		},
+		{
+			name:  "three elements",
+			input: "8.8.8.8;1.1.1.1;9.9.9.9",
+			want:  `["8.8.8.8", "1.1.1.1", "9.9.9.9"]`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, api.formatStringSliceDefault(tt.input))
 		})
 	}
 }
@@ -497,9 +593,24 @@ func TestAPIFields_setSample(t *testing.T) {
 			},
 		},
 		{
+			name: "set []string sample",
+			args: args{
+				sampleVal: []string{"foo", "bar"},
+			},
+			fields: fields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+			},
+			expect: &APIFields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       `hosts: ["foo", "bar"]`,
+			},
+		},
+		{
 			name: "set other sample",
 			args: args{
-				sampleVal: []string{"test", "sample"},
+				sampleVal: 3.14,
 			},
 			fields: fields{
 				manifestName: "other",
@@ -507,7 +618,7 @@ func TestAPIFields_setSample(t *testing.T) {
 			expect: &APIFields{
 				manifestName: "other",
 				Type:         markers.FieldUnknownType,
-				Sample:       "other: [test sample]",
+				Sample:       "other: 3.14",
 			},
 		},
 	}
@@ -573,9 +684,30 @@ func TestAPIFields_setDefault(t *testing.T) {
 			},
 		},
 		{
+			name: "set default for []string",
+			args: args{
+				sampleVal: []string{"foo", "bar"},
+			},
+			fields: fields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+			},
+			expect: &APIFields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       `hosts: ["foo", "bar"]`,
+				Default:      `["foo", "bar"]`,
+				Markers: []string{
+					`+kubebuilder:default={"foo","bar"}`,
+					"+kubebuilder:validation:Optional",
+					`(Default: ["foo", "bar"])`,
+				},
+			},
+		},
+		{
 			name: "set default for other",
 			args: args{
-				sampleVal: []string{"other"},
+				sampleVal: 3.14,
 			},
 			fields: fields{
 				manifestName: "other",
@@ -583,12 +715,12 @@ func TestAPIFields_setDefault(t *testing.T) {
 			expect: &APIFields{
 				manifestName: "other",
 				Type:         markers.FieldUnknownType,
-				Sample:       "other: [other]",
-				Default:      "[other]",
+				Sample:       "other: 3.14",
+				Default:      "3.14",
 				Markers: []string{
-					"+kubebuilder:default=[other]",
+					"+kubebuilder:default=3.14",
 					"+kubebuilder:validation:Optional",
-					"(Default: [other])",
+					"(Default: 3.14)",
 				},
 			},
 		},
@@ -773,18 +905,36 @@ func TestAPIFields_newChild(t *testing.T) {
 			},
 		},
 		{
+			name: "new child for []string slice",
+			args: args{
+				name:      "hosts",
+				fieldType: markers.FieldStringSlice,
+				sample:    []string{"foo", "bar"},
+			},
+			fields: fields{},
+			want: &APIFields{
+				Name:         "Hosts",
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       `hosts: ["foo", "bar"]`,
+				Tags:         "`json:\"hosts,omitempty\"`",
+				Comments:     []string{},
+				Markers:      []string{},
+			},
+		},
+		{
 			name: "new child for unknown",
 			args: args{
 				name:      "unknown",
 				fieldType: markers.FieldUnknownType,
-				sample:    []string{"test", "unknown"},
+				sample:    3.14,
 			},
 			fields: fields{},
 			want: &APIFields{
 				Name:         "Unknown",
 				manifestName: "unknown",
 				Type:         markers.FieldUnknownType,
-				Sample:       "unknown: [test unknown]",
+				Sample:       "unknown: 3.14",
 				Tags:         "`json:\"unknown,omitempty\"`",
 				Comments:     []string{},
 				Markers:      []string{},

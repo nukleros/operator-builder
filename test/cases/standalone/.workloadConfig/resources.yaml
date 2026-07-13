@@ -18,6 +18,9 @@ spec:
       - name: webstore-container
         #+operator-builder:field:name=webstore.really.long.path.image,default="nginx:1.17",type=string,description="Defines the web store image"
         image: nginx:1.17
+        # +operator-builder:field:name=webstore.containerArgs,default=--log-level=info;--port=8080,type=[]string
+        args:
+          - --log-level=info
         ports:
         - containerPort: 8080
 ---

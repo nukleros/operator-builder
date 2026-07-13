@@ -395,6 +395,8 @@ func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
 		return fmt.Sprintf("!!start strconv.Itoa(%s) !!end", marker.GetSourceCodeVariable()), nil
 	case FieldBool:
 		return fmt.Sprintf("!!start strconv.FormatBool(%s) !!end", marker.GetSourceCodeVariable()), nil
+	case FieldStringSlice:
+		return "", fmt.Errorf("%w: replace= is not supported for []string fields", ErrInvalidReplaceMarkerFieldType)
 	default:
 		return "", fmt.Errorf("%w with field type %s", ErrInvalidReplaceMarkerFieldType, marker.GetFieldType())
 	}

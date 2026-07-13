@@ -19,6 +19,7 @@ const (
 	FieldString
 	FieldInt
 	FieldBool
+	FieldStringSlice
 	FieldStruct
 )
 
@@ -26,10 +27,11 @@ const (
 // field marker into its underlying FieldType object.
 func (f *FieldType) UnmarshalMarkerArg(in string) error {
 	types := map[string]FieldType{
-		"":       FieldUnknownType,
-		"string": FieldString,
-		"int":    FieldInt,
-		"bool":   FieldBool,
+		"":         FieldUnknownType,
+		"string":   FieldString,
+		"int":      FieldInt,
+		"bool":     FieldBool,
+		"[]string": FieldStringSlice,
 	}
 
 	if t, ok := types[in]; ok {
@@ -52,6 +54,7 @@ func (f FieldType) String() string {
 		FieldString:      "string",
 		FieldInt:         "int",
 		FieldBool:        "bool",
+		FieldStringSlice: "[]string",
 		FieldStruct:      "struct",
 	}
 
