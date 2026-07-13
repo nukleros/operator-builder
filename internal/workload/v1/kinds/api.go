@@ -255,29 +255,69 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 
 		return t
 	case []string:
-		if len(t) == 0 {
-			return "[]"
-		}
-
-		return `["` + strings.Join(t, `", "`) + `"]`
+		return formatStringSliceJSON(t)
 	default:
 		return fmt.Sprintf(`%v`, t)
 	}
 }
 
-// formatStringSliceDefault converts a raw semicolon-separated string (e.g. "foo;bar")
-// to JSON-array display form (e.g. ["foo", "bar"]).  An empty string returns "[]".
-func (api *APIFields) formatStringSliceDefault(s string) string {
-	if s == "" {
+// formatStringSliceJSON formats a []string as a JSON array with properly
+// escaped elements, e.g. ["foo", "bar"].
+func formatStringSliceJSON(items []string) string {
+	if len(items) == 0 {
 		return "[]"
 	}
 
-	parts := strings.Split(s, ";")
-	for i := range parts {
-		parts[i] = strings.TrimSpace(parts[i])
+	quoted := make([]string, len(items))
+	for i, v := range items {
+		quoted[i] = fmt.Sprintf("%q", v)
 	}
 
-	return `["` + strings.Join(parts, `", "`) + `"]`
+	return "[" + strings.Join(quoted, ", ") + "]"
+}
+
+// splitStringSliceDefault splits a semicolon-separated default string into a
+// []string, trimming whitespace and dropping empty elements.  "foo;bar" > ["foo","bar"].
+// A backslash-escaped semicolon (\;) is treated as a literal semicolon within an element,
+// allowing values that contain the separator character to round-trip: "foo\;bar" > ["foo;bar"].
+func splitStringSliceDefault(s string) []string {
+	if s == "" {
+		return []string{}
+	}
+
+	var out []string
+	var cur strings.Builder
+
+	runes := []rune(s)
+	for i := 0; i < len(runes); i++ {
+		if runes[i] == '\\' && i+1 < len(runes) && runes[i+1] == ';' {
+			cur.WriteRune(';')
+			i++ // consume the escaped ';'
+		} else if runes[i] == ';' {
+			if elem := strings.TrimSpace(cur.String()); elem != "" {
+				out = append(out, elem)
+			}
+			cur.Reset()
+		} else {
+			cur.WriteRune(runes[i])
+		}
+	}
+
+	if elem := strings.TrimSpace(cur.String()); elem != "" {
+		out = append(out, elem)
+	}
+
+	if out == nil {
+		return []string{}
+	}
+
+	return out
+}
+
+// formatStringSliceDefault converts a raw semicolon-separated string (e.g. "foo;bar")
+// to JSON-array display form (e.g. ["foo", "bar"]).  An empty string returns "[]".
+func (api *APIFields) formatStringSliceDefault(s string) string {
+	return formatStringSliceJSON(splitStringSliceDefault(s))
 }
 
 func (api *APIFields) setSample(sampleVal interface{}) {

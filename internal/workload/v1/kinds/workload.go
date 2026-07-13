@@ -377,11 +377,7 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 			// receives the expected []string value.
 			if marker.GetFieldType() == markers.FieldStringSlice {
 				if strVal, ok := sampleVal.(string); ok {
-					parts := strings.Split(strVal, ";")
-					for i := range parts {
-						parts[i] = strings.TrimSpace(parts[i])
-					}
-					sampleVal = parts
+					sampleVal = splitStringSliceDefault(strVal)
 				}
 			}
 		} else {

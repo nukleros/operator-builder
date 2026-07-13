@@ -104,6 +104,14 @@ dnsServers:
 
 > **Note:** The `replace=` argument is not supported for `[]string` fields.
 
+> **Note:** Default values must not contain `=`, `,`, or `:` characters — these are reserved
+> as marker argument separators and will cause a parse error.  Values containing those
+> characters (e.g. CLI flags such as `--flag=value`) cannot be expressed as defaults in a
+> marker and must instead rely on the operator's mutation logic.
+
+> **Note:** To include a literal semicolon inside one element, escape it with a backslash:
+> `default=foo\;bar;baz` produces `["foo;bar", "baz"]`.
+
 ### Default (optional)
 
 This will make configuration optional for your operator's end user. the supplied

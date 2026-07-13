@@ -433,6 +433,16 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 			want: "[]",
 		},
 		{
+			name: "test []string element with double quote is escaped",
+			args: args{
+				sampleVal: []string{`foo"bar`},
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: `["foo\"bar"]`,
+		},
+		{
 			name: "test semicolon-separated string with FieldStringSlice type",
 			args: args{
 				sampleVal: "foo;bar",
@@ -445,7 +455,11 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 		{
 			name: "test semicolon-separated string pointer with FieldStringSlice type",
 			args: args{
-				sampleVal: func() interface{} { s := "foo;bar"; return &s }(),
+				sampleVal: func() interface{} {
+					s := "foo;bar"
+
+					return &s
+				}(),
 			},
 			fields: fields{
 				Type: markers.FieldStringSlice,
@@ -497,6 +511,124 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 	}
 }
 
+func Test_splitStringSliceDefault(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		want  []string
+	}{
+		{
+			name:  "empty string returns empty slice",
+			input: "",
+			want:  []string{},
+		},
+		{
+			name:  "single element",
+			input: "foo",
+			want:  []string{"foo"},
+		},
+		{
+			name:  "two elements",
+			input: "foo;bar",
+			want:  []string{"foo", "bar"},
+		},
+		{
+			name:  "trims spaces around semicolons",
+			input: "foo ; bar",
+			want:  []string{"foo", "bar"},
+		},
+		{
+			name:  "consecutive semicolons drop empty elements",
+			input: "foo;;bar",
+			want:  []string{"foo", "bar"},
+		},
+		{
+			name:  "trailing semicolon dropped",
+			input: "foo;bar;",
+			want:  []string{"foo", "bar"},
+		},
+		{
+			name:  "escaped semicolon is preserved as literal within element",
+			input: `foo\;bar`,
+			want:  []string{"foo;bar"},
+		},
+		{
+			name:  "escaped semicolon mid-list keeps element intact",
+			input: `a\;b;c`,
+			want:  []string{"a;b", "c"},
+		},
+		{
+			name:  "multiple escaped semicolons in one element",
+			input: `a\;b\;c`,
+			want:  []string{"a;b;c"},
+		},
+		{
+			name:  "escaped semicolon at start of element",
+			input: `\;foo;bar`,
+			want:  []string{";foo", "bar"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, splitStringSliceDefault(tt.input))
+		})
+	}
+}
+
+func Test_formatStringSliceJSON(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input []string
+		want  string
+	}{
+		{
+			name:  "empty slice returns empty array",
+			input: []string{},
+			want:  "[]",
+		},
+		{
+			name:  "nil slice returns empty array",
+			input: nil,
+			want:  "[]",
+		},
+		{
+			name:  "single element",
+			input: []string{"foo"},
+			want:  `["foo"]`,
+		},
+		{
+			name:  "two elements",
+			input: []string{"foo", "bar"},
+			want:  `["foo", "bar"]`,
+		},
+		{
+			name:  "element containing double quote is escaped",
+			input: []string{`foo"bar`},
+			want:  `["foo\"bar"]`,
+		},
+		{
+			name:  "element containing backslash is escaped",
+			input: []string{`foo\bar`},
+			want:  `["foo\\bar"]`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, formatStringSliceJSON(tt.input))
+		})
+	}
+}
+
 func TestAPIFields_formatStringSliceDefault(t *testing.T) {
 	t.Parallel()
 
@@ -531,6 +663,16 @@ func TestAPIFields_formatStringSliceDefault(t *testing.T) {
 			name:  "three elements",
 			input: "8.8.8.8;1.1.1.1;9.9.9.9",
 			want:  `["8.8.8.8", "1.1.1.1", "9.9.9.9"]`,
+		},
+		{
+			name:  "consecutive semicolons drop empty elements",
+			input: "foo;;bar",
+			want:  `["foo", "bar"]`,
+		},
+		{
+			name:  "element containing double quote is escaped",
+			input: `foo"bar`,
+			want:  `["foo\"bar"]`,
 		},
 	}
 
