@@ -29,7 +29,7 @@ type FieldMarker struct {
 	Name        *string
 	Type        FieldType
 	Description *string
-	Default     interface{} `marker:",optional"`
+	Default     *string     `marker:",optional"`
 	Replace     *string
 	Parent      *string
 	Arbitrary   *bool
@@ -47,11 +47,16 @@ func (fm FieldMarker) String() string {
 		arbitraryBool = *fm.Arbitrary
 	}
 
+	var defaultVal string
+	if fm.Default != nil {
+		defaultVal = *fm.Default
+	}
+
 	return fmt.Sprintf("FieldMarker{Name: %s Type: %v Description: %q Default: %v Arbitrary: %v}",
 		fm.GetName(),
 		fm.Type,
 		fm.GetDescription(),
-		fm.Default,
+		defaultVal,
 		arbitraryBool,
 	)
 }
@@ -77,7 +82,7 @@ func (fm *FieldMarker) GetName() string {
 	return *fm.Name
 }
 
-func (fm *FieldMarker) GetDefault() interface{} {
+func (fm *FieldMarker) GetDefault() *string {
 	return fm.Default
 }
 

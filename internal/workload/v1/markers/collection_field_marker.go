@@ -23,11 +23,16 @@ const (
 type CollectionFieldMarker FieldMarker
 
 func (cfm CollectionFieldMarker) String() string {
+	var defaultVal string
+	if cfm.Default != nil {
+		defaultVal = *cfm.Default
+	}
+
 	return fmt.Sprintf("CollectionFieldMarker{Name: %s Type: %v Description: %q Default: %v}",
 		cfm.GetName(),
 		cfm.Type,
 		cfm.GetDescription(),
-		cfm.Default,
+		defaultVal,
 	)
 }
 
@@ -52,7 +57,7 @@ func (cfm *CollectionFieldMarker) GetName() string {
 	return *cfm.Name
 }
 
-func (cfm *CollectionFieldMarker) GetDefault() interface{} {
+func (cfm *CollectionFieldMarker) GetDefault() *string {
 	return cfm.Default
 }
 

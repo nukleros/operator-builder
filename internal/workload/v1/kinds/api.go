@@ -277,9 +277,11 @@ func formatStringSliceJSON(items []string) string {
 }
 
 // splitStringSliceDefault splits a semicolon-separated default string into a
-// []string, trimming whitespace and dropping empty elements.  "foo;bar" > ["foo","bar"].
-// A backslash-escaped semicolon (\;) is treated as a literal semicolon within an element,
-// allowing values that contain the separator character to round-trip: "foo\;bar" > ["foo;bar"].
+// []string, trimming whitespace from each element.  "foo;bar" > ["foo","bar"].
+// Empty elements between separators are preserved: "foo;;bar" > ["foo","","bar"].
+// Only a completely empty input string returns an empty slice.
+// A backslash-escaped semicolon (\;) is treated as a literal semicolon within an
+// element: "foo\;bar" > ["foo;bar"].
 func splitStringSliceDefault(s string) []string {
 	if s == "" {
 		return []string{}
@@ -294,22 +296,14 @@ func splitStringSliceDefault(s string) []string {
 			cur.WriteRune(';')
 			i++ // consume the escaped ';'
 		} else if runes[i] == ';' {
-			if elem := strings.TrimSpace(cur.String()); elem != "" {
-				out = append(out, elem)
-			}
+			out = append(out, strings.TrimSpace(cur.String()))
 			cur.Reset()
 		} else {
 			cur.WriteRune(runes[i])
 		}
 	}
 
-	if elem := strings.TrimSpace(cur.String()); elem != "" {
-		out = append(out, elem)
-	}
-
-	if out == nil {
-		return []string{}
-	}
+	out = append(out, strings.TrimSpace(cur.String()))
 
 	return out
 }

@@ -540,14 +540,19 @@ func Test_splitStringSliceDefault(t *testing.T) {
 			want:  []string{"foo", "bar"},
 		},
 		{
-			name:  "consecutive semicolons drop empty elements",
+			name:  "consecutive semicolons preserve empty element",
 			input: "foo;;bar",
-			want:  []string{"foo", "bar"},
+			want:  []string{"foo", "", "bar"},
 		},
 		{
-			name:  "trailing semicolon dropped",
+			name:  "trailing semicolon preserves trailing empty element",
 			input: "foo;bar;",
-			want:  []string{"foo", "bar"},
+			want:  []string{"foo", "bar", ""},
+		},
+		{
+			name:  "whitespace-only segment becomes empty string element",
+			input: "foo; ;bar",
+			want:  []string{"foo", "", "bar"},
 		},
 		{
 			name:  "escaped semicolon is preserved as literal within element",
@@ -665,9 +670,9 @@ func TestAPIFields_formatStringSliceDefault(t *testing.T) {
 			want:  `["8.8.8.8", "1.1.1.1", "9.9.9.9"]`,
 		},
 		{
-			name:  "consecutive semicolons drop empty elements",
+			name:  "consecutive semicolons preserve empty element",
 			input: "foo;;bar",
-			want:  `["foo", "bar"]`,
+			want:  `["foo", "", "bar"]`,
 		},
 		{
 			name:  "element containing double quote is escaped",
