@@ -80,13 +80,13 @@ The supported data types are:
 
 ex. `+operator-builder:field:name=myName,type=string`
 
-#### `[]string` fields
+#### `stringArray` fields
 
-Use `type=[]string` to define a CRD field that holds a list of strings.  Place
+Use `type=stringArray` to define a CRD field that holds a list of strings.  Place
 the marker as a head comment above a YAML sequence:
 
 ```yaml
-# +operator-builder:field:name=allowedHosts,type=[]string
+# +operator-builder:field:name=allowedHosts,type=stringArray
 allowedHosts:
   - host1.example.com
   - host2.example.com
@@ -96,13 +96,13 @@ The generated Go spec field will be `[]string` and can carry an optional default
 using semicolon-separated syntax (aligning with kubebuilder's enum convention):
 
 ```yaml
-# +operator-builder:field:name=dnsServers,default=8.8.8.8;1.1.1.1,type=[]string
+# +operator-builder:field:name=dnsServers,default=8.8.8.8;1.1.1.1,type=stringArray
 dnsServers:
   - 8.8.8.8
   - 1.1.1.1
 ```
 
-> **Note:** The `replace=` argument is not supported for `[]string` fields.
+> **Note:** The `replace=` argument is not supported for `stringArray` fields.
 
 > **Note:** Default values that start with `-` or contain `=`, `,`, or `:` must be wrapped
 > in double quotes so the marker parser treats them as string literals:

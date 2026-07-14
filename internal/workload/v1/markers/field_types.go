@@ -31,7 +31,7 @@ func (f *FieldType) UnmarshalMarkerArg(in string) error {
 		"string":   FieldString,
 		"int":      FieldInt,
 		"bool":     FieldBool,
-		"[]string": FieldStringSlice,
+		"stringArray": FieldStringSlice,
 	}
 
 	if t, ok := types[in]; ok {
@@ -54,7 +54,7 @@ func (f FieldType) String() string {
 		FieldString:      "string",
 		FieldInt:         "int",
 		FieldBool:        "bool",
-		FieldStringSlice: "[]string",
+		FieldStringSlice: "stringArray",
 		FieldStruct:      "struct",
 	}
 
