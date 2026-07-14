@@ -29,7 +29,7 @@ type FieldMarker struct {
 	Name        *string
 	Type        FieldType
 	Description *string
-	Default     *string     `marker:",optional"`
+	Default     *string `marker:",optional"`
 	Replace     *string
 	Parent      *string
 	Arbitrary   *bool
