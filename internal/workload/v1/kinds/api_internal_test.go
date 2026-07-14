@@ -847,6 +847,27 @@ func TestAPIFields_setDefault(t *testing.T) {
 			},
 		},
 		{
+			name: "set default for []string with comma-space inside element",
+			args: args{
+				sampleVal: []string{"foo, bar", "baz"},
+			},
+			fields: fields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+			},
+			expect: &APIFields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       `hosts: ["foo, bar", "baz"]`,
+				Default:      `["foo, bar", "baz"]`,
+				Markers: []string{
+					`+kubebuilder:default={"foo, bar","baz"}`,
+					"+kubebuilder:validation:Optional",
+					`(Default: ["foo, bar", "baz"])`,
+				},
+			},
+		},
+		{
 			name: "set default for other",
 			args: args{
 				sampleVal: 3.14,
@@ -881,6 +902,55 @@ func TestAPIFields_setDefault(t *testing.T) {
 			}
 			api.setDefault(tt.args.sampleVal)
 			assert.Equal(t, tt.expect, api)
+		})
+	}
+}
+
+func Test_formatStringSliceKubebuilder(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input []string
+		want  string
+	}{
+		{
+			name:  "empty slice returns empty braces",
+			input: []string{},
+			want:  "{}",
+		},
+		{
+			name:  "nil slice returns empty braces",
+			input: nil,
+			want:  "{}",
+		},
+		{
+			name:  "single element",
+			input: []string{"foo"},
+			want:  `{"foo"}`,
+		},
+		{
+			name:  "two elements",
+			input: []string{"foo", "bar"},
+			want:  `{"foo","bar"}`,
+		},
+		{
+			name:  "element with comma-space is preserved intact",
+			input: []string{"foo, bar", "baz"},
+			want:  `{"foo, bar","baz"}`,
+		},
+		{
+			name:  "element with double quote is escaped",
+			input: []string{`foo"bar`},
+			want:  `{"foo\"bar"}`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, formatStringSliceKubebuilder(tt.input))
 		})
 	}
 }

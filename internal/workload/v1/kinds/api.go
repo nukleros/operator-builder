@@ -334,7 +334,7 @@ func (api *APIFields) setSample(sampleVal interface{}) {
 func (api *APIFields) setDefault(sampleVal interface{}) {
 	api.Default = api.getSampleValue(sampleVal)
 	api.appendMarkers(
-		fmt.Sprintf("+kubebuilder:default=%s", api.kubebuilderDefault()),
+		fmt.Sprintf("+kubebuilder:default=%s", api.kubebuilderDefault(sampleVal)),
 		"+kubebuilder:validation:Optional",
 		fmt.Sprintf("(Default: %s)", api.Default),
 	)
@@ -343,17 +343,40 @@ func (api *APIFields) setDefault(sampleVal interface{}) {
 
 // kubebuilderDefault returns the default value formatted for a
 // +kubebuilder:default= marker annotation.  Array types require curly-brace
-// notation ({​"a","b"}) while scalars are used verbatim.
-func (api *APIFields) kubebuilderDefault() string {
+// notation ({"a","b"}) while scalars are used verbatim.
+// It takes the original sampleVal so that []string elements are quoted
+// individually — building from api.Default (JSON form) would require
+// re-parsing and could silently corrupt elements that contain ", ".
+func (api *APIFields) kubebuilderDefault(sampleVal interface{}) string {
 	if api.Type != markers.FieldStringSlice {
 		return api.Default
 	}
 
-	// api.Default is already in JSON-array form: ["a", "b"]
-	// Convert to kubebuilder brace notation: {"a","b"}
-	inner := strings.TrimPrefix(strings.TrimSuffix(api.Default, `]`), `[`)
+	switch t := sampleVal.(type) {
+	case []string:
+		return formatStringSliceKubebuilder(t)
+	case string:
+		return formatStringSliceKubebuilder(splitStringSliceDefault(t))
+	case *string:
+		return formatStringSliceKubebuilder(splitStringSliceDefault(*t))
+	default:
+		return api.Default
+	}
+}
 
-	return `{` + strings.ReplaceAll(inner, `, `, `,`) + `}`
+// formatStringSliceKubebuilder formats a []string as kubebuilder brace notation
+// ({"a","b"}) with each element properly %q-escaped.
+func formatStringSliceKubebuilder(items []string) string {
+	if len(items) == 0 {
+		return "{}"
+	}
+
+	quoted := make([]string, len(items))
+	for i, v := range items {
+		quoted[i] = fmt.Sprintf("%q", v)
+	}
+
+	return "{" + strings.Join(quoted, ",") + "}"
 }
 
 func (api *APIFields) appendMarkers(apiMarkers ...string) {
