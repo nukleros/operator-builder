@@ -37,7 +37,7 @@ const (
 // necessary for parsing a field marker or a collection field marker.
 type FieldMarkerProcessor interface {
 	GetName() string
-	GetDefault() *string
+	GetDefault() interface{}
 	GetDescription() string
 	GetFieldType() FieldType
 	GetOriginalValue() interface{}

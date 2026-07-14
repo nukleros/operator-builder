@@ -21,7 +21,7 @@ func TestFieldMarker_String(t *testing.T) {
 		Name        *string
 		Type        FieldType
 		Description *string
-		Default     *string
+		Default     interface{}
 		Arbitrary   *bool
 	}
 
@@ -36,7 +36,7 @@ func TestFieldMarker_String(t *testing.T) {
 				Name:        &testName,
 				Type:        FieldString,
 				Description: &testString,
-				Default:     &testName,
+				Default:     testName,
 				Arbitrary:   &testBool,
 			},
 			want: "FieldMarker{Name: fmtest Type: string Description: \"fm test\" Default: fmtest Arbitrary: false}",
@@ -47,7 +47,7 @@ func TestFieldMarker_String(t *testing.T) {
 				Name:        &testName,
 				Type:        FieldString,
 				Description: nil,
-				Default:     &testName,
+				Default:     testName,
 				Arbitrary:   nil,
 			},
 			want: "FieldMarker{Name: fmtest Type: string Description: \"\" Default: fmtest Arbitrary: false}",
@@ -109,20 +109,20 @@ func TestFieldMarker_GetDefault(t *testing.T) {
 	fmDefault := "this is a field default value"
 
 	type fields struct {
-		Default *string
+		Default interface{}
 	}
 
 	tests := []struct {
 		name   string
 		fields fields
-		want   *string
+		want   interface{}
 	}{
 		{
 			name: "ensure field default returns as expected",
 			fields: fields{
-				Default: &fmDefault,
+				Default: fmDefault,
 			},
-			want: &fmDefault,
+			want: fmDefault,
 		},
 		{
 			name: "ensure field default with nil value returns as expected",

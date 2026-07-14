@@ -104,10 +104,10 @@ dnsServers:
 
 > **Note:** The `replace=` argument is not supported for `[]string` fields.
 
-> **Note:** Default values must not contain `=`, `,`, or `:` characters — these are reserved
-> as marker argument separators and will cause a parse error.  Values containing those
-> characters (e.g. CLI flags such as `--flag=value`) cannot be expressed as defaults in a
-> marker and must instead rely on the operator's mutation logic.
+> **Note:** Default values that start with `-` or contain `=`, `,`, or `:` must be wrapped
+> in double quotes so the marker parser treats them as string literals:
+> `default="--log-level;info"`.  Unquoted values starting with `-` are tokenised as numeric
+> literals, which causes a parse error.
 
 > **Note:** To include a literal semicolon inside one element, escape it with a backslash:
 > `default=foo\;bar;baz` produces `["foo;bar", "baz"]`.

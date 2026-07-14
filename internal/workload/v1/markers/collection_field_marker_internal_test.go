@@ -20,7 +20,7 @@ func TestCollectionFieldMarker_String(t *testing.T) {
 		Name        *string
 		Type        FieldType
 		Description *string
-		Default     *string
+		Default     interface{}
 	}
 
 	tests := []struct {
@@ -34,7 +34,7 @@ func TestCollectionFieldMarker_String(t *testing.T) {
 				Name:        &testName,
 				Type:        FieldString,
 				Description: &testString,
-				Default:     &testName,
+				Default:     testName,
 			},
 			want: "CollectionFieldMarker{Name: cfmtest Type: string Description: \"cfm test\" Default: cfmtest}",
 		},
@@ -44,7 +44,7 @@ func TestCollectionFieldMarker_String(t *testing.T) {
 				Name:        &testName,
 				Type:        FieldString,
 				Description: nil,
-				Default:     &testName,
+				Default:     testName,
 			},
 			want: "CollectionFieldMarker{Name: cfmtest Type: string Description: \"\" Default: cfmtest}",
 		},
@@ -105,20 +105,20 @@ func TestCollectionFieldMarker_GetDefault(t *testing.T) {
 	cfmDefault := "this is a collection default value"
 
 	type fields struct {
-		Default *string
+		Default interface{}
 	}
 
 	tests := []struct {
 		name   string
 		fields fields
-		want   *string
+		want   interface{}
 	}{
 		{
 			name: "ensure collection field default returns as expected",
 			fields: fields{
-				Default: &cfmDefault,
+				Default: cfmDefault,
 			},
-			want: &cfmDefault,
+			want: cfmDefault,
 		},
 		{
 			name: "ensure collection field default with nil value returns as expected",

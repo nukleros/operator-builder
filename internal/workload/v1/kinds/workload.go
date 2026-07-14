@@ -368,17 +368,17 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 		comments := marker.GetComments("+kubebuilder:")
 
 		// set the sample value based on if a default was specified in the marker or not
-		if defaultStr := marker.GetDefault(); defaultStr != nil {
+		if marker.GetDefault() != nil {
 			defaultFound = true
+			sampleVal = marker.GetDefault()
 
-			// For []string fields, split the semicolon-separated default string into a
-			// proper []string so downstream formatting receives the expected type.
-			// All other types pass the raw *string through to getSampleValue which
-			// handles *string for int, bool, and string fields correctly.
+			// []string defaults arrive as a plain string ("foo;bar") because the marker
+			// parser doesn't know the field type.  Split on ; so downstream formatting
+			// receives the expected []string value.
 			if marker.GetFieldType() == markers.FieldStringSlice {
-				sampleVal = splitStringSliceDefault(*defaultStr)
-			} else {
-				sampleVal = defaultStr
+				if strVal, ok := sampleVal.(string); ok {
+					sampleVal = splitStringSliceDefault(strVal)
+				}
 			}
 		} else {
 			sampleVal = marker.GetOriginalValue()
