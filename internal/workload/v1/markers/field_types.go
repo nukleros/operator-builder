@@ -27,10 +27,10 @@ const (
 // field marker into its underlying FieldType object.
 func (f *FieldType) UnmarshalMarkerArg(in string) error {
 	types := map[string]FieldType{
-		"":         FieldUnknownType,
-		"string":   FieldString,
-		"int":      FieldInt,
-		"bool":     FieldBool,
+		"":            FieldUnknownType,
+		"string":      FieldString,
+		"int":         FieldInt,
+		"bool":        FieldBool,
 		"stringArray": FieldStringSlice,
 	}
 
