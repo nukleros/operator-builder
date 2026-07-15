@@ -577,6 +577,7 @@ func Test_setValue(t *testing.T) {
 			},
 			wantErr: false,
 			want: &yaml.Node{
+				Kind:  yaml.ScalarNode,
 				Tag:   "!!var",
 				Value: "parent.Spec.Test.Field.Set",
 			},

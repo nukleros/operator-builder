@@ -159,7 +159,7 @@ func (api *APIFields) hasRequiredField() bool {
 }
 
 func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
-	typeName := api.Type.String()
+	typeName := api.Type.GoTypeName()
 	if api.Type == markers.FieldStruct {
 		typeName = kind + api.StructName
 	}

@@ -489,6 +489,12 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 	} else {
 		value.Tag = varTag
 		value.Value = marker.GetSourceCodeVariable()
+		// gener8s code.Generate dispatches on yaml.Node.Kind, not Tag.  For
+		// sequence nodes the Kind stays SequenceNode after a Tag change, so
+		// decodeElements never reads Value and renders an empty operand ("key": ,).
+		// Collapsing to ScalarNode lets the !!var template path read Value correctly.
+		value.Kind = yaml.ScalarNode
+		value.Content = nil
 	}
 
 	return nil

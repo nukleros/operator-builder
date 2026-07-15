@@ -47,7 +47,7 @@ func (f *FieldType) UnmarshalMarkerArg(in string) error {
 	return fmt.Errorf("%w, %s into FieldType", ErrUnableToParseFieldType, in)
 }
 
-// String simply returns a FieldType in string format.
+// String returns the marker keyword for a FieldType (used in marker arguments).
 func (f FieldType) String() string {
 	types := map[FieldType]string{
 		FieldUnknownType: "",
@@ -55,6 +55,20 @@ func (f FieldType) String() string {
 		FieldInt:         "int",
 		FieldBool:        "bool",
 		FieldStringSlice: "stringArray",
+		FieldStruct:      "struct",
+	}
+
+	return types[f]
+}
+
+// GoTypeName returns the Go type name for a FieldType (used in generated source code).
+func (f FieldType) GoTypeName() string {
+	types := map[FieldType]string{
+		FieldUnknownType: "",
+		FieldString:      "string",
+		FieldInt:         "int",
+		FieldBool:        "bool",
+		FieldStringSlice: "[]string",
 		FieldStruct:      "struct",
 	}
 
