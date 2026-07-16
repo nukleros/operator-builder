@@ -18,9 +18,11 @@ spec:
       - name: webstore-container
         #+operator-builder:field:name=webstore.really.long.path.image,default="nginx:1.17",type=string,description="Defines the web store image"
         image: nginx:1.17
-        # +operator-builder:field:name=webstore.containerArgs,default="--log-level;info",type=stringArray
+        # +operator-builder:field:name=webstore.containerArgs,default="nginx;-g;daemon off\;",type=stringArray
         args:
-          - --log-level=info
+          - nginx
+          - -g
+          - "daemon off;"
         ports:
         - containerPort: 8080
 ---
