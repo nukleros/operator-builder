@@ -41,9 +41,11 @@ type ChildResource struct {
 }
 
 // NewChildResource returns a representation of a ChildResource object given an unstructured
-// Kubernetes object.
-func NewChildResource(object unstructured.Unstructured) (*ChildResource, error) {
-	rbacRules, err := rbac.ForResource(&object)
+// Kubernetes object.  markerByVar maps Go source-code variable expressions to their
+// FieldMarker definitions so that RBAC generation can resolve types and defaults for
+// dynamically-valued Role/ClusterRole fields.
+func NewChildResource(object unstructured.Unstructured, markerByVar map[string]*markers.FieldMarker) (*ChildResource, error) {
+	rbacRules, err := rbac.ForResource(&object, markerByVar)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"%w with kind [%s] and name [%s]",

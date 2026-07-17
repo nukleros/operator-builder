@@ -238,6 +238,13 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) erro
 			return err
 		}
 
+		// Build a lookup map from Go source-code variable to FieldMarker so that
+		// RBAC generation can resolve marker types and defaults for Role/ClusterRole fields.
+		markerByVar := make(map[string]*markers.FieldMarker, len(ws.FieldMarkers))
+		for _, fm := range ws.FieldMarkers {
+			markerByVar[fm.GetSourceCodeVariable()] = fm
+		}
+
 		var childResources []manifests.ChildResource
 
 		for _, manifest := range manifestFile.ExtractManifests() {
@@ -256,7 +263,7 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) erro
 			}
 
 			// create the new child resource and validate its unique name
-			childResource, err := manifests.NewChildResource(manifestObject)
+			childResource, err := manifests.NewChildResource(manifestObject, markerByVar)
 			if err != nil {
 				return processManifestError(err, manifestFile)
 			}

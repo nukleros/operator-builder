@@ -101,6 +101,35 @@ func InspectForYAML(yamlContent []byte, markerTypes ...MarkerType) ([]*yaml.Node
 	return nodes, results, nil
 }
 
+// SplitStringSliceDefault splits a semicolon-separated marker default string into a []string.
+// Whitespace is trimmed from each element.  A backslash-escaped semicolon (\;) is treated as
+// a literal semicolon within an element.
+func SplitStringSliceDefault(s string) []string {
+	if s == "" {
+		return []string{}
+	}
+
+	var out []string
+	var cur strings.Builder
+
+	runes := []rune(s)
+	for i := 0; i < len(runes); i++ {
+		if runes[i] == '\\' && i+1 < len(runes) && runes[i+1] == ';' {
+			cur.WriteRune(';')
+			i++
+		} else if runes[i] == ';' {
+			out = append(out, strings.TrimSpace(cur.String()))
+			cur.Reset()
+		} else {
+			cur.WriteRune(runes[i])
+		}
+	}
+
+	out = append(out, strings.TrimSpace(cur.String()))
+
+	return out
+}
+
 // initializeMarkerInspector will create a new registry and initialize an inspector
 // for specific marker types.
 func initializeMarkerInspector(markerTypes ...MarkerType) (*inspect.Inspector, error) {

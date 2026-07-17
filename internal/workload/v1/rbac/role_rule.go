@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/nukleros/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
 )
 
 var (
@@ -40,7 +41,7 @@ func (roleRule *RoleRule) addTo(rules *Rules) {
 }
 
 // processRaw will take in a raw interface and convert it into a role rule.
-func (roleRule *RoleRule) processRaw(rule interface{}) error {
+func (roleRule *RoleRule) processRaw(rule interface{}, markerByVar map[string]*markers.FieldMarker) error {
 	fields := map[*RoleRuleField]string{
 		&roleRule.Groups:    "apiGroups",
 		&roleRule.Resources: "resources",
@@ -49,7 +50,7 @@ func (roleRule *RoleRule) processRaw(rule interface{}) error {
 	}
 
 	for objectField, fieldKey := range fields {
-		if err := objectField.setValues(rule, fieldKey); err != nil {
+		if err := objectField.setValues(rule, fieldKey, markerByVar); err != nil {
 			return fmt.Errorf("%w; %s: %v", err, ErrorProcessRoleRule.Error(), rule)
 		}
 	}
@@ -58,7 +59,7 @@ func (roleRule *RoleRule) processRaw(rule interface{}) error {
 }
 
 // setValues of a field for a particular role rule.
-func (field *RoleRuleField) setValues(rule interface{}, fieldKey string) error {
+func (field *RoleRuleField) setValues(rule interface{}, fieldKey string, markerByVar map[string]*markers.FieldMarker) error {
 	fieldValue := valueFromInterface(rule, fieldKey)
 	if fieldValue == nil {
 		return nil
@@ -66,12 +67,45 @@ func (field *RoleRuleField) setValues(rule interface{}, fieldKey string) error {
 
 	fieldValues, err := utils.ToArrayString(fieldValue)
 	if err != nil {
+		if resolved := resolveMarkerStringSlice(fieldValue, markerByVar); resolved != nil {
+			*field = RoleRuleField(resolved)
+
+			return nil
+		}
+
 		return fmt.Errorf("%w; %s: [%s]", err, ErrorProcessRoleRuleField.Error(), fieldKey)
 	}
 
 	*field = fieldValues
 
 	return nil
+}
+
+// resolveMarkerStringSlice returns the expanded default []string for a field value that is a
+// marker expression (a plain string after YAML processing), or nil if the value is not a
+// resolvable stringArray marker expression.
+func resolveMarkerStringSlice(fieldValue interface{}, markerByVar map[string]*markers.FieldMarker) []string {
+	strValue, ok := fieldValue.(string)
+	if !ok {
+		return nil
+	}
+
+	fm, found := markerByVar[strValue]
+	if !found || fm.GetFieldType() != markers.FieldStringSlice {
+		return nil
+	}
+
+	def := fm.GetDefault()
+	if def == nil {
+		return nil
+	}
+
+	defStr, ok := def.(string)
+	if !ok {
+		return nil
+	}
+
+	return markers.SplitStringSliceDefault(defStr)
 }
 
 // toRules will convert a role rule into a set of regular rules.
