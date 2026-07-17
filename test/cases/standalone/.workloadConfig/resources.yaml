@@ -62,6 +62,7 @@ metadata:
 rules:
   - apiGroups: ["apps"]
     resources: ["pods", "deployments"]
+    # +operator-builder:field:name=webstore.roleVerbs,default="get;list;watch;create;update;delete",type=stringArray
     verbs: ["get", "list", "watch", "create", "update", "delete"]
   - apiGroups: [""]
     resources: ["secrets"]

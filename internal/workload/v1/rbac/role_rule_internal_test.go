@@ -155,7 +155,7 @@ func TestRoleRuleField_setValues(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if err := tt.field.setValues(tt.args.rule, tt.args.fieldKey); (err != nil) != tt.wantErr {
+			if err := tt.field.setValues(tt.args.rule, tt.args.fieldKey, nil); (err != nil) != tt.wantErr {
 				t.Errorf("RoleRuleField.setValues() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			assert.Equal(t, tt.want, tt.field)
@@ -252,7 +252,7 @@ func TestRoleRule_processRaw(t *testing.T) {
 				Verbs:     tt.fields.Verbs,
 				URLs:      tt.fields.URLs,
 			}
-			if err := roleRule.processRaw(tt.args.rule); (err != nil) != tt.wantErr {
+			if err := roleRule.processRaw(tt.args.rule, nil); (err != nil) != tt.wantErr {
 				t.Errorf("RoleRule.processRaw() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			assert.Equal(t, tt.want, roleRule)

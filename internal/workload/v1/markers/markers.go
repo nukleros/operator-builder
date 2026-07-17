@@ -101,6 +101,35 @@ func InspectForYAML(yamlContent []byte, markerTypes ...MarkerType) ([]*yaml.Node
 	return nodes, results, nil
 }
 
+// SplitStringSliceDefault splits a semicolon-separated marker default string into a []string.
+// Whitespace is trimmed from each element.  A backslash-escaped semicolon (\;) is treated as
+// a literal semicolon within an element.
+func SplitStringSliceDefault(s string) []string {
+	if s == "" {
+		return []string{}
+	}
+
+	var out []string
+	var cur strings.Builder
+
+	runes := []rune(s)
+	for i := 0; i < len(runes); i++ {
+		if runes[i] == '\\' && i+1 < len(runes) && runes[i+1] == ';' {
+			cur.WriteRune(';')
+			i++
+		} else if runes[i] == ';' {
+			out = append(out, strings.TrimSpace(cur.String()))
+			cur.Reset()
+		} else {
+			cur.WriteRune(runes[i])
+		}
+	}
+
+	out = append(out, strings.TrimSpace(cur.String()))
+
+	return out
+}
+
 // initializeMarkerInspector will create a new registry and initialize an inspector
 // for specific marker types.
 func initializeMarkerInspector(markerTypes ...MarkerType) (*inspect.Inspector, error) {
@@ -395,6 +424,8 @@ func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
 		return fmt.Sprintf("!!start strconv.Itoa(%s) !!end", marker.GetSourceCodeVariable()), nil
 	case FieldBool:
 		return fmt.Sprintf("!!start strconv.FormatBool(%s) !!end", marker.GetSourceCodeVariable()), nil
+	case FieldStringSlice:
+		return "", fmt.Errorf("%w: replace= is not supported for []string fields", ErrInvalidReplaceMarkerFieldType)
 	default:
 		return "", fmt.Errorf("%w with field type %s", ErrInvalidReplaceMarkerFieldType, marker.GetFieldType())
 	}
@@ -487,6 +518,12 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 	} else {
 		value.Tag = varTag
 		value.Value = marker.GetSourceCodeVariable()
+		// gener8s code.Generate dispatches on yaml.Node.Kind, not Tag.  For
+		// sequence nodes the Kind stays SequenceNode after a Tag change, so
+		// decodeElements never reads Value and renders an empty operand ("key": ,).
+		// Collapsing to ScalarNode lets the !!var template path read Value correctly.
+		value.Kind = yaml.ScalarNode
+		value.Content = nil
 	}
 
 	return nil

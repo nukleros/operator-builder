@@ -159,7 +159,7 @@ func (api *APIFields) hasRequiredField() bool {
 }
 
 func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
-	typeName := api.Type.String()
+	typeName := api.Type.GoTypeName()
 	if api.Type == markers.FieldStruct {
 		typeName = kind + api.StructName
 	}
@@ -235,6 +235,10 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 			return fmt.Sprintf(`%q`, *t)
 		}
 
+		if api.Type == markers.FieldStringSlice {
+			return api.formatStringSliceDefault(*t)
+		}
+
 		return *t
 	case *int:
 		return fmt.Sprintf(`%v`, *t)
@@ -245,16 +249,49 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 			return fmt.Sprintf(`%q`, t)
 		}
 
+		if api.Type == markers.FieldStringSlice {
+			return api.formatStringSliceDefault(t)
+		}
+
 		return t
+	case []string:
+		return formatStringSliceJSON(t)
 	default:
 		return fmt.Sprintf(`%v`, t)
 	}
+}
+
+// formatStringSliceJSON formats a []string as a JSON array with properly
+// escaped elements, e.g. ["foo", "bar"].
+func formatStringSliceJSON(items []string) string {
+	if len(items) == 0 {
+		return "[]"
+	}
+
+	quoted := make([]string, len(items))
+	for i, v := range items {
+		quoted[i] = fmt.Sprintf("%q", v)
+	}
+
+	return "[" + strings.Join(quoted, ", ") + "]"
+}
+
+func splitStringSliceDefault(s string) []string {
+	return markers.SplitStringSliceDefault(s)
+}
+
+// formatStringSliceDefault converts a raw semicolon-separated string (e.g. "foo;bar")
+// to JSON-array display form (e.g. ["foo", "bar"]).  An empty string returns "[]".
+func (api *APIFields) formatStringSliceDefault(s string) string {
+	return formatStringSliceJSON(splitStringSliceDefault(s))
 }
 
 func (api *APIFields) setSample(sampleVal interface{}) {
 	switch api.Type {
 	case markers.FieldStruct:
 		api.Sample = fmt.Sprintf("%s:", api.manifestName)
+	case markers.FieldStringSlice:
+		api.Sample = fmt.Sprintf("%s: %s", api.manifestName, api.getSampleValue(sampleVal))
 	default:
 		api.Sample = fmt.Sprintf("%s: %v", api.manifestName, api.getSampleValue(sampleVal))
 	}
@@ -263,11 +300,49 @@ func (api *APIFields) setSample(sampleVal interface{}) {
 func (api *APIFields) setDefault(sampleVal interface{}) {
 	api.Default = api.getSampleValue(sampleVal)
 	api.appendMarkers(
-		fmt.Sprintf("+kubebuilder:default=%s", api.Default),
+		fmt.Sprintf("+kubebuilder:default=%s", api.kubebuilderDefault(sampleVal)),
 		"+kubebuilder:validation:Optional",
 		fmt.Sprintf("(Default: %s)", api.Default),
 	)
 	api.setSample(sampleVal)
+}
+
+// kubebuilderDefault returns the default value formatted for a
+// +kubebuilder:default= marker annotation.  Array types require curly-brace
+// notation ({"a","b"}) while scalars are used verbatim.
+// It takes the original sampleVal so that []string elements are quoted
+// individually — building from api.Default (JSON form) would require
+// re-parsing and could silently corrupt elements that contain ", ".
+func (api *APIFields) kubebuilderDefault(sampleVal interface{}) string {
+	if api.Type != markers.FieldStringSlice {
+		return api.Default
+	}
+
+	switch t := sampleVal.(type) {
+	case []string:
+		return formatStringSliceKubebuilder(t)
+	case string:
+		return formatStringSliceKubebuilder(splitStringSliceDefault(t))
+	case *string:
+		return formatStringSliceKubebuilder(splitStringSliceDefault(*t))
+	default:
+		return api.Default
+	}
+}
+
+// formatStringSliceKubebuilder formats a []string as kubebuilder brace notation
+// ({"a","b"}) with each element properly %q-escaped.
+func formatStringSliceKubebuilder(items []string) string {
+	if len(items) == 0 {
+		return "{}"
+	}
+
+	quoted := make([]string, len(items))
+	for i, v := range items {
+		quoted[i] = fmt.Sprintf("%q", v)
+	}
+
+	return "{" + strings.Join(quoted, ",") + "}"
 }
 
 func (api *APIFields) appendMarkers(apiMarkers ...string) {

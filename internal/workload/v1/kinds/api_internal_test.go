@@ -413,14 +413,78 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 			want: fmt.Sprintf("%v", testBool),
 		},
 		{
+			name: "test []string value with FieldStringSlice type",
+			args: args{
+				sampleVal: []string{"foo", "bar"},
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: `["foo", "bar"]`,
+		},
+		{
+			name: "test empty []string value with FieldStringSlice type",
+			args: args{
+				sampleVal: []string{},
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: "[]",
+		},
+		{
+			name: "test []string element with double quote is escaped",
+			args: args{
+				sampleVal: []string{`foo"bar`},
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: `["foo\"bar"]`,
+		},
+		{
+			name: "test semicolon-separated string with FieldStringSlice type",
+			args: args{
+				sampleVal: "foo;bar",
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: `["foo", "bar"]`,
+		},
+		{
+			name: "test semicolon-separated string pointer with FieldStringSlice type",
+			args: args{
+				sampleVal: func() interface{} {
+					s := "foo;bar"
+
+					return &s
+				}(),
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: `["foo", "bar"]`,
+		},
+		{
+			name: "test empty string with FieldStringSlice type",
+			args: args{
+				sampleVal: "",
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: "[]",
+		},
+		{
 			name: "test other value",
 			args: args{
-				sampleVal: []string{"test", "get", "sample"},
+				sampleVal: 3.14,
 			},
 			fields: fields{
 				Type: markers.FieldUnknownType,
 			},
-			want: "[test get sample]",
+			want: "3.14",
 		},
 	}
 
@@ -443,6 +507,185 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 			if got := api.getSampleValue(tt.args.sampleVal); got != tt.want {
 				t.Errorf("APIFields.getSampleValue() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func Test_splitStringSliceDefault(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		want  []string
+	}{
+		{
+			name:  "empty string returns empty slice",
+			input: "",
+			want:  []string{},
+		},
+		{
+			name:  "single element",
+			input: "foo",
+			want:  []string{"foo"},
+		},
+		{
+			name:  "two elements",
+			input: "foo;bar",
+			want:  []string{"foo", "bar"},
+		},
+		{
+			name:  "trims spaces around semicolons",
+			input: "foo ; bar",
+			want:  []string{"foo", "bar"},
+		},
+		{
+			name:  "consecutive semicolons preserve empty element",
+			input: "foo;;bar",
+			want:  []string{"foo", "", "bar"},
+		},
+		{
+			name:  "trailing semicolon preserves trailing empty element",
+			input: "foo;bar;",
+			want:  []string{"foo", "bar", ""},
+		},
+		{
+			name:  "whitespace-only segment becomes empty string element",
+			input: "foo; ;bar",
+			want:  []string{"foo", "", "bar"},
+		},
+		{
+			name:  "escaped semicolon is preserved as literal within element",
+			input: `foo\;bar`,
+			want:  []string{"foo;bar"},
+		},
+		{
+			name:  "escaped semicolon mid-list keeps element intact",
+			input: `a\;b;c`,
+			want:  []string{"a;b", "c"},
+		},
+		{
+			name:  "multiple escaped semicolons in one element",
+			input: `a\;b\;c`,
+			want:  []string{"a;b;c"},
+		},
+		{
+			name:  "escaped semicolon at start of element",
+			input: `\;foo;bar`,
+			want:  []string{";foo", "bar"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, splitStringSliceDefault(tt.input))
+		})
+	}
+}
+
+func Test_formatStringSliceJSON(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input []string
+		want  string
+	}{
+		{
+			name:  "empty slice returns empty array",
+			input: []string{},
+			want:  "[]",
+		},
+		{
+			name:  "nil slice returns empty array",
+			input: nil,
+			want:  "[]",
+		},
+		{
+			name:  "single element",
+			input: []string{"foo"},
+			want:  `["foo"]`,
+		},
+		{
+			name:  "two elements",
+			input: []string{"foo", "bar"},
+			want:  `["foo", "bar"]`,
+		},
+		{
+			name:  "element containing double quote is escaped",
+			input: []string{`foo"bar`},
+			want:  `["foo\"bar"]`,
+		},
+		{
+			name:  "element containing backslash is escaped",
+			input: []string{`foo\bar`},
+			want:  `["foo\\bar"]`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, formatStringSliceJSON(tt.input))
+		})
+	}
+}
+
+func TestAPIFields_formatStringSliceDefault(t *testing.T) {
+	t.Parallel()
+
+	api := &APIFields{Type: markers.FieldStringSlice}
+
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "empty string returns empty array",
+			input: "",
+			want:  "[]",
+		},
+		{
+			name:  "single element",
+			input: "foo",
+			want:  `["foo"]`,
+		},
+		{
+			name:  "two elements",
+			input: "foo;bar",
+			want:  `["foo", "bar"]`,
+		},
+		{
+			name:  "trims spaces around semicolons",
+			input: "foo ; bar",
+			want:  `["foo", "bar"]`,
+		},
+		{
+			name:  "three elements",
+			input: "8.8.8.8;1.1.1.1;9.9.9.9",
+			want:  `["8.8.8.8", "1.1.1.1", "9.9.9.9"]`,
+		},
+		{
+			name:  "consecutive semicolons preserve empty element",
+			input: "foo;;bar",
+			want:  `["foo", "", "bar"]`,
+		},
+		{
+			name:  "element containing double quote is escaped",
+			input: `foo"bar`,
+			want:  `["foo\"bar"]`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, api.formatStringSliceDefault(tt.input))
 		})
 	}
 }
@@ -497,9 +740,24 @@ func TestAPIFields_setSample(t *testing.T) {
 			},
 		},
 		{
+			name: "set []string sample",
+			args: args{
+				sampleVal: []string{"foo", "bar"},
+			},
+			fields: fields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+			},
+			expect: &APIFields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       `hosts: ["foo", "bar"]`,
+			},
+		},
+		{
 			name: "set other sample",
 			args: args{
-				sampleVal: []string{"test", "sample"},
+				sampleVal: 3.14,
 			},
 			fields: fields{
 				manifestName: "other",
@@ -507,7 +765,7 @@ func TestAPIFields_setSample(t *testing.T) {
 			expect: &APIFields{
 				manifestName: "other",
 				Type:         markers.FieldUnknownType,
-				Sample:       "other: [test sample]",
+				Sample:       "other: 3.14",
 			},
 		},
 	}
@@ -573,9 +831,51 @@ func TestAPIFields_setDefault(t *testing.T) {
 			},
 		},
 		{
+			name: "set default for []string",
+			args: args{
+				sampleVal: []string{"foo", "bar"},
+			},
+			fields: fields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+			},
+			expect: &APIFields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       `hosts: ["foo", "bar"]`,
+				Default:      `["foo", "bar"]`,
+				Markers: []string{
+					`+kubebuilder:default={"foo","bar"}`,
+					"+kubebuilder:validation:Optional",
+					`(Default: ["foo", "bar"])`,
+				},
+			},
+		},
+		{
+			name: "set default for []string with comma-space inside element",
+			args: args{
+				sampleVal: []string{"foo, bar", "baz"},
+			},
+			fields: fields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+			},
+			expect: &APIFields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       `hosts: ["foo, bar", "baz"]`,
+				Default:      `["foo, bar", "baz"]`,
+				Markers: []string{
+					`+kubebuilder:default={"foo, bar","baz"}`,
+					"+kubebuilder:validation:Optional",
+					`(Default: ["foo, bar", "baz"])`,
+				},
+			},
+		},
+		{
 			name: "set default for other",
 			args: args{
-				sampleVal: []string{"other"},
+				sampleVal: 3.14,
 			},
 			fields: fields{
 				manifestName: "other",
@@ -583,12 +883,12 @@ func TestAPIFields_setDefault(t *testing.T) {
 			expect: &APIFields{
 				manifestName: "other",
 				Type:         markers.FieldUnknownType,
-				Sample:       "other: [other]",
-				Default:      "[other]",
+				Sample:       "other: 3.14",
+				Default:      "3.14",
 				Markers: []string{
-					"+kubebuilder:default=[other]",
+					"+kubebuilder:default=3.14",
 					"+kubebuilder:validation:Optional",
-					"(Default: [other])",
+					"(Default: 3.14)",
 				},
 			},
 		},
@@ -607,6 +907,55 @@ func TestAPIFields_setDefault(t *testing.T) {
 			}
 			api.setDefault(tt.args.sampleVal)
 			assert.Equal(t, tt.expect, api)
+		})
+	}
+}
+
+func Test_formatStringSliceKubebuilder(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input []string
+		want  string
+	}{
+		{
+			name:  "empty slice returns empty braces",
+			input: []string{},
+			want:  "{}",
+		},
+		{
+			name:  "nil slice returns empty braces",
+			input: nil,
+			want:  "{}",
+		},
+		{
+			name:  "single element",
+			input: []string{"foo"},
+			want:  `{"foo"}`,
+		},
+		{
+			name:  "two elements",
+			input: []string{"foo", "bar"},
+			want:  `{"foo","bar"}`,
+		},
+		{
+			name:  "element with comma-space is preserved intact",
+			input: []string{"foo, bar", "baz"},
+			want:  `{"foo, bar","baz"}`,
+		},
+		{
+			name:  "element with double quote is escaped",
+			input: []string{`foo"bar`},
+			want:  `{"foo\"bar"}`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, formatStringSliceKubebuilder(tt.input))
 		})
 	}
 }
@@ -773,18 +1122,36 @@ func TestAPIFields_newChild(t *testing.T) {
 			},
 		},
 		{
+			name: "new child for []string slice",
+			args: args{
+				name:      "hosts",
+				fieldType: markers.FieldStringSlice,
+				sample:    []string{"foo", "bar"},
+			},
+			fields: fields{},
+			want: &APIFields{
+				Name:         "Hosts",
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       `hosts: ["foo", "bar"]`,
+				Tags:         "`json:\"hosts,omitempty\"`",
+				Comments:     []string{},
+				Markers:      []string{},
+			},
+		},
+		{
 			name: "new child for unknown",
 			args: args{
 				name:      "unknown",
 				fieldType: markers.FieldUnknownType,
-				sample:    []string{"test", "unknown"},
+				sample:    3.14,
 			},
 			fields: fields{},
 			want: &APIFields{
 				Name:         "Unknown",
 				manifestName: "unknown",
 				Type:         markers.FieldUnknownType,
-				Sample:       "unknown: [test unknown]",
+				Sample:       "unknown: 3.14",
 				Tags:         "`json:\"unknown,omitempty\"`",
 				Comments:     []string{},
 				Markers:      []string{},

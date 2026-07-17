@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/nukleros/operator-builder/internal/utils"
+	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
 )
 
 type Rules []Rule
@@ -55,7 +56,7 @@ func (rules *Rules) addForWorkload(workload rbacWorkloadProcessor) {
 }
 
 // addForResource will add a particular rule given an unstructured manifest.
-func (rules *Rules) addForResource(manifest *unstructured.Unstructured) error {
+func (rules *Rules) addForResource(manifest *unstructured.Unstructured, markerByVar map[string]*markers.FieldMarker) error {
 	kind := manifest.GetKind()
 
 	rules.Add(
@@ -81,7 +82,7 @@ func (rules *Rules) addForResource(manifest *unstructured.Unstructured) error {
 
 		for _, rbacRoleRule := range rbacRoleRules {
 			rule := &RoleRule{}
-			if err := rule.processRaw(rbacRoleRule); err != nil {
+			if err := rule.processRaw(rbacRoleRule, markerByVar); err != nil {
 				return fmt.Errorf("%w; error processing rbac role rule %v", err, rbacRoleRule)
 			}
 

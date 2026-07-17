@@ -9,6 +9,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+
+	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
 )
 
 // rbacWorkloadProcessor is an interface which implements processing of rbac rules
@@ -63,10 +65,13 @@ func knownIrregulars() map[string]string {
 // a rule for the resource itself, in addition to adding particular rules for whatever
 // roles and cluster roles are requesting.  This is because the controller needs to have
 // permissions to manage the children that roles and cluster roles are requesting.
-func ForResource(manifest *unstructured.Unstructured) (*Rules, error) {
+// markerByVar maps Go source-code variable expressions to their FieldMarker definitions so
+// that dynamic Role/ClusterRole fields (replaced by marker expressions) can be resolved to
+// their configured default values for RBAC generation purposes.
+func ForResource(manifest *unstructured.Unstructured, markerByVar map[string]*markers.FieldMarker) (*Rules, error) {
 	rules := &Rules{}
 
-	if err := rules.addForResource(manifest); err != nil {
+	if err := rules.addForResource(manifest, markerByVar); err != nil {
 		return rules, err
 	}
 

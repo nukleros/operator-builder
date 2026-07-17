@@ -69,6 +69,15 @@ func TestFieldType_UnmarshalMarkerArg(t *testing.T) {
 			expect:  FieldBool,
 		},
 		{
+			name: "stringArray field type appropriately unmarshaled",
+			f:    FieldStringSlice,
+			args: args{
+				in: "stringArray",
+			},
+			wantErr: false,
+			expect:  FieldStringSlice,
+		},
+		{
 			name: "mismatched field type appropriately unmarshaled",
 			f:    FieldUnknownType,
 			args: args{
@@ -123,6 +132,11 @@ func TestFieldType_String(t *testing.T) {
 			name: "bool field type returns 'bool'",
 			f:    FieldBool,
 			want: "bool",
+		},
+		{
+			name: "stringArray field type returns 'stringArray'",
+			f:    FieldStringSlice,
+			want: "stringArray",
 		},
 	}
 	for _, tt := range tests {

@@ -244,6 +244,14 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 		Type:          FieldUnknownType,
 	}
 
+	stringSliceMarkerTest := "field.string.slice"
+
+	stringSliceTest := &FieldMarker{
+		Name:          &stringSliceMarkerTest,
+		sourceCodeVar: "parent.Spec.Field.String.Slice",
+		Type:          FieldStringSlice,
+	}
+
 	type args struct {
 		marker FieldMarkerProcessor
 	}
@@ -277,6 +285,14 @@ func Test_getSourceCodeFieldVariable(t *testing.T) {
 			},
 			want:    "!!start strconv.Itoa(parent.Spec.Field.Integer) !!end",
 			wantErr: false,
+		},
+		{
+			name: "ensure []string field marker with replace= returns an error",
+			args: args{
+				marker: stringSliceTest,
+			},
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "ensure unsupported field marker returns an error",
@@ -561,6 +577,7 @@ func Test_setValue(t *testing.T) {
 			},
 			wantErr: false,
 			want: &yaml.Node{
+				Kind:  yaml.ScalarNode,
 				Tag:   "!!var",
 				Value: "parent.Spec.Test.Field.Set",
 			},
