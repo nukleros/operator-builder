@@ -256,6 +256,19 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 		return t
 	case []string:
 		return formatStringSliceJSON(t)
+	case nil:
+		switch api.Type {
+		case markers.FieldString:
+			return `""`
+		case markers.FieldInt:
+			return "0"
+		case markers.FieldBool:
+			return "false"
+		case markers.FieldStringSlice:
+			return "[]"
+		default:
+			return ""
+		}
 	default:
 		return fmt.Sprintf(`%v`, t)
 	}
@@ -294,6 +307,10 @@ func (api *APIFields) setSample(sampleVal interface{}) {
 		api.Sample = fmt.Sprintf("%s: %s", api.manifestName, api.getSampleValue(sampleVal))
 	default:
 		api.Sample = fmt.Sprintf("%s: %v", api.manifestName, api.getSampleValue(sampleVal))
+	}
+
+	if sampleVal == nil && api.Type != markers.FieldStruct {
+		api.Sample += "  # required field"
 	}
 }
 
