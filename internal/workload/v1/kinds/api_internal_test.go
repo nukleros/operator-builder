@@ -486,6 +486,56 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 			},
 			want: "3.14",
 		},
+		{
+			name: "nil value with FieldString returns empty string",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				Type: markers.FieldString,
+			},
+			want: `""`,
+		},
+		{
+			name: "nil value with FieldInt returns zero",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				Type: markers.FieldInt,
+			},
+			want: "0",
+		},
+		{
+			name: "nil value with FieldBool returns false",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				Type: markers.FieldBool,
+			},
+			want: "false",
+		},
+		{
+			name: "nil value with FieldStringSlice returns empty array",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				Type: markers.FieldStringSlice,
+			},
+			want: "[]",
+		},
+		{
+			name: "nil value with unknown type returns empty string",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				Type: markers.FieldUnknownType,
+			},
+			want: "",
+		},
 	}
 
 	for _, tt := range tests {
@@ -766,6 +816,66 @@ func TestAPIFields_setSample(t *testing.T) {
 				manifestName: "other",
 				Type:         markers.FieldUnknownType,
 				Sample:       "other: 3.14",
+			},
+		},
+		{
+			name: "nil string required field shows zero value with comment",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				manifestName: "ref",
+				Type:         markers.FieldString,
+			},
+			expect: &APIFields{
+				manifestName: "ref",
+				Type:         markers.FieldString,
+				Sample:       `ref: ""  # required field`,
+			},
+		},
+		{
+			name: "nil int required field shows zero value with comment",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				manifestName: "replicas",
+				Type:         markers.FieldInt,
+			},
+			expect: &APIFields{
+				manifestName: "replicas",
+				Type:         markers.FieldInt,
+				Sample:       "replicas: 0  # required field",
+			},
+		},
+		{
+			name: "nil stringSlice required field shows empty array with comment",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+			},
+			expect: &APIFields{
+				manifestName: "hosts",
+				Type:         markers.FieldStringSlice,
+				Sample:       "hosts: []  # required field",
+			},
+		},
+		{
+			name: "nil struct does not add required comment",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				manifestName: "postgres",
+				Type:         markers.FieldStruct,
+			},
+			expect: &APIFields{
+				manifestName: "postgres",
+				Type:         markers.FieldStruct,
+				Sample:       "postgres:",
 			},
 		},
 	}
