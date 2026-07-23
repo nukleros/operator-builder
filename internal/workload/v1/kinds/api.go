@@ -380,14 +380,22 @@ func (api *APIFields) setDefault(sampleVal interface{}) {
 }
 
 // kubebuilderDefault returns the default value formatted for a
-// +kubebuilder:default= marker annotation.  Array types require curly-brace
-// notation ({"a","b"}) while scalars are used verbatim.
-// It takes the original sampleVal so that []string elements are quoted
-// individually — building from api.Default (JSON form) would require
-// re-parsing and could silently corrupt elements that contain ", ".
+// +kubebuilder:default= marker annotation.  Map types use JSON object notation
+// ({"key":"value"}), array types use kubebuilder brace notation ({"a","b"}),
+// and scalars are used verbatim.
+// It takes the original sampleVal so that collection elements are quoted
+// individually — building from api.Default (display form) would require
+// re-parsing and could silently corrupt elements that contain special characters.
 func (api *APIFields) kubebuilderDefault(sampleVal interface{}) string {
 	if api.Type == markers.FieldStringMap {
-		return ""
+		switch t := sampleVal.(type) {
+		case map[string]string:
+			return formatStringMapKubebuilder(t)
+		case string:
+			return formatStringMapKubebuilder(markers.SplitStringMapDefault(t))
+		default:
+			return ""
+		}
 	}
 
 	if api.Type != markers.FieldStringSlice {
@@ -404,6 +412,29 @@ func (api *APIFields) kubebuilderDefault(sampleVal interface{}) string {
 	default:
 		return api.Default
 	}
+}
+
+// formatStringMapKubebuilder formats a map[string]string as a JSON object for
+// use in a +kubebuilder:default= annotation, e.g. {"key":"value"}.
+// Keys are sorted deterministically.
+func formatStringMapKubebuilder(m map[string]string) string {
+	if len(m) == 0 {
+		return "{}"
+	}
+
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	pairs := make([]string, len(keys))
+	for i, k := range keys {
+		pairs[i] = fmt.Sprintf("%q:%q", k, m[k])
+	}
+
+	return "{" + strings.Join(pairs, ",") + "}"
 }
 
 // formatStringSliceKubebuilder formats a []string as kubebuilder brace notation

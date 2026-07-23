@@ -1073,7 +1073,7 @@ func TestAPIFields_setDefault(t *testing.T) {
 			},
 		},
 		{
-			name: "set default for map[string]string omits kubebuilder default annotation",
+			name: "set default for map[string]string emits kubebuilder default annotation",
 			args: args{
 				sampleVal: map[string]string{"APP_ENV": "production"},
 			},
@@ -1087,8 +1087,30 @@ func TestAPIFields_setDefault(t *testing.T) {
 				Sample:       "config: {APP_ENV: production}",
 				Default:      "{APP_ENV: production}",
 				Markers: []string{
+					`+kubebuilder:default={"APP_ENV":"production"}`,
 					"+kubebuilder:validation:Optional",
 					"(Default: {APP_ENV: production})",
+				},
+			},
+		},
+		{
+			name: "set default for empty map[string]string emits empty kubebuilder default",
+			args: args{
+				sampleVal: map[string]string{},
+			},
+			fields: fields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+			},
+			expect: &APIFields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+				Sample:       "config: {}",
+				Default:      "{}",
+				Markers: []string{
+					"+kubebuilder:default={}",
+					"+kubebuilder:validation:Optional",
+					"(Default: {})",
 				},
 			},
 		},
@@ -1308,6 +1330,7 @@ func TestAPIFields_setCommentsAndDefault(t *testing.T) {
 				Sample:       "config: {}",
 				Default:      "{}",
 				Markers: []string{
+					"+kubebuilder:default={}",
 					"+kubebuilder:validation:Optional",
 					"(Default: {})",
 				},
