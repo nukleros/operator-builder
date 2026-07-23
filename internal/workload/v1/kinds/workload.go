@@ -377,24 +377,7 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 		// set the sample value based on if a default was specified in the marker or not
 		if marker.GetDefault() != nil {
 			defaultFound = true
-			sampleVal = marker.GetDefault()
-
-			// []string defaults arrive as a plain string ("foo;bar") because the marker
-			// parser doesn't know the field type.  Split on ; so downstream formatting
-			// receives the expected []string value.
-			if marker.GetFieldType() == markers.FieldStringSlice {
-				if strVal, ok := sampleVal.(string); ok {
-					sampleVal = splitStringSliceDefault(strVal)
-				}
-			}
-
-			// map[string]string defaults arrive as a plain string ("key=value;foo=bar").
-			// Parse into a map so downstream formatting receives the expected type.
-			if marker.GetFieldType() == markers.FieldStringMap {
-				if strVal, ok := sampleVal.(string); ok {
-					sampleVal = markers.SplitStringMapDefault(strVal)
-				}
-			}
+			sampleVal = convertDefaultSampleVal(marker.GetDefault(), marker.GetFieldType())
 		} else {
 			sampleVal = marker.GetOriginalValue()
 		}
@@ -416,6 +399,26 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 	}
 
 	return nil
+}
+
+// convertDefaultSampleVal converts a raw default value to the correct Go type for the given
+// field type.  String defaults from the marker parser are parsed into their target collection
+// types ([]string for stringArray, map[string]string for stringMap) so that downstream
+// formatting receives the expected value.
+func convertDefaultSampleVal(sampleVal interface{}, fieldType markers.FieldType) interface{} {
+	strVal, ok := sampleVal.(string)
+	if !ok {
+		return sampleVal
+	}
+
+	switch fieldType {
+	case markers.FieldStringSlice:
+		return splitStringSliceDefault(strVal)
+	case markers.FieldStringMap:
+		return markers.SplitStringMapDefault(strVal)
+	default:
+		return sampleVal
+	}
 }
 
 // setSourceFileNames sets unique source file names that are generated from each manifest.  They are

@@ -147,6 +147,7 @@ func SplitStringMapDefault(s string) map[string]string {
 		idx := strings.Index(pair, "=")
 		if idx < 0 {
 			out[strings.TrimSpace(pair)] = ""
+
 			continue
 		}
 
@@ -553,52 +554,72 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 		return nil
 	}
 
-	const varTag = "!!var"
-
-	const strTag = "!!str"
-
-	markerReplaceText := marker.GetReplaceText()
-
 	marker.SetOriginalValue(value.Value)
 
-	if markerReplaceText != "" {
-		value.Tag = strTag
-
-		re, err := regexp.Compile(markerReplaceText)
-		if err != nil {
-			return fmt.Errorf("unable to convert %s to regex, %w", markerReplaceText, err)
-		}
-
-		fieldVar, err := getSourceCodeFieldVariable(marker)
-		if err != nil {
-			return fmt.Errorf("unable to get source code field variable for marker %s, %w", marker, err)
-		}
-
-		if !strings.Contains(value.Value, markerReplaceText) {
-			return fmt.Errorf("replace text=[%s] value=[%s], %w", markerReplaceText, value.Value, ErrMissingReplaceText)
-		}
-
-		value.Value = re.ReplaceAllString(value.Value, fieldVar)
-	} else if marker.IsMerge() {
-		if marker.GetFieldType() != FieldStringMap {
-			return fmt.Errorf("%w, got %s", ErrInvalidMergeMarkerFieldType, marker.GetFieldType())
-		}
-
-		staticPairs := extractStaticStringPairs(value.Content)
-		value.Tag = varTag
-		value.Value = buildMergeExpression(staticPairs, marker.GetSourceCodeVariable())
-		value.Kind = yaml.ScalarNode
-		value.Content = nil
-	} else {
-		value.Tag = varTag
-		value.Value = marker.GetSourceCodeVariable()
-		// gener8s code.Generate dispatches on yaml.Node.Kind, not Tag.  For
-		// sequence nodes the Kind stays SequenceNode after a Tag change, so
-		// decodeElements never reads Value and renders an empty operand ("key": ,).
-		// Collapsing to ScalarNode lets the !!var template path read Value correctly.
-		value.Kind = yaml.ScalarNode
-		value.Content = nil
+	if marker.GetReplaceText() != "" {
+		return setValueWithReplace(marker, value)
 	}
 
+	if marker.IsMerge() {
+		return setValueWithMerge(marker, value)
+	}
+
+	setValueDirect(marker, value)
+
 	return nil
+}
+
+func setValueWithReplace(marker FieldMarkerProcessor, value *yaml.Node) error {
+	const strTag = "!!str"
+
+	replaceText := marker.GetReplaceText()
+
+	value.Tag = strTag
+
+	re, err := regexp.Compile(replaceText)
+	if err != nil {
+		return fmt.Errorf("unable to convert %s to regex, %w", replaceText, err)
+	}
+
+	fieldVar, err := getSourceCodeFieldVariable(marker)
+	if err != nil {
+		return fmt.Errorf("unable to get source code field variable for marker %s, %w", marker, err)
+	}
+
+	if !strings.Contains(value.Value, replaceText) {
+		return fmt.Errorf("replace text=[%s] value=[%s], %w", replaceText, value.Value, ErrMissingReplaceText)
+	}
+
+	value.Value = re.ReplaceAllString(value.Value, fieldVar)
+
+	return nil
+}
+
+func setValueWithMerge(marker FieldMarkerProcessor, value *yaml.Node) error {
+	const varTag = "!!var"
+
+	if marker.GetFieldType() != FieldStringMap {
+		return fmt.Errorf("%w, got %s", ErrInvalidMergeMarkerFieldType, marker.GetFieldType())
+	}
+
+	staticPairs := extractStaticStringPairs(value.Content)
+	value.Tag = varTag
+	value.Value = buildMergeExpression(staticPairs, marker.GetSourceCodeVariable())
+	value.Kind = yaml.ScalarNode
+	value.Content = nil
+
+	return nil
+}
+
+func setValueDirect(marker FieldMarkerProcessor, value *yaml.Node) {
+	const varTag = "!!var"
+
+	value.Tag = varTag
+	value.Value = marker.GetSourceCodeVariable()
+	// gener8s code.Generate dispatches on yaml.Node.Kind, not Tag.  For
+	// sequence nodes the Kind stays SequenceNode after a Tag change, so
+	// decodeElements never reads Value and renders an empty operand ("key": ,).
+	// Collapsing to ScalarNode lets the !!var template path read Value correctly.
+	value.Kind = yaml.ScalarNode
+	value.Content = nil
 }

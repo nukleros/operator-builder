@@ -556,6 +556,8 @@ func Test_setValue(t *testing.T) {
 		value  *yaml.Node
 	}
 
+	trueVal := true
+
 	tests := []struct {
 		name    string
 		args    args
@@ -618,59 +620,46 @@ func Test_setValue(t *testing.T) {
 			},
 			wantErr: true,
 		},
-	}
-
-	trueVal := true
-
-	tests = append(tests, struct {
-		name    string
-		args    args
-		wantErr bool
-		want    *yaml.Node
-	}{
-		name: "merge flag builds IIFE expression from static mapping pairs",
-		args: args{
-			marker: &FieldMarker{
-				Name:          &testField,
-				sourceCodeVar: "parent.Spec.Test.Field.Set",
-				Type:          FieldStringMap,
-				Merge:         &trueVal,
-			},
-			value: &yaml.Node{
-				Kind: yaml.MappingNode,
-				Tag:  "!!map",
-				Content: []*yaml.Node{
-					{Kind: yaml.ScalarNode, Value: "LOG_LEVEL"},
-					{Kind: yaml.ScalarNode, Value: "info"},
+		{
+			name: "merge flag builds IIFE expression from static mapping pairs",
+			args: args{
+				marker: &FieldMarker{
+					Name:          &testField,
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
+					Type:          FieldStringMap,
+					Merge:         &trueVal,
+				},
+				value: &yaml.Node{
+					Kind: yaml.MappingNode,
+					Tag:  "!!map",
+					Content: []*yaml.Node{
+						{Kind: yaml.ScalarNode, Value: "LOG_LEVEL"},
+						{Kind: yaml.ScalarNode, Value: "info"},
+					},
 				},
 			},
-		},
-		wantErr: false,
-		want: &yaml.Node{
-			Kind:  yaml.ScalarNode,
-			Tag:   "!!var",
-			Value: `func() map[string]string { m := map[string]string{"LOG_LEVEL": "info"}; for k, v := range parent.Spec.Test.Field.Set { m[k] = v }; return m }()`,
-		},
-	})
-
-	tests = append(tests, struct {
-		name    string
-		args    args
-		wantErr bool
-		want    *yaml.Node
-	}{
-		name: "merge on non-stringMap type returns error",
-		args: args{
-			marker: &FieldMarker{
-				Name:          &testField,
-				sourceCodeVar: "parent.Spec.Test.Field.Set",
-				Type:          FieldString,
-				Merge:         &trueVal,
+			wantErr: false,
+			want: &yaml.Node{
+				Kind: yaml.ScalarNode,
+				Tag:  "!!var",
+				Value: `func() map[string]string { m := map[string]string{"LOG_LEVEL": "info"}; ` +
+					`for k, v := range parent.Spec.Test.Field.Set { m[k] = v }; return m }()`,
 			},
-			value: &yaml.Node{Tag: "!!str", Value: "some value"},
 		},
-		wantErr: true,
-	})
+		{
+			name: "merge on non-stringMap type returns error",
+			args: args{
+				marker: &FieldMarker{
+					Name:          &testField,
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
+					Type:          FieldString,
+					Merge:         &trueVal,
+				},
+				value: &yaml.Node{Tag: "!!str", Value: "some value"},
+			},
+			wantErr: true,
+		},
+	}
 
 	for _, tt := range tests {
 		tt := tt
@@ -747,13 +736,15 @@ func Test_buildMergeExpression(t *testing.T) {
 			name:        "single pair",
 			staticPairs: map[string]string{"KEY": "value"},
 			variable:    "parent.Spec.Foo",
-			want:        `func() map[string]string { m := map[string]string{"KEY": "value"}; for k, v := range parent.Spec.Foo { m[k] = v }; return m }()`,
+			want: `func() map[string]string { m := map[string]string{"KEY": "value"}; ` +
+				`for k, v := range parent.Spec.Foo { m[k] = v }; return m }()`,
 		},
 		{
 			name:        "two pairs are sorted by key",
 			staticPairs: map[string]string{"LOG_LEVEL": "info", "APP_ENV": "production"},
 			variable:    "parent.Spec.Foo",
-			want:        `func() map[string]string { m := map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"}; for k, v := range parent.Spec.Foo { m[k] = v }; return m }()`,
+			want: `func() map[string]string { m := map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"}; ` +
+				`for k, v := range parent.Spec.Foo { m[k] = v }; return m }()`,
 		},
 	}
 

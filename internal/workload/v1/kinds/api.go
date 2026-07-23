@@ -232,58 +232,51 @@ func (api *APIFields) isEqual(input *APIFields) bool {
 func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 	switch t := sampleVal.(type) {
 	case *string:
-		if api.Type == markers.FieldString {
-			return fmt.Sprintf(`%q`, *t)
-		}
-
-		if api.Type == markers.FieldStringSlice {
-			return api.formatStringSliceDefault(*t)
-		}
-
-		if api.Type == markers.FieldStringMap {
-			return formatStringMapYAML(markers.SplitStringMapDefault(*t))
-		}
-
-		return *t
+		return api.getSampleValueFromString(*t)
 	case *int:
 		return fmt.Sprintf(`%v`, *t)
 	case *bool:
 		return fmt.Sprintf(`%v`, *t)
 	case string:
-		if api.Type == markers.FieldString {
-			return fmt.Sprintf(`%q`, t)
-		}
-
-		if api.Type == markers.FieldStringSlice {
-			return api.formatStringSliceDefault(t)
-		}
-
-		if api.Type == markers.FieldStringMap {
-			return formatStringMapYAML(markers.SplitStringMapDefault(t))
-		}
-
-		return t
+		return api.getSampleValueFromString(t)
 	case []string:
 		return formatStringSliceJSON(t)
 	case map[string]string:
 		return formatStringMapYAML(t)
 	case nil:
-		switch api.Type {
-		case markers.FieldString:
-			return `""`
-		case markers.FieldInt:
-			return "0"
-		case markers.FieldBool:
-			return "false"
-		case markers.FieldStringSlice:
-			return "[]"
-		case markers.FieldStringMap:
-			return "{}"
-		default:
-			return ""
-		}
+		return api.getSampleValueForNil()
 	default:
 		return fmt.Sprintf(`%v`, t)
+	}
+}
+
+func (api *APIFields) getSampleValueFromString(s string) string {
+	switch api.Type {
+	case markers.FieldString:
+		return fmt.Sprintf(`%q`, s)
+	case markers.FieldStringSlice:
+		return api.formatStringSliceDefault(s)
+	case markers.FieldStringMap:
+		return formatStringMapYAML(markers.SplitStringMapDefault(s))
+	default:
+		return s
+	}
+}
+
+func (api *APIFields) getSampleValueForNil() string {
+	switch api.Type {
+	case markers.FieldString:
+		return `""`
+	case markers.FieldInt:
+		return "0"
+	case markers.FieldBool:
+		return "false"
+	case markers.FieldStringSlice:
+		return "[]"
+	case markers.FieldStringMap:
+		return "{}"
+	default:
+		return ""
 	}
 }
 
