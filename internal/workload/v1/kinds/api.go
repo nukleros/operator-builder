@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/nukleros/operator-builder/internal/utils"
 	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
 )
@@ -300,7 +302,8 @@ func splitStringSliceDefault(s string) []string {
 }
 
 // formatStringMapYAML formats a map[string]string as YAML flow style, e.g. {key1: value1, key2: value2}.
-// Keys are sorted deterministically.
+// Keys are sorted deterministically. Values that would be misinterpreted by a YAML parser (null, true,
+// *alias, flow delimiters, etc.) are automatically quoted by the yaml.v3 marshaler.
 func formatStringMapYAML(m map[string]string) string {
 	if len(m) == 0 {
 		return "{}"
@@ -313,12 +316,28 @@ func formatStringMapYAML(m map[string]string) string {
 
 	sort.Strings(keys)
 
-	pairs := make([]string, len(keys))
-	for i, k := range keys {
-		pairs[i] = fmt.Sprintf("%s: %s", k, m[k])
+	// Marshal via yaml.Node so the library applies correct YAML quoting rules.
+	// Plain string interpolation silently breaks values like "null", "*alias",
+	// or anything containing flow delimiters — the !!str tag forces the encoder
+	// to quote only what is genuinely ambiguous.
+	node := &yaml.Node{
+		Kind:  yaml.MappingNode,
+		Style: yaml.FlowStyle,
 	}
 
-	return "{" + strings.Join(pairs, ", ") + "}"
+	for _, k := range keys {
+		node.Content = append(node.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: k},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: m[k]},
+		)
+	}
+
+	out, err := yaml.Marshal(node)
+	if err != nil {
+		return "{}"
+	}
+
+	return strings.TrimSpace(string(out))
 }
 
 // formatStringSliceDefault converts a raw semicolon-separated string (e.g. "foo;bar")

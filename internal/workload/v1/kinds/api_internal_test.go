@@ -1139,6 +1139,26 @@ func Test_formatStringMapYAML(t *testing.T) {
 			input: map[string]string{"LOG_LEVEL": "info", "APP_ENV": "production"},
 			want:  "{APP_ENV: production, LOG_LEVEL: info}",
 		},
+		{
+			name:  "null value is quoted",
+			input: map[string]string{"key": "null"},
+			want:  `{key: "null"}`,
+		},
+		{
+			name:  "true value is quoted",
+			input: map[string]string{"key": "true"},
+			want:  `{key: "true"}`,
+		},
+		{
+			name:  "alias value is quoted",
+			input: map[string]string{"key": "*alias"},
+			want:  `{key: '*alias'}`,
+		},
+		{
+			name:  "flow delimiter in value is quoted",
+			input: map[string]string{"key": "a,b"},
+			want:  `{key: 'a,b'}`,
+		},
 	}
 
 	for _, tt := range tests {
