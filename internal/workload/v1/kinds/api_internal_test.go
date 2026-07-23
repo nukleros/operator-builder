@@ -536,6 +536,46 @@ func TestAPIFields_getSampleValue(t *testing.T) {
 			},
 			want: "",
 		},
+		{
+			name: "map[string]string value with FieldStringMap type",
+			args: args{
+				sampleVal: map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"},
+			},
+			fields: fields{
+				Type: markers.FieldStringMap,
+			},
+			want: "{APP_ENV: production, LOG_LEVEL: info}",
+		},
+		{
+			name: "empty map[string]string returns empty braces",
+			args: args{
+				sampleVal: map[string]string{},
+			},
+			fields: fields{
+				Type: markers.FieldStringMap,
+			},
+			want: "{}",
+		},
+		{
+			name: "semicolon-separated key=value string with FieldStringMap type",
+			args: args{
+				sampleVal: "APP_ENV=production;LOG_LEVEL=info",
+			},
+			fields: fields{
+				Type: markers.FieldStringMap,
+			},
+			want: "{APP_ENV: production, LOG_LEVEL: info}",
+		},
+		{
+			name: "nil value with FieldStringMap returns empty braces",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				Type: markers.FieldStringMap,
+			},
+			want: "{}",
+		},
 	}
 
 	for _, tt := range tests {
@@ -878,6 +918,36 @@ func TestAPIFields_setSample(t *testing.T) {
 				Sample:       "postgres:",
 			},
 		},
+		{
+			name: "set map[string]string sample",
+			args: args{
+				sampleVal: map[string]string{"APP_ENV": "production"},
+			},
+			fields: fields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+			},
+			expect: &APIFields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+				Sample:       "config: {APP_ENV: production}",
+			},
+		},
+		{
+			name: "nil stringMap never shows required comment",
+			args: args{
+				sampleVal: nil,
+			},
+			fields: fields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+			},
+			expect: &APIFields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+				Sample:       "config: {}",
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1002,6 +1072,26 @@ func TestAPIFields_setDefault(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "set default for map[string]string omits kubebuilder default annotation",
+			args: args{
+				sampleVal: map[string]string{"APP_ENV": "production"},
+			},
+			fields: fields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+			},
+			expect: &APIFields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+				Sample:       "config: {APP_ENV: production}",
+				Default:      "{APP_ENV: production}",
+				Markers: []string{
+					"+kubebuilder:validation:Optional",
+					"(Default: {APP_ENV: production})",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1017,6 +1107,45 @@ func TestAPIFields_setDefault(t *testing.T) {
 			}
 			api.setDefault(tt.args.sampleVal)
 			assert.Equal(t, tt.expect, api)
+		})
+	}
+}
+
+func Test_formatStringMapYAML(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input map[string]string
+		want  string
+	}{
+		{
+			name:  "empty map returns empty braces",
+			input: map[string]string{},
+			want:  "{}",
+		},
+		{
+			name:  "nil map returns empty braces",
+			input: nil,
+			want:  "{}",
+		},
+		{
+			name:  "single entry",
+			input: map[string]string{"KEY": "value"},
+			want:  "{KEY: value}",
+		},
+		{
+			name:  "two entries are sorted by key",
+			input: map[string]string{"LOG_LEVEL": "info", "APP_ENV": "production"},
+			want:  "{APP_ENV: production, LOG_LEVEL: info}",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, formatStringMapYAML(tt.input))
 		})
 	}
 }
@@ -1140,6 +1269,27 @@ func TestAPIFields_setCommentsAndDefault(t *testing.T) {
 				manifestName: "other",
 				Markers: []string{
 					"+kubebuilder:validation:Required",
+				},
+			},
+		},
+		{
+			name: "stringMap without default is always optional with empty map",
+			args: args{
+				sampleVal:  nil,
+				hasDefault: false,
+			},
+			fields: fields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+			},
+			expect: &APIFields{
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+				Sample:       "config: {}",
+				Default:      "{}",
+				Markers: []string{
+					"+kubebuilder:validation:Optional",
+					"(Default: {})",
 				},
 			},
 		},
@@ -1353,6 +1503,24 @@ func TestAPIFields_newChild(t *testing.T) {
 				Type:         markers.FieldStruct,
 				Sample:       "struct:",
 				Tags:         "`json:\"struct,omitempty\"`",
+				Comments:     []string{},
+				Markers:      []string{},
+			},
+		},
+		{
+			name: "new child for map[string]string",
+			args: args{
+				name:      "config",
+				fieldType: markers.FieldStringMap,
+				sample:    map[string]string{"KEY": "value"},
+			},
+			fields: fields{},
+			want: &APIFields{
+				Name:         "Config",
+				manifestName: "config",
+				Type:         markers.FieldStringMap,
+				Sample:       "config: {KEY: value}",
+				Tags:         "`json:\"config,omitempty\"`",
 				Comments:     []string{},
 				Markers:      []string{},
 			},

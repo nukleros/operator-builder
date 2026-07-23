@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/nukleros/operator-builder/internal/utils"
@@ -239,6 +240,10 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 			return api.formatStringSliceDefault(*t)
 		}
 
+		if api.Type == markers.FieldStringMap {
+			return formatStringMapYAML(markers.SplitStringMapDefault(*t))
+		}
+
 		return *t
 	case *int:
 		return fmt.Sprintf(`%v`, *t)
@@ -253,9 +258,15 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 			return api.formatStringSliceDefault(t)
 		}
 
+		if api.Type == markers.FieldStringMap {
+			return formatStringMapYAML(markers.SplitStringMapDefault(t))
+		}
+
 		return t
 	case []string:
 		return formatStringSliceJSON(t)
+	case map[string]string:
+		return formatStringMapYAML(t)
 	case nil:
 		switch api.Type {
 		case markers.FieldString:
@@ -266,6 +277,8 @@ func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 			return "false"
 		case markers.FieldStringSlice:
 			return "[]"
+		case markers.FieldStringMap:
+			return "{}"
 		default:
 			return ""
 		}
@@ -293,6 +306,28 @@ func splitStringSliceDefault(s string) []string {
 	return markers.SplitStringSliceDefault(s)
 }
 
+// formatStringMapYAML formats a map[string]string as YAML flow style, e.g. {key1: value1, key2: value2}.
+// Keys are sorted deterministically.
+func formatStringMapYAML(m map[string]string) string {
+	if len(m) == 0 {
+		return "{}"
+	}
+
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	pairs := make([]string, len(keys))
+	for i, k := range keys {
+		pairs[i] = fmt.Sprintf("%s: %s", k, m[k])
+	}
+
+	return "{" + strings.Join(pairs, ", ") + "}"
+}
+
 // formatStringSliceDefault converts a raw semicolon-separated string (e.g. "foo;bar")
 // to JSON-array display form (e.g. ["foo", "bar"]).  An empty string returns "[]".
 func (api *APIFields) formatStringSliceDefault(s string) string {
@@ -303,24 +338,32 @@ func (api *APIFields) setSample(sampleVal interface{}) {
 	switch api.Type {
 	case markers.FieldStruct:
 		api.Sample = fmt.Sprintf("%s:", api.manifestName)
-	case markers.FieldStringSlice:
+	case markers.FieldStringSlice, markers.FieldStringMap:
 		api.Sample = fmt.Sprintf("%s: %s", api.manifestName, api.getSampleValue(sampleVal))
 	default:
 		api.Sample = fmt.Sprintf("%s: %v", api.manifestName, api.getSampleValue(sampleVal))
 	}
 
-	if sampleVal == nil && api.Type != markers.FieldStruct {
+	if sampleVal == nil && api.Type != markers.FieldStruct && api.Type != markers.FieldStringMap {
 		api.Sample += "  # required field"
 	}
 }
 
 func (api *APIFields) setDefault(sampleVal interface{}) {
 	api.Default = api.getSampleValue(sampleVal)
-	api.appendMarkers(
-		fmt.Sprintf("+kubebuilder:default=%s", api.kubebuilderDefault(sampleVal)),
-		"+kubebuilder:validation:Optional",
-		fmt.Sprintf("(Default: %s)", api.Default),
-	)
+	kbDefault := api.kubebuilderDefault(sampleVal)
+	if kbDefault != "" {
+		api.appendMarkers(
+			fmt.Sprintf("+kubebuilder:default=%s", kbDefault),
+			"+kubebuilder:validation:Optional",
+			fmt.Sprintf("(Default: %s)", api.Default),
+		)
+	} else {
+		api.appendMarkers(
+			"+kubebuilder:validation:Optional",
+			fmt.Sprintf("(Default: %s)", api.Default),
+		)
+	}
 	api.setSample(sampleVal)
 }
 
@@ -331,6 +374,10 @@ func (api *APIFields) setDefault(sampleVal interface{}) {
 // individually — building from api.Default (JSON form) would require
 // re-parsing and could silently corrupt elements that contain ", ".
 func (api *APIFields) kubebuilderDefault(sampleVal interface{}) string {
+	if api.Type == markers.FieldStringMap {
+		return ""
+	}
+
 	if api.Type != markers.FieldStringSlice {
 		return api.Default
 	}
@@ -371,6 +418,9 @@ func (api *APIFields) appendMarkers(apiMarkers ...string) {
 func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interface{}, hasDefault bool) {
 	if hasDefault {
 		api.setDefault(sampleVal)
+	} else if api.Type == markers.FieldStringMap {
+		// map[string]string is always optional: nil/absent is equivalent to an empty map.
+		api.setDefault(map[string]string{})
 	} else {
 		api.appendMarkers("+kubebuilder:validation:Required")
 	}

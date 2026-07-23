@@ -130,6 +130,29 @@ func SplitStringSliceDefault(s string) []string {
 	return out
 }
 
+// SplitStringMapDefault splits a semicolon-separated "key=value" marker default string
+// into a map[string]string.  Whitespace is trimmed from each element.  A backslash-escaped
+// semicolon (\;) is treated as a literal semicolon within an element.
+func SplitStringMapDefault(s string) map[string]string {
+	out := make(map[string]string)
+
+	for _, pair := range SplitStringSliceDefault(s) {
+		if pair == "" {
+			continue
+		}
+
+		idx := strings.Index(pair, "=")
+		if idx < 0 {
+			out[strings.TrimSpace(pair)] = ""
+			continue
+		}
+
+		out[strings.TrimSpace(pair[:idx])] = strings.TrimSpace(pair[idx+1:])
+	}
+
+	return out
+}
+
 // initializeMarkerInspector will create a new registry and initialize an inspector
 // for specific marker types.
 func initializeMarkerInspector(markerTypes ...MarkerType) (*inspect.Inspector, error) {
@@ -426,6 +449,8 @@ func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
 		return fmt.Sprintf("!!start strconv.FormatBool(%s) !!end", marker.GetSourceCodeVariable()), nil
 	case FieldStringSlice:
 		return "", fmt.Errorf("%w: replace= is not supported for []string fields", ErrInvalidReplaceMarkerFieldType)
+	case FieldStringMap:
+		return "", fmt.Errorf("%w: replace= is not supported for map[string]string fields", ErrInvalidReplaceMarkerFieldType)
 	default:
 		return "", fmt.Errorf("%w with field type %s", ErrInvalidReplaceMarkerFieldType, marker.GetFieldType())
 	}

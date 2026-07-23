@@ -31,7 +31,7 @@ field for your workload.
 | Field                                | Type                           | Required |
 | ------------------------------------ | ------------------------------ | -------- |
 | [name](#name-required)               | string                              | true     |
-| [type](#type-required)               | string{string, int, bool, []string} | true     |
+| [type](#type-required)               | string{string, int, bool, stringArray, stringMap} | true     |
 | [default](#default-optional)         | [type](#supported-field-types) | false    |
 | [replace](#replace-optional)         | string                         | false    |
 | [arbitrary](#arbitrary-optional)     | bool                           | false    |
@@ -71,14 +71,18 @@ The `metadata.name` and `metadata.namespace` fields from the collection workload
 The other required field is the `type` field which specifies the data type for
 the value.
 
-The supported data types are:
+The supported Go data types are:
 
 - `bool`
 - `string`
 - `int`
 - `[]string`
+- `map[string]string`
 
 ex. `+operator-builder:field:name=myName,type=string`
+
+> **Note:** the above are the proper Go data types.  Please see the [field markers table](#field-markers) 
+for how to properly define them in markers (e.g. []string == stringArray).
 
 #### `stringArray` fields
 
@@ -111,6 +115,49 @@ dnsServers:
 
 > **Note:** To include a literal semicolon inside one element, escape it with a backslash:
 > `default=foo\;bar;baz` produces `["foo;bar", "baz"]`.
+
+#### `stringMap` fields
+
+Use `type=stringMap` to define a CRD field that holds a `map[string]string`.  Place the
+marker as a head comment above a YAML mapping:
+
+```yaml
+# +operator-builder:field:name=configData,type=stringMap
+data:
+  APP_ENV: production
+  LOG_LEVEL: info
+```
+
+The generated Go spec field will be `map[string]string`.
+
+**`stringMap` fields are always optional.** An absent or empty map is equivalent to
+`map[string]string{}` — no `+kubebuilder:validation:Required` is ever emitted for this
+type regardless of whether a `default=` is provided.
+
+A default can be specified using semicolon-separated `key=value` pairs:
+
+```yaml
+# +operator-builder:field:name=configData,default="APP_ENV=production;LOG_LEVEL=info",type=stringMap
+data:
+  APP_ENV: production
+  LOG_LEVEL: info
+```
+
+> **Important:** The `default=` value for a `stringMap` field **must always be wrapped in
+> double quotes**.  Each pair contains an `=` sign, and the marker parser uses `=` to
+> separate argument names from values.  Without quotes the parser would misread
+> `APP_ENV=production` as two separate arguments.  Always write:
+> `default="KEY1=value1;KEY2=value2"`.
+
+> **Note:** Values may themselves contain `=` signs — only the first `=` in each pair is
+> treated as the key/value separator:
+> `default="JDBC_URL=jdbc:postgresql://host/db?ssl=true"` produces
+> `{"JDBC_URL": "jdbc:postgresql://host/db?ssl=true"}`.
+
+> **Note:** The `replace=` argument is not supported for `stringMap` fields.
+
+> **Note:** To include a literal semicolon inside a value, escape it with a backslash:
+> `default="A=foo\;bar"` produces `{"A": "foo;bar"}`.
 
 ### Default (optional)
 

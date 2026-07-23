@@ -387,6 +387,14 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 					sampleVal = splitStringSliceDefault(strVal)
 				}
 			}
+
+			// map[string]string defaults arrive as a plain string ("key=value;foo=bar").
+			// Parse into a map so downstream formatting receives the expected type.
+			if marker.GetFieldType() == markers.FieldStringMap {
+				if strVal, ok := sampleVal.(string); ok {
+					sampleVal = markers.SplitStringMapDefault(strVal)
+				}
+			}
 		} else {
 			sampleVal = marker.GetOriginalValue()
 		}

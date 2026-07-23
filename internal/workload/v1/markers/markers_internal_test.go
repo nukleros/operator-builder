@@ -1231,3 +1231,62 @@ func Test_commentsFromMarker(t *testing.T) {
 		})
 	}
 }
+
+func TestSplitStringMapDefault(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		want  map[string]string
+	}{
+		{
+			name:  "empty string returns empty map",
+			input: "",
+			want:  map[string]string{},
+		},
+		{
+			name:  "single key=value pair",
+			input: "APP_ENV=production",
+			want:  map[string]string{"APP_ENV": "production"},
+		},
+		{
+			name:  "two key=value pairs separated by semicolon",
+			input: "APP_ENV=production;LOG_LEVEL=info",
+			want:  map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"},
+		},
+		{
+			name:  "whitespace around = is trimmed from keys and values",
+			input: "APP_ENV = production ; LOG_LEVEL = info",
+			want:  map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"},
+		},
+		{
+			name:  "value contains = sign",
+			input: "JDBC_URL=jdbc:postgresql://host/db?ssl=true",
+			want:  map[string]string{"JDBC_URL": "jdbc:postgresql://host/db?ssl=true"},
+		},
+		{
+			name:  "key without value",
+			input: "FLAG",
+			want:  map[string]string{"FLAG": ""},
+		},
+		{
+			name:  "empty pairs from consecutive semicolons are skipped",
+			input: "A=1;;B=2",
+			want:  map[string]string{"A": "1", "B": "2"},
+		},
+		{
+			name:  "escaped semicolon is literal within value",
+			input: `A=foo\;bar`,
+			want:  map[string]string{"A": "foo;bar"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, SplitStringMapDefault(tt.input))
+		})
+	}
+}
