@@ -282,64 +282,6 @@ func (api *APIFields) getSampleValueForNil() string {
 	}
 }
 
-// formatStringSliceJSON formats a []string as a JSON array with properly
-// escaped elements, e.g. ["foo", "bar"].
-func formatStringSliceJSON(items []string) string {
-	if len(items) == 0 {
-		return "[]"
-	}
-
-	quoted := make([]string, len(items))
-	for i, v := range items {
-		quoted[i] = fmt.Sprintf("%q", v)
-	}
-
-	return "[" + strings.Join(quoted, ", ") + "]"
-}
-
-func splitStringSliceDefault(s string) []string {
-	return markers.SplitStringSliceDefault(s)
-}
-
-// formatStringMapYAML formats a map[string]string as YAML flow style, e.g. {key1: value1, key2: value2}.
-// Keys are sorted deterministically. Values that would be misinterpreted by a YAML parser (null, true,
-// *alias, flow delimiters, etc.) are automatically quoted by the yaml.v3 marshaler.
-func formatStringMapYAML(m map[string]string) string {
-	if len(m) == 0 {
-		return "{}"
-	}
-
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-
-	// Marshal via yaml.Node so the library applies correct YAML quoting rules.
-	// Plain string interpolation silently breaks values like "null", "*alias",
-	// or anything containing flow delimiters — the !!str tag forces the encoder
-	// to quote only what is genuinely ambiguous.
-	node := &yaml.Node{
-		Kind:  yaml.MappingNode,
-		Style: yaml.FlowStyle,
-	}
-
-	for _, k := range keys {
-		node.Content = append(node.Content,
-			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: k},
-			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: m[k]},
-		)
-	}
-
-	out, err := yaml.Marshal(node)
-	if err != nil {
-		return "{}"
-	}
-
-	return strings.TrimSpace(string(out))
-}
-
 // formatStringSliceDefault converts a raw semicolon-separated string (e.g. "foo;bar")
 // to JSON-array display form (e.g. ["foo", "bar"]).  An empty string returns "[]".
 func (api *APIFields) formatStringSliceDefault(s string) string {
@@ -414,6 +356,42 @@ func (api *APIFields) kubebuilderDefault(sampleVal interface{}) string {
 	}
 }
 
+func (api *APIFields) appendMarkers(apiMarkers ...string) {
+	if len(api.Markers) == 0 {
+		api.Markers = append(api.Markers, apiMarkers...)
+	}
+}
+
+func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interface{}, hasDefault bool) {
+	if hasDefault {
+		api.setDefault(sampleVal)
+	} else if api.Type == markers.FieldStringMap {
+		// map[string]string is always optional: nil/absent is equivalent to an empty map.
+		api.setDefault(map[string]string{})
+	} else {
+		api.appendMarkers("+kubebuilder:validation:Required")
+	}
+
+	if len(comments) > 0 {
+		api.Comments = comments
+	}
+}
+
+func (api *APIFields) newChild(name string, fieldType markers.FieldType, sample interface{}) *APIFields {
+	child := &APIFields{
+		Name:         utils.ToTitle(name),
+		manifestName: name,
+		Type:         fieldType,
+		Tags:         fmt.Sprintf("`json:%q`", fmt.Sprintf("%s,%s", name, "omitempty")),
+		Comments:     []string{},
+		Markers:      []string{},
+	}
+
+	child.setSample(sample)
+
+	return child
+}
+
 // formatStringMapKubebuilder formats a map[string]string as a JSON object for
 // use in a +kubebuilder:default= annotation, e.g. {"key":"value"}.
 // Keys are sorted deterministically.
@@ -452,40 +430,62 @@ func formatStringSliceKubebuilder(items []string) string {
 	return "{" + strings.Join(quoted, ",") + "}"
 }
 
-func (api *APIFields) appendMarkers(apiMarkers ...string) {
-	if len(api.Markers) == 0 {
-		api.Markers = append(api.Markers, apiMarkers...)
+// formatStringSliceJSON formats a []string as a JSON array with properly
+// escaped elements, e.g. ["foo", "bar"].
+func formatStringSliceJSON(items []string) string {
+	if len(items) == 0 {
+		return "[]"
 	}
+
+	quoted := make([]string, len(items))
+	for i, v := range items {
+		quoted[i] = fmt.Sprintf("%q", v)
+	}
+
+	return "[" + strings.Join(quoted, ", ") + "]"
 }
 
-func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interface{}, hasDefault bool) {
-	if hasDefault {
-		api.setDefault(sampleVal)
-	} else if api.Type == markers.FieldStringMap {
-		// map[string]string is always optional: nil/absent is equivalent to an empty map.
-		api.setDefault(map[string]string{})
-	} else {
-		api.appendMarkers("+kubebuilder:validation:Required")
-	}
-
-	if len(comments) > 0 {
-		api.Comments = comments
-	}
+func splitStringSliceDefault(s string) []string {
+	return markers.SplitStringSliceDefault(s)
 }
 
-func (api *APIFields) newChild(name string, fieldType markers.FieldType, sample interface{}) *APIFields {
-	child := &APIFields{
-		Name:         utils.ToTitle(name),
-		manifestName: name,
-		Type:         fieldType,
-		Tags:         fmt.Sprintf("`json:%q`", fmt.Sprintf("%s,%s", name, "omitempty")),
-		Comments:     []string{},
-		Markers:      []string{},
+// formatStringMapYAML formats a map[string]string as YAML flow style, e.g. {key1: value1, key2: value2}.
+// Keys are sorted deterministically. Values that would be misinterpreted by a YAML parser (null, true,
+// *alias, flow delimiters, etc.) are automatically quoted by the yaml.v3 marshaler.
+func formatStringMapYAML(m map[string]string) string {
+	if len(m) == 0 {
+		return "{}"
 	}
 
-	child.setSample(sample)
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
 
-	return child
+	sort.Strings(keys)
+
+	// Marshal via yaml.Node so the library applies correct YAML quoting rules.
+	// Plain string interpolation silently breaks values like "null", "*alias",
+	// or anything containing flow delimiters — the !!str tag forces the encoder
+	// to quote only what is genuinely ambiguous.
+	node := &yaml.Node{
+		Kind:  yaml.MappingNode,
+		Style: yaml.FlowStyle,
+	}
+
+	for _, k := range keys {
+		node.Content = append(node.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: k},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: m[k]},
+		)
+	}
+
+	out, err := yaml.Marshal(node)
+	if err != nil {
+		return "{}"
+	}
+
+	return strings.TrimSpace(string(out))
 }
 
 func mustWrite(n int, err error) {
