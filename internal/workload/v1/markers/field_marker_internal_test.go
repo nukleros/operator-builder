@@ -644,6 +644,44 @@ func TestFieldMarker_SetDescription(t *testing.T) {
 	}
 }
 
+func TestFieldMarker_IsMerge(t *testing.T) {
+	t.Parallel()
+
+	trueVal := true
+	falseVal := false
+
+	tests := []struct {
+		name  string
+		merge *bool
+		want  bool
+	}{
+		{
+			name:  "nil merge returns false",
+			merge: nil,
+			want:  false,
+		},
+		{
+			name:  "false merge returns false",
+			merge: &falseVal,
+			want:  false,
+		},
+		{
+			name:  "true merge returns true",
+			merge: &trueVal,
+			want:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			fm := &FieldMarker{Merge: tt.merge}
+			assert.Equal(t, tt.want, fm.IsMerge())
+		})
+	}
+}
+
 func TestFieldMarker_SetForCollection(t *testing.T) {
 	t.Parallel()
 

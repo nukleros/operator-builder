@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/nukleros/markers/inspect"
@@ -20,6 +21,7 @@ var (
 	ErrMissingReplaceText            = errors.New("marker is missing the requested replace text")
 	ErrMissingParentOrName           = errors.New("missing either parent=value or name=value marker")
 	ErrInvalidReplaceMarkerFieldType = errors.New("invalid marker type using replace")
+	ErrInvalidMergeMarkerFieldType   = errors.New("merge is only supported for stringMap fields")
 	ErrInvalidParentField            = errors.New("invalid parent field")
 )
 
@@ -51,6 +53,7 @@ type FieldMarkerProcessor interface {
 	IsFieldMarker() bool
 	IsForCollection() bool
 	IsArbitrary() bool
+	IsMerge() bool
 
 	SetDescription(string)
 	SetOriginalValue(string)
@@ -151,6 +154,42 @@ func SplitStringMapDefault(s string) map[string]string {
 	}
 
 	return out
+}
+
+// extractStaticStringPairs extracts key-value pairs from a YAML MappingNode's content slice.
+// Content is a flat slice alternating key/value nodes.
+func extractStaticStringPairs(content []*yaml.Node) map[string]string {
+	pairs := make(map[string]string)
+
+	for i := 0; i+1 < len(content); i += 2 {
+		pairs[content[i].Value] = content[i+1].Value
+	}
+
+	return pairs
+}
+
+// buildMergeExpression generates a Go IIFE that uses staticPairs as a base map and
+// overlays the values from variable (user-specified values win).
+func buildMergeExpression(staticPairs map[string]string, variable string) string {
+	keys := make([]string, 0, len(staticPairs))
+	for k := range staticPairs {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	pairs := make([]string, len(keys))
+	for i, k := range keys {
+		pairs[i] = fmt.Sprintf("%q: %q", k, staticPairs[k])
+	}
+
+	baseLiteral := "map[string]string{" + strings.Join(pairs, ", ") + "}"
+
+	return fmt.Sprintf(
+		"func() map[string]string { m := %s; for k, v := range %s { m[k] = v }; return m }()",
+		baseLiteral,
+		variable,
+	)
 }
 
 // initializeMarkerInspector will create a new registry and initialize an inspector
@@ -540,6 +579,16 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 		}
 
 		value.Value = re.ReplaceAllString(value.Value, fieldVar)
+	} else if marker.IsMerge() {
+		if marker.GetFieldType() != FieldStringMap {
+			return fmt.Errorf("%w, got %s", ErrInvalidMergeMarkerFieldType, marker.GetFieldType())
+		}
+
+		staticPairs := extractStaticStringPairs(value.Content)
+		value.Tag = varTag
+		value.Value = buildMergeExpression(staticPairs, marker.GetSourceCodeVariable())
+		value.Kind = yaml.ScalarNode
+		value.Content = nil
 	} else {
 		value.Tag = varTag
 		value.Value = marker.GetSourceCodeVariable()

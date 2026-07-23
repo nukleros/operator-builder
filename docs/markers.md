@@ -34,6 +34,7 @@ field for your workload.
 | [type](#type-required)               | string{string, int, bool, stringArray, stringMap} | true     |
 | [default](#default-optional)         | [type](#supported-field-types) | false    |
 | [replace](#replace-optional)         | string                         | false    |
+| [merge](#merge-optional)             | bool                           | false    |
 | [arbitrary](#arbitrary-optional)     | bool                           | false    |
 | [description](#description-optional) | string                         | false    |
 
@@ -76,13 +77,10 @@ The supported Go data types are:
 - `bool`
 - `string`
 - `int`
-- `[]string`
-- `map[string]string`
+- `stringArray` (an `[]string` Go data type)
+- `stringMap` (a `map[string]string` Go data type)
 
 ex. `+operator-builder:field:name=myName,type=string`
-
-> **Note:** the above are the proper Go data types.  Please see the [field markers table](#field-markers) 
-for how to properly define them in markers (e.g. []string == stringArray).
 
 #### `stringArray` fields
 
@@ -159,6 +157,46 @@ data:
 > **Note:** To include a literal semicolon inside a value, escape it with a backslash:
 > `default="A=foo\;bar"` produces `{"A": "foo;bar"}`.
 
+#### `merge` flag for `stringMap` fields
+
+The `merge` flag merges the static key-value pairs already in the YAML manifest with the
+user-supplied map from the custom resource spec.  User-supplied values always win — keys
+present in both the manifest and the spec take their value from the spec.
+
+```yaml
+# +operator-builder:field:name=configData,type=stringMap,merge
+data:
+  LOG_LEVEL: info
+  APP_ENV: production
+```
+
+Given the above marker, operator-builder emits code equivalent to:
+
+```go
+// start with the static pairs from the manifest
+m := map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"}
+// overlay whatever the user provided — user values win
+for k, v := range parent.Spec.ConfigData {
+    m[k] = v
+}
+```
+
+You can combine `merge` with a `default=` to seed the spec field as well:
+
+```yaml
+# +operator-builder:field:name=configData,type=stringMap,merge,default="DEBUG=false"
+data:
+  LOG_LEVEL: info
+```
+
+This makes the `configData` spec field default to `{"DEBUG": "false"}`, which is then
+merged on top of the static `{"LOG_LEVEL": "info"}` at runtime.
+
+> **Note:** `merge` is only valid for `stringMap` fields.  Using it with any other type
+> returns a parse error.
+
+> **Note:** `merge` and `replace=` are mutually exclusive; use one or the other.
+
 ### Default (optional)
 
 This will make configuration optional for your operator's end user. the supplied
@@ -218,6 +256,20 @@ data:
     anotheroption: configuration1
     justtesting: myoption
 ```
+
+### Merge (optional)
+
+The `merge` flag is only valid for `stringMap` fields.  When set, the static
+key-value pairs in the YAML manifest are used as a base and the user-supplied
+map from the custom resource spec is merged on top — user values always win.
+
+```yaml
+# +operator-builder:field:name=configData,type=stringMap,merge
+data:
+  LOG_LEVEL: info
+```
+
+See [stringMap merge](#merge-flag-for-stringmap-fields) for full details and examples.
 
 ### Arbitrary (optional)
 

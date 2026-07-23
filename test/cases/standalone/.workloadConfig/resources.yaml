@@ -58,11 +58,19 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: webstore-config
+  name: webstore-config-merged
   namespace: webstore-config
-# +operator-builder:field:name=webstore.configData,type=stringMap,default="one=two;three=four",description=`set key-value configuration data for the webstore`
+# +operator-builder:field:name=webstore.configDataMerged,type=stringMap,merge,default="LOG_LEVEL=debug;FOO=bar",description=`set key-value configuration data for the webstore`
 data:
   LOG_LEVEL: info
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webstore-config
+  namespace: webstore-config
+# +operator-builder:field:name=webstore.configData,type=stringMap,merge,default="one=two;three=four"
+data:
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
