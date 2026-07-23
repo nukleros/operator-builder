@@ -9,7 +9,10 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"sort"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/nukleros/operator-builder/internal/utils"
 	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
@@ -231,66 +234,52 @@ func (api *APIFields) isEqual(input *APIFields) bool {
 func (api *APIFields) getSampleValue(sampleVal interface{}) string {
 	switch t := sampleVal.(type) {
 	case *string:
-		if api.Type == markers.FieldString {
-			return fmt.Sprintf(`%q`, *t)
-		}
-
-		if api.Type == markers.FieldStringSlice {
-			return api.formatStringSliceDefault(*t)
-		}
-
-		return *t
+		return api.getSampleValueFromString(*t)
 	case *int:
 		return fmt.Sprintf(`%v`, *t)
 	case *bool:
 		return fmt.Sprintf(`%v`, *t)
 	case string:
-		if api.Type == markers.FieldString {
-			return fmt.Sprintf(`%q`, t)
-		}
-
-		if api.Type == markers.FieldStringSlice {
-			return api.formatStringSliceDefault(t)
-		}
-
-		return t
+		return api.getSampleValueFromString(t)
 	case []string:
 		return formatStringSliceJSON(t)
+	case map[string]string:
+		return formatStringMapYAML(t)
 	case nil:
-		switch api.Type {
-		case markers.FieldString:
-			return `""`
-		case markers.FieldInt:
-			return "0"
-		case markers.FieldBool:
-			return "false"
-		case markers.FieldStringSlice:
-			return "[]"
-		default:
-			return ""
-		}
+		return api.getSampleValueForNil()
 	default:
 		return fmt.Sprintf(`%v`, t)
 	}
 }
 
-// formatStringSliceJSON formats a []string as a JSON array with properly
-// escaped elements, e.g. ["foo", "bar"].
-func formatStringSliceJSON(items []string) string {
-	if len(items) == 0 {
-		return "[]"
+func (api *APIFields) getSampleValueFromString(s string) string {
+	switch api.Type {
+	case markers.FieldString:
+		return fmt.Sprintf(`%q`, s)
+	case markers.FieldStringSlice:
+		return api.formatStringSliceDefault(s)
+	case markers.FieldStringMap:
+		return formatStringMapYAML(markers.SplitStringMapDefault(s))
+	default:
+		return s
 	}
-
-	quoted := make([]string, len(items))
-	for i, v := range items {
-		quoted[i] = fmt.Sprintf("%q", v)
-	}
-
-	return "[" + strings.Join(quoted, ", ") + "]"
 }
 
-func splitStringSliceDefault(s string) []string {
-	return markers.SplitStringSliceDefault(s)
+func (api *APIFields) getSampleValueForNil() string {
+	switch api.Type {
+	case markers.FieldString:
+		return `""`
+	case markers.FieldInt:
+		return "0"
+	case markers.FieldBool:
+		return "false"
+	case markers.FieldStringSlice:
+		return "[]"
+	case markers.FieldStringMap:
+		return "{}"
+	default:
+		return ""
+	}
 }
 
 // formatStringSliceDefault converts a raw semicolon-separated string (e.g. "foo;bar")
@@ -303,34 +292,54 @@ func (api *APIFields) setSample(sampleVal interface{}) {
 	switch api.Type {
 	case markers.FieldStruct:
 		api.Sample = fmt.Sprintf("%s:", api.manifestName)
-	case markers.FieldStringSlice:
+	case markers.FieldStringSlice, markers.FieldStringMap:
 		api.Sample = fmt.Sprintf("%s: %s", api.manifestName, api.getSampleValue(sampleVal))
 	default:
 		api.Sample = fmt.Sprintf("%s: %v", api.manifestName, api.getSampleValue(sampleVal))
 	}
 
-	if sampleVal == nil && api.Type != markers.FieldStruct {
+	if sampleVal == nil && api.Type != markers.FieldStruct && api.Type != markers.FieldStringMap {
 		api.Sample += "  # required field"
 	}
 }
 
 func (api *APIFields) setDefault(sampleVal interface{}) {
 	api.Default = api.getSampleValue(sampleVal)
-	api.appendMarkers(
-		fmt.Sprintf("+kubebuilder:default=%s", api.kubebuilderDefault(sampleVal)),
-		"+kubebuilder:validation:Optional",
-		fmt.Sprintf("(Default: %s)", api.Default),
-	)
+	kbDefault := api.kubebuilderDefault(sampleVal)
+	if kbDefault != "" {
+		api.appendMarkers(
+			fmt.Sprintf("+kubebuilder:default=%s", kbDefault),
+			"+kubebuilder:validation:Optional",
+			fmt.Sprintf("(Default: %s)", api.Default),
+		)
+	} else {
+		api.appendMarkers(
+			"+kubebuilder:validation:Optional",
+			fmt.Sprintf("(Default: %s)", api.Default),
+		)
+	}
 	api.setSample(sampleVal)
 }
 
 // kubebuilderDefault returns the default value formatted for a
-// +kubebuilder:default= marker annotation.  Array types require curly-brace
-// notation ({"a","b"}) while scalars are used verbatim.
-// It takes the original sampleVal so that []string elements are quoted
-// individually — building from api.Default (JSON form) would require
-// re-parsing and could silently corrupt elements that contain ", ".
+// +kubebuilder:default= marker annotation.  Map types use JSON object notation
+// ({"key":"value"}), array types use kubebuilder brace notation ({"a","b"}),
+// and scalars are used verbatim.
+// It takes the original sampleVal so that collection elements are quoted
+// individually — building from api.Default (display form) would require
+// re-parsing and could silently corrupt elements that contain special characters.
 func (api *APIFields) kubebuilderDefault(sampleVal interface{}) string {
+	if api.Type == markers.FieldStringMap {
+		switch t := sampleVal.(type) {
+		case map[string]string:
+			return formatStringMapKubebuilder(t)
+		case string:
+			return formatStringMapKubebuilder(markers.SplitStringMapDefault(t))
+		default:
+			return ""
+		}
+	}
+
 	if api.Type != markers.FieldStringSlice {
 		return api.Default
 	}
@@ -347,21 +356,6 @@ func (api *APIFields) kubebuilderDefault(sampleVal interface{}) string {
 	}
 }
 
-// formatStringSliceKubebuilder formats a []string as kubebuilder brace notation
-// ({"a","b"}) with each element properly %q-escaped.
-func formatStringSliceKubebuilder(items []string) string {
-	if len(items) == 0 {
-		return "{}"
-	}
-
-	quoted := make([]string, len(items))
-	for i, v := range items {
-		quoted[i] = fmt.Sprintf("%q", v)
-	}
-
-	return "{" + strings.Join(quoted, ",") + "}"
-}
-
 func (api *APIFields) appendMarkers(apiMarkers ...string) {
 	if len(api.Markers) == 0 {
 		api.Markers = append(api.Markers, apiMarkers...)
@@ -371,6 +365,9 @@ func (api *APIFields) appendMarkers(apiMarkers ...string) {
 func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interface{}, hasDefault bool) {
 	if hasDefault {
 		api.setDefault(sampleVal)
+	} else if api.Type == markers.FieldStringMap {
+		// map[string]string is always optional: nil/absent is equivalent to an empty map.
+		api.setDefault(map[string]string{})
 	} else {
 		api.appendMarkers("+kubebuilder:validation:Required")
 	}
@@ -393,6 +390,102 @@ func (api *APIFields) newChild(name string, fieldType markers.FieldType, sample 
 	child.setSample(sample)
 
 	return child
+}
+
+// formatStringMapKubebuilder formats a map[string]string as a JSON object for
+// use in a +kubebuilder:default= annotation, e.g. {"key":"value"}.
+// Keys are sorted deterministically.
+func formatStringMapKubebuilder(m map[string]string) string {
+	if len(m) == 0 {
+		return "{}"
+	}
+
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	pairs := make([]string, len(keys))
+	for i, k := range keys {
+		pairs[i] = fmt.Sprintf("%q:%q", k, m[k])
+	}
+
+	return "{" + strings.Join(pairs, ",") + "}"
+}
+
+// formatStringSliceKubebuilder formats a []string as kubebuilder brace notation
+// ({"a","b"}) with each element properly %q-escaped.
+func formatStringSliceKubebuilder(items []string) string {
+	if len(items) == 0 {
+		return "{}"
+	}
+
+	quoted := make([]string, len(items))
+	for i, v := range items {
+		quoted[i] = fmt.Sprintf("%q", v)
+	}
+
+	return "{" + strings.Join(quoted, ",") + "}"
+}
+
+// formatStringSliceJSON formats a []string as a JSON array with properly
+// escaped elements, e.g. ["foo", "bar"].
+func formatStringSliceJSON(items []string) string {
+	if len(items) == 0 {
+		return "[]"
+	}
+
+	quoted := make([]string, len(items))
+	for i, v := range items {
+		quoted[i] = fmt.Sprintf("%q", v)
+	}
+
+	return "[" + strings.Join(quoted, ", ") + "]"
+}
+
+func splitStringSliceDefault(s string) []string {
+	return markers.SplitStringSliceDefault(s)
+}
+
+// formatStringMapYAML formats a map[string]string as YAML flow style, e.g. {key1: value1, key2: value2}.
+// Keys are sorted deterministically. Values that would be misinterpreted by a YAML parser (null, true,
+// *alias, flow delimiters, etc.) are automatically quoted by the yaml.v3 marshaler.
+func formatStringMapYAML(m map[string]string) string {
+	if len(m) == 0 {
+		return "{}"
+	}
+
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	// Marshal via yaml.Node so the library applies correct YAML quoting rules.
+	// Plain string interpolation silently breaks values like "null", "*alias",
+	// or anything containing flow delimiters — the !!str tag forces the encoder
+	// to quote only what is genuinely ambiguous.
+	node := &yaml.Node{
+		Kind:  yaml.MappingNode,
+		Style: yaml.FlowStyle,
+	}
+
+	for _, k := range keys {
+		node.Content = append(node.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: k},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: m[k]},
+		)
+	}
+
+	out, err := yaml.Marshal(node)
+	if err != nil {
+		return "{}"
+	}
+
+	return strings.TrimSpace(string(out))
 }
 
 func mustWrite(n int, err error) {

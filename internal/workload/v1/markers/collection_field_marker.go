@@ -120,6 +120,14 @@ func (cfm *CollectionFieldMarker) IsArbitrary() bool {
 	return *cfm.Arbitrary
 }
 
+func (cfm *CollectionFieldMarker) IsMerge() bool {
+	if cfm.Merge == nil {
+		return false
+	}
+
+	return *cfm.Merge
+}
+
 func (cfm *CollectionFieldMarker) SetOriginalValue(value string) {
 	if cfm.GetReplaceText() != "" {
 		cfm.originalValue = cfm.GetReplaceText()

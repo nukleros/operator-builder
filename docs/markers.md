@@ -31,9 +31,10 @@ field for your workload.
 | Field                                | Type                           | Required |
 | ------------------------------------ | ------------------------------ | -------- |
 | [name](#name-required)               | string                              | true     |
-| [type](#type-required)               | string{string, int, bool, []string} | true     |
+| [type](#type-required)               | string{string, int, bool, stringArray, stringMap} | true     |
 | [default](#default-optional)         | [type](#supported-field-types) | false    |
 | [replace](#replace-optional)         | string                         | false    |
+| [merge](#merge-optional)             | bool                           | false    |
 | [arbitrary](#arbitrary-optional)     | bool                           | false    |
 | [description](#description-optional) | string                         | false    |
 
@@ -71,12 +72,13 @@ The `metadata.name` and `metadata.namespace` fields from the collection workload
 The other required field is the `type` field which specifies the data type for
 the value.
 
-The supported data types are:
+The supported Go data types are:
 
 - `bool`
 - `string`
 - `int`
-- `[]string`
+- `stringArray` (an `[]string` Go data type)
+- `stringMap` (a `map[string]string` Go data type)
 
 ex. `+operator-builder:field:name=myName,type=string`
 
@@ -111,6 +113,89 @@ dnsServers:
 
 > **Note:** To include a literal semicolon inside one element, escape it with a backslash:
 > `default=foo\;bar;baz` produces `["foo;bar", "baz"]`.
+
+#### `stringMap` fields
+
+Use `type=stringMap` to define a CRD field that holds a `map[string]string`.  Place the
+marker as a head comment above a YAML mapping:
+
+```yaml
+# +operator-builder:field:name=configData,type=stringMap
+data:
+  APP_ENV: production
+  LOG_LEVEL: info
+```
+
+The generated Go spec field will be `map[string]string`.
+
+**`stringMap` fields are always optional.** An absent or empty map is equivalent to
+`map[string]string{}` — no `+kubebuilder:validation:Required` is ever emitted for this
+type regardless of whether a `default=` is provided.
+
+A default can be specified using semicolon-separated `key=value` pairs:
+
+```yaml
+# +operator-builder:field:name=configData,default="APP_ENV=production;LOG_LEVEL=info",type=stringMap
+data:
+  APP_ENV: production
+  LOG_LEVEL: info
+```
+
+> **Important:** The `default=` value for a `stringMap` field **must always be wrapped in
+> double quotes**.  Each pair contains an `=` sign, and the marker parser uses `=` to
+> separate argument names from values.  Without quotes the parser would misread
+> `APP_ENV=production` as two separate arguments.  Always write:
+> `default="KEY1=value1;KEY2=value2"`.
+
+> **Note:** Values may themselves contain `=` signs — only the first `=` in each pair is
+> treated as the key/value separator:
+> `default="JDBC_URL=jdbc:postgresql://host/db?ssl=true"` produces
+> `{"JDBC_URL": "jdbc:postgresql://host/db?ssl=true"}`.
+
+> **Note:** The `replace=` argument is not supported for `stringMap` fields.
+
+> **Note:** To include a literal semicolon inside a value, escape it with a backslash:
+> `default="A=foo\;bar"` produces `{"A": "foo;bar"}`.
+
+#### `merge` flag for `stringMap` fields
+
+The `merge` flag merges the static key-value pairs already in the YAML manifest with the
+user-supplied map from the custom resource spec.  User-supplied values always win — keys
+present in both the manifest and the spec take their value from the spec.
+
+```yaml
+# +operator-builder:field:name=configData,type=stringMap,merge
+data:
+  LOG_LEVEL: info
+  APP_ENV: production
+```
+
+Given the above marker, operator-builder emits code equivalent to:
+
+```go
+// start with the static pairs from the manifest
+m := map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"}
+// overlay whatever the user provided — user values win
+for k, v := range parent.Spec.ConfigData {
+    m[k] = v
+}
+```
+
+You can combine `merge` with a `default=` to seed the spec field as well:
+
+```yaml
+# +operator-builder:field:name=configData,type=stringMap,merge,default="DEBUG=false"
+data:
+  LOG_LEVEL: info
+```
+
+This makes the `configData` spec field default to `{"DEBUG": "false"}`, which is then
+merged on top of the static `{"LOG_LEVEL": "info"}` at runtime.
+
+> **Note:** `merge` is only valid for `stringMap` fields.  Using it with any other type
+> returns a parse error.
+
+> **Note:** `merge` and `replace=` are mutually exclusive; use one or the other.
 
 ### Default (optional)
 
@@ -171,6 +256,20 @@ data:
     anotheroption: configuration1
     justtesting: myoption
 ```
+
+### Merge (optional)
+
+The `merge` flag is only valid for `stringMap` fields.  When set, the static
+key-value pairs in the YAML manifest are used as a base and the user-supplied
+map from the custom resource spec is merged on top — user values always win.
+
+```yaml
+# +operator-builder:field:name=configData,type=stringMap,merge
+data:
+  LOG_LEVEL: info
+```
+
+See [stringMap merge](#merge-flag-for-stringmap-fields) for full details and examples.
 
 ### Arbitrary (optional)
 

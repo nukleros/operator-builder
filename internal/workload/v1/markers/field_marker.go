@@ -33,6 +33,7 @@ type FieldMarker struct {
 	Replace     *string
 	Parent      *string
 	Arbitrary   *bool
+	Merge       *bool
 
 	// other values which we use to pass information
 	forCollection bool
@@ -143,6 +144,14 @@ func (fm *FieldMarker) IsArbitrary() bool {
 	}
 
 	return *fm.Arbitrary
+}
+
+func (fm *FieldMarker) IsMerge() bool {
+	if fm.Merge == nil {
+		return false
+	}
+
+	return *fm.Merge
 }
 
 func (fm *FieldMarker) SetOriginalValue(value string) {

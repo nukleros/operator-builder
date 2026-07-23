@@ -86,6 +86,15 @@ func TestFieldType_UnmarshalMarkerArg(t *testing.T) {
 			wantErr: false,
 			expect:  FieldString,
 		},
+		{
+			name: "stringMap field type appropriately unmarshaled",
+			f:    FieldStringMap,
+			args: args{
+				in: "stringMap",
+			},
+			wantErr: false,
+			expect:  FieldStringMap,
+		},
 	}
 
 	for _, tt := range tests {
@@ -137,6 +146,11 @@ func TestFieldType_String(t *testing.T) {
 			name: "stringArray field type returns 'stringArray'",
 			f:    FieldStringSlice,
 			want: "stringArray",
+		},
+		{
+			name: "stringMap field type returns 'stringMap'",
+			f:    FieldStringMap,
+			want: "stringMap",
 		},
 	}
 	for _, tt := range tests {

@@ -21,6 +21,7 @@ const (
 	FieldBool
 	FieldStringSlice
 	FieldStruct
+	FieldStringMap
 )
 
 // UnmarshalMarkerArg will convert the type argument within a field or collection
@@ -32,6 +33,7 @@ func (f *FieldType) UnmarshalMarkerArg(in string) error {
 		"int":         FieldInt,
 		"bool":        FieldBool,
 		"stringArray": FieldStringSlice,
+		"stringMap":   FieldStringMap,
 	}
 
 	if t, ok := types[in]; ok {
@@ -56,6 +58,7 @@ func (f FieldType) String() string {
 		FieldBool:        "bool",
 		FieldStringSlice: "stringArray",
 		FieldStruct:      "struct",
+		FieldStringMap:   "stringMap",
 	}
 
 	return types[f]
@@ -70,6 +73,7 @@ func (f FieldType) GoTypeName() string {
 		FieldBool:        "bool",
 		FieldStringSlice: "[]string",
 		FieldStruct:      "struct",
+		FieldStringMap:   "map[string]string",
 	}
 
 	return types[f]

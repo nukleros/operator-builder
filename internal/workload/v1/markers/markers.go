@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/nukleros/markers/inspect"
@@ -20,6 +21,7 @@ var (
 	ErrMissingReplaceText            = errors.New("marker is missing the requested replace text")
 	ErrMissingParentOrName           = errors.New("missing either parent=value or name=value marker")
 	ErrInvalidReplaceMarkerFieldType = errors.New("invalid marker type using replace")
+	ErrInvalidMergeMarkerFieldType   = errors.New("merge is only supported for stringMap fields")
 	ErrInvalidParentField            = errors.New("invalid parent field")
 )
 
@@ -51,6 +53,7 @@ type FieldMarkerProcessor interface {
 	IsFieldMarker() bool
 	IsForCollection() bool
 	IsArbitrary() bool
+	IsMerge() bool
 
 	SetDescription(string)
 	SetOriginalValue(string)
@@ -128,6 +131,66 @@ func SplitStringSliceDefault(s string) []string {
 	out = append(out, strings.TrimSpace(cur.String()))
 
 	return out
+}
+
+// SplitStringMapDefault splits a semicolon-separated "key=value" marker default string
+// into a map[string]string.  Whitespace is trimmed from each element.  A backslash-escaped
+// semicolon (\;) is treated as a literal semicolon within an element.
+func SplitStringMapDefault(s string) map[string]string {
+	out := make(map[string]string)
+
+	for _, pair := range SplitStringSliceDefault(s) {
+		if pair == "" {
+			continue
+		}
+
+		idx := strings.Index(pair, "=")
+		if idx < 0 {
+			out[strings.TrimSpace(pair)] = ""
+
+			continue
+		}
+
+		out[strings.TrimSpace(pair[:idx])] = strings.TrimSpace(pair[idx+1:])
+	}
+
+	return out
+}
+
+// extractStaticStringPairs extracts key-value pairs from a YAML MappingNode's content slice.
+// Content is a flat slice alternating key/value nodes.
+func extractStaticStringPairs(content []*yaml.Node) map[string]string {
+	pairs := make(map[string]string)
+
+	for i := 0; i+1 < len(content); i += 2 {
+		pairs[content[i].Value] = content[i+1].Value
+	}
+
+	return pairs
+}
+
+// buildMergeExpression generates a Go IIFE that uses staticPairs as a base map and
+// overlays the values from variable (user-specified values win).
+func buildMergeExpression(staticPairs map[string]string, variable string) string {
+	keys := make([]string, 0, len(staticPairs))
+	for k := range staticPairs {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	pairs := make([]string, len(keys))
+	for i, k := range keys {
+		pairs[i] = fmt.Sprintf("%q: %q", k, staticPairs[k])
+	}
+
+	baseLiteral := "map[string]string{" + strings.Join(pairs, ", ") + "}"
+
+	return fmt.Sprintf(
+		"func() map[string]string { m := %s; for k, v := range %s { m[k] = v }; return m }()",
+		baseLiteral,
+		variable,
+	)
 }
 
 // initializeMarkerInspector will create a new registry and initialize an inspector
@@ -426,6 +489,8 @@ func getSourceCodeFieldVariable(marker FieldMarkerProcessor) (string, error) {
 		return fmt.Sprintf("!!start strconv.FormatBool(%s) !!end", marker.GetSourceCodeVariable()), nil
 	case FieldStringSlice:
 		return "", fmt.Errorf("%w: replace= is not supported for []string fields", ErrInvalidReplaceMarkerFieldType)
+	case FieldStringMap:
+		return "", fmt.Errorf("%w: replace= is not supported for map[string]string fields", ErrInvalidReplaceMarkerFieldType)
 	default:
 		return "", fmt.Errorf("%w with field type %s", ErrInvalidReplaceMarkerFieldType, marker.GetFieldType())
 	}
@@ -489,42 +554,72 @@ func setValue(marker FieldMarkerProcessor, value *yaml.Node) error {
 		return nil
 	}
 
-	const varTag = "!!var"
-
-	const strTag = "!!str"
-
-	markerReplaceText := marker.GetReplaceText()
-
 	marker.SetOriginalValue(value.Value)
 
-	if markerReplaceText != "" {
-		value.Tag = strTag
-
-		re, err := regexp.Compile(markerReplaceText)
-		if err != nil {
-			return fmt.Errorf("unable to convert %s to regex, %w", markerReplaceText, err)
-		}
-
-		fieldVar, err := getSourceCodeFieldVariable(marker)
-		if err != nil {
-			return fmt.Errorf("unable to get source code field variable for marker %s, %w", marker, err)
-		}
-
-		if !strings.Contains(value.Value, markerReplaceText) {
-			return fmt.Errorf("replace text=[%s] value=[%s], %w", markerReplaceText, value.Value, ErrMissingReplaceText)
-		}
-
-		value.Value = re.ReplaceAllString(value.Value, fieldVar)
-	} else {
-		value.Tag = varTag
-		value.Value = marker.GetSourceCodeVariable()
-		// gener8s code.Generate dispatches on yaml.Node.Kind, not Tag.  For
-		// sequence nodes the Kind stays SequenceNode after a Tag change, so
-		// decodeElements never reads Value and renders an empty operand ("key": ,).
-		// Collapsing to ScalarNode lets the !!var template path read Value correctly.
-		value.Kind = yaml.ScalarNode
-		value.Content = nil
+	if marker.GetReplaceText() != "" {
+		return setValueWithReplace(marker, value)
 	}
 
+	if marker.IsMerge() {
+		return setValueWithMerge(marker, value)
+	}
+
+	setValueDirect(marker, value)
+
 	return nil
+}
+
+func setValueWithReplace(marker FieldMarkerProcessor, value *yaml.Node) error {
+	const strTag = "!!str"
+
+	replaceText := marker.GetReplaceText()
+
+	value.Tag = strTag
+
+	re, err := regexp.Compile(replaceText)
+	if err != nil {
+		return fmt.Errorf("unable to convert %s to regex, %w", replaceText, err)
+	}
+
+	fieldVar, err := getSourceCodeFieldVariable(marker)
+	if err != nil {
+		return fmt.Errorf("unable to get source code field variable for marker %s, %w", marker, err)
+	}
+
+	if !strings.Contains(value.Value, replaceText) {
+		return fmt.Errorf("replace text=[%s] value=[%s], %w", replaceText, value.Value, ErrMissingReplaceText)
+	}
+
+	value.Value = re.ReplaceAllString(value.Value, fieldVar)
+
+	return nil
+}
+
+func setValueWithMerge(marker FieldMarkerProcessor, value *yaml.Node) error {
+	const varTag = "!!var"
+
+	if marker.GetFieldType() != FieldStringMap {
+		return fmt.Errorf("%w, got %s", ErrInvalidMergeMarkerFieldType, marker.GetFieldType())
+	}
+
+	staticPairs := extractStaticStringPairs(value.Content)
+	value.Tag = varTag
+	value.Value = buildMergeExpression(staticPairs, marker.GetSourceCodeVariable())
+	value.Kind = yaml.ScalarNode
+	value.Content = nil
+
+	return nil
+}
+
+func setValueDirect(marker FieldMarkerProcessor, value *yaml.Node) {
+	const varTag = "!!var"
+
+	value.Tag = varTag
+	value.Value = marker.GetSourceCodeVariable()
+	// gener8s code.Generate dispatches on yaml.Node.Kind, not Tag.  For
+	// sequence nodes the Kind stays SequenceNode after a Tag change, so
+	// decodeElements never reads Value and renders an empty operand ("key": ,).
+	// Collapsing to ScalarNode lets the !!var template path read Value correctly.
+	value.Kind = yaml.ScalarNode
+	value.Content = nil
 }

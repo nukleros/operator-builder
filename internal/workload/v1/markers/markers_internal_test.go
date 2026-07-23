@@ -556,6 +556,8 @@ func Test_setValue(t *testing.T) {
 		value  *yaml.Node
 	}
 
+	trueVal := true
+
 	tests := []struct {
 		name    string
 		args    args
@@ -618,6 +620,45 @@ func Test_setValue(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "merge flag builds IIFE expression from static mapping pairs",
+			args: args{
+				marker: &FieldMarker{
+					Name:          &testField,
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
+					Type:          FieldStringMap,
+					Merge:         &trueVal,
+				},
+				value: &yaml.Node{
+					Kind: yaml.MappingNode,
+					Tag:  "!!map",
+					Content: []*yaml.Node{
+						{Kind: yaml.ScalarNode, Value: "LOG_LEVEL"},
+						{Kind: yaml.ScalarNode, Value: "info"},
+					},
+				},
+			},
+			wantErr: false,
+			want: &yaml.Node{
+				Kind: yaml.ScalarNode,
+				Tag:  "!!var",
+				Value: `func() map[string]string { m := map[string]string{"LOG_LEVEL": "info"}; ` +
+					`for k, v := range parent.Spec.Test.Field.Set { m[k] = v }; return m }()`,
+			},
+		},
+		{
+			name: "merge on non-stringMap type returns error",
+			args: args{
+				marker: &FieldMarker{
+					Name:          &testField,
+					sourceCodeVar: "parent.Spec.Test.Field.Set",
+					Type:          FieldString,
+					Merge:         &trueVal,
+				},
+				value: &yaml.Node{Tag: "!!str", Value: "some value"},
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -630,6 +671,88 @@ func Test_setValue(t *testing.T) {
 			if tt.want != nil {
 				assert.Equal(t, tt.want, tt.args.value)
 			}
+		})
+	}
+}
+
+func Test_extractStaticStringPairs(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		content []*yaml.Node
+		want    map[string]string
+	}{
+		{
+			name:    "empty content returns empty map",
+			content: nil,
+			want:    map[string]string{},
+		},
+		{
+			name: "single pair",
+			content: []*yaml.Node{
+				{Kind: yaml.ScalarNode, Value: "KEY"},
+				{Kind: yaml.ScalarNode, Value: "value"},
+			},
+			want: map[string]string{"KEY": "value"},
+		},
+		{
+			name: "two pairs",
+			content: []*yaml.Node{
+				{Kind: yaml.ScalarNode, Value: "A"},
+				{Kind: yaml.ScalarNode, Value: "1"},
+				{Kind: yaml.ScalarNode, Value: "B"},
+				{Kind: yaml.ScalarNode, Value: "2"},
+			},
+			want: map[string]string{"A": "1", "B": "2"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, extractStaticStringPairs(tt.content))
+		})
+	}
+}
+
+func Test_buildMergeExpression(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		staticPairs map[string]string
+		variable    string
+		want        string
+	}{
+		{
+			name:        "empty static pairs",
+			staticPairs: map[string]string{},
+			variable:    "parent.Spec.Foo",
+			want:        `func() map[string]string { m := map[string]string{}; for k, v := range parent.Spec.Foo { m[k] = v }; return m }()`,
+		},
+		{
+			name:        "single pair",
+			staticPairs: map[string]string{"KEY": "value"},
+			variable:    "parent.Spec.Foo",
+			want: `func() map[string]string { m := map[string]string{"KEY": "value"}; ` +
+				`for k, v := range parent.Spec.Foo { m[k] = v }; return m }()`,
+		},
+		{
+			name:        "two pairs are sorted by key",
+			staticPairs: map[string]string{"LOG_LEVEL": "info", "APP_ENV": "production"},
+			variable:    "parent.Spec.Foo",
+			want: `func() map[string]string { m := map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"}; ` +
+				`for k, v := range parent.Spec.Foo { m[k] = v }; return m }()`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, buildMergeExpression(tt.staticPairs, tt.variable))
 		})
 	}
 }
@@ -1228,6 +1351,65 @@ func Test_commentsFromMarker(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("commentsFromMarker() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestSplitStringMapDefault(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		want  map[string]string
+	}{
+		{
+			name:  "empty string returns empty map",
+			input: "",
+			want:  map[string]string{},
+		},
+		{
+			name:  "single key=value pair",
+			input: "APP_ENV=production",
+			want:  map[string]string{"APP_ENV": "production"},
+		},
+		{
+			name:  "two key=value pairs separated by semicolon",
+			input: "APP_ENV=production;LOG_LEVEL=info",
+			want:  map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"},
+		},
+		{
+			name:  "whitespace around = is trimmed from keys and values",
+			input: "APP_ENV = production ; LOG_LEVEL = info",
+			want:  map[string]string{"APP_ENV": "production", "LOG_LEVEL": "info"},
+		},
+		{
+			name:  "value contains = sign",
+			input: "JDBC_URL=jdbc:postgresql://host/db?ssl=true",
+			want:  map[string]string{"JDBC_URL": "jdbc:postgresql://host/db?ssl=true"},
+		},
+		{
+			name:  "key without value",
+			input: "FLAG",
+			want:  map[string]string{"FLAG": ""},
+		},
+		{
+			name:  "empty pairs from consecutive semicolons are skipped",
+			input: "A=1;;B=2",
+			want:  map[string]string{"A": "1", "B": "2"},
+		},
+		{
+			name:  "escaped semicolon is literal within value",
+			input: `A=foo\;bar`,
+			want:  map[string]string{"A": "foo;bar"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, SplitStringMapDefault(tt.input))
 		})
 	}
 }
