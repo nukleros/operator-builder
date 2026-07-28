@@ -18,7 +18,12 @@ import (
 	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
 )
 
-var ErrOverwriteExistingValue = errors.New("an attempt to overwrite existing value was made")
+var (
+	ErrOverwriteExistingValue    = errors.New("an attempt to overwrite existing value was made")
+	ErrStructMarkerMissingFields = errors.New(
+		"struct marker has no corresponding field markers — the named struct must have at least one nested field marker",
+	)
+)
 
 type APIFields struct {
 	Name         string
@@ -180,6 +185,16 @@ func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
 
 func (api *APIFields) generateAPIStruct(b io.StringWriter, kind string) {
 	if api.Type == markers.FieldStruct {
+		// Emit non-empty comment lines above the type declaration so kubebuilder
+		// and kubectl explain can surface the description in the CRD schema.
+		for _, c := range api.Comments {
+			if c == "" {
+				continue
+			}
+
+			mustWrite(b.WriteString(fmt.Sprintf("// %s\n", c)))
+		}
+
 		mustWrite(b.WriteString(fmt.Sprintf("type %s %s{\n", kind+api.StructName, api.Type.String())))
 
 		for _, child := range api.Children {
@@ -486,6 +501,41 @@ func formatStringMapYAML(m map[string]string) string {
 	}
 
 	return strings.TrimSpace(string(out))
+}
+
+// SetStructComments traverses the APIFields tree along the dot-separated path
+// and sets Comments on the FieldStruct node found there.  Returns
+// ErrStructMarkerMissingFields when the path does not resolve to a FieldStruct,
+// which means no field markers exist for that struct.
+func (api *APIFields) SetStructComments(path string, comments []string) error {
+	parts := strings.Split(path, ".")
+	obj := api
+
+	for _, part := range parts {
+		var found *APIFields
+
+		for _, child := range obj.Children {
+			if child.manifestName == part {
+				found = child
+
+				break
+			}
+		}
+
+		if found == nil {
+			return fmt.Errorf("%w: %q not found", ErrStructMarkerMissingFields, path)
+		}
+
+		if found.Type != markers.FieldStruct {
+			return fmt.Errorf("%w: %q is not a struct", ErrStructMarkerMissingFields, path)
+		}
+
+		obj = found
+	}
+
+	obj.Comments = comments
+
+	return nil
 }
 
 func mustWrite(n int, err error) {

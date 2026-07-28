@@ -1899,3 +1899,73 @@ func TestAPIFields_AddField(t *testing.T) {
 		})
 	}
 }
+
+func TestAPIFields_SetStructComments(t *testing.T) {
+	t.Parallel()
+
+	// build a tree with a nested struct by processing a field at "webstore.image"
+	buildTree := func() *APIFields {
+		root := &APIFields{
+			Name:   "Spec",
+			Type:   markers.FieldStruct,
+			Sample: "spec:",
+		}
+		_ = root.AddField("webstore.image", markers.FieldString, nil, "nginx", true)
+
+		return root
+	}
+
+	tests := []struct {
+		name     string
+		path     string
+		comments []string
+		wantErr  bool
+	}{
+		{
+			name:     "sets comments on an existing struct node",
+			path:     "webstore",
+			comments: []string{"Manages the webstore configuration"},
+			wantErr:  false,
+		},
+		{
+			name:     "returns error when path does not exist",
+			path:     "nonexistent",
+			comments: []string{"description"},
+			wantErr:  true,
+		},
+		{
+			name:     "returns error when path resolves to a leaf field not a struct",
+			path:     "webstore.image",
+			comments: []string{"description"},
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			root := buildTree()
+
+			err := root.SetStructComments(tt.path, tt.comments)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SetStructComments() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				// verify the comments were applied to the correct node
+				var structNode *APIFields
+
+				for _, child := range root.Children {
+					if child.manifestName == tt.path {
+						structNode = child
+
+						break
+					}
+				}
+				assert.NotNil(t, structNode)
+				assert.Equal(t, tt.comments, structNode.Comments)
+			}
+		})
+	}
+}
