@@ -150,7 +150,7 @@ func (s *StandaloneWorkload) SetRBAC() {
 }
 
 func (s *StandaloneWorkload) SetResources(workloadPath string) error {
-	err := s.Spec.processManifests(markers.FieldMarkerType)
+	err := s.Spec.processManifests(markers.FieldMarkerType, markers.StructMarkerType)
 	if err != nil {
 		return err
 	}

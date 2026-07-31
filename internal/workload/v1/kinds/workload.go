@@ -74,6 +74,7 @@ var (
 	ErrLoadManifests   = errors.New("error loading manifests")
 	ErrProcessManifest = errors.New("error processing manifest file")
 	ErrUniqueName      = errors.New("child resource unique name error")
+	ErrStructMarker    = errors.New("struct marker error")
 )
 
 // WorkloadAPISpec contains fields shared by all workload specs.
@@ -99,6 +100,7 @@ type WorkloadSpec struct {
 	Manifests              *manifests.Manifests             `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	FieldMarkers           []*markers.FieldMarker           `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	CollectionFieldMarkers []*markers.CollectionFieldMarker `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
+	StructMarkers          []*markers.StructMarker          `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	ForCollection          bool                             `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	Collection             *WorkloadCollection              `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
 	APISpecFields          *APIFields                       `json:",omitempty" yaml:",omitempty" validate:"omitempty"`
@@ -308,8 +310,38 @@ func (ws *WorkloadSpec) processManifests(markerTypes ...markers.MarkerType) erro
 		manifestFile.ChildResources = childResources
 	}
 
+	// Apply struct marker descriptions to the API field tree.  This runs after
+	// all field markers have been processed so the struct nodes they create are
+	// guaranteed to exist.
+	if err := ws.applyStructMarkers(); err != nil {
+		return err
+	}
+
 	// set the source file names, ensuring no duplicates exist
 	ws.setSourceFileNames()
+
+	return nil
+}
+
+// applyStructMarkers sets comments on APIFields struct nodes as declared by any
+// StructMarkers collected during processMarkerResults.  A struct marker whose
+// named path does not correspond to an existing struct node (because no field
+// markers were nested beneath it) is treated as a configuration error.
+func (ws *WorkloadSpec) applyStructMarkers() error {
+	for _, sm := range ws.StructMarkers {
+		name := sm.GetName()
+		comments := sm.GetComments()
+
+		if name == markers.StructRootName {
+			ws.APISpecFields.Comments = comments
+
+			continue
+		}
+
+		if err := ws.APISpecFields.SetStructComments(name, comments); err != nil {
+			return fmt.Errorf("%w: %w", ErrStructMarker, err)
+		}
+	}
 
 	return nil
 }
@@ -368,6 +400,10 @@ func (ws *WorkloadSpec) processMarkerResults(markerResults []*inspect.YAMLResult
 		case *markers.CollectionFieldMarker:
 			marker = t
 			ws.CollectionFieldMarkers = append(ws.CollectionFieldMarkers, t)
+		case *markers.StructMarker:
+			ws.StructMarkers = append(ws.StructMarkers, t)
+
+			continue
 		default:
 			continue
 		}

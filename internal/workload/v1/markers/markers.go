@@ -32,6 +32,7 @@ const (
 	FieldMarkerType MarkerType = iota
 	CollectionMarkerType
 	ResourceMarkerType
+	StructMarkerType
 	UnknownMarkerType
 )
 
@@ -208,6 +209,8 @@ func initializeMarkerInspector(markerTypes ...MarkerType) (*inspect.Inspector, e
 			err = defineCollectionFieldMarker(registry)
 		case ResourceMarkerType:
 			err = defineResourceMarker(registry)
+		case StructMarkerType:
+			err = defineStructMarker(registry)
 		}
 	}
 
@@ -242,6 +245,18 @@ func transformYAML(results ...*inspect.YAMLResult) error {
 
 			t.sourceCodeVar = sourceCodeVar
 			marker = &t
+		case StructMarker:
+			sm := t
+			key, _ := getKeyValue(result)
+			// Replace the raw marker text in the YAML comment so processed
+			// manifests don't expose unparsed marker syntax.
+			replaceText := strings.TrimSuffix(result.MarkerText, "\n")
+			replaceText = strings.ReplaceAll(replaceText, "\n", "\n#")
+			key.FootComment = ""
+			key.HeadComment = strings.ReplaceAll(key.HeadComment, replaceText, "struct: "+sm.GetName())
+			result.Object = &sm
+
+			continue
 		default:
 			continue
 		}

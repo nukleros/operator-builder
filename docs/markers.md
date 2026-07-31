@@ -403,6 +403,106 @@ spec:
   webAppImage: acmerepo/webapp:3.5.3
 ```
 
+## Struct Markers
+
+Defined as `+operator-builder:struct` this marker annotates a generated Go struct type with a
+description.  Unlike a field marker, it does not create a new API field — it attaches documentation
+to a struct that is already created by the field markers nested within it.
+
+| Field                              | Type   | Required |
+| ---------------------------------- | ------ | -------- |
+| [name](#struct-name-required)       | string | true     |
+| [description](#struct-description-required) | string | true     |
+
+### Struct Name (required)
+
+The dot-separated path of the struct to annotate, matching the prefix used in the nested field
+marker names.  For example, if you have a field marker `name=subscriptionManager.image`, the
+corresponding struct name is `subscriptionManager`.
+
+Use the special value `"."` to target the root `Spec` struct itself.
+
+```yaml
+# +operator-builder:struct:name=subscriptionManager,description="Configures the subscription manager"
+subscriptionManager:
+  # +operator-builder:field:name=subscriptionManager.image,type=string,default="nginx"
+  image: nginx
+```
+
+```yaml
+# +operator-builder:struct:name=".",description="Root configuration for the WebStore operator"
+apiVersion: apps/v1
+kind: Deployment
+...
+```
+
+### Struct Description (required)
+
+The description to emit as a comment above both the field declaration in the parent struct and the
+type declaration.  kubebuilder reads both locations to populate `description` in the generated CRD
+schema, so this text will appear in `kubectl explain` output.
+
+```
+$ kubectl explain myapp.spec.subscriptionManager
+KIND:     MyApp
+VERSION:  apps.acme.com/v1alpha1
+
+FIELD:    subscriptionManager <Object>
+    Configures the subscription manager
+```
+
+### Struct marker constraints
+
+A struct marker must have at least one field marker nested within the named struct.  If the named
+path does not correspond to any existing struct node (because no field markers were defined for
+it), processing fails with an error.
+
+The marker can be placed as a head comment above any YAML node in the resource manifest — it does
+not need to be directly above the YAML key that corresponds to the struct.  Placing it above the
+first node of the manifest document or above the relevant map key are both valid and common
+patterns.
+
+### Struct markers in collection components
+
+Struct markers work the same way in collection components.  A struct marker placed in a component
+resource file annotates that component's spec; a struct marker placed in a collection resource
+file annotates the collection's spec.
+
+```yaml
+# in a collection resource file
+# +operator-builder:struct:name=".",description="Cloud Native Platform collection configuration"
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+...
+```
+
+```yaml
+# in a component resource file
+# +operator-builder:struct:name=nsOperator,description="Configures the Namespace Operator component"
+apiVersion: apps/v1
+kind: Deployment
+...
+  # +operator-builder:field:name=nsOperator.image,type=string
+  image: nginx:1.17
+```
+
+### Generated output
+
+Given a struct marker and matching field markers, operator-builder emits the description in two
+places in the generated `_types.go` file:
+
+```go
+// +kubebuilder:validation:Optional
+//
+// Configures the subscription manager
+SubscriptionManager WebAppSpecSubscriptionManagerSpec `json:"subscriptionManager,omitempty"`
+
+// Configures the subscription manager
+type WebAppSpecSubscriptionManagerSpec struct {
+    // ...
+}
+```
+
 ## Collection Markers
 
 A second marker type `+operator-builder:collection:field` can be used with the
