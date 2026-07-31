@@ -1,6 +1,9 @@
 ---
-# +operator-builder:struct:name=".",description="Configures the WebStore operator"
-# +operator-builder:struct:name=webstore,description="Manages WebStore deployment, networking, and configuration"
+# +operator-builder:struct:name=".",description=`
+# Configures the WebStore operator`
+# +operator-builder:struct:name=webstore,description=`
+# Manages WebStore deployment, networking, and configuration.
+#`
 apiVersion: apps/v1
 kind: Deployment
 metadata:

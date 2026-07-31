@@ -99,9 +99,25 @@ func (api *APIFields) AddField(path string, fieldType markers.FieldType, comment
 func (api *APIFields) GenerateAPISpec(kind string) string {
 	var buf bytes.Buffer
 
-	mustWrite(fmt.Fprintf(&buf, `
-// %[1]sSpec defines the desired state of %[1]s.
-type %[1]sSpec struct {
+	mustWrite(buf.WriteString("\n"))
+
+	hasComment := false
+
+	for _, c := range api.Comments {
+		if c == "" {
+			continue
+		}
+
+		mustWrite(buf.WriteString(fmt.Sprintf("// %s\n", c)))
+
+		hasComment = true
+	}
+
+	if !hasComment {
+		mustWrite(buf.WriteString(fmt.Sprintf("// %sSpec defines the desired state of %s.\n", kind, kind)))
+	}
+
+	mustWrite(fmt.Fprintf(&buf, `type %[1]sSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
