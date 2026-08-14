@@ -44,15 +44,19 @@ type TypesUpdater struct {
 	machinery.ResourceMixin
 }
 
-// GetPath implements file.Builder
+// GetPath implements file.Builder.  This must stay in lockstep with Types.SetTemplateDefaults,
+// which is what actually writes the file: operator-builder scaffolds APIs under apis/ rather
+// than kubebuilder's api/, and always includes the group segment.  filepath.Join drops the
+// group when it is empty, so no separate single-group branch is needed.
 func (f *TypesUpdater) GetPath() string {
-	if f.MultiGroup && f.Resource.Group != "" {
-		f.Path = filepath.Join("api", "%[group]", "%[version]", "%[kind]_types.go")
-	} else {
-		f.Path = filepath.Join("api", "%[version]", "%[kind]_types.go")
-	}
+	f.Path = filepath.Join(
+		"apis",
+		f.Resource.Group,
+		f.Resource.Version,
+		fmt.Sprintf("%s_types.go", strings.ToLower(f.Resource.Kind)),
+	)
 
-	return f.Resource.Replacer().Replace(f.Path)
+	return f.Path
 }
 
 // GetIfExistsAction implements file.Builder

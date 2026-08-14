@@ -20,8 +20,10 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	log "log/slog"
 	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
 )
@@ -41,14 +43,12 @@ type Spoke struct {
 
 // SetTemplateDefaults implements file.Template
 func (f *Spoke) SetTemplateDefaults() error {
-	if f.Path == "" {
-		if f.MultiGroup && f.Resource.Group != "" {
-			// Use SpokeVersion for dynamic file path generation
-			f.Path = filepath.Join("api", f.Resource.Group, f.SpokeVersion, "%[kind]_conversion.go")
-		} else {
-			f.Path = filepath.Join("api", f.SpokeVersion, "%[kind]_conversion.go")
-		}
-	}
+	f.Path = filepath.Join(
+		"apis",
+		f.Resource.Group,
+		f.Resource.Version,
+		fmt.Sprintf("%s_conversion.go", strings.ToLower(f.Resource.Kind)),
+	)
 
 	// Replace placeholders in the path
 	f.Path = f.Resource.Replacer().Replace(f.Path)

@@ -182,12 +182,9 @@ func (s *webhookScaffolder) getWebhookFilePath() string {
 	baseDir := "internal/webhook"
 
 	var path string
-	if s.config.IsMultiGroup() && s.resource.Group != "" {
+	if s.resource.Group != "" {
 		path = fmt.Sprintf("%s/%s/%s/%s_webhook.go",
 			baseDir, s.resource.Group, s.resource.Version, strings.ToLower(s.resource.Kind))
-	} else {
-		path = fmt.Sprintf("%s/%s/%s_webhook.go",
-			baseDir, s.resource.Version, strings.ToLower(s.resource.Kind))
 	}
 
 	return path
@@ -198,12 +195,9 @@ func (s *webhookScaffolder) getWebhookTestFilePath() string {
 	baseDir := "internal/webhook"
 
 	var path string
-	if s.config.IsMultiGroup() && s.resource.Group != "" {
+	if s.resource.Group != "" {
 		path = fmt.Sprintf("%s/%s/%s/%s_webhook_test.go",
 			baseDir, s.resource.Group, s.resource.Version, strings.ToLower(s.resource.Kind))
-	} else {
-		path = fmt.Sprintf("%s/%s/%s_webhook_test.go",
-			baseDir, s.resource.Version, strings.ToLower(s.resource.Kind))
 	}
 
 	return path

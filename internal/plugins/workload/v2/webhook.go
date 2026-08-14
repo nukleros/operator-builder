@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	log "log/slog"
+	"path"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -34,7 +35,10 @@ import (
 	pluginutil "sigs.k8s.io/kubebuilder/v4/pkg/plugin/util"
 	goPlugin "sigs.k8s.io/kubebuilder/v4/pkg/plugins/golang"
 
+	"github.com/nukleros/operator-builder/internal/plugins/workload"
 	"github.com/nukleros/operator-builder/internal/plugins/workload/v2/scaffolds"
+	workloadconfig "github.com/nukleros/operator-builder/internal/workload/v1/config"
+	"github.com/nukleros/operator-builder/internal/workload/v1/kinds"
 )
 
 var _ plugin.CreateWebhookSubcommand = &createWebhookSubcommand{}
@@ -53,6 +57,9 @@ type createWebhookSubcommand struct {
 
 	// runMake indicates whether to run make or not after scaffolding APIs
 	runMake bool
+
+	workloadConfigPath string
+	workload           kinds.WorkloadBuilder
 }
 
 func (p *createWebhookSubcommand) UpdateMetadata(cliMeta plugin.CLIMetadata, subcmdMeta *plugin.SubcommandMetadata) {
@@ -87,6 +94,8 @@ validating and/or conversion webhooks.
 }
 
 func (p *createWebhookSubcommand) BindFlags(fs *pflag.FlagSet) {
+	workload.AddFlags(fs, &p.workloadConfigPath, nil)
+
 	p.options = &goPlugin.Options{}
 
 	fs.BoolVar(&p.runMake, "make", true,
@@ -130,24 +139,31 @@ func (p *createWebhookSubcommand) BindFlags(fs *pflag.FlagSet) {
 }
 
 func (p *createWebhookSubcommand) InjectConfig(c config.Config) error {
+	processor, err := workloadconfig.Parse(p.workloadConfigPath)
+	if err != nil {
+		return fmt.Errorf("unable to inject config into %s, %w", p.workloadConfigPath, err)
+	}
+
+	p.workload = processor.Workload
+
+	pluginConfig := workloadconfig.Plugin{WorkloadConfigPath: p.workloadConfigPath}
+
+	if err := c.EncodePluginConfig(workloadconfig.PluginKey, pluginConfig); err != nil {
+		return fmt.Errorf("unable to encode plugin config at key %s, %w", workloadconfig.PluginKey, err)
+	}
+
 	p.config = c
+
 	return nil
 }
 
+// operator-builder
+
 func (p *createWebhookSubcommand) InjectResource(res *resource.Resource) error {
+	// set from config file if not provided with command line flag
+	workload.InjectResourceGVK(res, p.workload)
+
 	p.resource = res
-
-	if err := p.updateResourceFromConfig(res); err != nil {
-		return err
-	}
-
-	for _, spoke := range p.options.Spoke {
-		spoke = strings.TrimSpace(spoke)
-		if !isValidVersion(spoke, res, p.config) {
-			return fmt.Errorf("invalid spoke version %q", spoke)
-		}
-		res.Webhooks.Spoke = append(res.Webhooks.Spoke, spoke)
-	}
 
 	// Validate path flags are only used with appropriate webhook types
 	if p.options.DefaultingPath != "" && !p.options.DoDefaulting {
@@ -162,7 +178,31 @@ func (p *createWebhookSubcommand) InjectResource(res *resource.Resource) error {
 		return errors.New("'--external-api-module' requires '--external-api-path' to be specified")
 	}
 
-	p.options.UpdateResource(p.resource, p.config)
+	// Normalize and validate the spokes before UpdateResource copies p.options.Spoke
+	// onto the resource wholesale; appending to res.Webhooks.Spoke afterwards would
+	// only duplicate every entry.
+	for i, spoke := range p.options.Spoke {
+		spoke = strings.TrimSpace(spoke)
+		if !isValidVersion(spoke, res, p.config) {
+			return fmt.Errorf("invalid spoke version %q", spoke)
+		}
+		p.options.Spoke[i] = spoke
+	}
+
+	p.options.UpdateResource(res, p.config)
+
+	if err := p.updateResourceFromConfig(res); err != nil {
+		return err
+	}
+
+	// goPlugin.Options.UpdateResource hardcodes api/ via resource.APIPackagePath, so
+	// operator-builder's apis/ layout has to be applied after the last call to it.
+	// This resource pointer is shared with every other plugin in the bundle, all of
+	// which reconcile it against the path already recorded in PROJECT. Leave external
+	// and core types alone; UpdateResource sets their paths to a foreign package.
+	if !res.External && !res.Core {
+		res.Path = path.Join(p.config.GetRepository(), "apis", res.Group, res.Version)
+	}
 
 	if err := p.resource.Validate(); err != nil {
 		return fmt.Errorf("error validating resource: %w", err)
@@ -174,8 +214,7 @@ func (p *createWebhookSubcommand) InjectResource(res *resource.Resource) error {
 	}
 
 	// check if resource exist to create webhook
-	resValue, err := p.config.GetResource(p.resource.GVK)
-	res = &resValue
+	existing, err := p.config.GetResource(p.resource.GVK)
 	if err != nil {
 		if !p.resource.External && !p.resource.Core {
 			return fmt.Errorf(
@@ -186,20 +225,20 @@ func (p *createWebhookSubcommand) InjectResource(res *resource.Resource) error {
 				p.resource.Kind,
 			)
 		}
-	} else if res.Webhooks != nil && !res.Webhooks.IsEmpty() && !p.force {
+	} else if existing.Webhooks != nil && !existing.Webhooks.IsEmpty() && !p.force {
 		// Check if user is trying to add a webhook type that already exists
-		if p.resource.HasDefaultingWebhook() && res.Webhooks.Defaulting {
+		if p.resource.HasDefaultingWebhook() && existing.Webhooks.Defaulting {
 			return fmt.Errorf("defaulting webhook already exists for this resource")
 		}
-		if p.resource.HasValidationWebhook() && res.Webhooks.Validation {
+		if p.resource.HasValidationWebhook() && existing.Webhooks.Validation {
 			return fmt.Errorf("validation webhook already exists for this resource")
 		}
-		if p.resource.HasConversionWebhook() && res.Webhooks.Conversion {
+		if p.resource.HasConversionWebhook() && existing.Webhooks.Conversion {
 			return fmt.Errorf("conversion webhook already exists for this resource")
 		}
 		// If we're here, user is adding a new webhook type to existing resource
 		// Merge the webhook configurations
-		if err := p.resource.Webhooks.Update(res.Webhooks); err != nil {
+		if err := p.resource.Webhooks.Update(existing.Webhooks); err != nil {
 			return fmt.Errorf("error merging webhook configurations: %w", err)
 		}
 	}

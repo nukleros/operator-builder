@@ -111,18 +111,7 @@ func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 
 func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 	// set from config file if not provided with command line flag
-	if res.Group == "" {
-		res.Group = p.workload.GetAPIGroup()
-	}
-
-	if res.Version == "" {
-		res.Version = p.workload.GetAPIVersion()
-	}
-
-	if res.Kind == "" {
-		res.Kind = p.workload.GetAPIKind()
-		res.Plural = resource.RegularPlural(p.workload.GetAPIKind())
-	}
+	workload.InjectResourceGVK(res, p.workload)
 
 	// TODO: re-evaluate whether y/n input still makes sense. We should probably always
 	//       scaffold the resource and controller.

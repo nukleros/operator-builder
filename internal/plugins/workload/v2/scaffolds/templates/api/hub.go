@@ -20,17 +20,17 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	log "log/slog"
 	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
 )
 
 var _ machinery.Template = &Hub{}
 
-// Hub scaffolds the file that defines hub
-//
-
+// Hub scaffolds the file that defines hub.
 type Hub struct {
 	machinery.TemplateMixin
 	machinery.MultiGroupMixin
@@ -42,13 +42,12 @@ type Hub struct {
 
 // SetTemplateDefaults implements file.Template
 func (f *Hub) SetTemplateDefaults() error {
-	if f.Path == "" {
-		if f.MultiGroup && f.Resource.Group != "" {
-			f.Path = filepath.Join("api", "%[group]", "%[version]", "%[kind]_conversion.go")
-		} else {
-			f.Path = filepath.Join("api", "%[version]", "%[kind]_conversion.go")
-		}
-	}
+	f.Path = filepath.Join(
+		"apis",
+		f.Resource.Group,
+		f.Resource.Version,
+		fmt.Sprintf("%s_conversion.go", strings.ToLower(f.Resource.Kind)),
+	)
 
 	f.Path = f.Resource.Replacer().Replace(f.Path)
 	log.Info(f.Path)
