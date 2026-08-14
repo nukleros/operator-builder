@@ -1,4 +1,4 @@
-// Copyright 2024 Nukleros
+// Copyright 2026 Nukleros
 // SPDX-License-Identifier: Apache-2.0
 
 package v2
@@ -20,14 +20,16 @@ var (
 )
 
 var (
-	_ plugin.Plugin    = Plugin{}
-	_ plugin.Init      = Plugin{}
-	_ plugin.CreateAPI = Plugin{}
+	_ plugin.Plugin        = Plugin{}
+	_ plugin.Init          = Plugin{}
+	_ plugin.CreateAPI     = Plugin{}
+	_ plugin.CreateWebhook = Plugin{}
 )
 
 type Plugin struct {
 	initSubcommand
 	createAPISubcommand
+	createWebhookSubcommand
 }
 
 func (Plugin) Name() string                               { return pluginName }
@@ -39,3 +41,8 @@ func (p Plugin) GetInitSubcommand() plugin.InitSubcommand { return &p.initSubcom
 
 //nolint:gocritic // needed to implement interface
 func (p Plugin) GetCreateAPISubcommand() plugin.CreateAPISubcommand { return &p.createAPISubcommand }
+
+//nolint:gocritic // needed to implement interface
+func (p Plugin) GetCreateWebhookSubcommand() plugin.CreateWebhookSubcommand {
+	return &p.createWebhookSubcommand
+}
