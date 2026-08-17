@@ -205,6 +205,7 @@ const mainTemplate = `{{ .Boilerplate }}
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"os"
 

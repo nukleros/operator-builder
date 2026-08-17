@@ -257,6 +257,10 @@ func (p *createWebhookSubcommand) validateFlagCombinations() error {
 func (p *createWebhookSubcommand) validateSpokes(res *resource.Resource) error {
 	for i, spoke := range p.options.Spoke {
 		spoke = strings.TrimSpace(spoke)
+		if spoke == res.Version {
+			return fmt.Errorf("spoke version %q cannot be the same as the hub version", spoke)
+		}
+
 		if !isValidVersion(spoke, res, p.config) {
 			return fmt.Errorf("invalid spoke version %q", spoke)
 		}
