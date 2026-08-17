@@ -28,6 +28,8 @@ type Main struct {
 	machinery.BoilerplateMixin
 	machinery.DomainMixin
 	machinery.RepositoryMixin
+
+	ControllerRuntimeVersion string
 }
 
 func (f *Main) SetTemplateDefaults() error {
