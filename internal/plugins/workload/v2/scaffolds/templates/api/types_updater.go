@@ -37,7 +37,7 @@ const (
 
 var _ machinery.Template = &TypesUpdater{}
 
-// TypesUpdater updates an existing API types file to add conversion-related markers
+// TypesUpdater updates an existing API types file to add conversion-related markers.
 type TypesUpdater struct {
 	machinery.TemplateMixin
 	machinery.MultiGroupMixin
@@ -59,12 +59,12 @@ func (f *TypesUpdater) GetPath() string {
 	return f.Path
 }
 
-// GetIfExistsAction implements file.Builder
+// GetIfExistsAction implements file.Builder.
 func (*TypesUpdater) GetIfExistsAction() machinery.IfExistsAction {
 	return machinery.OverwriteFile
 }
 
-// SetTemplateDefaults implements file.Template
+// SetTemplateDefaults implements file.Template.
 func (f *TypesUpdater) SetTemplateDefaults() error {
 	filePath := f.GetPath()
 
@@ -72,6 +72,7 @@ func (f *TypesUpdater) SetTemplateDefaults() error {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Error("failed to read types file", "file", filePath, "error", err)
+
 		return fmt.Errorf("failed to read types file: %w", err)
 	}
 
@@ -95,7 +96,7 @@ func (f *TypesUpdater) SetTemplateDefaults() error {
 	return nil
 }
 
-// addStorageVersionMarker adds the storage version marker after +kubebuilder:object:root=true
+// addStorageVersionMarker adds the storage version marker after +kubebuilder:object:root=true.
 func (f *TypesUpdater) addStorageVersionMarker(content string) string {
 	// Try to match the specific Kind's type definition (handles multigroup with multiple types)
 	typePatternStr := fmt.Sprintf(
@@ -108,6 +109,7 @@ func (f *TypesUpdater) addStorageVersionMarker(content string) string {
 		idx := strings.Index(content, rootMarker)
 		if idx != -1 {
 			insertPos := idx + len(rootMarker)
+
 			return content[:insertPos] + storageVersionMarker + content[insertPos:]
 		}
 	}
@@ -117,6 +119,7 @@ func (f *TypesUpdater) addStorageVersionMarker(content string) string {
 	if match := simplePattern.FindStringIndex(content); match != nil {
 		log.Info("Adding storage version marker to first type definition",
 			"kind", f.Resource.Kind)
+
 		return content[:match[1]] + storageVersionMarker + content[match[1]:]
 	}
 

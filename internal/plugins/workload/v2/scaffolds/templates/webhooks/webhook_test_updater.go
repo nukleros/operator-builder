@@ -33,20 +33,20 @@ import (
 )
 
 const (
-	// testClosingLine is the closing line of a Describe block in test files
+	// testClosingLine is the closing line of a Describe block in test files.
 	testClosingLine = "\n})\n"
 )
 
 var _ machinery.Template = &WebhookTestUpdater{}
 
-// WebhookTestUpdater updates an existing webhook test file to add validator/defaulter variables
+// WebhookTestUpdater updates an existing webhook test file to add validator/defaulter variables.
 type WebhookTestUpdater struct {
 	machinery.TemplateMixin
 	machinery.MultiGroupMixin
 	machinery.ResourceMixin
 }
 
-// GetPath implements file.Builder
+// GetPath implements file.Builder.
 func (f *WebhookTestUpdater) GetPath() string {
 	baseDir := filepath.Join("internal", "webhook")
 
@@ -60,12 +60,12 @@ func (f *WebhookTestUpdater) GetPath() string {
 	return f.Resource.Replacer().Replace(path)
 }
 
-// GetIfExistsAction implements file.Builder
+// GetIfExistsAction implements file.Builder.
 func (*WebhookTestUpdater) GetIfExistsAction() machinery.IfExistsAction {
 	return machinery.OverwriteFile
 }
 
-// SetTemplateDefaults implements file.Template
+// SetTemplateDefaults implements file.Template.
 func (f *WebhookTestUpdater) SetTemplateDefaults() error {
 	filePath := f.GetPath()
 
@@ -115,21 +115,23 @@ func (f *WebhookTestUpdater) SetTemplateDefaults() error {
 	return nil
 }
 
-// addValidatorVariable adds the validator variable to the var block
+// addValidatorVariable adds the validator variable to the var block.
 func (f *WebhookTestUpdater) addValidatorVariable(content string) string {
 	varName := "validator"
 	typeName := f.Resource.Kind + "Validator"
+
 	return f.addVariableToBlock(content, varName, typeName)
 }
 
-// addDefaulterVariable adds the defaulter variable to the var block
+// addDefaulterVariable adds the defaulter variable to the var block.
 func (f *WebhookTestUpdater) addDefaulterVariable(content string) string {
 	varName := "defaulter"
 	typeName := f.Resource.Kind + "Defaulter"
+
 	return f.addVariableToBlock(content, varName, typeName)
 }
 
-// addVariableToBlock adds a variable declaration to the var block before the closing paren
+// addVariableToBlock adds a variable declaration to the var block before the closing paren.
 func (f *WebhookTestUpdater) addVariableToBlock(content, varName, typeName string) string {
 	varBlockPattern := regexp.MustCompile(`(?s)(var\s*\(\s*)([^)]*?)(\s*\))`)
 
@@ -153,10 +155,11 @@ func (f *WebhookTestUpdater) addVariableToBlock(content, varName, typeName strin
 		"kind", f.Resource.Kind,
 		"variable", varName,
 		"suggestion", fmt.Sprintf("Manually add '%s %s' to the var block", varName, typeName))
+
 	return content
 }
 
-// detectIndentationInBlock extracts indentation from existing code
+// detectIndentationInBlock extracts indentation from existing code.
 func (f *WebhookTestUpdater) detectIndentationInBlock(blockContent string) string {
 	lines := strings.Split(blockContent, "\n")
 	for _, v := range slices.Backward(lines) {
@@ -169,24 +172,27 @@ func (f *WebhookTestUpdater) detectIndentationInBlock(blockContent string) strin
 			}
 		}
 	}
+
 	return "\t\t"
 }
 
-// addValidatorInit adds validator initialization in BeforeEach
+// addValidatorInit adds validator initialization in BeforeEach.
 func (f *WebhookTestUpdater) addValidatorInit(content string) string {
 	varName := "validator"
 	typeName := f.Resource.Kind + "Validator"
+
 	return f.addWebhookInit(content, varName, typeName)
 }
 
-// addDefaulterInit adds defaulter initialization in BeforeEach
+// addDefaulterInit adds defaulter initialization in BeforeEach.
 func (f *WebhookTestUpdater) addDefaulterInit(content string) string {
 	varName := "defaulter"
 	typeName := f.Resource.Kind + "Defaulter"
+
 	return f.addWebhookInit(content, varName, typeName)
 }
 
-// addWebhookInit adds webhook variable initialization at the end of BeforeEach block
+// addWebhookInit adds webhook variable initialization at the end of BeforeEach block.
 func (f *WebhookTestUpdater) addWebhookInit(content, varName, typeName string) string {
 	checkPattern := fmt.Sprintf("%s = %s", varName, typeName)
 	if strings.Contains(content, checkPattern) {
@@ -212,6 +218,7 @@ func (f *WebhookTestUpdater) addWebhookInit(content, varName, typeName string) s
 		init := fmt.Sprintf("\n%s%s = %s{}\n%sExpect(%s).NotTo(BeNil(), \"Expected %s to be initialized\")",
 			indent, varName, typeName, indent, varName, varName)
 		replacement := opening + blockContent + init + closing
+
 		return strings.Replace(content, match[0], replacement, 1)
 	}
 
@@ -219,10 +226,11 @@ func (f *WebhookTestUpdater) addWebhookInit(content, varName, typeName string) s
 		"kind", f.Resource.Kind,
 		"variable", varName,
 		"suggestion", fmt.Sprintf("Manually add '%s = %s{}' to BeforeEach", varName, typeName))
+
 	return content
 }
 
-// addValidationTestContext adds the validation test context
+// addValidationTestContext adds the validation test context.
 func (f *WebhookTestUpdater) addValidationTestContext(content string) string {
 	testContext := fmt.Sprintf(`
 	Context("When creating or updating %s under Validating Webhook", func() {
@@ -252,7 +260,7 @@ func (f *WebhookTestUpdater) addValidationTestContext(content string) string {
 	return f.addContextToEnd(content, testContext)
 }
 
-// addDefaultingTestContext adds the defaulting test context
+// addDefaultingTestContext adds the defaulting test context.
 func (f *WebhookTestUpdater) addDefaultingTestContext(content string) string {
 	testContext := fmt.Sprintf(`
 	Context("When creating %s under Defaulting Webhook", func() {
@@ -272,7 +280,7 @@ func (f *WebhookTestUpdater) addDefaultingTestContext(content string) string {
 	return f.addContextToEnd(content, testContext)
 }
 
-// addConversionTestContext adds the conversion test context
+// addConversionTestContext adds the conversion test context.
 func (f *WebhookTestUpdater) addConversionTestContext(content string) string {
 	testContext := fmt.Sprintf(`
 	Context("When creating %s under Conversion Webhook", func() {
@@ -289,7 +297,7 @@ func (f *WebhookTestUpdater) addConversionTestContext(content string) string {
 	return f.addContextToEnd(content, testContext)
 }
 
-// addContextToEnd adds a test context before the Describe block's closing })
+// addContextToEnd adds a test context before the Describe block's closing }).
 func (f *WebhookTestUpdater) addContextToEnd(content, testContext string) string {
 	// Find the Describe block's closing })
 	describePattern := regexp.MustCompile(`(?s)var\s*_\s*=\s*Describe\([^}]+`)
@@ -307,5 +315,6 @@ func (f *WebhookTestUpdater) addContextToEnd(content, testContext string) string
 
 	// Last resort: append at end of file
 	content = strings.TrimRight(content, "\n")
+
 	return content + testContext + "\n"
 }

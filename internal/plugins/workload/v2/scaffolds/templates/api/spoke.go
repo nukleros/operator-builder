@@ -30,7 +30,7 @@ import (
 
 var _ machinery.Template = &Spoke{}
 
-// Spoke scaffolds the file that defines spoke version conversion
+// Spoke scaffolds the file that defines spoke version conversion.
 type Spoke struct {
 	machinery.TemplateMixin
 	machinery.MultiGroupMixin
@@ -41,12 +41,12 @@ type Spoke struct {
 	SpokeVersion string
 }
 
-// SetTemplateDefaults implements file.Template
+// SetTemplateDefaults implements file.Template.
 func (f *Spoke) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
 		"apis",
 		f.Resource.Group,
-		f.Resource.Version,
+		f.SpokeVersion,
 		fmt.Sprintf("%s_conversion.go", strings.ToLower(f.Resource.Kind)),
 	)
 
@@ -65,7 +65,6 @@ func (f *Spoke) SetTemplateDefaults() error {
 	return nil
 }
 
-//nolint:lll
 const spokeTemplate = `{{ .Boilerplate }}
 
 package {{ .SpokeVersion }}

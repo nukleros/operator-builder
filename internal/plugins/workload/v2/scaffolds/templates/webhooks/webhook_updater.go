@@ -35,7 +35,7 @@ const coreGroup = "core"
 
 var _ machinery.Template = &WebhookUpdater{}
 
-// WebhookUpdater updates an existing webhook file to add additional webhook types
+// WebhookUpdater updates an existing webhook file to add additional webhook types.
 type WebhookUpdater struct {
 	machinery.TemplateMixin
 	machinery.RepositoryMixin
@@ -50,7 +50,7 @@ type WebhookUpdater struct {
 	AdmissionReviewVersions string
 }
 
-// GetPath implements file.Builder
+// GetPath implements file.Builder.
 func (f *WebhookUpdater) GetPath() string {
 	baseDir := filepath.Join("internal", "webhook")
 
@@ -64,12 +64,12 @@ func (f *WebhookUpdater) GetPath() string {
 	return f.Resource.Replacer().Replace(path)
 }
 
-// GetIfExistsAction implements file.Builder
+// GetIfExistsAction implements file.Builder.
 func (*WebhookUpdater) GetIfExistsAction() machinery.IfExistsAction {
 	return machinery.OverwriteFile
 }
 
-// SetTemplateDefaults implements file.Template
+// SetTemplateDefaults implements file.Template.
 func (f *WebhookUpdater) SetTemplateDefaults() error {
 	filePath := f.GetPath()
 
@@ -77,6 +77,7 @@ func (f *WebhookUpdater) SetTemplateDefaults() error {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Error("failed to read webhook file", "file", filePath, "error", err)
+
 		return fmt.Errorf("failed to read webhook file: %w", err)
 	}
 
@@ -87,45 +88,13 @@ func (f *WebhookUpdater) SetTemplateDefaults() error {
 	var newCode strings.Builder
 
 	// Add defaulting webhook if requested and not already present
-	defaulterType := fmt.Sprintf("%sDefaulter", f.Resource.Kind)
 	if f.Resource.HasDefaultingWebhook() {
-		typeDefPattern := regexp.MustCompile(fmt.Sprintf(`type\s+%s\s+struct`, defaulterType))
-		if typeDefPattern.MatchString(string(content)) {
-			log.Info("Defaulting webhook already exists, skipping", "kind", f.Resource.Kind)
-		} else {
-			defaultingCode := f.generateDefaultingWebhookCode()
-			if defaultingCode != "" {
-				newCode.WriteString(defaultingCode)
-			}
-
-			setupCode := f.generateDefaulterSetupCode()
-			if !strings.Contains(fileContent, fmt.Sprintf("WithDefaulter(&%s{})", defaulterType)) {
-				fileContent = f.injectBeforeComplete(fileContent, setupCode)
-			}
-		}
+		fileContent = f.applyDefaultingWebhook(content, fileContent, &newCode)
 	}
 
 	// Add validation webhook if requested and not already present
-	validatorType := fmt.Sprintf("%sValidator", f.Resource.Kind)
 	if f.Resource.HasValidationWebhook() {
-		typeDefPattern := regexp.MustCompile(fmt.Sprintf(`type\s+%s\s+struct`, validatorType))
-		if typeDefPattern.MatchString(string(content)) {
-			log.Info("Validation webhook already exists, skipping", "kind", f.Resource.Kind)
-		} else {
-			if !bytes.Contains(content, []byte("sigs.k8s.io/controller-runtime/pkg/webhook/admission")) {
-				fileContent = f.addAdmissionImport(fileContent)
-			}
-
-			validationCode := f.generateValidationWebhookCode()
-			if validationCode != "" {
-				newCode.WriteString(validationCode)
-			}
-
-			setupCode := f.generateValidatorSetupCode()
-			if !strings.Contains(fileContent, fmt.Sprintf("WithValidator(&%s{})", validatorType)) {
-				fileContent = f.injectBeforeComplete(fileContent, setupCode)
-			}
-		}
+		fileContent = f.applyValidationWebhook(content, fileContent, &newCode)
 	}
 
 	// Append new webhook code at the end of the file
@@ -140,29 +109,80 @@ func (f *WebhookUpdater) SetTemplateDefaults() error {
 	return nil
 }
 
-// injectBeforeComplete injects webhook setup code before the Complete() call
+// applyDefaultingWebhook adds defaulting webhook code when the type is not already present.
+func (f *WebhookUpdater) applyDefaultingWebhook(content []byte, fileContent string, newCode *strings.Builder) string {
+	defaulterType := fmt.Sprintf("%sDefaulter", f.Resource.Kind)
+	typeDefPattern := regexp.MustCompile(fmt.Sprintf(`type\s+%s\s+struct`, defaulterType))
+
+	if typeDefPattern.MatchString(string(content)) {
+		log.Info("Defaulting webhook already exists, skipping", "kind", f.Resource.Kind)
+
+		return fileContent
+	}
+
+	if defaultingCode := f.generateDefaultingWebhookCode(); defaultingCode != "" {
+		newCode.WriteString(defaultingCode)
+	}
+
+	setupCode := f.generateDefaulterSetupCode()
+	if !strings.Contains(fileContent, fmt.Sprintf("WithDefaulter(&%s{})", defaulterType)) {
+		fileContent = f.injectBeforeComplete(fileContent, setupCode)
+	}
+
+	return fileContent
+}
+
+// applyValidationWebhook adds validation webhook code when the type is not already present.
+func (f *WebhookUpdater) applyValidationWebhook(content []byte, fileContent string, newCode *strings.Builder) string {
+	validatorType := fmt.Sprintf("%sValidator", f.Resource.Kind)
+	typeDefPattern := regexp.MustCompile(fmt.Sprintf(`type\s+%s\s+struct`, validatorType))
+
+	if typeDefPattern.MatchString(string(content)) {
+		log.Info("Validation webhook already exists, skipping", "kind", f.Resource.Kind)
+
+		return fileContent
+	}
+
+	if !bytes.Contains(content, []byte("sigs.k8s.io/controller-runtime/pkg/webhook/admission")) {
+		fileContent = f.addAdmissionImport(fileContent)
+	}
+
+	if validationCode := f.generateValidationWebhookCode(); validationCode != "" {
+		newCode.WriteString(validationCode)
+	}
+
+	setupCode := f.generateValidatorSetupCode()
+	if !strings.Contains(fileContent, fmt.Sprintf("WithValidator(&%s{})", validatorType)) {
+		fileContent = f.injectBeforeComplete(fileContent, setupCode)
+	}
+
+	return fileContent
+}
+
+// injectBeforeComplete injects webhook setup code before the Complete() call.
 func (f *WebhookUpdater) injectBeforeComplete(content, code string) string {
-	completePattern := regexp.MustCompile(`(?m)^(\s*)(?:\.)?\s*Complete\(\s*\)`)
+	completePattern := regexp.MustCompile(`(?m)^(\s*)\.?\s*Complete\(\s*\)`)
 
 	if match := completePattern.FindStringSubmatch(content); len(match) > 1 {
 		completeCall := match[0]
 		baseIndent := match[1]
 
-		beforeComplete := content[:strings.Index(content, completeCall)]
-		indent := f.detectIndentationBeforeComplete(beforeComplete, baseIndent)
+		// completeCall is a regex match on content, so insertPos is always >= 0.
+		insertPos := strings.Index(content, completeCall)
+		indent := f.detectIndentationBeforeComplete(content[:insertPos], baseIndent)
 		adjustedCode := f.adjustCodeIndentation(code, indent)
 
-		insertPos := strings.Index(content, completeCall)
 		return content[:insertPos] + adjustedCode + content[insertPos:]
 	}
 
 	log.Warn("Could not find Complete() call in setup function",
 		"kind", f.Resource.Kind,
 		"suggestion", "Manually wire webhook in SetupWebhookWithManager")
+
 	return content
 }
 
-// detectIndentationBeforeComplete extracts indentation from method chain lines
+// detectIndentationBeforeComplete extracts indentation from method chain lines.
 func (f *WebhookUpdater) detectIndentationBeforeComplete(beforeComplete, baseIndent string) string {
 	lines := strings.Split(beforeComplete, "\n")
 
@@ -182,10 +202,11 @@ func (f *WebhookUpdater) detectIndentationBeforeComplete(beforeComplete, baseInd
 	if strings.Contains(baseIndent, "\t") {
 		return baseIndent + "\t\t"
 	}
+
 	return baseIndent + "        "
 }
 
-// adjustCodeIndentation replaces existing indentation with target indentation
+// adjustCodeIndentation replaces existing indentation with target indentation.
 func (f *WebhookUpdater) adjustCodeIndentation(code, targetIndent string) string {
 	lines := strings.Split(code, "\n")
 	adjusted := make([]string, len(lines))
@@ -193,6 +214,7 @@ func (f *WebhookUpdater) adjustCodeIndentation(code, targetIndent string) string
 	for i, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			adjusted[i] = line
+
 			continue
 		}
 
@@ -207,7 +229,7 @@ func (f *WebhookUpdater) adjustCodeIndentation(code, targetIndent string) string
 	return strings.Join(adjusted, "\n")
 }
 
-// addAdmissionImport adds the admission package import after the webhook import
+// addAdmissionImport adds the admission package import after the webhook import.
 func (f *WebhookUpdater) addAdmissionImport(content string) string {
 	admissionImport := "sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	if strings.Contains(content, admissionImport) {
@@ -221,6 +243,7 @@ func (f *WebhookUpdater) addAdmissionImport(content string) string {
 		indent := match[1]
 		webhookLine := match[0]
 		replacement := webhookLine + "\n" + indent + `"` + admissionImport + `"`
+
 		return strings.Replace(content, webhookLine, replacement, 1)
 	}
 
@@ -238,12 +261,14 @@ func (f *WebhookUpdater) addAdmissionImport(content string) string {
 
 		newImport := "\n" + indent + `"` + admissionImport + `"`
 		replacement := match[1] + newImport + match[2]
+
 		return strings.Replace(content, match[0], replacement, 1)
 	}
 
 	log.Warn("Could not add admission import",
 		"kind", f.Resource.Kind,
 		"suggestion", "Manually add: "+admissionImport)
+
 	return content
 }
 
@@ -262,28 +287,31 @@ func (f *WebhookUpdater) addContextImport(content string) string {
 	log.Warn("Could not add context import",
 		"kind", f.Resource.Kind,
 		"suggestion", "Manually add: context")
+
 	return content
 }
 
-// generateDefaulterSetupCode generates the setup code for defaulting webhook
+// generateDefaulterSetupCode generates the setup code for defaulting webhook.
 func (f *WebhookUpdater) generateDefaulterSetupCode() string {
 	code := fmt.Sprintf("\t\tWithDefaulter(&%sDefaulter{}).", f.Resource.Kind)
 	if f.Resource.Webhooks.DefaultingPath != "" {
-		code += fmt.Sprintf("\n\t\tWithDefaulterCustomPath(\"%s\").", f.Resource.Webhooks.DefaultingPath)
+		code += fmt.Sprintf("\n\t\tWithDefaulterCustomPath(%q).", f.Resource.Webhooks.DefaultingPath)
 	}
+
 	return code + "\n"
 }
 
-// generateValidatorSetupCode generates the setup code for validation webhook
+// generateValidatorSetupCode generates the setup code for validation webhook.
 func (f *WebhookUpdater) generateValidatorSetupCode() string {
 	code := fmt.Sprintf("\t\tWithValidator(&%sValidator{}).", f.Resource.Kind)
 	if f.Resource.Webhooks.ValidationPath != "" {
-		code += fmt.Sprintf("\n\t\tWithValidatorCustomPath(\"%s\").", f.Resource.Webhooks.ValidationPath)
+		code += fmt.Sprintf("\n\t\tWithValidatorCustomPath(%q).", f.Resource.Webhooks.ValidationPath)
 	}
+
 	return code + "\n"
 }
 
-// generateDefaultingWebhookCode generates the defaulting webhook code
+// generateDefaultingWebhookCode generates the defaulting webhook code.
 func (f *WebhookUpdater) generateDefaultingWebhookCode() string {
 	var code strings.Builder
 
@@ -336,7 +364,7 @@ func (d *%sDefaulter) Default(_ context.Context, obj *%s) error {
 	return code.String()
 }
 
-// generateValidationWebhookCode generates the validation webhook code
+// generateValidationWebhookCode generates the validation webhook code.
 func (f *WebhookUpdater) generateValidationWebhookCode() string {
 	var code strings.Builder
 
@@ -354,7 +382,7 @@ func (f *WebhookUpdater) generateValidationWebhookCode() string {
 
 	code.WriteString(
 		`// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
+// NOTE: If you want to customize the 'path', use the flags '--defaulting-path' or '--validation-path'.
 `)
 	//nolint:lll
 	fmt.Fprintf(&code, `// +kubebuilder:webhook:path=%s,mutating=false,failurePolicy=fail,sideEffects=None,groups=%s,resources=%s,verbs=create;update,versions=%s,name=v%s-%s.kb.io,admissionReviewVersions=%s
@@ -414,10 +442,11 @@ func (v *%sValidator) ValidateDelete(_ context.Context, obj *%s) (admission.Warn
 	return code.String()
 }
 
-// getGroupValue returns the group value for webhook markers
+// getGroupValue returns the group value for webhook markers.
 func (f *WebhookUpdater) getGroupValue() string {
 	if f.Resource.Core && f.Resource.QualifiedGroup() == coreGroup {
 		return `""`
 	}
+
 	return f.Resource.QualifiedGroup()
 }

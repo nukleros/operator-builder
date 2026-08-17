@@ -30,7 +30,7 @@ import (
 
 var _ machinery.Template = &WebhookTest{}
 
-// WebhookTest scaffolds the file that sets up the webhook unit tests
+// WebhookTest scaffolds the file that sets up the webhook unit tests.
 type WebhookTest struct {
 	machinery.TemplateMixin
 	machinery.MultiGroupMixin
@@ -41,7 +41,7 @@ type WebhookTest struct {
 	Force bool
 }
 
-// SetTemplateDefaults implements machinery.Template
+// SetTemplateDefaults implements machinery.Template.
 func (f *WebhookTest) SetTemplateDefaults() error {
 	if f.Path == "" {
 		pathAPI := filepath.Join("internal", "webhook")

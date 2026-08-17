@@ -157,36 +157,21 @@ func (p *createWebhookSubcommand) InjectConfig(c config.Config) error {
 	return nil
 }
 
-// operator-builder
-
 func (p *createWebhookSubcommand) InjectResource(res *resource.Resource) error {
 	// set from config file if not provided with command line flag
 	workload.InjectResourceGVK(res, p.workload)
 
 	p.resource = res
 
-	// Validate path flags are only used with appropriate webhook types
-	if p.options.DefaultingPath != "" && !p.options.DoDefaulting {
-		return fmt.Errorf("--defaulting-path can only be used with --defaulting")
-	}
-	if p.options.ValidationPath != "" && !p.options.DoValidation {
-		return fmt.Errorf("--validation-path can only be used with --programmatic-validation")
-	}
-
-	// Validate that --external-api-module requires --external-api-path
-	if len(p.options.ExternalAPIModule) != 0 && len(p.options.ExternalAPIPath) == 0 {
-		return errors.New("'--external-api-module' requires '--external-api-path' to be specified")
+	if err := p.validateFlagCombinations(); err != nil {
+		return err
 	}
 
 	// Normalize and validate the spokes before UpdateResource copies p.options.Spoke
 	// onto the resource wholesale; appending to res.Webhooks.Spoke afterwards would
 	// only duplicate every entry.
-	for i, spoke := range p.options.Spoke {
-		spoke = strings.TrimSpace(spoke)
-		if !isValidVersion(spoke, res, p.config) {
-			return fmt.Errorf("invalid spoke version %q", spoke)
-		}
-		p.options.Spoke[i] = spoke
+	if err := p.validateSpokes(res); err != nil {
+		return err
 	}
 
 	p.options.UpdateResource(res, p.config)
@@ -208,46 +193,15 @@ func (p *createWebhookSubcommand) InjectResource(res *resource.Resource) error {
 		return fmt.Errorf("error validating resource: %w", err)
 	}
 
-	if !p.resource.HasDefaultingWebhook() && !p.resource.HasValidationWebhook() && !p.resource.HasConversionWebhook() {
-		return fmt.Errorf("%s create webhook requires at least one of --defaulting,"+
-			" --programmatic-validation and --conversion to be true", p.commandName)
+	if err := p.validateWebhookTypes(); err != nil {
+		return err
 	}
 
-	// check if resource exist to create webhook
-	existing, err := p.config.GetResource(p.resource.GVK)
-	if err != nil {
-		if !p.resource.External && !p.resource.Core {
-			return fmt.Errorf(
-				"no API found for %s/%s, Kind %s: run 'create api' first, "+
-					"or pass --external-api-path for an external type",
-				p.resource.QualifiedGroup(),
-				p.resource.Version,
-				p.resource.Kind,
-			)
-		}
-	} else if existing.Webhooks != nil && !existing.Webhooks.IsEmpty() && !p.force {
-		// Check if user is trying to add a webhook type that already exists
-		if p.resource.HasDefaultingWebhook() && existing.Webhooks.Defaulting {
-			return fmt.Errorf("defaulting webhook already exists for this resource")
-		}
-		if p.resource.HasValidationWebhook() && existing.Webhooks.Validation {
-			return fmt.Errorf("validation webhook already exists for this resource")
-		}
-		if p.resource.HasConversionWebhook() && existing.Webhooks.Conversion {
-			return fmt.Errorf("conversion webhook already exists for this resource")
-		}
-		// If we're here, user is adding a new webhook type to existing resource
-		// Merge the webhook configurations
-		if err := p.resource.Webhooks.Update(existing.Webhooks); err != nil {
-			return fmt.Errorf("error merging webhook configurations: %w", err)
-		}
-	}
-
-	return nil
+	return p.reconcileExistingResource()
 }
 
 func (p *createWebhookSubcommand) Scaffold(fs machinery.Filesystem) error {
-	scaffolder := scaffolds.NewWebhookScaffolder(p.config, *p.resource, p.force)
+	scaffolder := scaffolds.NewWebhookScaffolder(p.config, p.resource, p.force)
 	scaffolder.InjectFS(fs)
 	if err := scaffolder.Scaffold(); err != nil {
 		return fmt.Errorf("failed to scaffold webhook: %w", err)
@@ -279,7 +233,86 @@ func (p *createWebhookSubcommand) PostScaffold() error {
 		}
 	}
 
-	fmt.Print("Next: implement your new Webhook and generate the manifests with:\n$ make manifests\n")
+	log.Info("Next: implement your new Webhook and generate the manifests with: $ make manifests")
+
+	return nil
+}
+
+func (p *createWebhookSubcommand) validateFlagCombinations() error {
+	if p.options.DefaultingPath != "" && !p.options.DoDefaulting {
+		return fmt.Errorf("--defaulting-path can only be used with --defaulting")
+	}
+
+	if p.options.ValidationPath != "" && !p.options.DoValidation {
+		return fmt.Errorf("--validation-path can only be used with --programmatic-validation")
+	}
+
+	if p.options.ExternalAPIModule != "" && p.options.ExternalAPIPath == "" {
+		return errors.New("'--external-api-module' requires '--external-api-path' to be specified")
+	}
+
+	return nil
+}
+
+func (p *createWebhookSubcommand) validateSpokes(res *resource.Resource) error {
+	for i, spoke := range p.options.Spoke {
+		spoke = strings.TrimSpace(spoke)
+		if !isValidVersion(spoke, res, p.config) {
+			return fmt.Errorf("invalid spoke version %q", spoke)
+		}
+
+		p.options.Spoke[i] = spoke
+	}
+
+	return nil
+}
+
+func (p *createWebhookSubcommand) validateWebhookTypes() error {
+	if !p.resource.HasDefaultingWebhook() && !p.resource.HasValidationWebhook() && !p.resource.HasConversionWebhook() {
+		return fmt.Errorf("%s create webhook requires at least one of --defaulting,"+
+			" --programmatic-validation and --conversion to be true", p.commandName)
+	}
+
+	return nil
+}
+
+func (p *createWebhookSubcommand) reconcileExistingResource() error {
+	existing, err := p.config.GetResource(p.resource.GVK)
+	if err != nil && !p.resource.External && !p.resource.Core {
+		return fmt.Errorf(
+			"no API found for %s/%s, Kind %s: run 'create api' first, "+
+				"or pass --external-api-path for an external type",
+			p.resource.QualifiedGroup(),
+			p.resource.Version,
+			p.resource.Kind,
+		)
+	}
+
+	if err == nil && existing.Webhooks != nil && !existing.Webhooks.IsEmpty() && !p.force {
+		if err := p.checkWebhookConflicts(&existing); err != nil {
+			return err
+		}
+
+		if err := p.resource.Webhooks.Update(existing.Webhooks); err != nil {
+			return fmt.Errorf("error merging webhook configurations: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (p *createWebhookSubcommand) checkWebhookConflicts(existing *resource.Resource) error {
+	if p.resource.HasDefaultingWebhook() && existing.Webhooks.Defaulting {
+		return fmt.Errorf("defaulting webhook already exists for this resource")
+	}
+
+	if p.resource.HasValidationWebhook() && existing.Webhooks.Validation {
+		return fmt.Errorf("validation webhook already exists for this resource")
+	}
+
+	if p.resource.HasConversionWebhook() && existing.Webhooks.Conversion {
+		return fmt.Errorf("conversion webhook already exists for this resource")
+	}
 
 	return nil
 }
@@ -293,24 +326,28 @@ func (p *createWebhookSubcommand) updateResourceFromConfig(res *resource.Resourc
 		return fmt.Errorf("failed to load resources from project configuration: %w", err)
 	}
 
-	for _, existingRes := range resources {
-		if existingRes.Group == res.Group &&
-			existingRes.Version == res.Version &&
-			existingRes.Kind == res.Kind {
-			p.resource.Domain = existingRes.Domain
-			p.resource.Path = existingRes.Path
-			p.resource.Plural = existingRes.Plural
-			p.resource.External = existingRes.External
-			p.resource.Core = existingRes.Core
-			p.resource.Module = existingRes.Module
-			break
+	for i := range resources {
+		existingRes := &resources[i]
+		if existingRes.Group != res.Group ||
+			existingRes.Version != res.Version ||
+			existingRes.Kind != res.Kind {
+			continue
 		}
+
+		p.resource.Domain = existingRes.Domain
+		p.resource.Path = existingRes.Path
+		p.resource.Plural = existingRes.Plural
+		p.resource.External = existingRes.External
+		p.resource.Core = existingRes.Core
+		p.resource.Module = existingRes.Module
+
+		break
 	}
 
 	return nil
 }
 
-// Helper function to validate spoke versions
+// isValidVersion is a helper function to validate spoke versions.
 func isValidVersion(version string, res *resource.Resource, cfg config.Config) bool {
 	// Fetch all resources in the config
 	resources, err := cfg.GetResources()
@@ -319,7 +356,8 @@ func isValidVersion(version string, res *resource.Resource, cfg config.Config) b
 	}
 
 	// Iterate through resources and validate if the given version exists for the same Group and Kind
-	for _, r := range resources {
+	for i := range resources {
+		r := &resources[i]
 		if r.Group == res.Group && r.Kind == res.Kind && r.Version == version {
 			return true
 		}

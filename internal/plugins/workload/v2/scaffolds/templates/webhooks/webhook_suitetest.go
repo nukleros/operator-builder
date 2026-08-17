@@ -32,7 +32,7 @@ var (
 	_ machinery.Inserter = &WebhookSuite{}
 )
 
-// WebhookSuite scaffolds the file that sets up the webhook tests
+// WebhookSuite scaffolds the file that sets up the webhook tests.
 type WebhookSuite struct {
 	machinery.TemplateMixin
 	machinery.MultiGroupMixin
@@ -50,7 +50,7 @@ type WebhookSuite struct {
 	BaseDirectoryRelativePath string
 }
 
-// SetTemplateDefaults implements machinery.Template
+// SetTemplateDefaults implements machinery.Template.
 func (f *WebhookSuite) SetTemplateDefaults() error {
 	if f.Path == "" {
 		baseDir := filepath.Join("internal", "webhook")
@@ -88,7 +88,7 @@ const (
 	addSchemeMarker         = "scheme"
 )
 
-// GetMarkers implements file.Inserter
+// GetMarkers implements file.Inserter.
 func (f *WebhookSuite) GetMarkers() []machinery.Marker {
 	return []machinery.Marker{
 		machinery.NewMarkerFor(f.Path, importMarker),
@@ -112,7 +112,7 @@ Expect(err).NotTo(HaveOccurred())
 `
 )
 
-// GetCodeFragments implements file.Inserter
+// GetCodeFragments implements file.Inserter.
 func (f *WebhookSuite) GetCodeFragments() machinery.CodeFragmentsMap {
 	fragments := make(machinery.CodeFragmentsMap, 3)
 

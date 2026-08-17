@@ -40,7 +40,7 @@ type Hub struct {
 	Force bool
 }
 
-// SetTemplateDefaults implements file.Template
+// SetTemplateDefaults implements file.Template.
 func (f *Hub) SetTemplateDefaults() error {
 	f.Path = filepath.Join(
 		"apis",

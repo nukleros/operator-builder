@@ -29,7 +29,7 @@ import (
 
 var _ machinery.Template = &Webhook{}
 
-// Webhook scaffolds the file that defines a webhook for a CRD or a builtin resource
+// Webhook scaffolds the file that defines a webhook for a CRD or a builtin resource.
 type Webhook struct {
 	machinery.TemplateMixin
 	machinery.MultiGroupMixin
@@ -45,7 +45,7 @@ type Webhook struct {
 	Force bool
 }
 
-// SetTemplateDefaults implements machinery.Template
+// SetTemplateDefaults implements machinery.Template.
 func (f *Webhook) SetTemplateDefaults() error {
 	if f.Path == "" {
 		baseDir := filepath.Join("internal", "webhook")
@@ -62,10 +62,11 @@ func (f *Webhook) SetTemplateDefaults() error {
 
 	webhookTemplate := webhookTemplate
 	if f.Resource.HasDefaultingWebhook() {
-		webhookTemplate = webhookTemplate + defaultingWebhookTemplate
+		webhookTemplate += defaultingWebhookTemplate
 	}
+
 	if f.Resource.HasValidationWebhook() {
-		webhookTemplate = webhookTemplate + validatingWebhookTemplate
+		webhookTemplate += validatingWebhookTemplate
 	}
 	f.TemplateBody = webhookTemplate
 
@@ -156,7 +157,7 @@ func (d *{{ .Resource.Kind }}Defaulter) Default(_ context.Context, obj *{{ .Reso
 	//nolint:lll
 	validatingWebhookTemplate = `
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
+// NOTE: If you want to customize the 'path', use the flags '--defaulting-path' or '--validation-path'.
 // +kubebuilder:webhook:{{ if ne .Resource.Webhooks.WebhookVersion "v1" }}webhookVersions={{"{"}}{{ .Resource.Webhooks.WebhookVersion }}{{"}"}},{{ end }}{{- if ne .Resource.Webhooks.ValidationPath "" -}}path={{ .Resource.Webhooks.ValidationPath }}{{- else -}}path=/validate-{{ if and .Resource.Core (eq .Resource.QualifiedGroup "core") }}-{{ else }}{{ .QualifiedGroupWithDash }}-{{ end }}{{ .Resource.Version }}-{{ lower .Resource.Kind }}{{- end -}},mutating=false,failurePolicy=fail,sideEffects=None,groups={{ if and .Resource.Core (eq .Resource.QualifiedGroup "core") }}""{{ else }}{{ .Resource.QualifiedGroup }}{{ end }},resources={{ .Resource.Plural }},verbs=create;update,versions={{ .Resource.Version }},name=v{{ lower .Resource.Kind }}-{{ .Resource.Version }}.kb.io,admissionReviewVersions={{ .AdmissionReviewVersions }}
 
 // {{ .Resource.Kind }}Validator struct is responsible for validating the {{ .Resource.Kind }} resource

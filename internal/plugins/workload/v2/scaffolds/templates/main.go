@@ -88,6 +88,7 @@ const (
 `
 	webhookImportCodeFragment = `%s "%s/internal/webhook/%s"
 `
+	//nolint:gosec
 	multiGroupWebhookImportCodeFragment = `%s "%s/internal/webhook/%s/%s"
 `
 	webhookSetupCodeFragment = `if err := %s.Setup%sWebhookWithManager(mgr); err != nil {
@@ -97,6 +98,7 @@ const (
 `
 )
 
+//nolint:gocyclo
 func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 	const options = 4
 
@@ -195,6 +197,7 @@ func (f *MainUpdater) webhookImportAlias() string {
 	return "webhook" + f.Resource.ImportAlias()
 }
 
+//nolint:lll
 const mainTemplate = `{{ .Boilerplate }}
 
 package main

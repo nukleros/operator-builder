@@ -52,21 +52,23 @@ type webhookScaffolder struct {
 	force bool
 }
 
-// NewWebhookScaffolder returns a new Scaffolder for v2 webhook creation operations
-func NewWebhookScaffolder(cfg config.Config, res resource.Resource, force bool) plugins.Scaffolder {
+// NewWebhookScaffolder returns a new Scaffolder for v2 webhook creation operations.
+func NewWebhookScaffolder(cfg config.Config, res *resource.Resource, force bool) plugins.Scaffolder {
 	return &webhookScaffolder{
 		config:   cfg,
-		resource: res,
+		resource: *res,
 		force:    force,
 	}
 }
 
-// InjectFS implements cmdutil.Scaffolder
+// InjectFS implements cmdutil.Scaffolder.
 func (s *webhookScaffolder) InjectFS(fs machinery.Filesystem) {
 	s.fs = fs
 }
 
-// Scaffold implements cmdutil.Scaffolder
+// Scaffold implements cmdutil.Scaffolder.
+//
+//nolint:gocognit,gocyclo
 func (s *webhookScaffolder) Scaffold() error {
 	log.Info("Writing scaffold for you to edit...")
 
@@ -118,7 +120,7 @@ func (s *webhookScaffolder) Scaffold() error {
 	// Note: Conversion webhooks also need a webhook.go file with minimal setup (.For(&Type{}).Complete())
 	// This is how controller-runtime discovers Hub/Convertible interfaces
 	if doDefaulting || doValidation || doConversion {
-		if err = s.scaffoldWebhookFile(scaffold, webhookFileExists); err != nil {
+		if err := s.scaffoldWebhookFile(scaffold, webhookFileExists); err != nil {
 			return err
 		}
 
@@ -131,7 +133,7 @@ func (s *webhookScaffolder) Scaffold() error {
 	}
 
 	// Scaffold or update webhook test file (for all webhook types)
-	if err = s.scaffoldWebhookTestFile(scaffold, webhookTestFileExists); err != nil {
+	if err := s.scaffoldWebhookTestFile(scaffold, webhookTestFileExists); err != nil {
 		return err
 	}
 
@@ -174,10 +176,11 @@ You need to implement the conversion.Hub and conversion.Convertible interfaces f
 			log.Error("failed to replace \"internal/controller\" with \"internal/\" in the Dockerfile", "error", err)
 		}
 	}
+
 	return nil
 }
 
-// getWebhookFilePath returns the path to the webhook file
+// getWebhookFilePath returns the path to the webhook file.
 func (s *webhookScaffolder) getWebhookFilePath() string {
 	baseDir := "internal/webhook"
 
@@ -190,7 +193,7 @@ func (s *webhookScaffolder) getWebhookFilePath() string {
 	return path
 }
 
-// getWebhookTestFilePath returns the path to the webhook test file
+// getWebhookTestFilePath returns the path to the webhook test file.
 func (s *webhookScaffolder) getWebhookTestFilePath() string {
 	baseDir := "internal/webhook"
 
@@ -203,7 +206,7 @@ func (s *webhookScaffolder) getWebhookTestFilePath() string {
 	return path
 }
 
-// scaffoldWebhookFile creates or updates the webhook implementation file
+// scaffoldWebhookFile creates or updates the webhook implementation file.
 func (s *webhookScaffolder) scaffoldWebhookFile(scaffold *machinery.Scaffold, fileExists bool) error {
 	if !fileExists || s.force {
 		if err := scaffold.Execute(
@@ -219,10 +222,11 @@ func (s *webhookScaffolder) scaffoldWebhookFile(scaffold *machinery.Scaffold, fi
 			return fmt.Errorf("error updating webhook: %w", err)
 		}
 	}
+
 	return nil
 }
 
-// scaffoldWebhookTestFile creates or updates the webhook test file
+// scaffoldWebhookTestFile creates or updates the webhook test file.
 func (s *webhookScaffolder) scaffoldWebhookTestFile(scaffold *machinery.Scaffold, fileExists bool) error {
 	if !fileExists || s.force {
 		if err := scaffold.Execute(
@@ -237,5 +241,6 @@ func (s *webhookScaffolder) scaffoldWebhookTestFile(scaffold *machinery.Scaffold
 			return fmt.Errorf("error updating webhook test: %w", err)
 		}
 	}
+
 	return nil
 }
