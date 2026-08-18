@@ -1,4 +1,7 @@
 version: "2"
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
 linters:
   default: none
   enable:
@@ -128,6 +131,9 @@ linters:
       - linters:
           - mnd
         path: internal/plugins/workload/v2/scaffolds/templates/readme.go
+      - linters:
+          - err113
+        path: internal/plugins/workload/v2/webhook.go
       - linters:
           - gocritic
         text: 'unnecessaryDefer:'

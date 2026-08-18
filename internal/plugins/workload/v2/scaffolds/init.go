@@ -116,7 +116,9 @@ func (s *initScaffolder) Scaffold() error {
 	}
 
 	if err := scaffold.Execute(
-		&templates.Main{},
+		&templates.Main{
+			ControllerRuntimeVersion: utils.ControllerRuntimeVersion,
+		},
 		&templates.GoMod{},
 		&templates.Dockerfile{},
 		&templates.Readme{

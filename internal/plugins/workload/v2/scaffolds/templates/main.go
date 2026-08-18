@@ -13,9 +13,11 @@ import (
 
 const (
 	defaultMainPath = utils.DefaultMainPath
+
 	importMarker    = "imports"
 	addSchemeMarker = "scheme"
 	setupMarker     = "reconcilers"
+	webhookMarker   = "webhook"
 )
 
 var _ machinery.Template = &Main{}
@@ -26,6 +28,8 @@ type Main struct {
 	machinery.BoilerplateMixin
 	machinery.DomainMixin
 	machinery.RepositoryMixin
+
+	ControllerRuntimeVersion string
 }
 
 func (f *Main) SetTemplateDefaults() error {
@@ -35,6 +39,7 @@ func (f *Main) SetTemplateDefaults() error {
 		machinery.NewMarkerFor(f.Path, importMarker),
 		machinery.NewMarkerFor(f.Path, addSchemeMarker),
 		machinery.NewMarkerFor(f.Path, setupMarker),
+		machinery.NewMarkerFor(f.Path, webhookMarker),
 	)
 
 	f.IfExistsAction = machinery.OverwriteFile
@@ -66,6 +71,7 @@ func (f *MainUpdater) GetMarkers() []machinery.Marker {
 		machinery.NewMarkerFor(defaultMainPath, importMarker),
 		machinery.NewMarkerFor(defaultMainPath, addSchemeMarker),
 		machinery.NewMarkerFor(defaultMainPath, setupMarker),
+		machinery.NewMarkerFor(defaultMainPath, webhookMarker),
 	}
 }
 
@@ -82,16 +88,21 @@ const (
 `
 	multiGroupReconcilerSetupCodeFragment = `%scontrollers.New%sReconciler(mgr),
 `
-	webhookSetupCodeFragment = `
-if err = (&%s.%s{}).SetupWebhookWithManager(mgr); err != nil {
+	webhookImportCodeFragment = `%s "%s/internal/webhook/%s"
+`
+	//nolint:gosec
+	multiGroupWebhookImportCodeFragment = `%s "%s/internal/webhook/%s/%s"
+`
+	webhookSetupCodeFragment = `if err := %s.Setup%sWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "%s")
 		os.Exit(1)
 	}
 `
 )
 
+//nolint:gocyclo
 func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
-	const options = 3
+	const options = 4
 
 	fragments := make(machinery.CodeFragmentsMap, options)
 
@@ -138,9 +149,23 @@ func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 		}
 	}
 
+	// Generate webhook wiring code fragments.  These are statements rather than literal
+	// elements, so they are kept separate from the reconciler setup fragments above.
+	webhookSetup := make([]string, 0)
+
 	if f.WireWebhook {
-		setup = append(setup, fmt.Sprintf(webhookSetupCodeFragment,
-			f.Resource.ImportAlias(), f.Resource.Kind, f.Resource.Kind))
+		alias := f.webhookImportAlias()
+
+		if f.Resource.Group == "" {
+			imports = append(imports, fmt.Sprintf(webhookImportCodeFragment,
+				alias, f.Repo, f.Resource.Version))
+		} else {
+			imports = append(imports, fmt.Sprintf(multiGroupWebhookImportCodeFragment,
+				alias, f.Repo, f.Resource.Group, f.Resource.Version))
+		}
+
+		webhookSetup = append(webhookSetup, fmt.Sprintf(webhookSetupCodeFragment,
+			alias, f.Resource.Kind, f.Resource.Kind))
 	}
 
 	// Only store code fragments in the map if the slices are non-empty
@@ -156,14 +181,31 @@ func (f *MainUpdater) GetCodeFragments() machinery.CodeFragmentsMap {
 		fragments[machinery.NewMarkerFor(defaultMainPath, setupMarker)] = setup
 	}
 
+	if len(webhookSetup) != 0 {
+		fragments[machinery.NewMarkerFor(defaultMainPath, webhookMarker)] = webhookSetup
+	}
+
 	return fragments
 }
 
+// webhookImportAlias returns the import alias for the generated webhook package.  The
+// alias is prefixed to keep it distinct from the API package alias, which main.go also
+// imports and which resolves to the same trailing path elements.
+func (f *MainUpdater) webhookImportAlias() string {
+	if f.Resource.Group == "" {
+		return "webhook" + f.Resource.Version
+	}
+
+	return "webhook" + f.Resource.ImportAlias()
+}
+
+//nolint:lll
 const mainTemplate = `{{ .Boilerplate }}
 
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"os"
 
@@ -179,6 +221,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	%s
 )
@@ -200,19 +244,32 @@ func init() {
 }
 
 func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	var secureMetrics bool
-	var enableHTTP2 bool
+	// webhook flags
+	var webhookCertPath, webhookCertName, webhookCertKey string
+	flag.StringVar(&webhookCertPath, "webhook-cert-path", "", "The directory that contains the webhook certificate.")
+	flag.StringVar(&webhookCertName, "webhook-cert-name", "tls.crt", "The name of the webhook certificate file.")
+	flag.StringVar(&webhookCertKey, "webhook-cert-key", "tls.key", "The name of the webhook key file.")
 
+	// metrics flags
+	var secureMetrics bool
+	var metricsAddr string
+	var metricsCertPath, metricsCertName, metricsCertKey string
+	flag.BoolVar(&secureMetrics, "metrics-secure", false, "If set the metrics endpoint is served securely")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&metricsCertPath, "metrics-cert-path", "", "The directory that contains the metrics server certificate.")
+	flag.StringVar(&metricsCertName, "metrics-cert-name", "tls.crt", "The name of the metrics server certificate file.")
+	flag.StringVar(&metricsCertKey, "metrics-cert-key", "tls.key", "The name of the metrics server key file.")
+
+	// health probe flags
+	var probeAddr string
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+
+	// generic server flags
+	var enableLeaderElection bool
+	var enableHTTP2 bool
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. " +
-		"Enabling this will ensure there is only one active controller manager.")
-	flag.BoolVar(&secureMetrics, "metrics-secure", false,
-		"If set the metrics endpoint is served securely")
+		"Enable leader election for controller manager. "+
+			"Enabling this will ensure there is only one active controller manager.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
 
@@ -247,16 +304,48 @@ func main() {
 		tlsOpts = append(tlsOpts, disableHTTP2)
 	}
 
+	// Initial webhook TLS options
+	webhookTLSOpts := tlsOpts
+	webhookServerOptions := webhook.Options{
+		TLSOpts: webhookTLSOpts,
+	}
+
+	if len(webhookCertPath) > 0 {
+		setupLog.Info("Initializing webhook certificate watcher using provided certificates",
+			"webhook-cert-path", webhookCertPath, "webhook-cert-name", webhookCertName, "webhook-cert-key", webhookCertKey)
+
+		webhookServerOptions.CertDir = webhookCertPath
+		webhookServerOptions.CertName = webhookCertName
+		webhookServerOptions.KeyName = webhookCertKey
+	}
+
+	webhookServer := webhook.NewServer(webhookServerOptions)
+
+	// Metrics endpoint is enabled in 'config/default/kustomization.yaml'. The Metrics options configure the server.
+	// More info:
+	// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@{{ .ControllerRuntimeVersion }}/pkg/metrics/server
+	// - https://book.kubebuilder.io/reference/metrics.html
+	metricsServerOptions := metricsserver.Options{
+		BindAddress:   metricsAddr,
+		SecureServing: secureMetrics,
+		TLSOpts: tlsOpts,
+	}
+
+	if secureMetrics {
+		// FilterProvider is used to protect the metrics endpoint with authn/authz.
+		// These configurations ensure that only authorized users and service accounts
+		// can access the metrics endpoint. The RBAC are configured in 'config/rbac/kustomization.yaml'. More info:
+		// https://pkg.go.dev/sigs.k8s.io/controller-runtime@{{ .ControllerRuntimeVersion }}/pkg/metrics/filters#WithAuthenticationAndAuthorization
+		metricsServerOptions.FilterProvider = filters.WithAuthenticationAndAuthorization
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
+		Metrics:                metricsServerOptions,
+		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "{{ hashFNV .Repo }}.{{ .Domain }}",
-		Metrics: metricsserver.Options{
-			BindAddress:   metricsAddr,
-			SecureServing: secureMetrics,
-			TLSOpts:       tlsOpts,
-		},
 	})
 
 	if err != nil {
@@ -274,6 +363,8 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+	%s
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
