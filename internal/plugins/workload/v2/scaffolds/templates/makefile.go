@@ -163,7 +163,8 @@ run: manifests generate fmt vet ## Run a controller from your host.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	$(CONTAINER_TOOL) build -t $(IMG) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
+	set +e; $(CONTAINER_TOOL) build -t $(IMG) . ; status=$$?; rm -f manager; exit $$status
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -178,13 +179,29 @@ docker-push: ## Push docker image with the manager.
 PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
 .PHONY: docker-buildx
 docker-buildx: test ## Build and push docker image for the manager for cross-platform support
-	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
-	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
-	- $(CONTAINER_TOOL) buildx create --name {{ .ProjectName }}-builder
-	$(CONTAINER_TOOL) buildx use {{ .ProjectName }}-builder
-	- $(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
-	- $(CONTAINER_TOOL) buildx rm {{ .ProjectName }}-builder
-	rm Dockerfile.cross
+	# the whole recipe runs as one shell invocation (note the trailing "\" on every line) so a
+	# single trap can guarantee cleanup of the per-platform binaries and Dockerfile.cross below
+	# on any failure, without masking that failure; a comment on its own line here would break
+	# that chaining, so further explanation stays here rather than inline below
+	#
+	# cross-compile one "manager" binary per platform, then copy the Dockerfile and rewrite its
+	# COPY line so BuildKit pulls in the binary matching whichever platform it is currently building;
+	# variant-qualified platforms (e.g. linux/arm/v7) are rejected since the binary name and the
+	# Dockerfile's COPY selection below are keyed on os/arch only, not the variant
+	trap 'rm -f Dockerfile.cross manager-*' EXIT; \
+	for platform in $$(echo $(PLATFORMS) | tr ',' ' '); do \
+		os=$${platform%%/*}; rest=$${platform#*/}; arch=$${rest%%/*}; \
+		if [ "$$rest" != "$$arch" ]; then \
+			echo "docker-buildx: platform \"$$platform\" has a variant, which is not supported; use a plain os/arch platform instead" >&2; \
+			exit 1; \
+		fi; \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch go build -a -o manager-$$os-$$arch main.go; \
+	done; \
+	sed -e 's/^COPY manager \./COPY manager-\$$\{TARGETOS\}-\$$\{TARGETARCH\} ./' Dockerfile > Dockerfile.cross; \
+	$(CONTAINER_TOOL) buildx create --name {{ .ProjectName }}-builder || true; \
+	$(CONTAINER_TOOL) buildx use {{ .ProjectName }}-builder; \
+	$(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross . ; \
+	$(CONTAINER_TOOL) buildx rm {{ .ProjectName }}-builder || true
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
