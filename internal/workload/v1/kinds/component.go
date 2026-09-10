@@ -142,7 +142,7 @@ func (c *ComponentWorkload) SetRBAC() {
 }
 
 func (c *ComponentWorkload) SetResources(workloadPath string) error {
-	err := c.Spec.processManifests(markers.FieldMarkerType)
+	err := c.Spec.processManifests(markers.FieldMarkerType, markers.StructMarkerType)
 	if err != nil {
 		return err
 	}

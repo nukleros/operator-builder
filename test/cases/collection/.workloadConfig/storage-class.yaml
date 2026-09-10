@@ -1,4 +1,5 @@
 ---
+# +operator-builder:struct:name=".",description="Configures the Cloud Native Platform collection"
 # +operator-builder:resource:collectionField=provider,value="aws",include
 apiVersion: storage.k8s.io/v1
 kind: StorageClass

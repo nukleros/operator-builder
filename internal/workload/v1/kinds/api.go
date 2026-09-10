@@ -18,19 +18,25 @@ import (
 	"github.com/nukleros/operator-builder/internal/workload/v1/markers"
 )
 
-var ErrOverwriteExistingValue = errors.New("an attempt to overwrite existing value was made")
+var (
+	ErrOverwriteExistingValue    = errors.New("an attempt to overwrite existing value was made")
+	ErrStructMarkerMissingFields = errors.New(
+		"struct marker has no corresponding field markers — the named struct must have at least one nested field marker",
+	)
+)
 
 type APIFields struct {
-	Name         string
-	StructName   string
+	Name       string
+	StructName string
+	Type       markers.FieldType
+	Tags       string
+	Comments   []string
+	Markers    []string
+	Children   []*APIFields
+	Default    string
+	Sample     string
+
 	manifestName string
-	Type         markers.FieldType
-	Tags         string
-	Comments     []string
-	Markers      []string
-	Children     []*APIFields
-	Default      string
-	Sample       string
 }
 
 func (api *APIFields) AddField(path string, fieldType markers.FieldType, comments []string, sample interface{}, hasDefault bool) error {
@@ -94,9 +100,25 @@ func (api *APIFields) AddField(path string, fieldType markers.FieldType, comment
 func (api *APIFields) GenerateAPISpec(kind string) string {
 	var buf bytes.Buffer
 
-	mustWrite(fmt.Fprintf(&buf, `
-// %[1]sSpec defines the desired state of %[1]s.
-type %[1]sSpec struct {
+	mustWrite(buf.WriteString("\n"))
+
+	hasComment := false
+
+	for _, c := range api.Comments {
+		if c == "" {
+			continue
+		}
+
+		mustWrite(fmt.Fprintf(&buf, "// %s\n", c))
+
+		hasComment = true
+	}
+
+	if !hasComment {
+		mustWrite(fmt.Fprintf(&buf, "// %sSpec defines the desired state of %s.\n", kind, kind))
+	}
+
+	mustWrite(fmt.Fprintf(&buf, `type %[1]sSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -180,6 +202,16 @@ func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
 
 func (api *APIFields) generateAPIStruct(b io.StringWriter, kind string) {
 	if api.Type == markers.FieldStruct {
+		// Emit non-empty comment lines above the type declaration so kubebuilder
+		// and kubectl explain can surface the description in the CRD schema.
+		for _, c := range api.Comments {
+			if c == "" {
+				continue
+			}
+
+			mustWrite(b.WriteString(fmt.Sprintf("// %s\n", c)))
+		}
+
 		mustWrite(b.WriteString(fmt.Sprintf("type %s %s{\n", kind+api.StructName, api.Type.String())))
 
 		for _, child := range api.Children {
@@ -321,6 +353,48 @@ func (api *APIFields) setDefault(sampleVal interface{}) {
 	api.setSample(sampleVal)
 }
 
+// setStructComments traverses the APIFields tree along the dot-separated path
+// to find the FieldStruct node declared there, then delegates to
+// setCommentsAndDefault to apply the comments.  Returns
+// ErrStructMarkerMissingFields when the path does not resolve to a FieldStruct,
+// which means no field markers exist for that struct.
+//
+// This only resolves a single struct marker's target node - it has no memory
+// of previously resolved paths, so it cannot on its own detect two separate
+// struct markers naming the same path. That is caught by the caller, which
+// sees every struct marker and can track which paths have already been set;
+// see (*WorkloadSpec).applyStructMarkers.
+func (api *APIFields) setStructComments(path string, comments []string) error {
+	parts := strings.Split(path, ".")
+	obj := api
+
+	for _, part := range parts {
+		var found *APIFields
+
+		for _, child := range obj.Children {
+			if child.manifestName == part {
+				found = child
+
+				break
+			}
+		}
+
+		if found == nil {
+			return fmt.Errorf("%w: %q not found", ErrStructMarkerMissingFields, path)
+		}
+
+		if found.Type != markers.FieldStruct {
+			return fmt.Errorf("%w: %q is not a struct", ErrStructMarkerMissingFields, path)
+		}
+
+		obj = found
+	}
+
+	obj.setCommentsAndDefault(comments, nil, false)
+
+	return nil
+}
+
 // kubebuilderDefault returns the default value formatted for a
 // +kubebuilder:default= marker annotation.  Map types use JSON object notation
 // ({"key":"value"}), array types use kubebuilder brace notation ({"a","b"}),
@@ -363,12 +437,16 @@ func (api *APIFields) appendMarkers(apiMarkers ...string) {
 }
 
 func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interface{}, hasDefault bool) {
-	if hasDefault {
+	switch {
+	case api.Type == markers.FieldStruct:
+		// structs have no default/required distinction - they are always optional.
+		api.appendMarkers("+kubebuilder:validation:Optional")
+	case hasDefault:
 		api.setDefault(sampleVal)
-	} else if api.Type == markers.FieldStringMap {
+	case api.Type == markers.FieldStringMap:
 		// map[string]string is always optional: nil/absent is equivalent to an empty map.
 		api.setDefault(map[string]string{})
-	} else {
+	default:
 		api.appendMarkers("+kubebuilder:validation:Required")
 	}
 
