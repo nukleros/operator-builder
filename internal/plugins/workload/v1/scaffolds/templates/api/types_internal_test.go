@@ -14,11 +14,11 @@ import (
 func TestTypesTemplateStatusFields(t *testing.T) {
 	t.Parallel()
 
-	// bool fields stay optional and keep a false value
+	// check bool fields stay optional and keep a false value
 	assertStatusTag(t, "Created", "`json:\"created\"`", true)
 	assertStatusTag(t, "DependenciesSatisfied", "`json:\"dependenciesSatisfied\"`", true)
 
-	// list fields still omit an empty value
+	// check list fields still omit an empty value
 	assertStatusTag(t, "Conditions", "`json:\"conditions,omitempty\"`", false)
 	assertStatusTag(t, "Resources", "`json:\"resources,omitempty\"`", false)
 }
