@@ -455,16 +455,23 @@ func (api *APIFields) setCommentsAndDefault(comments []string, sampleVal interfa
 	}
 }
 
+// newChild returns a child field for the named manifest key.
 func (api *APIFields) newChild(name string, fieldType markers.FieldType, sample interface{}) *APIFields {
+	// drop omitempty on a bool so false is serialized
+	jsonTag := name + ",omitempty"
+	if fieldType == markers.FieldBool {
+		jsonTag = name
+	}
+
+	// build the child field and copy its sample
 	child := &APIFields{
 		Name:         utils.ToTitle(name),
 		manifestName: name,
 		Type:         fieldType,
-		Tags:         fmt.Sprintf("`json:%q`", fmt.Sprintf("%s,%s", name, "omitempty")),
+		Tags:         fmt.Sprintf("`json:%q`", jsonTag),
 		Comments:     []string{},
 		Markers:      []string{},
 	}
-
 	child.setSample(sample)
 
 	return child

@@ -4,7 +4,10 @@
 package kinds
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -1509,7 +1512,7 @@ func TestAPIFields_newChild(t *testing.T) {
 				manifestName: "bool",
 				Type:         markers.FieldBool,
 				Sample:       "bool: true",
-				Tags:         "`json:\"bool,omitempty\"`",
+				Tags:         "`json:\"bool\"`",
 				Comments:     []string{},
 				Markers:      []string{},
 			},
@@ -1527,7 +1530,7 @@ func TestAPIFields_newChild(t *testing.T) {
 				manifestName: "bool",
 				Type:         markers.FieldBool,
 				Sample:       "bool: true",
-				Tags:         "`json:\"bool,omitempty\"`",
+				Tags:         "`json:\"bool\"`",
 				Comments:     []string{},
 				Markers:      []string{},
 			},
@@ -1968,4 +1971,91 @@ func TestAPIFields_setCommentsAndDefault_pathResolution(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestAPIFields_boolJSON checks that the tag newChild writes keeps both bool values.
+func TestAPIFields_boolJSON(t *testing.T) {
+	t.Parallel()
+
+	// build the tag the generator stores for a bool
+	child := (&APIFields{}).newChild("include", markers.FieldBool, false)
+
+	tests := []struct {
+		name  string
+		value bool
+		want  string
+	}{
+		{
+			name:  "false",
+			value: false,
+			want:  `{"include":false}`,
+		},
+		{
+			name:  "true",
+			value: true,
+			want:  `{"include":true}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// marshal the value with the stored tag
+			assert.Equal(t, tt.want, marshalStoredBoolTag(t, child.Tags, tt.value))
+		})
+	}
+}
+
+// marshalStoredBoolTag marshals value with the json tag newChild stores.
+func marshalStoredBoolTag(t *testing.T, storedTag string, value bool) string {
+	t.Helper()
+
+	// apply the stored tag, including its backticks, to a one-field struct
+	tag := strings.Trim(storedTag, "`")
+	fieldType := reflect.StructOf([]reflect.StructField{{
+		Name: "Include",
+		Type: reflect.TypeOf(true),
+		Tag:  reflect.StructTag(tag),
+	}})
+	field := reflect.New(fieldType).Elem()
+	field.Field(0).SetBool(value)
+
+	encoded, err := json.Marshal(field.Interface())
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+
+	return string(encoded)
+}
+
+// TestAPIFields_boolGenerateAPISpec checks the bool line AddField emits.
+func TestAPIFields_boolGenerateAPISpec(t *testing.T) {
+	t.Parallel()
+
+	// add a bool field and render the spec
+	api := &APIFields{}
+	err := api.AddField("include", markers.FieldBool, nil, false, false)
+	assert.NoError(t, err)
+
+	// check the emitted field line
+	spec := api.GenerateAPISpec("Widget")
+	assert.Contains(t, spec, "Include bool `json:\"include\"`")
+	assert.NotContains(t, spec, "json:\"include,omitempty\"")
+}
+
+// TestAPIFields_setDefaultBool checks a false default stays optional and keeps its tag.
+func TestAPIFields_setDefaultBool(t *testing.T) {
+	t.Parallel()
+
+	// start from the tag newChild writes, then apply the default
+	child := (&APIFields{}).newChild("include", markers.FieldBool, false)
+	child.setDefault(false)
+
+	assert.Equal(t, "`json:\"include\"`", child.Tags)
+	assert.Equal(t, []string{
+		"+kubebuilder:default=false",
+		"+kubebuilder:validation:Optional",
+		"(Default: false)",
+	}, child.Markers)
 }
