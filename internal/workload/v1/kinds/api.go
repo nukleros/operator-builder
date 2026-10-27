@@ -473,6 +473,7 @@ func (api *APIFields) newChild(name string, fieldType markers.FieldType, sample 
 		Markers:      []string{},
 	}
 	child.setSample(sample)
+
 	return child
 }
 
