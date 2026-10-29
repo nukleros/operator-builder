@@ -187,6 +187,13 @@ func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
 	typeName := api.Type.GoTypeName()
 	if api.Type == markers.FieldStruct {
 		typeName = kind + api.StructName
+
+		// the API server only defaults fields inside objects that are present, so
+		// default the struct to {} when nothing in it is required, otherwise its
+		// children's defaults are skipped when the struct is omitted
+		if !api.hasRequiredMarker() {
+			mustWrite(b.WriteString("// +kubebuilder:default={}\n"))
+		}
 	}
 
 	for _, m := range api.Markers {
@@ -198,6 +205,26 @@ func (api *APIFields) generateAPISpecField(b io.StringWriter, kind string) {
 	}
 
 	mustWrite(b.WriteString(fmt.Sprintf("%s %s %s\n\n", api.Name, typeName, api.Tags)))
+}
+
+// hasRequiredMarker reports whether the field, or any field nested in it, is
+// marked required.  It checks markers rather than Default because a field seen
+// first without a default keeps its required marker even if a later occurrence
+// sets a default.
+func (api *APIFields) hasRequiredMarker() bool {
+	for _, m := range api.Markers {
+		if m == "+kubebuilder:validation:Required" {
+			return true
+		}
+	}
+
+	for _, child := range api.Children {
+		if child.hasRequiredMarker() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (api *APIFields) generateAPIStruct(b io.StringWriter, kind string) {

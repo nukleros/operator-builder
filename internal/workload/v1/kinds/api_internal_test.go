@@ -2044,6 +2044,31 @@ func TestAPIFields_boolGenerateAPISpec(t *testing.T) {
 	assert.NotContains(t, spec, "json:\"include,omitempty\"")
 }
 
+// TestAPIFields_structDefaultGenerateAPISpec checks which structs get an empty object default.
+func TestAPIFields_structDefaultGenerateAPISpec(t *testing.T) {
+	t.Parallel()
+
+	// s3 and its parent seaweed only hold defaulted fields, filer holds a required one
+	api := &APIFields{}
+	assert.NoError(t, api.AddField("seaweed.s3.enabled", markers.FieldBool, nil, true, true))
+	assert.NoError(t, api.AddField("seaweed.replicas", markers.FieldInt, nil, 1, true))
+	assert.NoError(t, api.AddField("filer.image", markers.FieldString, nil, nil, false))
+	assert.NoError(t, api.AddField("filer.port", markers.FieldInt, nil, 8333, true))
+
+	// proxy is first seen without a default, so it stays required after the default
+	assert.NoError(t, api.AddField("kong.proxy", markers.FieldString, nil, nil, false))
+	assert.NoError(t, api.AddField("kong.proxy", markers.FieldString, nil, "kong-proxy", true))
+
+	spec := api.GenerateAPISpec("Widget")
+
+	assert.Contains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\nSeaweed WidgetSpecSeaweed")
+	assert.Contains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\nS3 WidgetSpecSeaweedS3")
+	assert.Contains(t, spec, "// +kubebuilder:validation:Optional\nFiler WidgetSpecFiler")
+	assert.NotContains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\nFiler")
+	assert.Contains(t, spec, "// +kubebuilder:validation:Optional\nKong WidgetSpecKong")
+	assert.NotContains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\nKong")
+}
+
 // TestAPIFields_setDefaultBool checks a false default stays optional and keeps its tag.
 func TestAPIFields_setDefaultBool(t *testing.T) {
 	t.Parallel()
