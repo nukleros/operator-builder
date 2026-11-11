@@ -2069,6 +2069,28 @@ func TestAPIFields_structDefaultGenerateAPISpec(t *testing.T) {
 	assert.NotContains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\nKong")
 }
 
+// TestAPIFields_structDefaultWithStructMarker checks a struct marker keeps the empty object default.
+func TestAPIFields_structDefaultWithStructMarker(t *testing.T) {
+	t.Parallel()
+
+	// seaweed and s3 only hold defaulted fields, filer holds a required one
+	api := &APIFields{}
+	assert.NoError(t, api.AddField("seaweed.s3.enabled", markers.FieldBool, nil, true, true))
+	assert.NoError(t, api.AddField("seaweed.replicas", markers.FieldInt, nil, 1, true))
+	assert.NoError(t, api.AddField("filer.image", markers.FieldString, nil, nil, false))
+
+	// describe each struct with a struct marker
+	assert.NoError(t, api.setStructComments("seaweed", []string{"Seaweed settings."}))
+	assert.NoError(t, api.setStructComments("seaweed.s3", []string{"S3 gateway settings."}))
+	assert.NoError(t, api.setStructComments("filer", []string{"Filer settings."}))
+
+	spec := api.GenerateAPISpec("Widget")
+
+	assert.Contains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\n// Seaweed settings.\nSeaweed WidgetSpecSeaweed")
+	assert.Contains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\n// S3 gateway settings.\nS3 WidgetSpecSeaweedS3")
+	assert.NotContains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\n// Filer settings.\nFiler")
+}
+
 // TestAPIFields_setDefaultBool checks a false default stays optional and keeps its tag.
 func TestAPIFields_setDefaultBool(t *testing.T) {
 	t.Parallel()

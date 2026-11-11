@@ -305,7 +305,11 @@ func Generate{{ .Resource.Kind }}(g *cmdgenerate.GenerateSubCommand) error {
 		%s
 	}
 
-	generate := generateFuncMap[apiVersion]
+	generate, ok := generateFuncMap[apiVersion]
+	if !ok {
+		return fmt.Errorf("unsupported API Version: %%s", apiVersion)
+	}
+
 	resourceObjects, err := generate({{ .GenerateFuncInputs }})
 	if err != nil {
 		return fmt.Errorf("unable to retrieve resources; %%w", err)
