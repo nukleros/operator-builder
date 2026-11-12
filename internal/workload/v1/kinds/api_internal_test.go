@@ -2086,8 +2086,16 @@ func TestAPIFields_structDefaultWithStructMarker(t *testing.T) {
 
 	spec := api.GenerateAPISpec("Widget")
 
-	assert.Contains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\n// Seaweed settings.\nSeaweed WidgetSpecSeaweed")
-	assert.Contains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\n// S3 gateway settings.\nS3 WidgetSpecSeaweedS3")
+	assert.Contains(
+		t,
+		spec,
+		"// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\n// Seaweed settings.\nSeaweed WidgetSpecSeaweed",
+	)
+	assert.Contains(
+		t,
+		spec,
+		"// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\n// S3 gateway settings.\nS3 WidgetSpecSeaweedS3",
+	)
 	assert.NotContains(t, spec, "// +kubebuilder:default={}\n// +kubebuilder:validation:Optional\n// Filer settings.\nFiler")
 }
 
