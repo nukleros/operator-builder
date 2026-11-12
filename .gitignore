@@ -16,3 +16,4 @@ test/cases/collection/*
 # vscode
 .vscode/*
 !.vscode/launch.json
+.claude/*
