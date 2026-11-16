@@ -18,7 +18,7 @@ const (
 	// NOTE: ControllerRuntimeVersion will need to match operator-builder-tools version
 	// otherwise their could be inconsistencies in method calls which cause
 	// ambiguous errors.
-	ControllerRuntimeVersion = "v0.24.1"
+	ControllerRuntimeVersion = "v0.25.3"
 	KustomizeVersion         = "v5.4.1"
 	GolangCILintVersion      = "v2.12.2"
 	EnvtestVersion           = "release-0.17"
@@ -28,7 +28,7 @@ const (
 	// the following are dependency versions that are shared across both v1 and v2 plugins.
 	// any updates to these versions will affect both plugins and should be tested accordingly.
 	GoLogrVersion               = "v1.4.3"
-	OperatorBuilderToolsVersion = "v0.8.1"
+	OperatorBuilderToolsVersion = "v0.8.2"
 	GinkgoVersion               = "v2.32.0"
 	GomegaVersion               = "v1.42.0"
 	CobraVersion                = "v1.10.2"
