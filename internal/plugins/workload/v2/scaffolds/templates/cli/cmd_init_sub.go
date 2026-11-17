@@ -192,7 +192,7 @@ import (
 func get{{ .Resource.Kind }}Manifest(i *cmdinit.InitSubCommand) (string, error) {
 	apiVersion := i.APIVersion
 	if apiVersion == "" || apiVersion == "latest" {
-		return {{ .Resource.Group }}.{{ .Resource.Kind }}LatestSample, nil
+		apiVersion = {{ .Resource.Group }}.{{ .Resource.Kind }}LatestGroupVersion.Version
 	}
 
 	// generate a map of all versions to samples for each api version created
