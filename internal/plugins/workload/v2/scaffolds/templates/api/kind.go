@@ -180,9 +180,5 @@ import (
 // {{ .Resource.Kind }}LatestGroupVersion returns the latest group version object associated with this
 // particular kind.
 var {{ .Resource.Kind }}LatestGroupVersion = {{ .Resource.Version }}{{ .Resource.Group }}.GroupVersion
-
-// {{ .Resource.Kind }}LatestSample returns the latest sample manifest associated with this
-// particular kind.
-var {{ .Resource.Kind }}LatestSample = {{ .Resource.Version }}{{ lower .Resource.Kind }}.Sample(false)
 `
 )
