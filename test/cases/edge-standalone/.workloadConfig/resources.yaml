@@ -88,6 +88,11 @@ spec:
             cpu: 100m
             memory: 128Mi
 ---
+# +operator-builder:struct:name=".",description=`
+# EdgeStandaloneSpec defines the desired state of EdgeStandalone.
+# This test ensures that kubebuilder markers longer than the 80 character wrap width are not wrapped.
+# See https://github.com/nukleros/operator-builder/issues/99 for details.
+# +kubebuilder:validation:XValidation:rule="self.webStoreReplicas >= 1",message="webStoreReplicas must be at least 1"`
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -332,7 +332,7 @@ func (ws *WorkloadSpec) applyStructMarkers() error {
 
 	for _, sm := range ws.StructMarkers {
 		name := sm.GetName()
-		comments := sm.GetComments()
+		comments := sm.GetComments("+kubebuilder:")
 
 		if seen[name] {
 			return fmt.Errorf("%w: duplicate struct marker for %q", ErrStructMarker, name)

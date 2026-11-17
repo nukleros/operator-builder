@@ -38,18 +38,6 @@ type StructMarker struct {
 	Description *string
 }
 
-// defineStructMarker registers a StructMarker with the marker registry.
-func defineStructMarker(registry *marker.Registry) error {
-	structMarker, err := marker.Define(StructMarkerPrefix, StructMarker{})
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	registry.Add(structMarker)
-
-	return nil
-}
-
 func (sm *StructMarker) GetName() string {
 	if sm.Name == nil {
 		return ""
@@ -67,6 +55,19 @@ func (sm *StructMarker) GetDescription() string {
 }
 
 // GetComments returns word-wrapped comment lines derived from the description.
-func (sm *StructMarker) GetComments() []string {
-	return commentsFromMarker(sm.GetDescription())
+// Lines beginning with any of the exception prefixes are emitted verbatim.
+func (sm *StructMarker) GetComments(exceptions ...string) []string {
+	return commentsFromMarker(sm.GetDescription(), exceptions...)
+}
+
+// defineStructMarker registers a StructMarker with the marker registry.
+func defineStructMarker(registry *marker.Registry) error {
+	structMarker, err := marker.Define(StructMarkerPrefix, StructMarker{})
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	registry.Add(structMarker)
+
+	return nil
 }
