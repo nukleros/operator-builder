@@ -92,9 +92,14 @@ func TestStructMarker_GetComments(t *testing.T) {
 	desc := "Manages subscription configuration"
 	emptyDesc := ""
 
+	kubebuilderLine := `+kubebuilder:validation:XValidation:rule="!(self.a=='x'&&self.b=='y')",` +
+		`message="a=x is not allowed with b=y; set b explicitly (e.g. z)"`
+	kubebuilderDesc := "Manages subscription configuration\n" + kubebuilderLine
+
 	tests := []struct {
 		name        string
 		marker      *StructMarker
+		exceptions  []string
 		wantNil     bool
 		wantContain string
 	}{
@@ -102,6 +107,12 @@ func TestStructMarker_GetComments(t *testing.T) {
 			name:        "description is word-wrapped into comment lines",
 			marker:      &StructMarker{Description: &desc},
 			wantContain: "Manages subscription configuration",
+		},
+		{
+			name:        "kubebuilder line longer than wrap width is not wrapped",
+			marker:      &StructMarker{Description: &kubebuilderDesc},
+			exceptions:  []string{"+kubebuilder:"},
+			wantContain: kubebuilderLine,
 		},
 		{
 			name:    "nil description returns nil",
@@ -119,7 +130,7 @@ func TestStructMarker_GetComments(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := tt.marker.GetComments()
+			got := tt.marker.GetComments(tt.exceptions...)
 			if tt.wantNil {
 				assert.Nil(t, got)
 			} else {

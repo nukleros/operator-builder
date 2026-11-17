@@ -95,3 +95,32 @@ func TestWorkloadSpec_applyStructMarkers(t *testing.T) {
 		})
 	}
 }
+
+// TestWorkloadSpec_applyStructMarkers_kubebuilderNotWrapped checks a +kubebuilder: line
+// longer than the wrap width is kept intact on its own comment line.
+func TestWorkloadSpec_applyStructMarkers_kubebuilderNotWrapped(t *testing.T) {
+	t.Parallel()
+
+	kubebuilderLine := `+kubebuilder:validation:XValidation:rule="!(self.a=='x'&&self.b=='y')",` +
+		`message="a=x is not allowed with b=y; set b explicitly (e.g. z)"`
+
+	root := &APIFields{
+		Name:   "Spec",
+		Type:   markers.FieldStruct,
+		Sample: "spec:",
+	}
+	_ = root.AddField("webstore.image", markers.FieldString, nil, "nginx", true)
+
+	ws := &WorkloadSpec{
+		APISpecFields: root,
+		StructMarkers: []*markers.StructMarker{
+			{
+				Name:        strPtr(markers.StructRootName),
+				Description: strPtr("Root description\n" + kubebuilderLine),
+			},
+		},
+	}
+
+	assert.NoError(t, ws.applyStructMarkers())
+	assert.Equal(t, []string{"", "Root description", kubebuilderLine}, ws.APISpecFields.Comments)
+}
